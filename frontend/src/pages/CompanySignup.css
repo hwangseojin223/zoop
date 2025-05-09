@@ -1,0 +1,122 @@
+.company-signup-container {
+    max-width: 560px;
+    margin: 6rem auto;
+    padding: 1rem;
+    font-family: 'Arial', sans-serif;
+  }
+  
+  .form-title {
+    font-size: 1.3rem;
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+  
+  .form-section {
+    margin-bottom: 2rem;
+  }
+  
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+    font-size: 0.95rem;
+  }
+  
+  input[type="text"] {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
+  
+  .small-link {
+    display: block;
+    margin-top: 0.4rem;
+    font-size: 0.85rem;
+    color: #30c59b;
+    text-align: right;
+  }
+  
+  .upload-instruction {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+  }
+  
+  .upload-box {
+    border: 1.5px dashed #30c59b;
+    padding: 1.2rem;
+    border-radius: 10px;
+    text-align: center;
+  }
+  
+  .upload-preview {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .upload-preview img {
+    width: 120px;
+    height: auto;
+    border-radius: 6px;
+  }
+  
+  .file-input {
+    display: none;
+  }
+  
+  .file-label {
+    display: inline-block;
+    padding: 0.8rem 2rem;
+    background-color: #30c59b;
+    color: white;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 1rem;
+  }
+  
+  .checkbox-wrap {
+    margin-top: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: center;
+    font-size: 0.9rem;
+    color: #333;
+  }
+  
+  .terms-title {
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+  }
+  
+  .terms-list {
+    list-style: none;
+    padding: 0;
+    font-size: 0.9rem;
+    line-height: 1.8;
+  }
+  
+  .terms-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  
+  .submit-button {
+    width: 100%;
+    padding: 1rem;
+    background-color: #30c59b;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  

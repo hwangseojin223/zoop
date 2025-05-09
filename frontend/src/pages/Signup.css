@@ -1,0 +1,86 @@
+.signup-wrapper {
+    max-width: 500px;
+    margin: 20rem auto 5rem;
+    text-align: center;
+    font-family: 'Arial', sans-serif;
+  }
+  
+  .signup-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .signup-tabs button {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #888;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    padding-bottom: 0.4rem;
+    transition: color 0.3s, border-bottom 0.3s;
+  }
+  
+  .signup-tabs .active {
+    color: #30c59b;
+    font-weight: 700;
+    border-bottom: 2px solid #30c59b;
+  }
+  
+  .signup-divider {
+    width: 60px;
+    height: 2px;
+    background-color: #30c59b;
+    margin: 2rem auto;
+  }
+  
+  .signup-subtext {
+    color: #666;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+  }
+  
+  .signup-icons {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .signup-icons img {
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+  }
+  
+  .signup-id-button {
+    background-color: white;
+    color: #30c59b;
+    border: 1.5px solid #30c59b;
+    padding: 0.9rem 2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .signup-id-button:hover {
+    background-color: #f3fdf9;
+  }
+  
+  .signup-footer {
+    margin-top: 2rem;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .signup-footer a {
+    color: #30c59b;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  

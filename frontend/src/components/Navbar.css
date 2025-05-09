@@ -1,0 +1,66 @@
+/* ====== 네비게이션 ====== */
+.zoop-navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    padding: 1.2rem 2.5rem;
+    background: transparent;
+    box-shadow: none;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    z-index: 10;
+  }
+  
+  .logo-img {
+    height: 56px;
+    flex-shrink: 0;
+    margin-left: 40rem;
+  }
+  
+  .nav-links {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex: 1;
+    flex-wrap: wrap;
+    margin-left: 0rem; /* ✅ 균형 맞추기 */
+  }
+  
+  
+  .nav-links a {
+    text-decoration: none;
+    color: #333;
+    font-size: 0.95rem;
+    white-space: nowrap;
+  }
+  
+  .auth-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    white-space: nowrap;
+    margin-right: 30rem; /* ✅ ✅ ✅ 핵심 포인트 */
+  }
+  
+  
+  .auth-buttons button {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    border: 1px solid #30c59b;
+    cursor: pointer;
+  }
+  
+  .btn-outline {
+    background-color: white;
+    color: #30c59b;
+  }
+  
+  .btn-filled {
+    background-color: #30c59b;
+    color: white;
+    border: none;
+  }
