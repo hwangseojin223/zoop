@@ -56,14 +56,65 @@
 			<version>1.18.30</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<dependency>
+    		<groupId>org.springframework.security</groupId>
+    		<artifactId>spring-security-test</artifactId>
+    		<scope>test</scope> <!-- 테스트 범위에서만 사용됩니다. -->
+		</dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.5.0</version>
+		</dependency>
+
+
 
 	</dependencies>
 
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+                <!-- version은 spring-boot-starter-parent에서 관리할 수도 있지만, 명시해도 무방 -->
+				<!-- <version>3.13.0</version> -->
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<!-- version은 spring-boot-starter-parent에서 관리하는 버전을 따르는 것이 좋지만, 명시해도 됨 -->
+                            <!-- <version>1.18.30</version> -->
+						</path>
+						<!-- 다른 annotation processors가 있다면 여기에 추가 -->
+						<!-- <path>...</path> -->
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				 <configuration>
+                     <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                     <!-- 메인 클래스 설정 (필요하다면) -->
+                     <!--
+                     <mainClass>com.zoop.backend.BackendApplication</mainClass>
+                     -->
+                </configuration>
 			</plugin>
 		</plugins>
 	</build>
