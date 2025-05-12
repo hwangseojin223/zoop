@@ -1,0 +1,99 @@
+.tip-box {
+    position: static;
+    top: 100px;
+    left: 1rem;
+    width: 100%;
+    max-width: 230px;               /* 더 작게 줄임 */
+    padding: 1.2rem;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 0.78rem;             /* 텍스트 더 작게 */
+    color: #222;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    z-index: 1000;
+  }
+  
+  
+  .tip-box h3 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .tip-section {
+    margin-bottom: 1.4rem;
+  }
+  
+  .tip-section strong {
+    display: block;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .tip-desc {
+    background-color: #f9fafb;
+    padding: 0.65rem 0.9rem;
+    border-radius: 8px;
+    margin-bottom: 0.6rem;
+    line-height: 1.4;
+    color: #444;
+    font-size: 0.75rem;
+  }
+  
+  .tip-desc span,
+  .tip-desc strong {
+    color: #111;
+    font-weight: 700;
+  }
+  
+  .tip-section button {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.9rem;
+    margin-top: 0.5rem;
+    border: 1px solid #30c59b;
+    border-radius: 8px;
+    background-color: #fff;
+    color: #30c59b;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .tip-section button:hover {
+    background-color: #f2fef7;
+  }
+  
+  .tip-file {
+    background-color: #f9fafb;
+    padding: 0.6rem 0.9rem;
+    border-radius: 8px;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  /* 반응형 대응 (작은 화면에서 자연스럽게 줄어들도록) */
+  @media (max-width: 768px) {
+    .tip-box {
+      position: static;
+      margin-bottom: 2rem;
+      max-width: 100%;
+    }
+  }
+  .tip-section a {
+    text-decoration: none; /* 밑줄 제거 */
+  }
+  
+  .tip-desc strong {
+    display: inline;      /* ✅ 블록 요소 방지 */
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #111;
+  }
+  
+  .tip-file strong {
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
