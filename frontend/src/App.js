@@ -1,17 +1,15 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
+
+import Signup from './pages/signup/Signup';
 import Index from './pages/Index';
-import CompanySignupProcess from './pages/CompanySignupProcess';
+import CompanySignupProcess from './pages/signup/CompanySignupProcess';
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Index />} />
-        <Route path="/login" element={<Login />} />
         <Route path="/auth/applicant/signup" element={<Signup />} />
         <Route path="/auth/company/signup/process" element={<CompanySignupProcess />} />
       </Routes>
