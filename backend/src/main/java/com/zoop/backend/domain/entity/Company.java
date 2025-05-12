@@ -1,27 +1,7 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-
 package com.zoop.backend.domain.entity;
 
-/**
- *
- * @author KOSA
- */
-
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "companies")
@@ -60,8 +40,10 @@ public class Company {
     public void preUpdate() {
         companyUpdatedAt = LocalDateTime.now();
     }
-    
-    
+
+    public Company() {
+        // 기본 생성자 (Jackson 역직렬화용)
+    }
 
     public Long getCompanyId() {
         return companyId;
@@ -110,6 +92,7 @@ public class Company {
     public void setCompanyUpdatedAt(LocalDateTime companyUpdatedAt) {
         this.companyUpdatedAt = companyUpdatedAt;
     }
+
     public String getCeoName() {
         return ceoName;
     }
