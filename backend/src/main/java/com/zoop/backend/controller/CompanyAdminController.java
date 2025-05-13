@@ -1,7 +1,11 @@
 package com.zoop.backend.controller;
 
+import com.zoop.backend.domain.entity.Company;
 import com.zoop.backend.domain.entity.CompanyAdmin;
 import com.zoop.backend.service.CompanyAdminService;
+
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,4 +36,21 @@ public class CompanyAdminController {
             ? ResponseEntity.ok("이미 사용 중인 아이디입니다.")
             : ResponseEntity.ok("사용 가능한 아이디입니다.");
     }
-} 
+
+    @GetMapping("/info/{adminId}")
+    public ResponseEntity<?> getCompanyInfoByAdminId(@PathVariable Long adminId) {
+        System.out.println("✅ [API 호출됨] /info/" + adminId);
+        CompanyAdmin admin = adminService.getAdminById(adminId); // service에서 admin + company join 조회
+        Company company = admin.getCompany();
+
+        return ResponseEntity.ok(Map.of(
+            "companyName", company.getCompanyName(),
+            "businessNumber", company.getBusinessNumber(),
+            "address", company.getCompanyAddress(),
+            "ceoName", company.getCeoName(),
+            "adminName", admin.getName(),
+            "email", admin.getEmail()
+        ));
+    }
+
+}

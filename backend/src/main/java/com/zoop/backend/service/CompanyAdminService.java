@@ -28,6 +28,12 @@ public class CompanyAdminService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    public CompanyAdmin getAdminById(Long id) {
+        return adminRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("해당 관리자 없음"));
+    }
+    
+
     // @Transactional
     // public CompanyAdmin registerAdmin(Long companyId, CompanyAdmin admin) {
     //     Company company = companyRepository.findById(companyId)
