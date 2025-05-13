@@ -48,7 +48,8 @@ public class AuthController {
         return ResponseEntity.ok(Map.of(
                 "token", jwtToken,
                 "userId", admin.getCompanyAdminId(),
-                "userType", "company"
+                "userType", "company",
+                "loginId", admin.getLoginId() 
         ));
     }
 }

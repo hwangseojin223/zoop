@@ -7,28 +7,33 @@ const AuthContext = createContext();
 
 // 2. Provider 컴포넌트 정의
 export function AuthProvider({ children }) {
-  const [authState, setAuthState] = useState({
-    token: null,
-    userType: null,
-    userId: null,
-  });
-
-  // 3. 페이지 새로고침 시 LocalStorage에서 로그인 정보 복원
-  useEffect(() => {
-    const token = localStorage.getItem('jwtToken');
-    const userType = localStorage.getItem('userType');
-    const userId = localStorage.getItem('userId');
-    if (token && userType && userId) {
-      setAuthState({ token, userType, userId });
-    }
-  }, []);
-
-  return (
-    <AuthContext.Provider value={{ authState, setAuthState }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
+    const [authState, setAuthState] = useState({
+      token: null,
+      userType: null,
+      userId: null,
+      loginId: null,
+    });
+  
+    const [isInitialized, setIsInitialized] = useState(false);
+  
+    useEffect(() => {
+      const token = localStorage.getItem('jwtToken');
+      const userType = localStorage.getItem('userType');
+      const userId = localStorage.getItem('userId');
+      const loginId = localStorage.getItem('loginId');
+      if (token && userType && userId && loginId) {
+        setAuthState({ token, userType, userId, loginId });
+      }
+      setIsInitialized(true); // ✅ 상태 복원 완료 표시
+    }, []);
+  
+    return (
+      <AuthContext.Provider value={{ authState, setAuthState, isInitialized }}>
+        {children}
+      </AuthContext.Provider>
+    );
+  }
+  
 
 // 4. Custom hook for easy access
 export function useAuth() {
