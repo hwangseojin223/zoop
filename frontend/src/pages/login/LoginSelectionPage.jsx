@@ -2,11 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import './LoginSelectionPage.css';
-import Navbar from '../../components/Navbar'; // ✅ Navbar 추가
+import Navbar from '../../components/Navbar';
 import { useAuth } from '../../context/AuthContext';
 
 function LoginSelectionPage() {
-  const [userType, setUserType] = useState('candidate');
+  const [userType, setUserType] = useState('candidate'); // 기본값 개인회원
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -35,6 +35,12 @@ function LoginSelectionPage() {
       return;
     }
 
+    // ✅ 현재는 기업회원만 로그인 허용
+    if (userType !== 'company') {
+      setError('현재는 기업회원만 로그인할 수 있습니다.');
+      return;
+    }
+
     setError('');
 
     try {
@@ -47,17 +53,20 @@ function LoginSelectionPage() {
       const jwtToken = response.data.token;
       const receivedUserType = response.data.userType;
       const receivedUserId = response.data.userId;
+      const receivedLoginId = response.data.loginId; 
 
       if (jwtToken) {
         setAuthState({
           token: jwtToken,
           userType: receivedUserType,
-          userId: receivedUserId
+          userId: receivedUserId,
+          loginId: receivedLoginId,
         });
 
         localStorage.setItem('jwtToken', jwtToken);
         localStorage.setItem('userType', receivedUserType);
         localStorage.setItem('userId', receivedUserId);
+        localStorage.setItem('loginId', receivedLoginId);
 
         if (rememberId) {
           localStorage.setItem('savedLoginId', loginId);
@@ -68,7 +77,9 @@ function LoginSelectionPage() {
         }
 
         alert('로그인 성공!');
-        navigate('/');
+
+        // ✅ 기업회원 전용 페이지로 이동
+        navigate('/company/dashboard');
       } else {
         setError('로그인은 성공했으나 인증 토큰을 받지 못했습니다.');
       }
@@ -84,7 +95,7 @@ function LoginSelectionPage() {
   return (
     <>
       <Navbar />
-      <div className="login-page-wrapper"> {/* ✅ body 스타일 대체 */}
+      <div className="login-page-wrapper">
         <div className="login-container">
           <div className="login-left">
             <h2>다양한 ZOOP 서비스를 로그인 한 번으로 편리하게 이용하세요.</h2>

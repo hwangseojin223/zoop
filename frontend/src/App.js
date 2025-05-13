@@ -1,19 +1,21 @@
 import React, { useEffect } from 'react';
-import { AuthProvider } from './context/AuthContext'; // 로그인 전역 상태 관리
-
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+
 import Signup from './pages/signup/Signup';
 import Index from './pages/Index';
 import CompanySignupProcess from './pages/signup/CompanySignupProcess';
 import CompanyAdminSignup from './pages/signup/CompanyAdminSignup';
 import SignupSuccess from './pages/signup/SignupSuccess';
 import LoginSelectionPage from './pages/login/LoginSelectionPage';
-import { useAuth } from './context/AuthContext'; // ✅ useAuth import 필요
+import CompanyDashboard from './pages/company/CompanyDashboard';
+
+import PrivateRoute from './routes/PrivateRoute';
+import PublicOnlyRoute from './routes/PublicOnlyRoute'; // ✅ 로그아웃 상태만 접근 가능하게 하는 라우터
 
 function AppContent() {
   const { setAuthState } = useAuth();
 
-  // ✅ 앱 로드 시 로그인 상태 복원
   useEffect(() => {
     const token = localStorage.getItem('jwtToken');
     const userType = localStorage.getItem('userType');
@@ -27,12 +29,31 @@ function AppContent() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Index />} />
+        {/* ✅ 로그아웃 상태에서만 접근 가능한 페이지 */}
+        <Route
+          path="/"
+          element={
+            <PublicOnlyRoute>
+              <Index />
+            </PublicOnlyRoute>
+          }
+        />
+
         <Route path="/auth/applicant/signup" element={<Signup />} />
         <Route path="/auth/company/signup/process" element={<CompanySignupProcess />} />
         <Route path="/auth/company/signup/companyadmin" element={<CompanyAdminSignup />} />
         <Route path="/auth/company/signup/success" element={<SignupSuccess />} />
         <Route path="/auth/login" element={<LoginSelectionPage />} />
+
+        {/* ✅ 로그인 + 기업회원 전용 */}
+        <Route
+          path="/company/dashboard"
+          element={
+            <PrivateRoute allowedUserType="company">
+              <CompanyDashboard />
+            </PrivateRoute>
+          }
+        />
       </Routes>
     </Router>
   );
