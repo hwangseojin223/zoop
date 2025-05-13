@@ -21,7 +21,7 @@ const Navbar = () => {
         <Link to="/auth/applicant/signup">
           <button className="btn-outline">회원가입</button>
         </Link>
-        <Link to="/login">
+        <Link to="/auth/login">
           <button className="btn-filled">로그인</button>
         </Link>
       </div>
