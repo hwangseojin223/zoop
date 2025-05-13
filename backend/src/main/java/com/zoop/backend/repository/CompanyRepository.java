@@ -7,5 +7,4 @@ import com.zoop.backend.domain.entity.Company;
 
 public interface CompanyRepository extends JpaRepository<Company, Long> {
     boolean existsByBusinessNumber(String businessNumber);
-   
 }
