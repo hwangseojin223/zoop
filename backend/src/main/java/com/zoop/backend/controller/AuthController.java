@@ -1,16 +1,26 @@
 package com.zoop.backend.controller;
 
-import com.zoop.backend.domain.entity.CompanyAdmin;
-import com.zoop.backend.domain.dto.LoginRequest;
-import com.zoop.backend.repository.CompanyAdminRepository;
-import com.zoop.backend.util.JwtUtil;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
+import com.zoop.backend.domain.dto.LoginRequest;
+import com.zoop.backend.domain.entity.CompanyAdmin;
+import com.zoop.backend.repository.CompanyAdminRepository;
+import com.zoop.backend.util.JwtUtil;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name="AuthController", description="사용자 인증 관련 API(로그인)")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -24,9 +34,23 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
     }
-
+    @Operation(summary="사용자 로그인", description="아이디와 비밀번호를 사용하여 로그인하고 JWT 토큰을 발급받습니다.")
+    @ApiResponses(value= {
+        @ApiResponse(responseCode="200", description="로그인 성공 및 JWT 토큰 발급",
+            content=@Content(schema=@Schema(implementation=LoginResponse.class))), 
+        @ApiResponse(responseCode ="404", description="존재하지 않는 아이디"),
+        @ApiResponse(responseCode="401", description="비밀번호 불일치")
+    })
+    
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(
+        @io.swagger.v3.oas.annotations.parameters.RequestBody( 
+            description = "로그인을 위한 아이디와 비밀번호",
+            required=true,
+            content=@Content(schema=@Schema(implementation=LoginRequest.class))
+        )
+        @org.springframework.web.bind.annotation.RequestBody LoginRequest request) { // 실제 Spring의 @RequestBody
+        
         CompanyAdmin admin = adminRepo.findByLoginId(request.getLoginId()).orElse(null);
 
         if (admin == null) {
@@ -51,5 +75,11 @@ public class AuthController {
                 "userType", "company",
                 "loginId", admin.getLoginId() 
         ));
+    }
+
+    private static class LoginResponse {
+
+        public LoginResponse() {
+        }
     }
 }
