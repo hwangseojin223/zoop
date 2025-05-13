@@ -6,13 +6,13 @@ D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\controller\AuthControll
 D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\controller\CompanyAdminController.java
 D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\controller\CompanyController.java
 D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\controller\EmailController.java
+D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\domain\dto\CandidateSignupRequest.java
+D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\domain\dto\CompanyAdminSignupRequest.java
+D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\domain\dto\LoginRequest.java
+D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\domain\dto\LoginResponse.java
 D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\domain\entity\Candidate.java
 D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\domain\entity\Company.java
 D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\domain\entity\CompanyAdmin.java
-D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\domain\entity\dto\CandidateSignupRequest.java
-D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\domain\entity\dto\CompanyAdminSignupRequest.java
-D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\domain\entity\dto\LoginRequest.java
-D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\domain\entity\dto\LoginResponse.java
 D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\domain\entity\EmailVerification.java
 D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\domain\entity\User.java
 D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\repository\CandidateRepository.java
