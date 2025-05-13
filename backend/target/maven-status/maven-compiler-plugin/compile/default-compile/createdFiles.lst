@@ -1,0 +1,4 @@
+com\zoop\backend\domain\dto\CandidateSignupRequest.class
+com\zoop\backend\domain\dto\LoginRequest.class
+com\zoop\backend\domain\dto\CompanyAdminSignupRequest.class
+com\zoop\backend\domain\dto\LoginResponse.class

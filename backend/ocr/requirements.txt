@@ -3,4 +3,4 @@ uvicorn
 pytesseract
 Pillow
 
-//pip install fastapi uvicorn pytesseract pillow
+#pip install fastapi uvicorn pytesseract pillow
