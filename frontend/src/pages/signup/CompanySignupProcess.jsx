@@ -70,7 +70,7 @@ export default function CompanySignupProcess() {
     };
   
     try {
-      const res = await fetch('/api/companies', {
+      const res = await fetch('http://localhost:8081/api/companies', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

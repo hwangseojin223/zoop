@@ -16,7 +16,7 @@ export default function CompanyAdminSignup() {
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [resendTimer, setResendTimer] = useState(300); // 5분 = 300초
+  const [resendTimer, setResendTimer] = useState(300);
   const [resendVisible, setResendVisible] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState('');
   const [strengthColor, setStrengthColor] = useState('#aaa');
@@ -24,10 +24,14 @@ export default function CompanyAdminSignup() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSendingCode, setIsSendingCode] = useState(false);
 
+  const navigate = useNavigate();
+  const location = useLocation();
+  const companyId = location.state?.companyId;
+
   const handleSendCode = async () => {
     setIsSendingCode(true);
     const fullEmail = `${emailLocal}@${emailDomain}`;
-    const res = await fetch(`/api/email/send?email=${encodeURIComponent(fullEmail)}`, {
+    const res = await fetch(`http://localhost:8081/api/email/send?email=${encodeURIComponent(fullEmail)}`, {
       method: 'POST',
     });
     if (res.ok) {
@@ -56,10 +60,29 @@ export default function CompanyAdminSignup() {
     await handleSendCode();
   };
 
-  const navigate = useNavigate();
-  const location = useLocation();
-  const companyId = location.state?.companyId;
-  
+  const handleDomainChange = (e) => {
+    const value = e.target.value;
+    if (value === 'custom') {
+      setCustomInput(true);
+      setEmailDomain('');
+    } else {
+      setCustomInput(false);
+      setEmailDomain(value);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    const fullEmail = `${emailLocal}@${emailDomain}`;
+    const res = await fetch(`http://localhost:8081/api/email/verify?email=${encodeURIComponent(fullEmail)}&code=${verificationCode}`, {
+      method: 'POST',
+    });
+    if (res.ok) {
+      alert('이메일 인증 완료');
+      setIsEmailVerified(true);
+    } else {
+      alert('인증 실패. 코드를 확인해주세요.');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -88,11 +111,9 @@ export default function CompanyAdminSignup() {
     };
 
     try {
-      const res = await fetch('/api/companyadmins', {
+      const res = await fetch('http://localhost:8081/api/companyadmins', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
@@ -105,31 +126,6 @@ export default function CompanyAdminSignup() {
       alert('서버 오류');
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-
-  const handleDomainChange = (e) => {
-    const value = e.target.value;
-    if (value === 'custom') {
-      setCustomInput(true);
-      setEmailDomain('');
-    } else {
-      setCustomInput(false);
-      setEmailDomain(value);
-    }
-  };
-
-  const handleVerifyCode = async () => {
-    const fullEmail = `${emailLocal}@${emailDomain}`;
-    const res = await fetch(`/api/email/verify?email=${encodeURIComponent(fullEmail)}&code=${verificationCode}`, {
-      method: 'POST',
-    });
-    if (res.ok) {
-      alert('이메일 인증 완료');
-      setIsEmailVerified(true);
-    } else {
-      alert('인증 실패. 코드를 확인해주세요.');
     }
   };
 
@@ -170,7 +166,7 @@ export default function CompanyAdminSignup() {
                       return;
                     }
                     try {
-                      const res = await fetch(`/api/companyadmins/check-id?loginId=${encodeURIComponent(loginId)}`);
+                      const res = await fetch(`http://localhost:8081/api/companyadmins/check-id?loginId=${encodeURIComponent(loginId)}`);
                       if (res.ok) {
                         const data = await res.text();
                         alert(data);
