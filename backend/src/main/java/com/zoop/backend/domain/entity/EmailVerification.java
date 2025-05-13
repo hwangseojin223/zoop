@@ -1,13 +1,21 @@
 package com.zoop.backend.domain.entity;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+
 @Entity
+@Schema(description="이메일 인증 정보를 나타내는 엔티티")
 public class EmailVerification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description="인증 정보 고유 ID", example="1", accessMode=Schema.AccessMode.READ_ONLY)
     private Long id;
 
     private String email;
