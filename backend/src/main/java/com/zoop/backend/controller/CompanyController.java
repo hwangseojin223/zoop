@@ -1,21 +1,17 @@
 package com.zoop.backend.controller;
 
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.zoop.backend.domain.entity.Company;
 import com.zoop.backend.domain.dto.CompanyDto;
+import com.zoop.backend.domain.entity.Company;
 import com.zoop.backend.service.CompanyService;
-<<<<<<< HEAD
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import java.util.Map;
-=======
->>>>>>> SCRUM-31
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -43,7 +39,6 @@ public class CompanyController {
         @ApiResponse(responseCode="400", description="잘못된 요청(예: 필수 필드 누락 등)")
     })
     @PostMapping
-<<<<<<< HEAD
     public ResponseEntity<?> registerCompany(@RequestBody CompanyDto dto) {
         System.out.println("✅ 회사 등록 요청 수신");
         System.out.println(" - 사업자번호: " + dto.getBusinessNumber());
@@ -57,15 +52,6 @@ public class CompanyController {
         company.setCeoName(dto.getCeoName());
         company.setCompanyAddress(dto.getCompanyAddress());
 
-=======
-    public ResponseEntity<Company> registerCompany(
-        @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description="등록할 회사 정보",
-            required=true,
-            content=@Content(schema=@Schema(implementation=Company.class))
-        )    
-        @RequestBody Company company) {
->>>>>>> SCRUM-31
         Company saved = service.saveCompany(company);
         return ResponseEntity.ok(Map.of("companyId", saved.getCompanyId()));
     }

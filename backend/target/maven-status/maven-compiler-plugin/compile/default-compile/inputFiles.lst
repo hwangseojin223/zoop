@@ -5,6 +5,8 @@ D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\controller\AuthControll
 D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\controller\CompanyAdminController.java
 D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\controller\CompanyController.java
 D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\controller\EmailController.java
+D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\domain\dto\CompanyAdminDto.java
+D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\domain\dto\CompanyDto.java
 D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\domain\dto\LoginRequest.java
 D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\domain\entity\Company.java
 D:\AI_prompt\zoop\backend\src\main\java\com\zoop\backend\domain\entity\CompanyAdmin.java
