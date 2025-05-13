@@ -20,7 +20,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-
 @Tag(name="AuthController", description="사용자 인증 관련 API(로그인)")
 @RestController
 @RequestMapping("/api/auth")
@@ -49,8 +48,9 @@ public class AuthController {
             description = "로그인을 위한 아이디와 비밀번호",
             required=true,
             content=@Content(schema=@Schema(implementation=LoginRequest.class))
-            )
-            @org.springframework.web.bind.annotation.RequestBody LoginRequest request) { // 실제 Spring의 @RequestBody
+        )
+        @org.springframework.web.bind.annotation.RequestBody LoginRequest request) { // 실제 Spring의 @RequestBody
+        
         CompanyAdmin admin = adminRepo.findByLoginId(request.getLoginId()).orElse(null);
 
         if (admin == null) {
