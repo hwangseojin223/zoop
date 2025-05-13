@@ -40,7 +40,7 @@ export default function Index() {
         </nav>
         <div className="auth-buttons">
           <button className="btn-outline" onClick={() => navigate('/auth/applicant/signup')}>회원가입</button>
-          <button className="btn-filled" onClick={() => navigate('/auth/login')}>로그인</button>
+          <button className="btn-filled" onClick={() => navigate('/login')}>로그인</button>
         </div>
       </header>
 
