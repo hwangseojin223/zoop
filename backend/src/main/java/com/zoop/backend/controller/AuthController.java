@@ -11,6 +11,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name="AuthController", description="사용자 인증 관련 API(로그인)")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -24,7 +31,14 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
     }
-
+    @Operation(summary="사용자 로그인", description="아이디와 비밀번호를 사용하여 로그인하고 JWT 토큰을 발급받습니다.")
+    @ApiResponse(value= {
+        @ApiResponse(responseCode="200", description="로그인 성공 및 JWT 토큰 발급",
+            content=@Content(schema=@Schema(implementation=LoginResponse.class)), 
+        @ApiResponse(responseCode ="404", description="존재하지 않는 아이디"),
+        @ApiResponse(responseCode="401", description="비밀번호 불일치")
+        )
+    })
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         CompanyAdmin admin = adminRepo.findByLoginId(request.getLoginId()).orElse(null);
@@ -51,5 +65,11 @@ public class AuthController {
                 "userType", "company",
                 "loginId", admin.getLoginId() 
         ));
+    }
+
+    private static class LoginResponse {
+
+        public LoginResponse() {
+        }
     }
 }
