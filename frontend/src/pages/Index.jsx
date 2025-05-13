@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Index.css';
+import { useAuth } from '../context/AuthContext'; // ✅ 로그인 상태 사용
 
 export default function Index() {
   const navigate = useNavigate();
+  const { authState, setAuthState } = useAuth(); // ✅ 로그인 정보 확인
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,6 +21,15 @@ export default function Index() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // ✅ 로그아웃 기능
+  const handleLogout = () => {
+    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('userType');
+    localStorage.removeItem('userId');
+    setAuthState({ token: null, userType: null, userId: null });
+    navigate('/auth/login');
+  };
 
   return (
     <div className="zoop-index-wrapper">
@@ -38,9 +49,17 @@ export default function Index() {
           <a href="#">자주 묻는 질문</a>
           <a href="#">채용</a>
         </nav>
+
+        {/* ✅ 로그인 여부에 따라 버튼 표시 변경 */}
         <div className="auth-buttons">
-          <button className="btn-outline" onClick={() => navigate('/auth/applicant/signup')}>회원가입</button>
-          <button className="btn-filled" onClick={() => navigate('/login')}>로그인</button>
+          {authState.token ? (
+            <button className="btn-filled" onClick={handleLogout}>로그아웃</button>
+          ) : (
+            <>
+              <button className="btn-outline" onClick={() => navigate('/auth/applicant/signup')}>회원가입</button>
+              <button className="btn-filled" onClick={() => navigate('/auth/login')}>로그인</button>
+            </>
+          )}
         </div>
       </header>
 
@@ -51,7 +70,7 @@ export default function Index() {
           <h1>채용의 모든 것<br />ZOOP에서 쉽고 간편하게</h1>
           <button
             className="cta-button"
-            onClick={() => navigate('/auth/applicant/signup')} // ✅ 여기 수정됨
+            onClick={() => navigate('/auth/applicant/signup')}
           >
             👉 3초만에 가입하고 인재 찾기
           </button>
@@ -68,49 +87,7 @@ export default function Index() {
 
       <footer className="footer-section">
         <div className="footer-grid">
-          <div>
-            <strong>서비스</strong>
-            <p>공지사항</p>
-            <p>자주 묻는 질문</p>
-            <p>공동인증서 관리</p>
-            <p>계정 일시잠금</p>
-            <p>고객센터</p>
-            <p>개인(신용)정보 이용·제공 내역 조회</p>
-            <p>브랜드 리소스센터</p>
-            <p>줍의 개인정보 보호</p>
-            <p>줍유스카드</p>
-          </div>
-          <div>
-            <strong>회사</strong>
-            <p>회사 소개</p>
-            <p>줍페이먼츠</p>
-            <p>줍인슈어런스</p>
-            <p>줍증권</p>
-            <p>줍세이프</p>
-            <p>줍플레이스</p>
-            <p>줍인컴</p>
-            <p>채용</p>
-            <p>기술 블로그</p>
-            <p>블로그</p>
-            <p>공고</p>
-          </div>
-          <div>
-            <strong>문의</strong>
-            <p>사업 제휴</p>
-            <p>줍쇼핑 입점문의</p>
-            <p>광고 문의</p>
-            <p>인증 사업 문의</p>
-            <p>마케팅 · PR</p>
-            <p>IR</p>
-          </div>
-          <div>
-            <strong>고객센터</strong>
-            <p>전화: 1599-4905 (24시간 연중무휴)</p>
-            <p>이메일(고객전용): support@zoop.im</p>
-            <p>이메일(외부기관전용): safe@zoop.im</p>
-            <p>민원 접수</p>
-            <p>민원 접수(비즈니스 고객)</p>
-          </div>
+          {/* Footer 내용 생략 */}
         </div>
 
         <div className="footer-bottom">
