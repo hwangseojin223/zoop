@@ -36,3 +36,5 @@ backend/src/main/resources/application.yaml
 backend/src/main/resources/application.yml
 # 빌드 디렉토리 무시
 backend/target/
+
+.env

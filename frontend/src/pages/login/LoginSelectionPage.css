@@ -207,3 +207,111 @@
 /* .login-form h1 { ... } */
 /* .login-form h2 { ... } */
 
+.login-form {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ✅ 체크박스 그룹 스타일 수정 */
+.checkbox-group {
+    display: flex;
+    /* justify-content: space-between; /* 기존 속성 제거 */
+    justify-content: flex-start; /* ✅ 시작 부분에 정렬 */
+    align-items: center;
+    margin-bottom: 20px;
+    width: 100%; /* 부모 너비에 맞춤 */
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0;
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+/* ✅ 첫 번째 체크박스 라벨에 오른쪽 마진 추가하여 간격 조정 */
+.checkbox-group .checkbox-label:first-child {
+    margin-right: 20px; /* 원하는 간격으로 조정 (예: 20px, 30px 등) */
+}
+/* frontend/src/pages/login/LoginSelectionPage.css */
+
+/* ... (기존 스타일 유지) ... */
+
+.login-left {
+    background-color: #f2f2f2;
+    color: #333;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center; /* ✅ 자식 요소들을 가로 중앙에 정렬 */
+    width: 50%;
+    text-align: center; /* ✅ 텍스트 자식 요소들을 가운데 정렬 */
+}
+
+/* ✅ 왼쪽 패널 텍스트 (h2) 스타일 수정 */
+.login-left h2 {
+    font-size: 22px; /* 폰트 크기 조정 (기존 24px) */
+    font-weight: bold; /* 글자 두께 */
+    margin-bottom: 20px;
+    line-height: 1.4; /* 행간 조정 */
+    color: #333; /* 텍스트 색상 (기존 유지 또는 약간 어둡게) */
+     /* text-shadow: 1px 1px 2px rgba(0,0,0,0.1); /* 은은한 그림자 효과 (선택 사항) */
+}
+
+.login-left p { /* 이 p 태그는 현재 JSX에 없으므로 이 스타일은 적용되지 않습니다. */
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+
+.zoop-logo {
+    margin-bottom: 30px;
+     /* .login-left에 text-align: center; 또는 align-items: center; 가 적용되어 있으면 이 div 자체는 가운데 정렬됩니다. */
+}
+
+/* ✅ 로고 이미지 가운데 정렬 */
+.zoop-logo img {
+    display: block; /* 이미지를 블록 레벨 요소로 만들어 margin: auto 적용 가능하게 함 */
+    margin: 0 auto 10px auto; /* 상하 0, 좌우 auto 마진으로 가운데 정렬, 하단에 10px 여백 */
+    max-width: 150px;
+    height: auto;
+}
+
+/* ✅ 회원가입 버튼 스타일 수정 (세련되게) */
+.signup-button {
+    /* background-color: #007bff; /* 기존 파란색 배경 제거 */
+    background-color: transparent; /* 배경 투명하게 */
+    color: #28a745; /* ✅ 메인 초록색 계열 텍스트 색상 */
+    border: 2px solid #28a745; /* ✅ 메인 초록색 계열 테두리 */
+    border-radius: 25px; /* ✅ 더 부드러운 모서리 (pill 형태에 가깝게) */
+    padding: 10px 20px; /* 패딩 조정 */
+    font-size: 15px; /* 폰트 크기 조정 */
+    font-weight: bold; /* 글자 두께 */
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; /* 전환 효과 추가 */
+    /* box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 은은한 그림자 (선택 사항) */
+}
+
+/* ✅ 회원가입 버튼 호버 스타일 */
+.signup-button:hover {
+    background-color: #28a745; /* ✅ 호버 시 메인 초록색 계열 배경 */
+    color: #fff; /* ✅ 호버 시 흰색 텍스트 */
+    border-color: #28a745; /* 호버 시 테두리 색상 유지 */
+}
+/* 회원가입 버튼 클릭 시 스타일 (선택 사항) */
+.signup-button:active {
+     background-color: #1e7e34; /* 클릭 시 약간 더 어두운 색 */
+     border-color: #1e7e34;
+}
+
+
+/* ... (이후 스타일 유지) ... */

@@ -36,10 +36,10 @@ function LoginSelectionPage() {
     }
 
     // ✅ 현재는 기업회원만 로그인 허용
-    if (userType !== 'company') {
-      setError('현재는 기업회원만 로그인할 수 있습니다.');
-      return;
-    }
+    // if (userType !== 'company') {
+    //   setError('현재는 기업회원만 로그인할 수 있습니다.');
+    //   return;
+    // }
 
     setError('');
 
@@ -77,9 +77,13 @@ function LoginSelectionPage() {
         }
 
         alert('로그인 성공!');
-
-        // ✅ 기업회원 전용 페이지로 이동
-        navigate('/company/dashboard');
+        if(receivedUserType === 'candidate'){
+          // ✅ 기업회원 전용 페이지로 이동
+          navigate('/candidate/dashboard');
+        }else if(receivedUserType === 'company'){
+          navigate('/company/dashboard');
+        }
+       
       } else {
         setError('로그인은 성공했으나 인증 토큰을 받지 못했습니다.');
       }
@@ -153,22 +157,26 @@ function LoginSelectionPage() {
                 />
               </div>
 
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={rememberId}
-                  onChange={(e) => setRememberId(e.target.checked)}
-                />
-                아이디 저장
-              </label>
-              <label className="checkbox-label" style={{ marginTop: '-15px', marginBottom: '20px' }}>
-                <input
-                  type="checkbox"
-                  checked={keepLoggedIn}
-                  onChange={(e) => setKeepLoggedIn(e.target.checked)}
-                />
-                로그인 유지
-              </label>
+              {/* ✅ 체크박스 라벨 두 개를 감싸는 div 추가 */}
+              <div className="checkbox-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={rememberId}
+                    onChange={(e) => setRememberId(e.target.checked)}
+                  />
+                  아이디 저장
+                </label>
+                <label className="checkbox-label"> {/* 인라인 스타일 제거 */}
+                  <input
+                    type="checkbox"
+                    checked={keepLoggedIn}
+                    onChange={(e) => setKeepLoggedIn(e.target.checked)}
+                  />
+                  로그인 유지
+                </label>
+              </div> {/* ✅ div 종료 태그 */}
+
 
               <button type="submit" className="login-button">로그인</button>
 
