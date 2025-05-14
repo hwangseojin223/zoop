@@ -8,10 +8,10 @@ import java.util.List;
 @Setter
 public class FilterRequestDto {
     private Long postId;
-    private List<String> roles;
+    private List<String> roles; // ❗ 실제로 사용하지 않지만 DB 저장용
     private List<String> languages;
     private List<String> regions;
     private boolean nationwide;
-    private int salary;
-    private int headcount;
+    private int salary;   // ❗ DB 저장용
+    private int headcount; // ❗ DB 저장용
 }

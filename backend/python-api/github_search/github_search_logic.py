@@ -1,7 +1,9 @@
 # github_search_logic.py
-import requests, re
+import requests, re, os
+from dotenv import load_dotenv
 
-GITHUB_TOKEN = "your_token_here"
+load_dotenv()
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 def extract_email(text):
     if not text:
