@@ -12,6 +12,8 @@ import CompanyDashboard from './pages/company/CompanyDashboard';
 
 import PrivateRoute from './routes/PrivateRoute';
 import PublicOnlyRoute from './routes/PublicOnlyRoute'; // ✅ 로그아웃 상태만 접근 가능하게 하는 라우터
+import RecruitCreate from './pages/company/RecruitCreate';
+import CandidateList from './pages/company/CandidateList';
 
 function AppContent() {
   const { setAuthState } = useAuth();
@@ -54,6 +56,24 @@ function AppContent() {
             </PrivateRoute>
           }
         />
+          <Route
+            path="/company/recruit/create"
+            element={
+              <PrivateRoute allowedUserType="company">
+                <RecruitCreate />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/company/candidates"
+            element={
+              <PrivateRoute allowedUserType="company">
+                <CandidateList />
+              </PrivateRoute>
+            }
+          />
+
       </Routes>
     </Router>
   );

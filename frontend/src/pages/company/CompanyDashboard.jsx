@@ -3,6 +3,7 @@ import Navbar from '../../components/Navbar';
 import { FaEdit } from 'react-icons/fa';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function CompanyDashboard() {
   const [openSection, setOpenSection] = useState('공고1');
@@ -13,6 +14,7 @@ export default function CompanyDashboard() {
   const [tempName, setTempName] = useState('');
   const [companyInfo, setCompanyInfo] = useState(null);
   const { authState } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCompanyInfo = async () => {
@@ -117,10 +119,25 @@ export default function CompanyDashboard() {
                 </div>
                 {openSection === key && (
                   <div style={{ backgroundColor: '#e8f8f0', borderRadius: '10px', padding: '0.9rem 1rem', marginTop: '0.6rem', boxShadow: 'inset 0 0 0.5px rgba(0,0,0,0.05)' }}>
-                    <ul style={{ paddingLeft: '0.8rem', fontSize: '0.8rem', color: '#444', lineHeight: '1.6', margin: 0 }}>
-                      <li>새 채용 시작</li>
-                      <li>후보자 목록</li>
-                      <li>회신자 목록</li>
+                    <ul style={{ paddingLeft: '0.8rem', fontSize: '0.9rem', color: '#444', lineHeight: '1.6', margin: 0 }}>
+                      <li
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => navigate('/company/recruit/create')}
+                      >
+                        새 채용 시작
+                      </li>
+                      <li
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => alert('후보자 목록 클릭됨')}
+                      >
+                        후보자 목록
+                      </li>
+                      <li
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => alert('회신자 목록 클릭됨')}
+                      >
+                        회신자 목록
+                      </li>
                     </ul>
                   </div>
                 )}
