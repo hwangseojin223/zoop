@@ -51,6 +51,7 @@ export default function ApplicantSignupProcess() {
       githubLogin : document.getElementById('candidate_id').value,
       candidatePassword : document.getElementById('password').value,
       candidatePhoneNumber : document.getElementById('phone').value,
+      candidateName : document.getElementById('candidate_name').value,
       candidateEmail : document.getElementById('email').value,
       candidateRegistrationDate: new Date().toISOString(),  // 현재 시각
       candidateCreatedAt: new Date().toISOString(),        // 현재 시각
@@ -93,6 +94,11 @@ export default function ApplicantSignupProcess() {
           <div className="applicant-signup-form-group">
             <label htmlFor="password" className="applicant-signup-label">비밀번호</label>
             <input type="password" id="password" name="password" className="applicant-signup-input" placeholder="8~16자리/영문 대소문자, 숫자, 특수문자 조합" />
+          </div>
+
+          <div className="applicant-signup-form-group">
+            <label htmlFor="candidate_name" className="applicant-signup-label">이름</label>
+            <input type="text" id="candidate_name" name="candidate_name" className="applicant-signup-input" placeholder="이름을 입력해주세요" />
           </div>
 
           <div className="applicant-signup-form-group">
