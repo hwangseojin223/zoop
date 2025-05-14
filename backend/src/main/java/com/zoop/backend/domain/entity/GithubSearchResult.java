@@ -15,7 +15,9 @@ import java.time.LocalDateTime;
 public class GithubSearchResult {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "gsr_seq_gen")
+    @SequenceGenerator(name = "gsr_seq_gen", sequenceName = "GITHUB_SEARCH_RESULT_SEQ", allocationSize = 1)
+    @Column(name = "github_search_result_id")
     private Long githubSearchResultId;
 
     private Long postId;

@@ -23,7 +23,7 @@ public class GithubSearchController {
     public ResponseEntity<?> filterAndStore(@RequestBody FilterRequestDto dto) {
         System.out.println("🔍 GitHub 후보자 검색 시작: " + dto.getPostId());
         githubBridgeService.fetchFromPythonAndSave(dto);
-        return ResponseEntity.ok().body("✅ FastAPI에서 GitHub 후보자 검색 완료");
+        return ResponseEntity.ok("✅ FastAPI에서 GitHub 후보자 검색 완료");
     }
 
     @GetMapping("/results")
@@ -31,3 +31,5 @@ public class GithubSearchController {
         return ResponseEntity.ok(resultRepo.findAll());
     }
 }
+
+
