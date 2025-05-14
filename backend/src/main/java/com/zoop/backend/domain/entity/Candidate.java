@@ -1,0 +1,66 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+
+package com.zoop.backend.domain.entity;
+
+
+/**
+ *
+ * @author hwangseojin
+ */
+
+import java.sql.Timestamp;
+import java.util.Date;
+
+import jakarta.persistence.Column; // java.sql.Timestamp 클래스 임포트
+import jakarta.persistence.Entity; // java.util.Date 클래스 임포트 (CANDIDATE_REGISTRATION_DATE 컬럼이 DATE 타입이므로 사용)
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity // 이 클래스가 JPA 엔티티임을 나타냅니다.
+@Table(name = "CANDIDATES") // 이 엔티티가 매핑될 실제 데이터베이스 테이블 이름을 지정합니다.
+@Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor // Lombok 어노테이션
+public class Candidate {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "candidates_seq_gen") // Oracle Sequence 사용 설정
+    @SequenceGenerator(name = "candidates_seq_gen", sequenceName = "candidates_seq", allocationSize = 1) // 사용할 Sequence 이름 명시
+    @Column(name = "CANDIDATE_ID") // 실제 DB 컬럼 이름 매핑
+    private Long candidateId; // Oracle NUMBER(10) 타입에 대응
+
+    @Column(name = "GITHUB_LOGIN", unique = true, nullable = false) // VARCHAR2(255), UNIQUE, NOT NULL
+    private String githubLogin;
+
+    @Column(name = "CANDIDATE_EMAIL", unique = true, nullable = false) // VARCHAR2(255), UNIQUE, NOT NULL
+    private String candidateEmail;
+
+    @Column(name = "CANDIDATE_PASSWORD", nullable = false) // VARCHAR2(255), NOT NULL (해시된 비밀번호 저장용)
+    private String candidatePassword;
+
+    @Column(name = "CANDIDATE_NAME") // VARCHAR2(255), nullable=true (기본값)
+    private String candidateName;
+
+    @Column(name = "CANDIDATE_PHONE_NUMBER") // VARCHAR2(20), nullable=true (기본값)
+    private String candidatePhoneNumber;
+
+    @Column(name = "CANDIDATE_REGISTRATION_DATE", nullable = false) // DATE, NOT NULL
+    private Date candidateRegistrationDate; // 데이터베이스 DATE 타입에 대응합니다. java.util.Date 또는 java.sql.Date 사용
+
+    @Column(name = "CANDIDATE_CREATED_AT", nullable = false) // TIMESTAMP, NOT NULL
+    private Timestamp candidateCreatedAt;
+
+    @Column(name = "CANDIDATE_UPDATED_AT", nullable = false) // TIMESTAMP, NOT NULL
+    private Timestamp candidateUpdatedAt;
+
+    // @PrePersist, @PreUpdate 등의 JPA 콜백 메소드를 사용하여 생성/수정 시각 자동 업데이트 로직을 구현할 수 있습니다.
+}
