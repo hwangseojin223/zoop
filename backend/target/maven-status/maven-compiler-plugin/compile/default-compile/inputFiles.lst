@@ -37,4 +37,5 @@
 /Users/hwangseojin/Downloads/AI_prompt/zoop/backend/src/main/java/com/zoop/backend/service/EmailService.java
 /Users/hwangseojin/Downloads/AI_prompt/zoop/backend/src/main/java/com/zoop/backend/service/GithubBridgeService.java
 /Users/hwangseojin/Downloads/AI_prompt/zoop/backend/src/main/java/com/zoop/backend/service/PostService.java
+/Users/hwangseojin/Downloads/AI_prompt/zoop/backend/src/main/java/com/zoop/backend/service/SocialAuthService.java
 /Users/hwangseojin/Downloads/AI_prompt/zoop/backend/src/main/java/com/zoop/backend/util/JwtUtil.java

@@ -315,3 +315,33 @@
 
 
 /* ... (이후 스타일 유지) ... */
+.social-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin: 0 5px;
+    color: #fff;
+    /* text-decoration: none; /* a 태그에서만 유효 */
+    font-size: 16px;
+    /* ✅ 버튼 기본 스타일 초기화 */
+    border: none;
+    background-color: transparent;
+    padding: 0; /* 기본 패딩 제거 */
+    cursor: pointer; /* 클릭 가능한 커서 */
+}
+
+/* ✅ button.social-icon 에 대한 배경색 스타일 추가 */
+button.social-icon.naver {
+    background-color: #2db400; /* 네이버 녹색 */
+}
+
+button.social-icon.google {
+    background-color: #ea4335; /* 구글 빨간색 */
+}
+
+button.social-icon.github{
+    background-color: #1a9669;
+}
