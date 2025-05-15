@@ -39,7 +39,13 @@ public class CompanyController {
         @ApiResponse(responseCode="400", description="잘못된 요청(예: 필수 필드 누락 등)")
     })
     @PostMapping
-    public ResponseEntity<?> registerCompany(@RequestBody CompanyDto dto) {
+    public ResponseEntity<?> registerCompany(
+        @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "등록할 회사 정보 (CompanyDto 형식)",
+            required = true,
+            content = @Content(schema = @Schema(implementation = CompanyDto.class))
+        )
+        @RequestBody CompanyDto dto) {
         System.out.println("✅ 회사 등록 요청 수신");
         System.out.println(" - 사업자번호: " + dto.getBusinessNumber());
         System.out.println(" - 회사명: " + dto.getCompanyName());
@@ -57,8 +63,19 @@ public class CompanyController {
     }
 
     // 매핑 실패 디버깅용 임시 엔드포인트
+    @Operation(summary = "디버그용 임시 엔드포인트", description = "요청 본문 매핑 실패 디버깅을 위한 임시 API입니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "요청 수신 확인 및 처리"),
+        @ApiResponse(responseCode = "400", description = "잘못된 형식의 요청 본문")
+    })
     @PostMapping("/debug")
-    public ResponseEntity<?> debug(@RequestBody Map<String, Object> raw) {
+    public ResponseEntity<?> debug(
+        @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "디버깅을 위한 임의의 JSON 요청 본문 (모든 필드 허용)",
+            required = true,
+            content = @Content(schema = @Schema(implementation = Map.class))
+        )
+        @RequestBody Map<String, Object> raw) {
         System.out.println("🐛 수신된 RAW JSON = " + raw);
         return ResponseEntity.ok().build();
     }

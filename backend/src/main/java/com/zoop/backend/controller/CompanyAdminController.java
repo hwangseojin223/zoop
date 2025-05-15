@@ -69,8 +69,18 @@ public class CompanyAdminController {
             : ResponseEntity.ok("사용 가능한 아이디입니다.");
     }
 
+    @Operation(summary = "관리자 ID로 회사 정보 조회", description = "관리자 ID를 통해 해당 관리자가 속한 회사의 정보를 조회합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "회사 정보 반환",
+            content=@Content(schema = @Schema(implementation = Map.class))),
+        @ApiResponse(responseCode = "404", description = "관리자를 찾을 수 없음"),
+        @ApiResponse(responseCode = "500", description = "서버 오류 또는 회사 정보 연결 문제")
+        
+    })
     @GetMapping("/info/{adminId}")
-    public ResponseEntity<?> getCompanyInfoByAdminId(@PathVariable Long adminId) {
+    public ResponseEntity<?> getCompanyInfoByAdminId(
+        @Parameter(description = "조회할 회사 관리자의 ID", required = true, example = "123")
+        @PathVariable Long adminId) {
         System.out.println("✅ [API 호출됨] /info/" + adminId);
         CompanyAdmin admin = adminService.getAdminById(adminId); // service에서 admin + company join 조회
         Company company = admin.getCompany();
