@@ -20,8 +20,10 @@
  public interface CandidateRepository extends JpaRepository<Candidate, Long> {
      // Spring Data JPA 쿼리 메소드 선언
      // 개인 후보자 로그인 시 사용될 조회 메소드 선언 (GitHub 로그인 ID 또는 이메일로 조회)
-     Optional<Candidate> findByGithubLogin(String githubLogin); // githubLogin 필드로 조회
-     // Optional<Candidate> findByCandidateEmail(String candidateEmail); // candidateEmail 필드로 조회
-     Optional<Candidate> findByGoogleId(String googleId);
+    Optional<Candidate> findByGithubLogin(String githubLogin); // githubLogin 필드로 조회
+    Optional<Candidate> findByCandidateEmail(String candidateEmail); // candidateEmail 필드로 조회
+    Optional<Candidate> findByGoogleId(String googleId);
+    // Optional<Candidate> findByGithubId(String githubId);
+    // Optional<Candidate> findByNaverId(String naverId);
  }
  

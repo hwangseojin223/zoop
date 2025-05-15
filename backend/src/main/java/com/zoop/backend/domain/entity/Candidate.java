@@ -12,6 +12,7 @@ package com.zoop.backend.domain.entity;
   */
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Date;
  
 import jakarta.persistence.Column; // java.sql.Timestamp 클래스 임포트
@@ -54,16 +55,22 @@ public class Candidate {
     private String candidatePhoneNumber;
  
     @Column(name = "CANDIDATE_REGISTRATION_DATE", nullable = false) // DATE, NOT NULL
-    private Date candidateRegistrationDate; // 데이터베이스 DATE 타입에 대응합니다. java.util.Date 또는 java.sql.Date 사용
+    private LocalDateTime candidateRegistrationDate; // 데이터베이스 DATE 타입에 대응합니다. java.util.Date 또는 java.sql.Date 사용
  
     @Column(name = "CANDIDATE_CREATED_AT", nullable = false) // TIMESTAMP, NOT NULL
-    private Timestamp candidateCreatedAt;
+    private LocalDateTime candidateCreatedAt;
  
     @Column(name = "CANDIDATE_UPDATED_AT", nullable = false) // TIMESTAMP, NOT NULL
-    private Timestamp candidateUpdatedAt;
+    private LocalDateTime candidateUpdatedAt;
  
      // @PrePersist, @PreUpdate 등의 JPA 콜백 메소드를 사용하여 생성/수정 시각 자동 업데이트 로직을 구현할 수 있습니다.
 
     @Column(name="google_id", unique=true)
     private String googleId;
+
+    // @Column(name = "github_id", unique = true) 
+    // private String githubId;
+
+    // @Column(name = "naver_id", unique = true)
+    // private String naverId;
 }
