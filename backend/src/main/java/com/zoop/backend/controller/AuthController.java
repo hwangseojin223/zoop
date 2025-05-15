@@ -22,6 +22,18 @@ import com.zoop.backend.repository.CompanyAdminRepository; // CandidateRepositor
 import com.zoop.backend.util.JwtUtil;
 import com.zoop.backend.service.SocialAuthService;
 
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.zoop.backend.domain.dto.LoginRequest;
+import com.zoop.backend.domain.entity.CompanyAdmin;
+import com.zoop.backend.repository.CompanyAdminRepository;
+import com.zoop.backend.util.JwtUtil;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
