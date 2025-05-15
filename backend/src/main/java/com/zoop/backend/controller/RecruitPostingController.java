@@ -26,7 +26,7 @@ public class RecruitPostingController {
     ) {
         String token = authHeader.replace("Bearer ", "");
         String loginId = jwtUtil.getLoginIdFromToken(token); // ✅ 정적 호출 ❌ → 인스턴스 호출 ✅
-        Post post = postService.save(dto, loginId);
+        Post post = postService.createPost(dto, loginId);
         return ResponseEntity.ok(Map.of("postId", post.getPostId()));
     }
 }

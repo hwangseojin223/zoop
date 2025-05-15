@@ -64,13 +64,24 @@ export default function CompanyDashboard() {
     e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)';
   };
 
+  const [draftPosts, setDraftPosts] = useState([]);
+const handleAddDraftPost = () => {
+  const newId = draftPosts.length + 1;
+  setDraftPosts([...draftPosts, { id: newId, title: `공고 ${newId}` }]);
+};
+
+const handleStartRecruit = (draftId) => {
+  navigate('/company/recruit/create', { state: { draftId } });
+};
+
+
   return (
     <div className="company-dashboard" style={{ fontFamily: 'SUIT, Apple SD Gothic Neo, sans-serif', backgroundColor: '#fefefe', minHeight: '100vh' }}>
       <Navbar />
 
       <div className="dashboard-container" style={{ display: 'flex', marginTop: '6rem', alignItems: 'flex-start' }}>
-        <aside
-          style={{
+      <aside
+        style={{
             ...hoverBoxStyle,
             marginTop: '7.6rem',
             marginLeft: '3rem',
@@ -80,71 +91,65 @@ export default function CompanyDashboard() {
             top: '6rem',
             height: 'fit-content',
             fontSize: '0.85rem',
-            color: '#222'
-          }}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
+            color: '#222',
+        }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         >
-          <h3 style={{ fontSize: '1rem', fontWeight: '700', color: '#111', marginBottom: '1.5rem' }}>📢 공고 관리</h3>
+        <h3 style={{ fontSize: '1rem', fontWeight: '700', color: '#111', marginBottom: '1.5rem' }}>
+            📢 공고 관리
+        </h3>
+        <button
+            onClick={handleAddDraftPost}
+            style={{
+            backgroundColor: '#30c59b',
+            color: 'white',
+            padding: '0.6rem 1.2rem',
+            border: 'none',
+            borderRadius: '999px',
+            fontWeight: '600',
+            fontSize: '1rem',
+            cursor: 'pointer',
+            width: '100%',
+            marginBottom: '2rem',
+            }}
+        >
+            ➕ 새 공고 추가
+        </button>
 
-          {[1, 2, 3].map(num => {
-            const key = `공고${num}`;
-            const name = num === 1 ? notice1Name : num === 2 ? notice2Name : notice3Name;
-            return (
-              <div key={key} style={{ marginBottom: '1.8rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  {editing === key ? (
-                    <>
-                      <input
-                        value={tempName}
-                        onChange={(e) => setTempName(e.target.value)}
-                        style={{ fontSize: '0.85rem', padding: '0.4rem', border: '1px solid #ddd', borderRadius: '6px', flex: 1 }}
-                      />
-                      <button onClick={handleEditSave} style={{ fontSize: '0.8rem', backgroundColor: '#30c59b', color: '#fff', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '6px' }}>저장</button>
-                    </>
-                  ) : (
-                    <>
-                      <div
-                        onClick={() => handleToggle(key)}
-                        style={{ fontWeight: '600', fontSize: '0.9rem', color: '#333', cursor: 'pointer' }}
-                      >
-                        {name}
-                      </div>
-                      <FaEdit
-                        onClick={() => startEditing(key, name)}
-                        style={{ cursor: 'pointer', fontSize: '0.85rem', color: '#888' }}
-                      />
-                    </>
-                  )}
-                </div>
-                {openSection === key && (
-                  <div style={{ backgroundColor: '#e8f8f0', borderRadius: '10px', padding: '0.9rem 1rem', marginTop: '0.6rem', boxShadow: 'inset 0 0 0.5px rgba(0,0,0,0.05)' }}>
-                    <ul style={{ paddingLeft: '0.8rem', fontSize: '0.9rem', color: '#444', lineHeight: '1.6', margin: 0 }}>
-                      <li
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => navigate('/company/recruit/create')}
-                      >
-                        새 채용 시작
-                      </li>
-                      <li
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => alert('후보자 목록 클릭됨')}
-                      >
-                        후보자 목록
-                      </li>
-                      <li
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => navigate('/company/responder')}
-                      >
-                        회신자 목록
-                      </li>
-                    </ul>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+        {draftPosts.map((post) => (
+            <div key={post.id} style={{ marginBottom: '1.8rem' }}>
+            <div style={{ fontWeight: '600', fontSize: '0.9rem', color: '#333' }}>
+                {post.title}
+            </div>
+            <div
+                style={{
+                backgroundColor: '#e8f8f0',
+                borderRadius: '10px',
+                padding: '0.9rem 1rem',
+                marginTop: '0.6rem',
+                boxShadow: 'inset 0 0 0.5px rgba(0,0,0,0.05)',
+                }}
+            >
+                <ul
+                style={{
+                    paddingLeft: '0.8rem',
+                    fontSize: '0.9rem',
+                    color: '#444',
+                    lineHeight: '1.6',
+                    margin: 0,
+                }}
+                >
+                <li style={{ cursor: 'pointer' }} onClick={() => handleStartRecruit(post.id)}>
+                    새 채용 시작
+                </li>
+                </ul>
+            </div>
+            </div>
+        ))}
+
         </aside>
+
 
         <main style={{ flex: 1, padding: '4rem 3rem', backgroundColor: '#fefefe' }}>
           <h2 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '0.8rem', color: '#111' }}>기업 정보</h2>

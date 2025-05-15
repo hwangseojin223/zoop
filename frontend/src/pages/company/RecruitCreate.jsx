@@ -7,6 +7,10 @@ import { useAuth } from '../../context/AuthContext';
 export default function RecruitCreate() {
   const navigate = useNavigate();
   const { authState } = useAuth();
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+
 
   const [filters, setFilters] = useState({
     roles: [],
@@ -33,62 +37,79 @@ export default function RecruitCreate() {
     setFilters((prev) => ({ ...prev, nationwide: !prev.nationwide }));
   };
 
-  const handleSubmit = async () => {
+    const handleSubmit = async () => {
     try {
-        const token = localStorage.getItem('jwtToken');
+        // 유효성 검사
+        if (!title || !description || !expiryDate) {
+        alert('공고 제목, 설명, 마감일을 모두 입력해 주세요.');
+        return;
+        }
+            // ✅ 2. 필수 필터 조건 검사
+        if (filters.languages.length === 0) {
+            alert('하나 이상의 언어를 선택해 주세요.');
+            return;
+        }
+        if (!filters.nationwide && filters.regions.length === 0) {
+            alert('지역을 선택하거나 "전국"을 체크해주세요.');
+            return;
+        }
+    
+        // ✅ 3. 마감일 유효성 검사
+        const today = new Date();
+        const expiry = new Date(expiryDate);
+        if (expiry < today) {
+            alert('마감일은 오늘 이후여야 합니다.');
+            return;
+        }
 
+        const postingPayload = {
+        companyId: Number(localStorage.getItem('companyId')),
+        companyAdminId: Number(localStorage.getItem('userId')),
+        postTitle: title,
+        postDescription: description,
+        postProgrammingLanguage: filters.languages.join(', ') || '기타',
+        postLocation: filters.nationwide ? '전국' : filters.regions.join(', ') || '전국',
+        postHeadcount: filters.headcount,
+        postSalaryStart: String(filters.salary),
+        postSalaryEnd: String(filters.salary),
+        postPostedDate: new Date().toISOString().substring(0, 10),
+        postExpiryDate: expiryDate,
+        postStatus: 'OPEN'
+        };
 
-      // 1. 공고 등록 요청
-      const recruitRes = await fetch('http://localhost:8081/api/postings', {
+        const postRes = await fetch('http://localhost:8081/api/postings', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authState.token}` // ✅ 헤더에 포함
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('jwtToken')}`,
         },
-        body: JSON.stringify({
-          postTitle: '프론트엔드 개발자 채용',
-          postDescription: '우리는 멋진 프론트엔드 개발자를 찾고 있습니다.',
-          postProgrammingLanguage: filters.languages.join(','),
-          postLocation: filters.regions.join(','),
-          postHeadcount: filters.headcount,
-          postSalaryStart: '3000만원',
-          postSalaryEnd: `${filters.salary}만원`,
-          postPostedDate: new Date().toISOString().split('T')[0],
-          postExpiryDate: null,
-          postStatus: 'Open'
-        })
-      });
+        body: JSON.stringify(postingPayload),
+        });
 
-      if (!recruitRes.ok) throw new Error('공고 등록 실패');
+        if (!postRes.ok) throw new Error('공고 등록 실패');
+        const postData = await postRes.json();
+        const postId = postData.postId;
 
-      const { postId } = await recruitRes.json();
+        const filterDto = {
+        postId,
+        regions: filters.nationwide ? [] : filters.regions,
+        languages: filters.languages,
+        nationwide: filters.nationwide
+        };
 
-      // 2. GitHub 필터링 요청
-      const filterRes = await fetch('http://localhost:8081/api/github-search', {
+        await fetch('http://localhost:8081/api/github-search', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ ...filters, postId })
-      });
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(filterDto),
+        });
 
-      if (filterRes.ok) {
-        alert('공고 등록 및 GitHub 후보자 수집 완료!');
-        navigate('/company/candidates');
-      } else {
-        alert('후보자 저장 실패');
-      }
+        navigate(`/company/candidates/${postId}`);
     } catch (err) {
-      console.error(err);
-      alert('서버 오류 발생');
+        console.error('❌ 등록 오류:', err);
+        alert('공고 등록 중 오류 발생!');
     }
-  };
-  
-  
-  
-  
-  
+    };
+
 
   const chipStyle = (selected) => ({
     border: '1.5px solid #30c59b',
@@ -98,7 +119,7 @@ export default function RecruitCreate() {
     padding: '0.6rem 1.2rem',
     fontSize: '0.95rem',
     fontWeight: 500,
-    cursor: 'pointer',
+    cursor: 'pointer'
   });
 
   const sliderStyle = {
@@ -108,8 +129,6 @@ export default function RecruitCreate() {
     borderRadius: '8px',
     backgroundColor: '#c8f5dc',
     outline: 'none',
-    WebkitAppearance: 'none',
-    MozAppearance: 'none',
     accentColor: '#30c59b',
     transition: 'background 0.3s ease-in-out'
   };
@@ -124,54 +143,8 @@ export default function RecruitCreate() {
   return (
     <div style={{ fontFamily: 'SUIT, sans-serif', backgroundColor: '#fefefe', minHeight: '100vh' }}>
       <Navbar />
-
       <div className="dashboard-container" style={{ display: 'flex', alignItems: 'flex-start', marginTop: '6rem' }}>
-        <aside
-          style={{
-            backgroundColor: '#fff',
-            borderRadius: '12px',
-            padding: '2rem',
-            marginLeft: '3rem',
-            marginTop: '7.6rem',
-            width: '280px',
-            position: 'sticky',
-            top: '6rem',
-            height: 'fit-content',
-            fontSize: '0.85rem',
-            color: '#222',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
-          }}
-        >
-          <h3 style={{ fontSize: '1rem', fontWeight: '700', color: '#111', marginBottom: '1.5rem' }}>📢 공고 관리</h3>
-          {[1, 2, 3].map(num => {
-            const key = `공고${num}`;
-            const name = num === 1 ? '공고 1' : num === 2 ? '공고 2' : '공고 3';
-            return (
-              <div key={key} style={{ marginBottom: '1.8rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div
-                    style={{ fontWeight: '600', fontSize: '0.9rem', color: key === '공고1' ? '#30c59b' : '#333' }}
-                  >
-                    {name}
-                  </div>
-                  <FaEdit
-                    style={{ cursor: 'pointer', fontSize: '0.85rem', color: '#888' }}
-                  />
-                </div>
-                {key === '공고1' && (
-                  <div style={{ backgroundColor: '#e8f8f0', borderRadius: '10px', padding: '0.9rem 1rem', marginTop: '0.6rem', boxShadow: 'inset 0 0 0.5px rgba(0,0,0,0.05)' }}>
-                    <ul style={{ paddingLeft: '0.8rem', fontSize: '0.9rem', color: '#444', lineHeight: '1.6', margin: 0 }}>
-                      <li style={{ cursor: 'pointer', color: '#30c59b', fontWeight: 600 }}>새 채용 시작</li>
-                      <li style={{ cursor: 'pointer' }} onClick={() => navigate('/company/dashboard')}>후보자 목록</li>
-                      <li style={{ cursor: 'pointer' }} onClick={() => navigate('/company/dashboard')}>회신자 목록</li>
-                    </ul>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </aside>
-
+        {/* 사이드바 생략 */}
         <main style={{ flex: 1, padding: '6rem 3rem 4rem' }}>
           <h2 style={{ fontSize: '1.6rem', fontWeight: 700, marginBottom: '2.5rem' }}>필터링 기준을 선택하세요</h2>
 
@@ -219,6 +192,53 @@ export default function RecruitCreate() {
               style={sliderStyle}
             />
           </Section>
+          <Section title="공고 제목">
+            <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="예: 백엔드 주니어 개발자"
+                style={{
+                padding: '0.8rem',
+                borderRadius: '8px',
+                border: '1px solid #ccc',
+                width: '100%',
+                fontSize: '1rem',
+                }}
+            />
+            </Section>
+
+            <Section title="상세 설명">
+            <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="공고에 대한 상세 설명을 입력하세요."
+                rows="6"
+                style={{
+                padding: '0.8rem',
+                borderRadius: '8px',
+                border: '1px solid #ccc',
+                width: '100%',
+                fontSize: '1rem',
+                resize: 'vertical',
+                }}
+            />
+            </Section>
+
+            <Section title="공고 마감일">
+            <input
+                type="date"
+                value={expiryDate}
+                onChange={(e) => setExpiryDate(e.target.value)}
+                style={{
+                padding: '0.8rem',
+                borderRadius: '8px',
+                border: '1px solid #ccc',
+                fontSize: '1rem',
+                }}
+            />
+            </Section>
+
 
           <button
             onClick={handleSubmit}
