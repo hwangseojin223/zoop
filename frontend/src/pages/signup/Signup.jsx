@@ -11,7 +11,7 @@ export default function Signup() {
     if (selectedTab === 'company') {
       navigate('/auth/company/signup/process');
     } else {
-      alert('개인회원 가입 기능은 아직 준비 중입니다.');
+      navigate('/auth/applicant/signup/process');
     }
   };
 
