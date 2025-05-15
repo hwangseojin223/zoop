@@ -10,9 +10,11 @@ package com.zoop.backend.repository;
  * @author hwangseojin
  */
 
-import com.zoop.backend.domain.entity.Candidate; // entity 패키지 임포트
+import java.util.Optional; // entity 패키지 임포트
+
 import org.springframework.data.jpa.repository.JpaRepository; // Spring Data JPA의 JpaRepository 임포트
-import java.util.Optional; // Optional 클래스 임포트
+
+import com.zoop.backend.domain.entity.Candidate; // Optional 클래스 임포트
 
 // JpaRepository<다룰 엔티티 타입, 해당 엔티티의 Primary Key 타입>를 상속받습니다.
 public interface CandidateRepository extends JpaRepository<Candidate, Long> {

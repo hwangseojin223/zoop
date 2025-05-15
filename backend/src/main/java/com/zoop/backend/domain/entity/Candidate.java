@@ -26,10 +26,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 @Entity // 이 클래스가 JPA 엔티티임을 나타냅니다.
 @Table(name = "CANDIDATES") // 이 엔티티가 매핑될 실제 데이터베이스 테이블 이름을 지정합니다.
-@Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor // Lombok 어노테이션
+@Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor @ToString// Lombok 어노테이션
 public class Candidate {
 
     @Id
