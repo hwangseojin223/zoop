@@ -66,10 +66,25 @@ export default function Index() {
         </div>
       </section>
 
-      <footer className="footer-section"> {/* 푸터 섹션 */}
-        {/* 푸터 내용 (기존 코드 유지) */}
-         <div className="footer-grid"> {/* ... */} </div>
-         <div className="footer-bottom"> {/* ... */} </div>
+      <footer className="footer-section">
+        <div className="footer-grid">
+          {/* Footer 내용 생략 */}
+        </div>
+
+        <div className="footer-bottom">
+          <strong>(주)줍스튜디오</strong>
+          <p>사업자 등록번호: 120-88-01280 │ 대표: 홍길동</p>
+          <p>서울특별시 강남구 테헤란로 133, 9층 (역삼동, Zoop타워)</p>
+          <div className="footer-terms">
+            <p><strong>서비스 이용약관</strong></p>
+            <p><strong>개인정보 처리방침</strong></p>
+            <p><strong>위치기반서비스 이용약관</strong></p>
+            <p><strong>전자금융거래약관</strong></p>
+          </div>
+          <div className="footer-icons">
+            <span>📘</span> <span>🐦</span> <span>📸</span> <span>🔗</span>
+          </div>
+        </div>
       </footer>
     </div>
   );
