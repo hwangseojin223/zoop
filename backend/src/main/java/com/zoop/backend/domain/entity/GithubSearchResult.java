@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @Entity
 @Table(name = "github_search_results")
 @Getter
@@ -20,11 +22,19 @@ public class GithubSearchResult {
     @Column(name = "github_search_result_id")
     private Long githubSearchResultId;
 
+    @Column(name = "analysis_score")
+    @JsonProperty("analysisScore")
+    private Double analysisScore;
+
     private Long postId;
 
     private String githubLogin;
 
     private String githubProfileUrl;
+
+    @Column(name = "candidate_email")
+    @JsonProperty("candidateEmail")
+    private String candidateEmail;
 
     private LocalDateTime githubSearchDate;
 
