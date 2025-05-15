@@ -10,11 +10,8 @@ import SignupSuccess from './pages/signup/SignupSuccess';
 import ApplicantSignupSuccess from './pages/signup/ApplicantSignupSuccess';
 import LoginSelectionPage from './pages/login/LoginSelectionPage';
 import CompanyDashboard from './pages/company/CompanyDashboard';
-<<<<<<< HEAD
 import GoogleAuthCallback from './pages/auth/GoogleAuthCallback';
-=======
 import ApplicantSignupProcess from './pages/signup/ApplicantSignupProcess';
->>>>>>> origin/SCRUM-33
 
 import PrivateRoute from './routes/PrivateRoute';
 import PublicOnlyRoute from './routes/PublicOnlyRoute'; // ✅ 로그아웃 상태만 접근 가능하게 하는 라우터
@@ -55,7 +52,7 @@ function AppContent() {
         <Route path="/auth/applicant/signup/process" element={<ApplicantSignupProcess />} />
         <Route path="/auth/login" element={<LoginSelectionPage />} />
         <Route path="/google-auth" element={<GoogleAuthCallback />} />
-        
+
         {/* ✅ 로그인 + 기업회원 전용 */}
         <Route
           path="/company/dashboard"

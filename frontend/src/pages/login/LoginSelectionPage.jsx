@@ -324,7 +324,7 @@ function LoginSelectionPage() {
 
               <button type="submit" className="login-button">로그인</button>
 
-              {error && <p className="error-message" style={{ marginBottom: '20px', textAlign: 'center' }}>{error}</p>}
+              {error && <p className="error-message" style={{ marginBottom: '10px', textAlign: 'center' }}>{error}</p>}
 
               <div className="find-links">
                 <Link to="/find-id">아이디 찾기</Link>
@@ -332,13 +332,22 @@ function LoginSelectionPage() {
                 <Link to="/find-password">비밀번호 찾기</Link>
               </div>
             </form>
-
+            <div className="signup-divider" />
             <div className="social-login">
-              <p>소셜 계정으로 간편 로그인</p>
+              <p className="signup-subtext">소셜 계정으로 간편 로그인</p> {/* 첫 번째 스니펫의 p 태그 클래스 이름 사용 */}
               <div className="social-icons">
-                <a href="#" className="social-icon naver">N</a>
-                <button type="button" className="social-icon google" onClick={() => handleSocialLogin('google')}>G</button>
-                <a href="#" className="social-icon github">G</a>
+                {/* 네이버 아이콘 */}
+                <img src="/icons/naver.svg" alt="네이버 로그인" className="social-icon" /> {/* 첫 번째 스니펫의 이미지 소스 사용, 클래스 이름 social-icon 추가 */}
+                {/* 카카오 아이콘 */}
+                <img src="/icons/kakao.svg" alt="카카오 로그인" className="social-icon" /> {/* 첫 번째 스니펫의 이미지 소스 사용 */}
+                {/* 구글 아이콘 (버튼으로 변경하고 클릭 핸들러 연결) */}
+                <button type="button" className="social-icon google" onClick={() => handleSocialLogin('google')}> {/* 버튼 태그 사용 및 클래스, onClick 핸들러 연결 */}
+                  <img src="/icons/google.svg" alt="구글 로그인" /> {/* 구글 아이콘 이미지 사용 */}
+                </button>
+                {/* 페이스북 아이콘 */}
+                <img src="/icons/facebook.svg" alt="페이스북 로그인" className="social-icon" /> {/* 첫 번째 스니펫의 이미지 소스 사용 */}
+                {/* 애플 아이콘 */}
+                <img src="/icons/apple.svg" alt="애플 로그인" className="social-icon" /> {/* 첫 번째 스니펫의 이미지 소스 사용 */}
               </div>
             </div>
           </div>

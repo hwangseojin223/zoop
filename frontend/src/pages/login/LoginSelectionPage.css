@@ -1,303 +1,120 @@
 /* frontend/src/pages/login/LoginSelectionPage.css */
 
+/* ============================================================== */
+/* ✅ 기본 요소 (body, html) 스타일 */
+/* ============================================================== */
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased; /* ✅ 웹킷 기반 브라우저 폰트 부드럽게 */
+    -moz-osx-font-smoothing: grayscale; /* ✅ 파이어폭스 맥 폰트 부드럽게 */
+    color: #333; /* 기본 글자색 설정 */
+    line-height: 1.6; /* 기본 행간 설정 */
+}
+
+html {
+    box-sizing: border-box;
+}
+
+*, *:before, *:after {
+    box-sizing: inherit; /* 모든 요소에 box-sizing 상속 */
+}
+
+
+/* ============================================================== */
+/* ✅ 페이지 전체 컨테이너 (.login-page-wrapper) 스타일 */
+/* ============================================================== */
 .login-page-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background-color: #f7f7f7;
-    }
+    display: flex; /* 내부 요소들을 Flexbox로 배치 */
+    justify-content: center; /* 가로축 중앙 정렬 */
+    align-items: center; /* 세로축 중앙 정렬 */
+    min-height: 100vh; /* 뷰포트 높이의 최소값으로 설정하여 화면 전체를 채움 */
+    background-color: #f7f7f7; /* 연한 회색 배경색 */
+    padding: 20px; /* 작은 화면을 위한 여백 */
+    box-sizing: border-box; /* 패딩을 너비/높이에 포함 */
+    /* overflow: auto; /* 내용이 넘칠 경우 스크롤바 표시 (필요시) */
+}
 
+/* ============================================================== */
+/* ✅ 로그인 컨테이너 (.login-container) 스타일 (좌우 분할 영역) */
+/* ============================================================== */
 .login-container {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    display: flex;
-    width: 960px; /* 이미지 기준 적절한 너비 */
-    height: 540px; /* 이미지 기준 적절한 높이 */
-    overflow: hidden;
+    background-color: #fff; /* 흰색 배경 */
+    border-radius: 10px; /* ✅ 모서리 약간 더 둥글게 */
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08); /* ✅ 그림자 약간 더 부드럽고 넓게 */
+    display: flex; /* 내부 요소 (왼쪽/오른쪽 패널)를 Flexbox로 배치 */
+    width: 960px; /* ✅ 데스크탑 기준 적절한 너비 */
+    height: 540px; /* ✅ 데스크탑 기준 적절한 높이 */
+    overflow: hidden; /* 모서리 둥근 부분 밖으로 내용이 넘치지 않도록 숨김 */
+    max-width: 100%; /* 부모(.login-page-wrapper) 너비를 초과하지 않도록 */
+    box-sizing: border-box; /* 패딩/테두리를 너비/높이에 포함 */
 }
 
+/* ============================================================== */
+/* ✅ 로그인 왼쪽 패널 (.login-left) 스타일 */
+/* ============================================================== */
 .login-left {
-    background-color: #f2f2f2; /* 밝은 회색 배경 */
-    color: #333;
-    padding: 40px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 50%;
+    background-color: #eef2f7; /* ✅ 배경색 약간 조정 (더 산뜻하게) */
+    color: #333; /* 글자색 */
+    padding: 40px; /* 내부 패딩 */
+    display: flex; /* 내부 요소들을 Flexbox로 배치 */
+    flex-direction: column; /* 세로 방향으로 정렬 */
+    justify-content: center; /* 세로축 중앙 정렬 */
+    align-items: center; /* ✅ 가로축 중앙 정렬 (자식 요소들 가운데 배치) */
+    width: 50%; /* 부모(.login-container) 너비의 50% 차지 */
+    text-align: center; /* ✅ 텍스트 자식 요소들을 가운데 정렬 */
+    box-sizing: border-box;
 }
 
+/* ✅ 왼쪽 패널 제목 (.login-left h2) 스타일 수정 */
 .login-left h2 {
-    font-size: 24px;
-    margin-bottom: 20px;
+    font-size: 22px; /* 폰트 크기 조정 (기존 24px) */
+    font-weight: bold; /* 글자 두께 */
+    margin-bottom: 20px; /* 아래쪽 여백 */
+    line-height: 1.4; /* 행간 조정 */
+    color: #333; /* 텍스트 색상 */
+     /* text-shadow: 1px 1px 2px rgba(0,0,0,0.1); /* 은은한 그림자 효과 (선택 사항) */
 }
 
+/* ✅ 왼쪽 패널 본문 텍스트 (.login-left p) 스타일 */
+/* 현재 React JSX에는 이 p 태그가 없습니다. 만약 추가한다면 이 스타일이 적용됩니다. */
 .login-left p {
     font-size: 16px;
     line-height: 1.5;
     margin-bottom: 30px;
     text-align: center;
+    color: #555; /* ✅ 텍스트 색상 약간 어둡게 */
 }
 
+/* ============================================================== */
+/* ✅ ZOOP 로고 컨테이너 (.zoop-logo) 스타일 */
+/* ============================================================== */
 .zoop-logo {
-    margin-bottom: 30px;
+    margin-bottom: 30px; /* 아래쪽 여백 */
+     /* 부모 .login-left에 text-align: center; 또는 align-items: center; 가 적용되어 있으면 이 div 자체는 가운데 정렬됩니다. */
 }
 
+/* ✅ ZOOP 로고 이미지 (.zoop-logo img) 스타일 - 가운데 정렬 */
 .zoop-logo img {
-    max-width: 150px; /* 로고 크기 조절 */
-    height: auto;
+    display: block; /* ✅ 이미지를 블록 레벨 요소로 만들어 margin: auto 적용 가능하게 함 */
+    margin: 0 auto 10px auto; /* ✅ 상하 0, 좌우 auto 마진으로 가운데 정렬, 하단에 10px 여백 */
+    max-width: 150px; /* 로고 최대 너비 */
+    height: auto; /* 비율 유지 */
 }
 
+/* ============================================================== */
+/* ✅ 회원가입 버튼 (.signup-button) 스타일 수정 (세련되게) */
+/* ============================================================== */
 .signup-button {
-    background-color: #007bff; /* 파란색 버튼 */
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    padding: 12px 24px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.signup-button:hover {
-    background-color: #0056b3;
-}
-
-.login-right {
-    padding: 40px;
-    width: 50%;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-}
-
-.login-tabs {
-    display: flex;
-    margin-bottom: 20px;
-}
-
-.tab-button {
-    border: none;
-    background-color: transparent;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: border-bottom 0.3s ease;
-}
-
-.tab-button.active {
-    border-bottom: 2px solid #007bff;
-    color: #007bff;
-}
-
-.login-form {
-    display: flex;
-    flex-direction: column;
-}
-
-.input-group {
-    margin-bottom: 15px;
-}
-
-.input-group input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 16px;
-    box-sizing: border-box;
-}
-
-.checkbox-label {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px; /* 원래 HTML에서는 20px */
-    font-size: 14px;
-    color: #555;
-}
-
-.checkbox-label input[type="checkbox"] {
-    margin-right: 8px;
-}
-
-/* React JSX 구조에 맞춰 두 번째 체크박스 라벨의 상단 마진을 조정 (선택 사항, CSS로 통합 가능) */
-/* .login-form > label.checkbox-label:nth-of-type(2) { margin-top: -15px; } */
-
-
-.login-button {
-    background-color: #28a745; /* 초록색 로그인 버튼 */
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    padding: 12px 24px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin-bottom: 20px;
-}
-
-.login-button:hover {
-    background-color: #1e7e34;
-}
-
-.find-links {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 30px; /* 원래 HTML에서는 30px */
-    font-size: 14px;
-    color: #555;
-}
-
-.find-links a {
-    color: #007bff;
-    text-decoration: none;
-    margin: 0 10px;
-}
-
-.find-links span {
-    margin: 0 10px;
-}
-
-.social-login {
-    text-align: center;
-     margin-top: auto; /* login-right 하단에 배치되도록 설정 (Flexbox 사용 시) */
-}
-
-.social-login p {
-    font-size: 14px;
-    color: #555;
-    margin-bottom: 10px;
-}
-
-.social-icons {
-    display: flex;
-    justify-content: center;
-}
-
-.social-icon {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    margin: 0 5px;
-    color: #fff;
-    text-decoration: none;
-    font-size: 16px;
-}
-
-.social-icon.naver {
-    background-color: #2db400; /* 네이버 녹색 */
-}
-
-.social-icon.google {
-    background-color: #ea4335; /* 구글 빨간색 */
-}
-
-.social-icon.github{
-    background-color: #1a9669;
-}
-
-/* 기본 H1, H2 제목 스타일 (선택 사항) */
-/* H1은 login-container 바깥에 있을 수도 있으므로 필요에 따라 App.js나 다른 전역 CSS에 정의 */
-/* .login-form h1 { ... } */
-/* .login-form h2 { ... } */
-
-.login-form {
-    display: flex;
-    flex-direction: column;
-}
-
-/* ✅ 체크박스 그룹 스타일 수정 */
-.checkbox-group {
-    display: flex;
-    /* justify-content: space-between; /* 기존 속성 제거 */
-    justify-content: flex-start; /* ✅ 시작 부분에 정렬 */
-    align-items: center;
-    margin-bottom: 20px;
-    width: 100%; /* 부모 너비에 맞춤 */
-}
-
-.checkbox-label {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0;
-    font-size: 14px;
-    color: #555;
-    cursor: pointer;
-}
-
-.checkbox-label input[type="checkbox"] {
-    margin-right: 8px;
-}
-
-/* ✅ 첫 번째 체크박스 라벨에 오른쪽 마진 추가하여 간격 조정 */
-.checkbox-group .checkbox-label:first-child {
-    margin-right: 20px; /* 원하는 간격으로 조정 (예: 20px, 30px 등) */
-}
-/* frontend/src/pages/login/LoginSelectionPage.css */
-
-/* ... (기존 스타일 유지) ... */
-
-.login-left {
-    background-color: #f2f2f2;
-    color: #333;
-    padding: 40px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center; /* ✅ 자식 요소들을 가로 중앙에 정렬 */
-    width: 50%;
-    text-align: center; /* ✅ 텍스트 자식 요소들을 가운데 정렬 */
-}
-
-/* ✅ 왼쪽 패널 텍스트 (h2) 스타일 수정 */
-.login-left h2 {
-    font-size: 22px; /* 폰트 크기 조정 (기존 24px) */
-    font-weight: bold; /* 글자 두께 */
-    margin-bottom: 20px;
-    line-height: 1.4; /* 행간 조정 */
-    color: #333; /* 텍스트 색상 (기존 유지 또는 약간 어둡게) */
-     /* text-shadow: 1px 1px 2px rgba(0,0,0,0.1); /* 은은한 그림자 효과 (선택 사항) */
-}
-
-.login-left p { /* 이 p 태그는 현재 JSX에 없으므로 이 스타일은 적용되지 않습니다. */
-    font-size: 16px;
-    line-height: 1.5;
-    margin-bottom: 30px;
-    text-align: center;
-}
-
-
-.zoop-logo {
-    margin-bottom: 30px;
-     /* .login-left에 text-align: center; 또는 align-items: center; 가 적용되어 있으면 이 div 자체는 가운데 정렬됩니다. */
-}
-
-/* ✅ 로고 이미지 가운데 정렬 */
-.zoop-logo img {
-    display: block; /* 이미지를 블록 레벨 요소로 만들어 margin: auto 적용 가능하게 함 */
-    margin: 0 auto 10px auto; /* 상하 0, 좌우 auto 마진으로 가운데 정렬, 하단에 10px 여백 */
-    max-width: 150px;
-    height: auto;
-}
-
-/* ✅ 회원가입 버튼 스타일 수정 (세련되게) */
-.signup-button {
-    /* background-color: #007bff; /* 기존 파란색 배경 제거 */
-    background-color: transparent; /* 배경 투명하게 */
+    background-color: transparent; /* 배경 투명하게 (기존 파란색 배경 제거) */
     color: #28a745; /* ✅ 메인 초록색 계열 텍스트 색상 */
     border: 2px solid #28a745; /* ✅ 메인 초록색 계열 테두리 */
     border-radius: 25px; /* ✅ 더 부드러운 모서리 (pill 형태에 가깝게) */
-    padding: 10px 20px; /* 패딩 조정 */
+    padding: 10px 24px; /* ✅ 패딩 조정 (좌우 약간 늘림) */
     font-size: 15px; /* 폰트 크기 조정 */
     font-weight: bold; /* 글자 두께 */
-    cursor: pointer;
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; /* 전환 효과 추가 */
+    cursor: pointer; /* 클릭 가능한 요소임을 표시 */
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.2s ease; /* ✅ 전환 효과에 transform 추가 */
     /* box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 은은한 그림자 (선택 사항) */
 }
 
@@ -306,42 +123,545 @@
     background-color: #28a745; /* ✅ 호버 시 메인 초록색 계열 배경 */
     color: #fff; /* ✅ 호버 시 흰색 텍스트 */
     border-color: #28a745; /* 호버 시 테두리 색상 유지 */
+     transform: translateY(-2px); /* ✅ 호버 시 살짝 위로 올라가는 효과 */
+     box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* ✅ 호버 시 그림자 강조 */
 }
-/* 회원가입 버튼 클릭 시 스타일 (선택 사항) */
+/* ✅ 회원가입 버튼 클릭 시 스타일 (선택 사항) */
 .signup-button:active {
      background-color: #1e7e34; /* 클릭 시 약간 더 어두운 색 */
      border-color: #1e7e34;
+     transform: translateY(0); /* 클릭 시 원래 위치 */
+     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+/* ✅ 회원가입 버튼 포커스 스타일 */
+.signup-button:focus {
+     outline: 2px solid rgba(40, 167, 69, 0.5); /* ✅ 포커스 시 아웃라인 (접근성 고려) */
+     outline-offset: 2px;
 }
 
 
-/* ... (이후 스타일 유지) ... */
+/* ============================================================== */
+/* ✅ 로그인 오른쪽 패널 (.login-right) 스타일 */
+/* ============================================================== */
+.login-right {
+    padding: 40px; /* 내부 패딩 */
+    width: 50%; /* 부모(.login-container) 너비의 50% 차지 */
+    display: flex; /* 내부 요소들을 Flexbox로 배치 */
+    flex-direction: column; /* 세로 방향으로 정렬 */
+    justify-content: flex-start; /* 세로축 상단 정렬 (콘텐츠 상단에 모이도록) */
+    box-sizing: border-box;
+}
+
+/* ============================================================== */
+/* ✅ 로그인 탭 (.login-tabs, .tab-button) 스타일 */
+/* ============================================================== */
+.login-tabs {
+    display: flex; /* 탭 버튼들을 가로로 배치 */
+    margin-bottom: 25px; /* ✅ 아래쪽 여백 약간 늘림 */
+    /* justify-content: center; /* 탭 버튼들을 가운데 정렬 (필요시) */
+    /* gap: 10px; /* 탭 버튼 간 간격 (필요시) */
+}
+
+.tab-button {
+    border: none; /* 기본 테두리 제거 */
+    background-color: transparent; /* 배경 투명 */
+    padding: 10px 20px; /* 패딩 */
+    font-size: 16px; /* 폰트 크기 */
+    cursor: pointer; /* 클릭 가능한 요소임을 표시 */
+    border-bottom: 2px solid transparent; /* 선택되지 않았을 때 투명한 하단 테두리 */
+    transition: border-bottom 0.3s ease, color 0.3s ease; /* 전환 효과 */
+    color: #555; /* ✅ 기본 글자색 약간 어둡게 */
+    font-weight: 500; /* ✅ 기본 글자 두께 약간 얇게 */
+}
+
+.tab-button.active {
+    border-bottom: 2px solid #007bff; /* 선택되었을 때 파란색 하단 테두리 */
+    color: #007bff; /* 선택되었을 때 파란색 글자색 */
+    font-weight: bold; /* 선택되었을 때 글자 두께 */
+}
+/* ✅ 탭 버튼 포커스 스타일 */
+.tab-button:focus {
+     outline: 2px solid rgba(0, 123, 255, 0.5); /* ✅ 포커스 시 아웃라인 */
+     outline-offset: 2px;
+}
+
+/* ============================================================== */
+/* ✅ 로그인 폼 (.login-form) 스타일 */
+/* ============================================================== */
+.login-form {
+    display: flex; /* 내부 요소들을 Flexbox로 배치 */
+    flex-direction: column; /* 세로 방향으로 정렬 */
+    /* gap: 15px; /* 폼 요소 간 간격 (input-group margin-bottom과 함께 사용하지 않거나 조정) */
+}
+
+/* 입력 필드 그룹 (.input-group) 스타일 */
+.input-group {
+    margin-bottom: 18px; /* ✅ 아래쪽 여백 약간 늘림 */
+}
+
+/* 입력 필드 (.input-group input) 스타일 */
+.input-group input {
+    width: 100%; /* 부모(.input-group) 너비에 맞춤 */
+    padding: 12px; /* 내부 패딩 */
+    border: 1px solid #ccc; /* 테두리 */
+    border-radius: 6px; /* ✅ 모서리 약간 더 둥글게 */
+    font-size: 16px; /* 폰트 크기 */
+    box-sizing: border-box; /* 패딩/테두리를 너비에 포함 */
+    transition: border-color 0.3s ease, box-shadow 0.3s ease; /* ✅ 전환 효과 추가 */
+}
+/* ✅ 입력 필드 포커스 스타일 */
+.input-group input:focus {
+    outline: none; /* 기본 포커스 아웃라인 제거 */
+    border-color: #007bff; /* ✅ 포커스 시 테두리 색상 변경 */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.2); /* ✅ 포커스 시 은은한 그림자 */
+}
+
+
+/* ============================================================== */
+/* ✅ 체크박스 그룹 (.checkbox-group, .checkbox-label) 스타일 */
+/* ============================================================== */
+.checkbox-group {
+    display: flex; /* ✅ 내부 체크박스 라벨들을 Flexbox로 배치 */
+    justify-content: flex-start; /* ✅ 가로축 시작 부분에 정렬 (체크박스 라벨들 왼쪽 정렬) */
+    align-items: center; /* 세로축 중앙 정렬 */
+    margin-bottom: 20px; /* 아래쪽 여백 */
+    width: 100%; /* 부모 너비에 맞춤 */
+    /* gap: 20px; /* 체크박스 라벨 간 간격 (first-child 마진 대신 사용할 수 있음) */
+}
+
+.checkbox-label {
+    display: flex; /* 내부 요소 (체크박스 input, 텍스트)를 Flexbox로 배치 */
+    align-items: center; /* 세로축 중앙 정렬 */
+    margin-bottom: 0; /* 부모 .checkbox-group의 마진 사용 */
+    font-size: 14px; /* 폰트 크기 */
+    color: #555; /* 글자색 */
+    cursor: pointer; /* 클릭 가능한 요소임을 표시 */
+     /* ✅ 포커스 가능한 요소이므로 아웃라인 스타일링 고려 */
+}
+
+/* 체크박스 input 스타일 */
+.checkbox-label input[type="checkbox"] {
+    margin-right: 8px; /* 체크박스와 텍스트 사이 간격 */
+    /* 기본 브라우저 스타일 사용 */
+    /* ✅ 포커스 스타일링 고려 */
+}
+/* ✅ 체크박스 input 포커스 스타일 */
+.checkbox-label input[type="checkbox"]:focus + span { /* 스팬 태그로 텍스트 감싸면 더 정확한 포커스 스타일링 가능 */
+     /* outline: 2px solid rgba(0, 123, 255, 0.5); */
+     /* outline-offset: 2px; */
+     /* 체크박스 자체의 포커스 아웃라인을 사용하는 것이 일반적입니다. */
+}
+
+
+/* ✅ 첫 번째 체크박스 라벨에 오른쪽 마진 추가하여 두 번째 라벨과의 간격 조정 */
+.checkbox-group .checkbox-label:first-child {
+    margin-right: 25px; /* ✅ 간격 약간 늘림 */
+}
+
+
+/* ============================================================== */
+/* ✅ 로그인 버튼 (.login-button) 스타일 */
+/* ============================================================== */
+.login-button {
+    background-color: #28a745; /* 초록색 배경 */
+    color: #fff; /* 흰색 글자 */
+    border: none; /* 테두리 없음 */
+    border-radius: 6px; /* ✅ 모서리 약간 더 둥글게 */
+    padding: 12px 24px; /* 패딩 */
+    font-size: 16px; /* 폰트 크기 */
+    font-weight: bold; /* ✅ 글자 두께 */
+    cursor: pointer; /* 클릭 가능한 요소임을 표시 */
+    transition: background-color 0.3s ease, box-shadow 0.3s ease; /* ✅ 전환 효과 추가 */
+    margin-bottom: 6px; /* ✅ 아래쪽 여백 조정 (원래 20px) */
+    width: 100%; /* 부모 너비에 맞춤 */
+    box-sizing: border-box; /* 패딩/테두리를 너비에 포함 */
+     box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* ✅ 은은한 그림자 */
+}
+
+.login-button:hover {
+    background-color: #1e7e34; /* 호버 시 약간 어두운 초록색 */
+     box-shadow: 0 4px 8px rgba(0,0,0,0.15); /* ✅ 호버 시 그림자 강조 */
+}
+/* ✅ 로그인 버튼 포커스 스타일 */
+.login-button:focus {
+     outline: 2px solid rgba(40, 167, 69, 0.5); /* ✅ 포커스 시 아웃라인 */
+     outline-offset: 2px;
+}
+
+
+/* ✅ 에러 메시지 (.error-message) 스타일 */
+.error-message {
+    color: #dc3545; /* 빨간색 에러 텍스트 */
+    font-size: 14px;
+    text-align: center;
+    margin-top: -20px; /* 폼 요소와의 간격 조정 */
+    margin-bottom: 10px;
+}
+
+
+/* ============================================================== */
+/* ✅ 아이디/비밀번호 찾기 링크 (.find-links) 스타일 */
+/* ============================================================== */
+.find-links {
+    display: flex; /* 내부 링크/span을 가로로 배치 */
+    justify-content: center; /* 가로축 중앙 정렬 */
+    /* margin-bottom: 5px; ✅ 아래쪽 여백 조정 */
+    font-size: 14px; /* 폰트 크기 */
+    color: #555; /* 글자색 */
+}
+
+.find-links a {
+    color: #007bff; /* 파란색 링크 색상 */
+    text-decoration: none; /* 밑줄 제거 */
+    margin: 0 8px; /* ✅ 좌우 마진 약간 줄임 */
+     transition: color 0.3s ease, text-decoration 0.3s ease; /* ✅ 전환 효과 추가 */
+}
+
+.find-links a:hover {
+    color: #0056b3; /* ✅ 호버 시 색상 변경 */
+    text-decoration: underline; /* 호버 시 밑줄 표시 */
+}
+/* ✅ 아이디/비밀번호 찾기 링크 포커스 스타일 */
+.find-links a:focus {
+     outline: 2px solid rgba(0, 123, 255, 0.5); /* ✅ 포커스 시 아웃라인 */
+     outline-offset: 2px;
+}
+
+
+.find-links span {
+    margin: 0 5px; /* 구분선 좌우 마진 */
+    color: #ccc; /* 구분선 색상 */
+}
+
+/* ============================================================== */
+/* ✅ 구분선 (.signup-divider) 스타일 */
+/* ============================================================== */
+.signup-divider {
+    width: 60px;
+    height: 2px;
+    background-color: #ddd; /* ✅ 색상 약간 연하게 (구분선 느낌) */
+    /* margin: 2rem auto; ✅ 상하 마진 및 가운데 정렬 (기존 1.5rem에서 2rem으로 다시 늘림) */
+}
+
+/* ============================================================== */
+/* ✅ 소셜 로그인 섹션 (.social-login) 스타일 */
+/* ============================================================== */
+.social-login {
+    text-align: center; /* 내부 텍스트 및 인라인/inline-block 요소 가운데 정렬 */
+    /* margin-top: auto; /* ✅ 기존 설정 제거 (Flexbox 정렬 대신 고정 마진 사용) */
+    /* margin-top: 1.5rem; ✅ 상단 마진을 고정값으로 설정하여 간격 조절 */
+    margin-bottom: 30px; /* ✅ 하단 여백 추가 (전체 컨테이너 하단과의 간격) */
+    /* padding-top: 10px; /* 구분선과의 간격 (구분선 마진 대신 사용 가능) */
+     /* border-top: 1px solid #eee; /* 구분선 대신 상단 테두리 사용 가능 */
+}
+
+/* ✅ "소셜 계정으로 간편 로그인" 텍스트 (.signup-subtext) 스타일 */
+/* React JSX에서 <p className="signup-subtext"> 로 사용했으므로 이 셀렉터 사용 */
+.signup-subtext {
+    color: #666; /* 텍스트 색상 */
+    margin-bottom: 1rem; /* 아래쪽 여백 */
+    font-size: 0.95rem; /* 폰트 크기 */
+    /* font-weight: ...; /* 글자 두께 */
+  }
+
+/* ✅ 소셜 아이콘 컨테이너 (.social-icons) 스타일 */
+/* React JSX에서 <div className="social-icons"> 로 사용했으므로 이 셀렉터 사용 */
+.social-icons {
+    display: flex; /* ✅ Flexbox로 아이콘 가로 배열 */
+    justify-content: center; /* ✅ 가로축 중앙 정렬 */
+    gap: 1.5rem; /* ✅ 아이콘 간 가로 간격 */
+    margin-bottom: 4rem; /* ✅ 아래쪽 여백 */
+    /* align-items: center; /* 세로 중앙 정렬 (이미 아이콘 크기가 같으면 필요 없을 수 있음) */
+  }
+
+/* ✅ 개별 소셜 아이콘 (.social-icon - img 또는 button) 공통 스타일 */
+/* React JSX에서 각 아이콘에 className="social-icon" 추가했으므로 이 셀렉터 사용 */
+/* 네이버, 카카오, 페이스북, 애플 (img 태그), 구글 (button 태그) */
 .social-icon {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    margin: 0 5px;
-    color: #fff;
-    /* text-decoration: none; /* a 태그에서만 유효 */
-    font-size: 16px;
-    /* ✅ 버튼 기본 스타일 초기화 */
-    border: none;
-    background-color: transparent;
+    display: flex; /* 내부 콘텐츠 (예: 구글 버튼 안의 이미지)를 가운데 정렬하기 위해 Flexbox 사용 */
+    justify-content: center; /* 가로 가운데 정렬 */
+    align-items: center; /* 세로 가운데 정렬 */
+    width: 44px; /* ✅ 아이콘 크기 약간 늘림 (원하는 크기로 조정) */
+    height: 44px; /* ✅ 아이콘 크기 약간 늘림 (원하는 크기로 조정) */
+    border-radius: 50%; /* ✅ 원형으로 만듦 */
+    cursor: pointer; /* 클릭 가능한 요소임을 표시 */
+    overflow: hidden; /* 내부 이미지가 border-radius 밖으로 나가지 않도록 */
+
+    /* 추가적인 세련된 스타일 */
+    border: 1px solid #eee; /* ✅ 테두리 색상 약간 연하게 */
+    background-color: #fff; /* 배경색 */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08); /* ✅ 그림자 약간 더 부드럽게 */
+    transition: transform 0.2s ease, box-shadow 0.2s ease; /* 호버 애니메이션 */
+
+    /* ✅ button 요소의 기본 스타일 초기화 (구글 버튼 등에 적용) */
     padding: 0; /* 기본 패딩 제거 */
-    cursor: pointer; /* 클릭 가능한 커서 */
+    background: none; /* 기본 배경 제거 */
+    color: inherit; /* 기본 글자색 상속 (아이콘 폰트 사용 시) */
+    /* border: none; /* 버튼 기본 테두리 제거 (필요시) */
+  }
+
+/* ✅ 구글 버튼 안에 있는 이미지 스타일 */
+/* .social-icon 클래스를 가진 button 요소 안에 있는 img 태그를 선택 */
+button.social-icon.google img {
+    width: 26px; /* ✅ 구글 로고 이미지 크기 조정 (아이콘 크기 44px보다 작게, 원하는 크기로) */
+    height: 26px; /* ✅ 구글 로고 이미지 크기 조정 */
+    object-fit: contain; /* 이미지 비율 유지 */
+    /* padding: ...; /* 이미지와 버튼 테두리/배경 사이 여백 */
 }
 
-/* ✅ button.social-icon 에 대한 배경색 스타일 추가 */
-button.social-icon.naver {
-    background-color: #2db400; /* 네이버 녹색 */
+/* ✅ 이미지 아이콘 (.social-icon - img 태그) 스타일 (필요시) */
+/* 구글 외 이미지 아이콘에 대한 추가 스타일 (예: border, background 등) */
+/* img.social-icon {
+    border: 1px solid #eee; /* 이미지 아이콘에만 테두리 추가 */
+    /* background-color: #fff; */
+    /* box-sizing: border-box; */
+/* } */
+
+
+/* ✅ 소셜 아이콘 호버 스타일 (img 및 button 모두 적용) */
+.social-icon:hover {
+    transform: translateY(-3px); /* ✅ 호버 시 살짝 위로 올라가는 효과 (강조) */
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1); /* ✅ 호버 시 그림자 강조 (더 넓게) */
 }
 
-button.social-icon.google {
-    background-color: #ea4335; /* 구글 빨간색 */
+/* ✅ 소셜 아이콘 클릭 시 스타일 (선택 사항) */
+.social-icon:active {
+    transform: translateY(0); /* 클릭 시 원래 위치로 돌아오며 눌리는 느낌 */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+/* ✅ 소셜 아이콘 포커스 스타일 */
+.social-icon:focus {
+     outline: 2px solid rgba(0, 123, 255, 0.5); /* ✅ 포커스 시 아웃라인 */
+     outline-offset: 2px;
 }
 
-button.social-icon.github{
-    background-color: #1a9669;
+
+/* ============================================================== */
+/* ✅ 반응형 디자인 (max-width: 768px) */
+/* ============================================================== */
+@media (max-width: 768px) {
+    /* 로그인 컨테이너 레이아웃 변경 */
+    .login-container {
+        flex-direction: column; /* 세로 방향으로 정렬 */
+        width: 95%; /* 너비 줄임 */
+        height: auto; /* 높이 자동 조절 */
+        margin: 20px auto; /* ✅ 가운데 정렬을 위해 상하 마진 및 좌우 auto */
+    }
+
+    /* 좌우 패널 너비 조정 및 순서 변경 */
+    .login-left,
+    .login-right {
+        width: 100%; /* 너비 100% 차지 */
+        padding: 30px; /* 패딩 조정 */
+    }
+
+    /* 왼쪽 패널 (login-left)을 오른쪽 패널 (login-right) 아래로 이동 */
+    .login-left {
+         order: 2; /* 순서 변경 (기본값 0) */
+         border-top: 1px solid #eee; /* 상단 구분선 추가 */
+         padding-top: 30px; /* 상단 패딩 조정 */
+         background-color: #f9fbfd; /* ✅ 작은 화면에서 배경색 약간 더 밝게 */
+    }
+
+     /* 오른쪽 패널 (login-right)을 왼쪽 패널 위로 이동 */
+     .login-right {
+          order: 1; /* 순서 변경 */
+          padding-bottom: 30px; /* 하단 패딩 조정 */
+     }
+
+
+    /* 왼쪽 패널 텍스트 스타일 조정 */
+    .login-left h2 {
+        font-size: 20px; /* 폰트 크기 더 줄임 */
+        margin-bottom: 15px;
+        text-shadow: 0.5px 0.5px 1px rgba(0,0,0,0.05);
+    }
+
+    .login-left p {
+        font-size: 14px; /* 폰트 크기 더 줄임 */
+        margin-bottom: 20px;
+    }
+
+    /* 로고 마진 조정 */
+    .zoop-logo {
+        margin-bottom: 20px;
+    }
+     .zoop-logo img {
+         max-width: 120px; /* 로고 크기 더 줄임 */
+     }
+
+    /* 회원가입 버튼 마진/패딩 조정 */
+    .signup-button {
+        padding: 10px 15px; /* 패딩 조정 */
+        font-size: 14px; /* 폰트 크기 조정 */
+    }
+
+
+    /* 로그인 오른쪽 패널 간격 조정 */
+    .login-right {
+        justify-content: flex-start; /* 상단 정렬 */
+    }
+
+    /* 탭 버튼 패딩 조정 */
+    .tab-button {
+        padding: 8px 15px;
+        font-size: 15px;
+    }
+
+    /* 입력 필드 패딩 조정 */
+     .input-group input {
+         padding: 10px;
+         font-size: 15px;
+     }
+
+    /* 체크박스 그룹 마진/간격 조정 */
+     .checkbox-group {
+          margin-bottom: 15px;
+     }
+      .checkbox-group .checkbox-label:first-child {
+           margin-right: 15px; /* 간격 조정 */
+      }
+
+    /* 로그인 버튼 패딩/마진 조정 */
+    .login-button {
+         padding: 10px 20px;
+         font-size: 15px;
+         margin-bottom: 15px;
+    }
+
+    /* 아이디/비밀번호 찾기 링크 마진/폰트 조정 */
+    .find-links {
+         margin-bottom: 20px;
+         font-size: 13px;
+    }
+     .find-links a, .find-links span {
+          margin: 0 5px; /* 좌우 마진 조정 */
+     }
+
+    /* 구분선 마진 조정 */
+    .signup-divider {
+         margin: 1.5rem auto; /* ✅ 작은 화면에서 상하 마진 조정 */
+    }
+
+    /* 소셜 로그인 섹션 마진/패딩 조정 */
+     .social-login {
+          margin-top: 1.5rem; /* ✅ 작은 화면에서 상단 마진 고정값 */
+          margin-bottom: 15px; /* ✅ 작은 화면에서 하단 마진 조정 */
+          /* padding-top: 15px; /* ✅ 작은 화면에서 상단 패딩 조정 (필요시) */
+     }
+
+     /* 소셜 아이콘 컨테이너 간격 조정 */
+      .social-icons {
+           gap: 1.2rem; /* ✅ 아이콘 간 간격 조정 */
+           margin-bottom: 1.5rem;
+      }
+
+      /* 소셜 아이콘 크기 조정 */
+      .social-icon {
+          width: 38px; /* ✅ 아이콘 크기 조정 */
+          height: 38px;
+      }
+
+       button.social-icon.google img {
+           width: 22px; /* ✅ 구글 로고 이미지 크기 조정 */
+           height: 22px;
+       }
+}
+
+/* ============================================================== */
+/* ✅ 매우 작은 화면일 때 (max-width: 480px) 추가 조정 */
+/* ============================================================== */
+@media (max-width: 480px) {
+    /* 로그인 컨테이너 마진 조정 */
+    .login-container {
+        margin: 10px auto; /* ✅ 가운데 정렬 */
+        padding: 0; /* 컨테이너 자체 패딩 제거 */
+    }
+
+     /* 좌우 패널 패딩 더 줄임 */
+     .login-left,
+     .login-right {
+          padding: 20px;
+     }
+
+    /* 왼쪽 패널 상단 구분선/패딩 조정 */
+     .login-left {
+          padding-top: 20px;
+          border-top: 1px solid #eee; /* 구분선 유지 */
+     }
+
+    /* 로고 마진/크기 조정 */
+    .zoop-logo {
+        margin-bottom: 15px;
+    }
+     .zoop-logo img {
+         max-width: 90px; /* ✅ 로고 크기 더 줄임 */
+     }
+
+    /* 회원가입 버튼 패딩/폰트 더 줄임 */
+    .signup-button {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    /* 탭 버튼 패딩/폰트 더 줄임 */
+    .tab-button {
+        padding: 6px 10px;
+        font-size: 14px;
+    }
+
+    /* 입력 필드 패딩/폰트 더 줄임 */
+     .input-group input {
+         padding: 8px;
+         font-size: 14px;
+     }
+
+    /* 체크박스 그룹 마진 조정 */
+     .checkbox-group {
+          margin-bottom: 10px;
+     }
+      .checkbox-group .checkbox-label:first-child {
+           margin-right: 10px; /* 간격 더 줄임 */
+      }
+
+    /* 로그인 버튼 패딩/폰트 더 줄임 */
+    .login-button {
+         padding: 8px 15px;
+         font-size: 14px;
+         margin-bottom: 10px;
+    }
+
+    /* 아이디/비밀번호 찾기 링크 폰트 더 줄임 */
+     .find-links {
+          font-size: 12px;
+     }
+
+    /* 구분선 마진 더 줄임 */
+     .signup-divider {
+          margin: 1rem auto; /* ✅ 매우 작은 화면에서 상하 마진 더 줄임 */
+     }
+
+    /* 소셜 로그인 섹션 패딩 더 줄임 */
+     .social-login {
+          margin-top: 1.2rem; /* ✅ 매우 작은 화면에서 상단 마진 고정값 */
+          margin-bottom: 10px; /* ✅ 매우 작은 화면에서 하단 마진 조정 */
+          padding-top: 10px;
+     }
+
+     /* 소셜 아이콘 간격 더 줄임 */
+      .social-icons {
+           gap: 0.8rem;
+           margin-bottom: 1rem;
+      }
+
+      /* 소셜 아이콘 크기 더 줄임 */
+      .social-icon {
+          width: 30px;
+          height: 30px;
+      }
+
+       button.social-icon.google img {
+           width: 18px;
+           height: 18px;
+       }
 }
