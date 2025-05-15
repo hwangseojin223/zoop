@@ -134,7 +134,7 @@ export default function CompanyDashboard() {
                       </li>
                       <li
                         style={{ cursor: 'pointer' }}
-                        onClick={() => alert('회신자 목록 클릭됨')}
+                        onClick={() => navigate('/company/responder')}
                       >
                         회신자 목록
                       </li>
