@@ -7,6 +7,7 @@ import Index from './pages/Index';
 import CompanySignupProcess from './pages/signup/CompanySignupProcess';
 import CompanyAdminSignup from './pages/signup/CompanyAdminSignup';
 import SignupSuccess from './pages/signup/SignupSuccess';
+import ApplicantSignupSuccess from './pages/signup/ApplicantSignupSuccess';
 import LoginSelectionPage from './pages/login/LoginSelectionPage';
 import CompanyDashboard from './pages/company/CompanyDashboard';
 import ApplicantSignupProcess from './pages/signup/ApplicantSignupProcess';
@@ -44,6 +45,7 @@ function AppContent() {
         <Route path="/auth/company/signup/process" element={<CompanySignupProcess />} />
         <Route path="/auth/company/signup/companyadmin" element={<CompanyAdminSignup />} />
         <Route path="/auth/company/signup/success" element={<SignupSuccess />} />
+        <Route path="/auth/applicant/signup/success" element={<ApplicantSignupSuccess />} />
         <Route path="/auth/applicant/signup/process" element={<ApplicantSignupProcess />} />
         <Route path="/auth/login" element={<LoginSelectionPage />} />
 

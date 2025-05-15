@@ -2,12 +2,12 @@ package com.zoop.backend.service;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.zoop.backend.domain.entity.Candidate;
 import com.zoop.backend.repository.CandidateRepository;
@@ -30,6 +30,7 @@ public class CandidateService {
         return candidateRepository.findAll();
     }
 
+    @Transactional 
     public Candidate save(Candidate candidate) {
         try {
             // 비밀번호 암호화
@@ -38,15 +39,17 @@ public class CandidateService {
             // 비밀번호 암호화 전/후 로그 출력
             logger.info("암호화 전 비밀번호: {}", candidate.getCandidatePassword());
             logger.info("암호화된 비밀번호: {}", encrypted);
+            logger.info("저장할 값1 : {}", candidate.toString());
             
             candidate.setCandidatePassword(encrypted);
             
             // 후보자 저장
             Candidate savedCandidate = candidateRepository.save(candidate);
             
-            // 저장된 후보자 정보 로그 출력
-            logger.info("회원 저장 성공, 회원 ID: {}", savedCandidate.getCandidateId());
             
+            // // 저장된 후보자 정보 로그 출력
+            logger.info("회원 저장 성공, 회원 ID: {}", savedCandidate.getCandidateId());
+            logger.info("저장할 값2 : {}", candidate.toString());
             return savedCandidate;
         } catch (Exception e) {
             // 예외 발생 시 에러 로그 출력
