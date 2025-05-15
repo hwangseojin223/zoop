@@ -26,10 +26,13 @@ public class GithubSearchController {
         return ResponseEntity.ok("✅ FastAPI에서 GitHub 후보자 검색 완료");
     }
 
-    @GetMapping("/results")
-    public ResponseEntity<List<GithubSearchResult>> getResults() {
-        return ResponseEntity.ok(resultRepo.findAll());
+    @GetMapping("/by-post/{postId}")
+    public ResponseEntity<List<GithubSearchResult>> getCandidatesByPost(@PathVariable Long postId) {
+        List<GithubSearchResult> list = resultRepo.findSortedByEmailPresenceAndScore(postId);
+        return ResponseEntity.ok(list);
     }
+    
+    
 }
 
 
