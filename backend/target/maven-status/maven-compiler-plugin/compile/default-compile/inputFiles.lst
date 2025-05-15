@@ -27,7 +27,6 @@
 /Users/minchankim/Documents/GitHub/zoop/backend/src/main/java/com/zoop/backend/repository/EmailVerificationRepository.java
 /Users/minchankim/Documents/GitHub/zoop/backend/src/main/java/com/zoop/backend/repository/GithubSearchResultRepository.java
 /Users/minchankim/Documents/GitHub/zoop/backend/src/main/java/com/zoop/backend/repository/PostRepository.java
-/Users/minchankim/Documents/GitHub/zoop/backend/src/main/java/com/zoop/backend/repository/UserRepository.java
 /Users/minchankim/Documents/GitHub/zoop/backend/src/main/java/com/zoop/backend/service/CompanyAdminService.java
 /Users/minchankim/Documents/GitHub/zoop/backend/src/main/java/com/zoop/backend/service/CompanyService.java
 /Users/minchankim/Documents/GitHub/zoop/backend/src/main/java/com/zoop/backend/service/EmailService.java
