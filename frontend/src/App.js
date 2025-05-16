@@ -87,7 +87,7 @@ function AppContent() {
         />
 
           <Route
-            path="/company/responder"
+            path="/company/responder/:postId"
             element={
               <PrivateRoute allowedUserType="company">
                 <ResponderList />
