@@ -99,7 +99,6 @@ const handleStartRecruit = (draftId) => {
         <h3 style={{ fontSize: '1rem', fontWeight: '700', color: '#111', marginBottom: '1.5rem' }}>
             📢 공고 관리
         </h3>
-
         <button
             onClick={handleAddDraftPost}
             style={{
@@ -148,6 +147,7 @@ const handleStartRecruit = (draftId) => {
             </div>
             </div>
         ))}
+
         </aside>
 
 
