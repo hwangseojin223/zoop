@@ -41,7 +41,7 @@ public class CompanyController {
     @PostMapping
     public ResponseEntity<?> registerCompany(
         @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "등록할 회사 정보(CompanyDto 형식)",
+            description = "등록할 회사 정보 (CompanyDto 형식)",
             required = true,
             content = @Content(schema = @Schema(implementation = CompanyDto.class))
         )
@@ -67,12 +67,12 @@ public class CompanyController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "요청 수신 확인 및 처리"),
         @ApiResponse(responseCode = "400", description = "잘못된 형식의 요청 본문")
-    }
-    )
+    })
     @PostMapping("/debug")
     public ResponseEntity<?> debug(
         @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "디버깅을 위한 임의의 JSON 요청 본문(모든 필드 허용)",
+            description = "디버깅을 위한 임의의 JSON 요청 본문 (모든 필드 허용)",
+   
             required = true,
             content = @Content(schema = @Schema(implementation = Map.class))
         )
