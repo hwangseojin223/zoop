@@ -72,6 +72,7 @@ public class CompanyController {
     public ResponseEntity<?> debug(
         @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "디버깅을 위한 임의의 JSON 요청 본문 (모든 필드 허용)",
+   
             required = true,
             content = @Content(schema = @Schema(implementation = Map.class))
         )

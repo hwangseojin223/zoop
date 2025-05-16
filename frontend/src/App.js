@@ -18,6 +18,7 @@ import PublicOnlyRoute from './routes/PublicOnlyRoute';
 
 import RecruitCreate from './pages/company/RecruitCreate';
 import CandidateList from './pages/company/CandidateList';
+import ResponderList from './pages/company/ResponderList';
 
 function AppContent() {
   const { setAuthState } = useAuth();
@@ -84,6 +85,15 @@ function AppContent() {
             </PrivateRoute>
           }
         />
+
+          <Route
+            path="/company/responder"
+            element={
+              <PrivateRoute allowedUserType="company">
+                <ResponderList />
+              </PrivateRoute>
+            }
+          />
 
       </Routes>
     </Router>

@@ -35,13 +35,14 @@ import com.zoop.backend.repository.CompanyAdminRepository;
 import com.zoop.backend.util.JwtUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-@Tag(name="AuthController", description="사용자 인증 관련 API(로그인)")
+@Tag(name="AuthController", description="사용자 인증 관련 API(로그인 및 소셜 로그인)")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -62,7 +63,7 @@ public class AuthController {
         this.jwtUtil = jwtUtil;
         this.socialAuthService = socialAuthService;
     }
-
+    // == 일반 로그인 API ==
     @Operation(summary="사용자 로그인", description="아이디와 비밀번호, 사용자 유형을 사용하여 로그인하고 JWT 토큰을 발급받습니다.")
     @ApiResponses(value= {
         @ApiResponse(responseCode="200", description="로그인 성공 및 JWT 토큰 발급",
@@ -166,6 +167,7 @@ public class AuthController {
 
     // ✅ 소셜 로그인 콜백 요청을 처리하는 새로운 엔드포인트 추가
     // 프론트엔드에서 http://localhost:8081/api/auth/social/google/callback 으로 POST 요청을 보낼 때 이 메소드가 실행됩니다.
+    // Swagger 문서에 설명된 SocialLoginCallbackRequest DTO를 요청 본문으로 받습니다.
     @Operation(summary="소셜 로그인 콜백 처리", description="프론트엔드로부터 인가 코드를 받아 소셜 로그인 처리 후 자체 JWT 토큰 발급")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "소셜 로그인 성공 및 자체 JWT 토큰 발급",
@@ -177,14 +179,8 @@ public class AuthController {
     // {provider} PathVariable을 사용하여 google, naver, github 등을 구분합니다.
     @PostMapping("/social/{provider}/callback")
     public ResponseEntity<?> handleSocialLoginCallback(
+        @Parameter(description = "소셜 로그인 제공자(google 등", required = true)
         @PathVariable String provider, // URL 경로에서 provider 추출 (예: "google")
-        // Swagger 문서화를 위한 어노테이션 (별칭 사용 예시)
-        // @SwaggerRequestBody(
-        //      description = "소셜 서비스로부터 받은 인가 코드 및 필요시 상태 값",
-        //      required = true,
-        //      content = @Content(schema = @Schema(implementation = SocialLoginCallbackRequest.class))
-        // )
-        // 또는 FQCN 사용 예시 (import io.swagger...RequestBody as ... 없이 사용)
         @io.swagger.v3.oas.annotations.parameters.RequestBody(
              description = "소셜 서비스로부터 받은 인가 코드 및 필요시 상태 값",
              required = true,

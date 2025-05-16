@@ -66,10 +66,67 @@ export default function Index() {
         </div>
       </section>
 
-      <footer className="footer-section"> {/* 푸터 섹션 */}
-        {/* 푸터 내용 (기존 코드 유지) */}
-         <div className="footer-grid"> {/* ... */} </div>
-         <div className="footer-bottom"> {/* ... */} </div>
+      <footer className="footer-section">
+        <div className="footer-grid">
+          <div>
+            <strong>서비스</strong>
+            <p>공지사항</p>
+            <p>자주 묻는 질문</p>
+            <p>공동인증서 관리</p>
+            <p>계정 일시잠금</p>
+            <p>고객센터</p>
+            <p>개인(신용)정보 이용·제공 내역 조회</p>
+            <p>브랜드 리소스센터</p>
+            <p>줍의 개인정보 보호</p>
+            <p>줍유스카드</p>
+          </div>
+          <div>
+            <strong>회사</strong>
+            <p>회사 소개</p>
+            <p>줍페이먼츠</p>
+            <p>줍인슈어런스</p>
+            <p>줍증권</p>
+            <p>줍세이프</p>
+            <p>줍플레이스</p>
+            <p>줍인컴</p>
+            <p>채용</p>
+            <p>기술 블로그</p>
+            <p>블로그</p>
+            <p>공고</p>
+          </div>
+          <div>
+            <strong>문의</strong>
+            <p>사업 제휴</p>
+            <p>줍쇼핑 입점문의</p>
+            <p>광고 문의</p>
+            <p>인증 사업 문의</p>
+            <p>마케팅 · PR</p>
+            <p>IR</p>
+          </div>
+          <div>
+            <strong>고객센터</strong>
+            <p>전화: 1599-4905 (24시간 연중무휴)</p>
+            <p>이메일(고객전용): support@zoop.im</p>
+            <p>이메일(외부기관전용): safe@zoop.im</p>
+            <p>민원 접수</p>
+            <p>민원 접수(비즈니스 고객)</p>
+          </div>
+        </div>
+
+        <div className="footer-bottom">
+          <strong>(주)줍스튜디오</strong>
+          <p>사업자 등록번호: 120-88-01280 │ 대표: 홍길동</p>
+          <p>서울특별시 강남구 테헤란로 133, 9층 (역삼동, Zoop타워)</p>
+          <div className="footer-terms">
+            <p><strong>서비스 이용약관</strong></p>
+            <p><strong>개인정보 처리방침</strong></p>
+            <p><strong>위치기반서비스 이용약관</strong></p>
+            <p><strong>전자금융거래약관</strong></p>
+          </div>
+          <div className="footer-icons">
+            <span>📘</span> <span>🐦</span> <span>📸</span> <span>🔗</span>
+          </div>
+        </div>
       </footer>
     </div>
   );
