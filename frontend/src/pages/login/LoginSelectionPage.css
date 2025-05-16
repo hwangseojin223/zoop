@@ -144,7 +144,7 @@ html {
 /* ✅ 로그인 오른쪽 패널 (.login-right) 스타일 */
 /* ============================================================== */
 .login-right {
-    padding: 40px; /* 내부 패딩 */
+    padding: 20px; /* 내부 패딩 */
     width: 50%; /* 부모(.login-container) 너비의 50% 차지 */
     display: flex; /* 내부 요소들을 Flexbox로 배치 */
     flex-direction: column; /* 세로 방향으로 정렬 */
@@ -156,7 +156,7 @@ html {
 /* ✅ 로그인 탭 (.login-tabs, .tab-button) 스타일 */
 /* ============================================================== */
 .login-tabs {
-    display: flex; /* 탭 버튼들을 가로로 배치 */
+    display: align-items; /* 탭 버튼들을 가로로 배치 */
     margin-bottom: 25px; /* ✅ 아래쪽 여백 약간 늘림 */
     /* justify-content: center; /* 탭 버튼들을 가운데 정렬 (필요시) */
     /* gap: 10px; /* 탭 버튼 간 간격 (필요시) */
@@ -294,7 +294,7 @@ html {
     color: #dc3545; /* 빨간색 에러 텍스트 */
     font-size: 14px;
     text-align: center;
-    margin-top: -20px; /* 폼 요소와의 간격 조정 */
+    margin-top: 10px; /* 폼 요소와의 간격 조정 */
     margin-bottom: 10px;
 }
 
@@ -305,7 +305,7 @@ html {
 .find-links {
     display: flex; /* 내부 링크/span을 가로로 배치 */
     justify-content: center; /* 가로축 중앙 정렬 */
-    /* margin-bottom: 5px; ✅ 아래쪽 여백 조정 */
+    margin-top: 10px; /*✅ 아래쪽 여백 조정*/
     font-size: 14px; /* 폰트 크기 */
     color: #555; /* 글자색 */
 }
@@ -353,6 +353,7 @@ html {
     margin-bottom: 30px; /* ✅ 하단 여백 추가 (전체 컨테이너 하단과의 간격) */
     /* padding-top: 10px; /* 구분선과의 간격 (구분선 마진 대신 사용 가능) */
      /* border-top: 1px solid #eee; /* 구분선 대신 상단 테두리 사용 가능 */
+    align-self: flex-start;
 }
 
 /* ✅ "소셜 계정으로 간편 로그인" 텍스트 (.signup-subtext) 스타일 */
@@ -362,6 +363,7 @@ html {
     margin-bottom: 1rem; /* 아래쪽 여백 */
     font-size: 0.95rem; /* 폰트 크기 */
     /* font-weight: ...; /* 글자 두께 */
+    text-align: center;
   }
 
 /* ✅ 소셜 아이콘 컨테이너 (.social-icons) 스타일 */
@@ -383,15 +385,15 @@ html {
     align-items: center; /* 세로 가운데 정렬 */
     width: 44px; /* ✅ 아이콘 크기 약간 늘림 (원하는 크기로 조정) */
     height: 44px; /* ✅ 아이콘 크기 약간 늘림 (원하는 크기로 조정) */
-    border-radius: 50%; /* ✅ 원형으로 만듦 */
+    /* border-radius: 50%; ✅ 원형으로 만듦 */
     cursor: pointer; /* 클릭 가능한 요소임을 표시 */
     overflow: hidden; /* 내부 이미지가 border-radius 밖으로 나가지 않도록 */
 
     /* 추가적인 세련된 스타일 */
-    border: 1px solid #eee; /* ✅ 테두리 색상 약간 연하게 */
-    background-color: #fff; /* 배경색 */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08); /* ✅ 그림자 약간 더 부드럽게 */
-    transition: transform 0.2s ease, box-shadow 0.2s ease; /* 호버 애니메이션 */
+     /* border: 1px solid #eee; ✅ 테두리 색상 약간 연하게 */
+    /* background-color: #fff; 배경색 */
+    /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08); ✅ 그림자 약간 더 부드럽게 */
+    /* transition: transform 0.2s ease, box-shadow 0.2s ease; 호버 애니메이션 */
 
     /* ✅ button 요소의 기본 스타일 초기화 (구글 버튼 등에 적용) */
     padding: 0; /* 기본 패딩 제거 */
@@ -452,7 +454,7 @@ button.social-icon.google img {
     .login-left,
     .login-right {
         width: 100%; /* 너비 100% 차지 */
-        padding: 30px; /* 패딩 조정 */
+        padding: 5px; /* 패딩 조정 */
     }
 
     /* 왼쪽 패널 (login-left)을 오른쪽 패널 (login-right) 아래로 이동 */
@@ -636,32 +638,30 @@ button.social-icon.google img {
           font-size: 12px;
      }
 
-    /* 구분선 마진 더 줄임 */
      .signup-divider {
-          margin: 1rem auto; /* ✅ 매우 작은 화면에서 상하 마진 더 줄임 */
-     }
-
-    /* 소셜 로그인 섹션 패딩 더 줄임 */
-     .social-login {
-          margin-top: 1.2rem; /* ✅ 매우 작은 화면에서 상단 마진 고정값 */
-          margin-bottom: 10px; /* ✅ 매우 작은 화면에서 하단 마진 조정 */
-          padding-top: 10px;
-     }
-
-     /* 소셜 아이콘 간격 더 줄임 */
-      .social-icons {
-           gap: 0.8rem;
-           margin-bottom: 1rem;
+        width: 60px;
+        height: 2px;
+        background-color: #30c59b;
+        margin: 2rem auto;
+      }
+      
+      .signup-subtext {
+        color: #666;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+      }
+      
+      .signup-icons {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      
+      .signup-icons img {
+        width: 36px;
+        height: 36px;
+        cursor: pointer;
       }
 
-      /* 소셜 아이콘 크기 더 줄임 */
-      .social-icon {
-          width: 30px;
-          height: 30px;
-      }
-
-       button.social-icon.google img {
-           width: 18px;
-           height: 18px;
-       }
 }
