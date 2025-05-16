@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../../components/Navbar';
+import { useParams } from 'react-router-dom'; // 🔥 여기
 
 export default function ResponderList() {
+
+  const { postId } = useParams(); // 🔥 URL에서 postId를 추출
   const [responder, setResponder] = useState([]);
 
   useEffect(() => {
     // 아래에 어떤 페이지로 요청할것인지
     // 1은 임시로.
-    fetch('http://localhost:8081/api/responder/1')
+    fetch(`http://localhost:8081/api/responder/${postId}`)
       .then(res => res.json())
       .then(data => setResponder(data))
       .catch(err => console.error('❌ 후보자 목록 오류:', err));
@@ -19,7 +22,7 @@ export default function ResponderList() {
     <div>
       <Navbar />
       <div style={{ padding: '7rem 3rem' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '2rem' }}>🔍 GitHub 후보자 목록</h2>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '2rem' }}>🔍 {postId}번 공고 회신자 목록</h2>
         {responder.length === 0 ? (
           <p>회신자가 없습니다.</p>
         ) : (

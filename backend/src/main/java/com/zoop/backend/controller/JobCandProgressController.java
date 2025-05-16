@@ -24,7 +24,7 @@ public class JobCandProgressController {
     //     return ResponseEntity.ok(jobCandProgressService.getAllProgresses());
     // }
 
-    // URL 예시: /api/job-candidates/post/1
+    // URL 예시: /api/post/1
     @GetMapping("{postId}")
     public List<ResponderDto> getCandidatesAtStage3nByPost(@PathVariable Long postId) {
         System.out.println("Controller: 요청 들어옴, postId=" + postId);
