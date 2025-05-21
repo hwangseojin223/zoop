@@ -332,7 +332,6 @@ function LoginSelectionPage() {
                 <Link to="/find-password">비밀번호 찾기</Link>
               </div>
             </form>
-            <div className="signup-divider" />
             <p className="signup-subtext">소셜 계정으로 간편 로그인</p> 
                 <div className="social-icons"> 
                   <img src="/icons/naver.svg" alt="네이버 로그인" className="social-icon" onClick={() => handleSocialLogin('naver')}/> {/* ✅ 클래스 추가, style 제거 */}
