@@ -1,236 +1,221 @@
-/* frontend/src/components/Navbar/Navbar.css */
-
-/* ============================================================== */
-/* ✅ 네비게이션 바 전체 컨테이너 (.zoop-navbar) 스타일 */
-/* ============================================================== */
-.zoop-navbar {
-  display: flex; /* ✅ 필수: 자식 요소(로고, 햄버거, 메뉴, 버튼)를 Flexbox로 가로 배치 */
-  align-items: center; /* 세로 중앙 정렬 */
-  padding: 1rem 2rem; /* 상하 1rem, 좌우 2rem 패딩 (데스크탑 기준) */
-  background-color: #fff; /* 배경색 */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
-  position: relative; /* ✅ 필수: 모바일 메뉴 (.mobile-menu)의 absolute 위치 기준점 */
-  z-index: 10; /* 다른 요소 위에 표시되도록 z-index 설정 */
-  /* ✅ justify-content 속성은 기본값(flex-start)으로 두거나 삭제합니다. */
-  /*    로고의 margin-right: auto와 함께 로고를 왼쪽에 고정하는 데 사용됩니다. */
-  /* flex-wrap: wrap; /* 요소들이 넘칠 경우 줄 바꿈 (필요시) */
-}
-
-/* ============================================================== */
-/* ✅ 로고 이미지 (.logo-img) 스타일 */
-/* ============================================================== */
-.logo-img {
-  height: 40px; /* 로고 높이 (데스크탑 기준) */
-  cursor: pointer; /* 클릭 가능한 요소임을 표시 */
-  /* ✅ 로고를 항상 네비게이션 바의 왼쪽 끝에 고정 */
-  margin-right: auto; /* ✅ 필수: 로고 오른쪽에 남은 공간을 모두 차지하여 다른 형제 요소들을 오른쪽으로 밀어냅니다. */
-  margin-left: 0; /* 왼쪽 여백 제거 (보통 기본값 0) */
-  flex-shrink: 0; /* 로고가 줄어들지 않도록 방지 (필요시) */
-}
-
-/* ============================================================== */
-/* ✅ 데스크탑 네비게이션 링크 컨테이너 (.nav-links) 스타일 */
-/* ============================================================== */
-.nav-links { /* .nav-links는 데스크탑/모바일 메뉴 모두 사용되므로 공통 스타일 */
-  display: flex; /* 자식 링크들을 Flexbox로 가로 배열 (기본) */
-  gap: 1.5rem; /* 링크 항목 간 가로 간격 */
-  margin-left: 2rem; /* 로고와 데스크탑 네비게이션 링크 사이 간격 */
-  /* flex-wrap: wrap; /* 링크들이 많을 경우 줄 바꿈 (필요시) */
-}
-
-/* 네비게이션 링크 항목 (.nav-links a) 스타일 */
-.nav-links a {
-  text-decoration: none; /* 링크 밑줄 제거 */
-  color: #333; /* 글자색 */
-  font-weight: 500; /* 글자 두께 */
-  font-size: 1rem; /* 글자 크기 (기본) */
-  white-space: nowrap; /* 텍스트 줄 바꿈 방지 (필요시) */
-  transition: color 0.3s ease; /* 호버 시 색상 변경 애니메이션 */
-}
-
-.nav-links a:hover {
-  color: #007bff; /* 호버 시 색상 변경 */
-}
-
-/* ============================================================== */
-/* ✅ 데스크탑 인증 버튼 컨테이너 (.auth-buttons) 스타일 */
-/* ============================================================== */
-.auth-buttons { /* .auth-buttons는 데스크탑/모바일 메뉴 모두 사용되므로 공통 스타일 */
-  display: flex; /* 자식 버튼들을 Flexbox로 가로 배열 (기본) */
-  gap: 1rem; /* 버튼 간 가로 간격 */
-}
-
-/* ============================================================== */
-/* ✅ 버튼 기본 스타일 (.btn-outline, .btn-filled) */
-/* ============================================================== */
-.btn-outline {
-  padding: 0.5rem 1rem; /* 버튼 내부 패딩 */
-  border: 1px solid #007bff; /* 테두리 색상 및 두께 */
-  color: #007bff; /* 글자색 */
-  background-color: transparent; /* 배경 투명 */
-  border-radius: 5px; /* 모서리 둥글게 */
-  font-weight: normal; /* 글자 두께 */
-  font-size: 1rem; /* 글자 크기 */
-  cursor: pointer; /* 클릭 가능한 요소임을 표시 */
-  transition: background-color 0.3s ease, color 0.3s ease; /* 호버 애니메이션 */
-}
-
-.btn-outline:hover {
-  background-color: #007bff;
-  color: white;
-}
-
-.btn-filled {
-  padding: 0.5rem 1rem; /* 버튼 내부 패딩 */
-  border: none; /* 테두리 없음 */
-  background-color: #007bff; /* 배경색 */
-  color: white; /* 글자색 */
-  border-radius: 5px; /* 모서리 둥글게 */
-  font-weight: normal; /* 글자 두께 */
-  font-size: 1rem; /* 글자 크기 */
-  cursor: pointer; /* 클릭 가능한 요소임을 표시 */
-  transition: background-color 0.3s ease; /* 호버 애니메이션 */
-}
-
-.btn-filled:hover {
-  background-color: #0056b3; /* 호버 시 배경색 변경 */
-}
-
-
-/* ============================================================== */
-/* ✅ 햄버거 메뉴 버튼 (.hamburger) 스타일 */
-/*    기본적으로 숨겨져 있으며, 작은 화면에서만 @media 쿼리로 표시됩니다. */
-/* ============================================================== */
-.hamburger {
-  display: none; /* ✅ 필수: 데스크탑 화면에서는 숨김 */
-  font-size: 2rem; /* 햄버거 아이콘 크기 */
-  cursor: pointer; /* 클릭 가능한 요소임을 표시 */
-  z-index: 15; /* 다른 요소 위에 표시 (메뉴 컨테이너 z-index: 12보다 높게) */
-  background: none; /* 배경 없음 */
-  border: none; /* 테두리 없음 */
-  color: #333; /* 햄버거 아이콘 색상 */
-  padding: 0.5rem; /* 클릭 영역 확보를 위한 패딩 (터치 영역 넓힘) */
-  /* position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); */ /* 네비게이션 바 우측 세로 중앙에 고정하고 싶다면 사용 */
-}
-
-/* ============================================================== */
-/* ✅ 모바일 메뉴 컨테이너 (.mobile-menu) 스타일 */
-/*    기본적으로 숨겨져 있으며, 햄버거 클릭 시 'active' 클래스로 표시됩니다. */
-/* ============================================================== */
-.mobile-menu {
-  display: none; /* ✅ 필수: 기본 숨김 */
-  flex-direction: column; /* ✅ 필수: 모바일 메뉴 내부 자식 요소(네비게이션 링크, 인증 버튼)를 세로로 배열 */
-  background-color: white; /* 메뉴 배경색 */
-  position: absolute; /* ✅ 필수: 부모(.zoop-navbar) 기준 절대 위치 */
-  top: 100%; /* ✅ 필수: .zoop-navbar 높이(패딩 포함)만큼 아래에 위치 */
-  right: 0; /* ✅ 필수: .zoop-navbar 우측에 정렬 */
-  width: 200px; /* 모바일 메뉴의 너비 */
-  padding: 1rem; /* 모바일 메뉴 내부 패딩 */
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* 메뉴 그림자 */
-  z-index: 12; /* 네비게이션 바 (z-index: 10)보다 위에 표시, 햄버거 (z-index: 15)보다는 아래에 표시 */
-  border-radius: 5px; /* 모서리 둥글게 */
-  /* overflow-y: auto; /* 내용이 많을 경우 세로 스크롤바 표시 (필요시) */
-  /* max-height: calc(100vh - 70px); /* 화면 높이에 맞춰 최대 높이 설정 (네비게이션 바 높이 빼기) */
-}
-
-/* ✅ 모바일 메뉴 컨테이너에 'active' 클래스가 있을 때 표시 */
-/* 이 규칙이 .mobile-menu { display: none; } 규칙보다 우선해야 합니다. */
-.mobile-menu.active {
-  display: flex; /* ✅ 필수: 'active' 클래스 있을 때 Flexbox로 표시 (flex-direction: column 적용됨) */
-}
-
-/* ✅ 큰 화면일 때 모바일 전용 요소를 숨김 */
-/*    React 코드의 .mobile-only 클래스와 함께 사용됩니다. */
-.mobile-only {
-  display: none; /* ✅ 필수: 기본 숨김 (큰 화면에서 안 보이게) */
-}
-
-
-/* ==================================================== */
-/* ✅ 작은 화면일 때 (뷰포트 최대 너비 768px) 적용되는 스타일 */
-/* ==================================================== */
-@media screen and (max-width: 768px) {
-  /* ✅ 작은 화면에서 네비게이션 바 전체 스타일 */
-  .zoop-navbar {
-    flex-wrap: wrap; /* 요소들이 넘칠 경우 줄 바꿈 (필요시) */
-    justify-content: space-between; /* ✅ 필수: 작은 화면에서는 로고와 햄버거 버튼을 양 끝으로 벌립니다. */
-    /* ✅ 패딩 조정: 상하 0.8rem, 좌우 0.5rem으로 더 줄입니다. */
-    padding: 0.8rem 0.5rem; /* ✅ 좌우 패딩을 줄여 로고를 왼쪽 끝에 가깝게, 햄버거를 오른쪽 끝에 가깝게 */
-    /* height: auto; /* 메뉴 열릴 때 높이 자동 조절 (필요시) */
+/* ===============================
+   ✅ NAVIGATION BAR: 기본 스타일 (About 전용은 조건부 적용)
+   =============================== */
+   .zoop-navbar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 0.8rem 2.5rem;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: transparent;
+    box-shadow: none;
+    z-index: 10;
+    transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
   }
-
-  /* ✅ 작은 화면에서 로고 이미지 스타일 */
+  
+  .zoop-navbar.about {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 999;
+    background-color: transparent;
+    transition: all 0.3s ease;
+  }
+  
+  .zoop-navbar.about.scrolled {
+    background-color: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+  
   .logo-img {
-     height: 35px; /* 작은 화면에서 로고 크기 조정 */
-     /* margin-right: auto;는 일반 스타일에서 설정됨 */
-     /* margin-left: 0; */
+    height: 48px;
+    flex-shrink: 0;
+    cursor: pointer;
+    justify-self: start;
   }
-
-  /* ✅ 작은 화면에서 햄버거 메뉴 버튼 표시 */
+  
+  .nav-links {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    justify-self: center;
+  }
+  
+  .nav-links a {
+    text-decoration: none;
+    color: #333;
+    font-size: 0.95rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: color 0.3s ease;
+  }
+  
+  .zoop-navbar.about .nav-links a {
+    color: white;
+  }
+  
+  .zoop-navbar.about .nav-links a:hover {
+    color: #30c59b;
+  }
+  
+  .nav-links a:hover {
+    color: #007bff;
+  }
+  
+  .auth-buttons {
+    display: flex;
+    gap: 0.6rem;
+    justify-self: end;
+  }
+  
+  .auth-buttons button,
+  .auth-buttons span {
+    padding: 0.3rem 1rem;
+    border-radius: 999px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #333;
+    background: transparent;
+    border: none;
+  }
+  
+  .zoop-navbar.about .auth-buttons button,
+  .zoop-navbar.about .auth-buttons span {
+    color: white;
+  }
+  
+  .auth-buttons span {
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+  }
+  
+  .auth-buttons span::after {
+    content: '|';
+    margin: 0 0.5rem;
+    color: rgba(0, 0, 0, 0.6);
+  }
+  
+  .zoop-navbar.about .auth-buttons span::after {
+    color: rgba(255, 255, 255, 0.6);
+  }
+  
+  /* 햄버거 메뉴는 반응형에서만 사용 */
   .hamburger {
-    display: block; /* ✅ 필수: 작은 화면에서 표시 */
-    /* margin: 0; /* ✅ 혹시 모를 마진 제거 */
-    /* ... other hamburger styles ... */
+    display: none;
+    font-size: 2rem;
+    cursor: pointer;
+    z-index: 15;
+    background: none;
+    border: none;
+    color: #333;
+    padding: 0.5rem;
   }
-
-  /* ✅ 작은 화면에서 데스크탑 전용 요소를 숨김 - 특정성을 높여서 다른 규칙을 확실히 덮어씁니다. */
-  /*    .zoop-navbar 안에 있는 .desktop-only 요소에만 적용되도록 합니다. */
-  .zoop-navbar .desktop-only { /* ✅ 셀렉터 변경: 부모 클래스 명시하여 특정성 높임 */
-    display: none; /* ✅ 필수: 작은 화면에서 숨김 */
-     /* !important; */ /* ✅ 만약 이래도 안 되면 임시로 !important 추가 (최후의 수단) */
+  
+  .zoop-navbar.about .hamburger {
+    color: white;
   }
-
-  /* ✅ 작은 화면일 때 모바일 전용 요소를 표시 */
-  /* mobile-only 클래스 자체는 기본 display: none이지만, 부모(.mobile-menu.active)가 display: flex이면 자식은 보이게 됩니다. */
-  /* 따라서 여기서는 별도의 display 설정이 필요 없습니다. */
-   .mobile-only {
-       /* display: block; /* 또는 flex; */ /* 필요시 명시적으로 설정 (이 경우 mobile-menu 내에서도 display: block/flex가 됨) */
-   }
-
-
-  /* ✅ 모바일 메뉴 내부 네비게이션 링크 그룹 스타일 (작은 화면에서 세로 배열 및 간격) */
-  /* 모바일 메뉴(.mobile-menu.active) 안에 있을 때 적용되는 스타일 */
-  .mobile-menu .nav-links.mobile-only {
-       flex-direction: column; /* ✅ 필수: 세로 배열 (mobile-menu에 설정되어 있지만 명시적 설정) */
-       width: 100%; /* 메뉴 너비에 맞춤 */
-       gap: 0.8rem; /* 링크 항목 간 세로 간격 */
-       margin-left: 0; /* 왼쪽 여백 제거 */
-       padding-bottom: 0.8rem; /* 네비게이션 링크 그룹 하단 패딩 (아래 버튼 그룹과의 간격 확보) */
-       border-bottom: 1px solid #eee; /* 네비게이션 링크 그룹과 버튼 그룹 사이 구분선 (선택 사항) */
+  
+  .mobile-menu {
+    display: none;
+    flex-direction: column;
+    background-color: white;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 100%;
+    padding: 1rem 2rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    z-index: 12;
+    border-radius: 0 0 10px 10px;
+    animation: dropdown 0.3s ease-out;
+    flex-wrap: nowrap;
   }
-   .mobile-menu .nav-links.mobile-only a {
-       padding: 0.5rem 0; /* 링크 항목 내부 상하 패딩 */
-       /* border-bottom: 1px solid #eee; /* 개별 링크 항목 구분선 (선택 사항) */
-   }
-
-
-  /* ✅ 모바일 메뉴 내부 인증 버튼 그룹 스타일 (작은 화면에서 세로 배열 및 간격) */
-  /* 모바일 메뉴(.mobile-menu.active) 안에 있을 때 적용되는 스타일 */
-  .mobile-menu .auth-buttons.mobile-only {
-      flex-direction: column; /* ✅ 필수: 세로 배열 */
-      width: 100%; /* 메뉴 너비에 맞춤 */
-      gap: 0.8rem; /* 버튼 간 세로 간격 */
-      margin-top: 1rem; /* ✅ 필수: 네비게이션 링크 그룹과의 상단 간격 */
+  
+  @keyframes dropdown {
+    0% {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
-   .mobile-menu .auth-buttons.mobile-only button {
-        width: 100%; /* 버튼 너비를 메뉴 너비에 맞춤 */
-   }
-
-  /* ============================================================== */
-  /* ✅ 매우 작은 화면일 때 (예: 뷰포트 최대 너비 480px) 추가 조정 스타일 */
-  /*    로고/햄버거를 왼쪽/오른쪽 끝에 더 가깝게 붙이거나 잘림 방지 */
-  /* ============================================================== */
+  
+  .mobile-menu.active {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .mobile-only {
+    display: none;
+  }
+  
+  /* 반응형 스타일 */
+  @media screen and (max-width: 900px) {
+    .zoop-navbar {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      padding: 0.6rem 1rem;
+    }
+  
+    .logo-img {
+      height: 36px;
+    }
+  
+    .hamburger {
+      display: block;
+    }
+  
+    .zoop-navbar .desktop-only {
+      display: none;
+    }
+  
+    .mobile-only {
+      display: block;
+    }
+  
+    .mobile-menu .nav-links.mobile-only {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      gap: 1rem;
+      margin: 0 auto;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #eee;
+      text-align: center;
+    }
+  
+    .mobile-menu .nav-links.mobile-only a {
+      padding: 0.6rem 0;
+      font-size: 1.05rem;
+    }
+  
+    .mobile-menu .auth-buttons.mobile-only {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      gap: 0.8rem;
+      margin-top: 1rem;
+    }
+  
+    .mobile-menu .auth-buttons.mobile-only button {
+      width: 100%;
+    }
+  }
+  
   @media screen and (max-width: 480px) {
-      /* ✅ 네비게이션 바 패딩 더 줄이기 */
-      .zoop-navbar {
-          padding: 0.6rem 0.3rem; /* ✅ 좌우 패딩을 0.3rem으로 더 줄여 공간 확보 */
-      }
-      /* 필요하다면 로고 크기를 아주 조금 더 줄일 수도 있습니다. */
-      /* .logo-img { height: 30px; } */
-      /* 필요하다면 햄버거 아이콘 크기를 아주 조금 줄일 수도 있습니다. */
-      /* .hamburger { font-size: 1.8rem; } */
-      /* 모바일 메뉴 너비를 화면에 꽉 차게 할 수도 있습니다. */
-      /* .mobile-menu { width: calc(100% - 0.6rem); right: 0.3rem; left: 0.3rem;} /* 좌우 패딩 0.3rem 고려 */
+    .zoop-navbar {
+      padding: 0.5rem 0.8rem;
+    }
   }
-
-}
+  

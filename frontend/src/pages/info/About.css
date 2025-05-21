@@ -1,0 +1,305 @@
+/* 🟣 Hero Section */
+.hero-banner {
+    position: relative;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  
+  .hero-banner::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(to bottom,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.3) 50%,
+      rgba(0, 0, 0, 0.8) 90%,
+      rgba(0, 0, 0, 1) 100%);
+    backdrop-filter: blur(12px);
+    z-index: -1;
+  }
+  
+  .overlay {
+    position: relative;
+    z-index: 1;
+    padding: 4rem 2rem;
+    max-width: 900px;
+  }
+  
+  .overlay h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.3;
+  }
+  
+  /* 🔵 Scroll Unlock Section */
+  .scroll-unlock-section {
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    gap: 6rem;
+    align-items: center;
+    justify-content: center;
+    padding: 15rem 2rem;
+  }
+  
+  .scroll-slide {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: translateY(60px);
+    transition: opacity 1s ease, transform 1s ease;
+  }
+  
+  .scroll-slide.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .scroll-slide h2 {
+    font-size: 3rem;
+    font-weight: 800;
+    color: white;
+    white-space: nowrap;
+    max-width: none;
+    text-align: center;
+    line-height: 1.2;
+  }
+  
+
+  .scroll-slide.last.visible h2 {
+    transform: scale(1.15) translateZ(0);
+    color: white; /* 여기 기존 색상 (#00ffd5 등)을 흰색으로 변경 */
+    text-shadow: 0 0 20px rgba(0, 255, 213, 0.6);
+  }
+  
+  
+  /* 🛩️ Plane + Text Animation */
+  .plane-text-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .paper-plane-svg {
+    position: absolute;
+    left: -60px;
+    top: 50%;
+    transform: translateY(-50%);
+    animation: fly-across 1.2s ease forwards;
+  }
+  
+  @keyframes fly-across {
+    0% {
+      left: -60px;
+      opacity: 1;
+    }
+    100% {
+      left: 100%;
+      opacity: 0;
+    }
+  }
+  
+  .plane-trail-text {
+    opacity: 0;
+    transform: translateX(-30px);
+    font-size: 3rem;
+    font-weight: 800;
+    color: white;
+    white-space: nowrap;
+    text-align: center;
+    animation: text-slide-in 1s ease forwards;
+    animation-delay: 1.2s;
+  }
+  
+  
+  @keyframes text-slide-in {
+    0% {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  /* 🔵 Stats Section */
+  .about-stats-banner {
+    position: relative;
+    min-height: 120vh;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    padding: 10rem 2rem;
+    color: white;
+  }
+  
+  .stats-gradient {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(to right,
+      rgba(0, 0, 0, 0.9) 0%,
+      rgba(0, 0, 0, 0.6) 25%,
+      rgba(0, 0, 0, 0.3) 50%,
+      rgba(0, 0, 0, 0.05) 80%,
+      rgba(0, 0, 0, 0) 100%);
+    z-index: 0;
+  }
+  
+  .stats-overlay {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: left;
+  }
+  
+  .stats-text-block {
+    font-size: 1.7rem;
+    font-weight: 600;
+    line-height: 2.5rem;
+    color: white;
+  }
+  
+  /* 🟡 Mission Section */
+  .about-mission-section {
+    background-size: cover;
+    background-position: center;
+    padding: 8rem 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .mission-card {
+    background-color: rgba(0, 0, 0, 0.65);
+    color: white;
+    padding: 3rem;
+    border-radius: 1rem;
+    max-width: 600px;
+    text-align: center;
+  }
+  
+  .mission-card h4 {
+    font-size: 1.2rem;
+    color: #9ca3af;
+    margin-bottom: 1rem;
+  }
+  
+  .mission-card p {
+    font-size: 1.1rem;
+    line-height: 1.8;
+  }
+  
+  /* 🟢 Vision Section */
+  .about-vision-section {
+    background-color: #f9fafb;
+    padding: 6rem 2rem;
+    text-align: center;
+  }
+  
+  .about-vision-section h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .about-vision-section p {
+    margin-bottom: 3rem;
+    color: #4b5563;
+  }
+  
+  .vision-cards {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .vision-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    padding: 2rem;
+    width: 280px;
+    text-align: left;
+    backdrop-filter: blur(6px);
+    color: white;
+  }
+  
+  .vision-card span {
+    font-size: 0.9rem;
+    color: #93c5fd;
+  }
+  
+  .vision-card h3 {
+    margin-top: 1rem;
+    font-size: 1.2rem;
+    color: white;
+  }
+  
+  /* ⚫ Footer */
+  .about-footer {
+    background-color: #f3f4f6;
+    padding: 4rem 2rem;
+  }
+  
+  .footer-columns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+  
+  .footer-columns div h4 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: #111827;
+  }
+  
+  .footer-columns div ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .footer-columns div ul li {
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+  }
+  
+  .footer-legal {
+    text-align: center;
+    color: #9ca3af;
+    font-size: 0.85rem;
+  }
+  
+  /* 📱 Responsive */
+  @media (max-width: 768px) {
+    .overlay h1 {
+      font-size: 2.5rem;
+    }
+    .scroll-slide h2,
+    .plane-trail-text {
+      font-size: 2rem;
+    }
+    .stats-overlay h3 {
+      font-size: 1.3rem;
+    }
+  }
+  
