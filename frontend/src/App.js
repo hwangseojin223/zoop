@@ -2,23 +2,36 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-import Signup from './pages/signup/Signup';
+//index
 import Index from './pages/Index';
+
+//signup
+import Signup from './pages/signup/Signup';
 import CompanySignupProcess from './pages/signup/CompanySignupProcess';
 import CompanyAdminSignup from './pages/signup/CompanyAdminSignup';
 import SignupSuccess from './pages/signup/SignupSuccess';
 import ApplicantSignupSuccess from './pages/signup/ApplicantSignupSuccess';
-import LoginSelectionPage from './pages/login/LoginSelectionPage';
-import CompanyDashboard from './pages/company/CompanyDashboard';
-import GoogleAuthCallback from './pages/auth/GoogleAuthCallback';
 import ApplicantSignupProcess from './pages/signup/ApplicantSignupProcess';
+
+import LoginSelectionPage from './pages/login/LoginSelectionPage';
+import GoogleAuthCallback from './pages/auth/GoogleAuthCallback';
 
 import PrivateRoute from './routes/PrivateRoute';
 import PublicOnlyRoute from './routes/PublicOnlyRoute';
 
+// company
+import CompanyDashboard from './pages/company/CompanyDashboard';
 import RecruitCreate from './pages/company/RecruitCreate';
 import CandidateList from './pages/company/CandidateList';
 import ResponderList from './pages/company/ResponderList';
+
+//info
+import About from './pages/info/About';
+import Notice from './pages/info/Notice';
+import Support from './pages/info/Support';
+import FAQ from './pages/info/FAQ';
+import Careers from './pages/info/Careers';
+
 
 function AppContent() {
   const { setAuthState } = useAuth();
@@ -54,6 +67,9 @@ function AppContent() {
         <Route path="/auth/login" element={<LoginSelectionPage />} />
         <Route path="/google-auth" element={<GoogleAuthCallback />} />
 
+        {/* 회사 소개 (공개 접근 가능) */}
+        <Route path="/about" element={<About />} />
+
         {/* 공고별 후보자 목록 페이지 */}
         <Route path="/company/candidates/:postId" element={<CandidateList />} />
 
@@ -78,23 +94,21 @@ function AppContent() {
           path="/company/candidates"
           element={
             <PrivateRoute allowedUserType="company">
-              <div style={{ padding: "7rem 3rem" }}>
+              <div style={{ padding: '7rem 3rem' }}>
                 <h2>❗ 공고 ID가 누락되었습니다.</h2>
                 <p>후보자 목록을 보려면 유효한 공고 ID가 필요합니다.</p>
               </div>
             </PrivateRoute>
           }
         />
-
-          <Route
-            path="/company/responder/:postId"
-            element={
-              <PrivateRoute allowedUserType="company">
-                <ResponderList />
-              </PrivateRoute>
-            }
-          />
-
+        <Route
+          path="/company/responder/:postId"
+          element={
+            <PrivateRoute allowedUserType="company">
+              <ResponderList />
+            </PrivateRoute>
+          }
+        />
       </Routes>
     </Router>
   );

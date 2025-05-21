@@ -83,6 +83,7 @@ export default function Index() {
           <div>
             <strong>회사</strong>
             <p>회사 소개</p>
+            <p>줍스토리</p>
             <p>줍페이먼츠</p>
             <p>줍인슈어런스</p>
             <p>줍증권</p>
