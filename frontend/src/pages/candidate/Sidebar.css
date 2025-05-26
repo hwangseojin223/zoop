@@ -1,0 +1,99 @@
+/* Sidebar.css */
+
+.sidebar {
+  width: 240px;
+  background-color: #ffffff;
+  padding: 20px 0;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0; /* 사이드바의 너비가 고정되도록 합니다. */
+}
+
+.logo {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.logo img {
+  height: 24px; /* Adjust as needed */
+}
+
+.menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  color: #555;
+  font-size: 15px;
+  cursor: pointer;
+  position: relative; /* 하위 메뉴의 absolute 포지셔닝 기준 */
+  flex-wrap: wrap; /* 하위 메뉴가 아래 줄로 내려가도록 허용 */
+  transition: background-color 0.2s ease-in-out; /* 부드러운 호버 효과 */
+}
+
+.menu-item:hover {
+  background-color: #f0f2f5;
+}
+
+.menu-item.active {
+  background-color: #e6f7ff; /* Light blue for active item */
+  color: #007bff; /* Blue text for active */
+  font-weight: bold;
+}
+
+.menu-item .icon {
+  margin-right: 10px;
+  font-size: 18px; /* Adjust icon size */
+}
+
+.menu-item .arrow {
+  margin-left: auto; /* 화살표를 오른쪽 끝으로 보냅니다. */
+  font-size: 12px;
+  transition: transform 0.2s ease-in-out; /* 화살표 회전 애니메이션 */
+}
+
+/* new-badge는 그대로 유지 */
+.new-badge {
+  background-color: #ff4d4f; /* Red */
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+  font-weight: normal;
+}
+
+/* sub-menu의 기본 스타일 (이제 JSX에서 조건부 렌더링되므로 display: none이 필요 없음) */
+.sub-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background-color: #f7f9fc; /* Slightly darker for sub-menu background */
+  border-top: 1px solid #eee;
+  width: 100%; /* 부모 .menu-item의 전체 너비 사용 */
+  /* position: absolute; /* 이 부분이 있으면 메뉴 아이템 안에서 겹쳐 보일 수 있습니다. */
+  /* left: 0; */
+  /* top: 100%; */ /* 주석 처리하거나 제거: flex-wrap에 의해 자연스럽게 아래로 내려갑니다. */
+  /* z-index: 10; */ /* 필요하다면 유지 */
+}
+
+.sub-menu-item {
+  padding: 10px 20px 10px 45px; /* Indent sub-menu items */
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+}
+
+.sub-menu-item:hover {
+  background-color: #e9eef2;
+}
+
+.sub-menu-item.active {
+  background-color: #dcf2ff; /* Lighter blue for active sub-menu item */
+  color: #007bff;
+  font-weight: bold;
+}
