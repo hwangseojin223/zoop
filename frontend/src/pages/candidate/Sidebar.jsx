@@ -1,15 +1,10 @@
-import React, { useState } from 'react'; // ① useState 훅을 임포트합니다.
+import React, { useState } from 'react';
 import './Sidebar.css';
 
 function Sidebar() {
-  // ② 어떤 메뉴가 현재 펼쳐져 있는지 추적하는 상태를 정의합니다.
-  // null은 아무 메뉴도 펼쳐져 있지 않음을 의미합니다.
-  const [expandedMenuId, setExpandedMenuId] = useState(null); // 초기값: 아무것도 펼치지 않음
+  const [expandedMenuId, setExpandedMenuId] = useState(null);
 
-  // ③ 메뉴 아이템 클릭 핸들러 함수
   const handleMenuItemClick = (menuId) => {
-    // 클릭된 메뉴가 이미 펼쳐져 있다면 닫고 (null로 설정),
-    // 닫혀있다면 해당 메뉴를 펼칩니다.
     setExpandedMenuId(expandedMenuId === menuId ? null : menuId);
   };
 
@@ -19,11 +14,27 @@ function Sidebar() {
         <img src="../../logo_zoop.png" alt="zoop" />
       </div>
       <ul className="menu-list">
-        {/* 일반 메뉴 아이템 (하위 메뉴 없음) */}
-        <li className="menu-item">MY홈</li>
-
+        {/* 'My 홈' 메뉴 아이템 */}
         <li
-          className={`menu-item ${expandedMenuId === 'receivedProposals' ? 'active' : ''}`}
+          className={`menu-item ${expandedMenuId === 'myHome' ? 'active' : ''}`} // 💡 고유 ID: 'myHome'
+          onClick={() => handleMenuItemClick('myHome')}
+        >
+          <span className="icon"></span> My 홈
+          <span className="arrow">{expandedMenuId === 'myHome' ? '▲' : '▼'}</span>
+          {expandedMenuId === 'myHome' && (
+            <ul className="sub-menu">
+              <li className="sub-menu-item active">계정정보 설정</li>
+              <li className="sub-menu-item">비밀번호 변경</li>
+              <li className="sub-menu-item">로그인 관리</li>
+              <li className="sub-menu-item">알림설정</li>
+              <li className="sub-menu-item">로그아웃</li>
+            </ul>
+          )}
+        </li>
+
+        {/* '받은 제안' 메뉴 아이템 */}
+        <li
+          className={`menu-item ${expandedMenuId === 'receivedProposals' ? 'active' : ''}`} // 💡 고유 ID: 'receivedProposals'
           onClick={() => handleMenuItemClick('receivedProposals')}
         >
           <span className="icon">📝</span> 받은 제안
@@ -35,37 +46,47 @@ function Sidebar() {
             </ul>
           )}
         </li>
-        <li className="menu-item has-badge">
-          <span className="icon">✉️</span> 이력서/자소서 <span className="new-badge">NEW</span>
+
+        {/* '이력서/자소서' 메뉴 아이템 */}
+        <li
+          className={`menu-item ${expandedMenuId === 'resumeCoverLetter' ? 'active' : ''}`} // 💡 고유 ID: 'resumeCoverLetter'
+          onClick={() => handleMenuItemClick('resumeCoverLetter')}
+        >
+          <span className="icon">✉️</span> 이력서/자소서
+          <span className="arrow">{expandedMenuId === 'resumeCoverLetter' ? '▲' : '▼'}</span>
+          {expandedMenuId === 'resumeCoverLetter' && (
+            <ul className="sub-menu">
+              <li className="sub-menu-item active">이력서 등록</li>
+              <li className="sub-menu-item">이력서 관리</li>
+              <li className="sub-menu-item">자소서 관리</li>
+            </ul>
+          )}
         </li>
+
         <li className="menu-item">
           <span className="icon">🎤</span> 스크랩/관심기업
         </li>
 
-        {/* 하위 메뉴가 있는 메뉴 아이템 */}
+        {/* '지원한 공고' 메뉴 아이템 */}
         <li
-          className={`menu-item ${expandedMenuId === 'appliedJobs' ? 'active' : ''}`} // ④ active 클래스 동적 추가
-          onClick={() => handleMenuItemClick('appliedJobs')} // ⑤ 클릭 이벤트 핸들러 추가
+          className={`menu-item ${expandedMenuId === 'appliedJobs' ? 'active' : ''}`}
+          onClick={() => handleMenuItemClick('appliedJobs')}
         >
           <span className="icon">🔍</span> 지원한 공고
-          {/* ⑥ 펼쳐진 상태에 따라 화살표 방향 변경 */}
           <span className="arrow">{expandedMenuId === 'appliedJobs' ? '▲' : '▼'}</span>
-          {/* ⑦ expandedMenuId가 'appliedJobs'일 때만 하위 메뉴 렌더링 */}
           {expandedMenuId === 'appliedJobs' && (
             <ul className="sub-menu">
-              {/* 여기에 '지원한 공고' 관련 하위 메뉴 아이템들을 추가하세요 */}
               <li className="sub-menu-item">내 지원 현황</li>
               <li className="sub-menu-item">기업별 지원 내역</li>
             </ul>
           )}
         </li>
 
-        
-
         <li className="menu-item">
           <span className="icon">⚙️</span> 제안받기 설정
         </li>
 
+        {/* '지원내역' 메뉴 아이템 */}
         <li
           className={`menu-item ${expandedMenuId === 'applicationHistory' ? 'active' : ''}`}
           onClick={() => handleMenuItemClick('applicationHistory')}
@@ -88,6 +109,7 @@ function Sidebar() {
           <span className="icon">📁</span> 내 쿠폰
         </li>
 
+        {/* '커리어 마일리지' 메뉴 아이템 */}
         <li
           className={`menu-item ${expandedMenuId === 'careerMileage' ? 'active' : ''}`}
           onClick={() => handleMenuItemClick('careerMileage')}

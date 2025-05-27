@@ -1,14 +1,58 @@
-import React from 'react';
-import Sidebar from './Sidebar'; // Import Sidebar from the same directory
-import Header from './Header';   // Import Header from the same directory
-import './CandidateDashboard.css'; // This CSS file will now contain styles for the main content too
+import React, { useState, useEffect } from 'react'; // ① useState와 useEffect 훅을 임포트해야 합니다.
+import Sidebar from './Sidebar';
+import Header from './Header';
+import './CandidateDashboard.css';
 
 function CandidateDashboard() {
+  // ② 사용자 이름 상태를 추가합니다.
+  const [userName, setUserName] = useState('게스트');
+
+  // ③ 탭 선택 상태를 관리할 새로운 useState 훅을 추가합니다.
+  const [activeTab, setActiveTab] = useState('all'); // 기본값: 'all' (전체)
+
+  // ④ 컴포넌트가 마운트될 때 사용자 정보를 가져오는 useEffect 훅
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        // 실제 백엔드 API 호출을 여기에 구현합니다.
+        // 예시:
+        // const response = await fetch('/api/me');
+        // const data = await response.json();
+        // if (response.ok) {
+        //   setUserName(data.userName);
+        // } else {
+        //   console.error('Failed to fetch user data:', data.message);
+        //   setUserName('사용자');
+        // }
+
+        // 백엔드 연동 전 임시 데이터 (실제 사용 시 제거)
+        setTimeout(() => {
+          setUserName('김채원'); // 여기에 실제 로그인한 사용자 이름을 설정합니다.
+        }, 500); // 짧은 지연
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        setUserName('오류 발생');
+      }
+    };
+
+    fetchUserData();
+  }, []); // 빈 배열은 컴포넌트 마운트 시 한 번만 실행됨을 의미합니다.
+
+  // ⑤ 탭 클릭 핸들러 함수를 추가합니다.
+  const handleTabClick = (tabId) => {
+    setActiveTab(tabId);
+    // 선택된 탭에 따라 다른 콘텐츠를 로드하는 로직을 여기에 추가할 수 있습니다.
+    console.log(`Tab selected: ${tabId}`);
+  };
+
   return (
-    <div className="candidate-dashboard-wrapper"> {/* Renamed for clarity: this wraps the whole layout */}
+    <div className="candidate-dashboard-wrapper">
+      {/* Sidebar 컴포넌트 */}
       <Sidebar />
-      <div className="main-content-area"> {/* This div will now hold the content previously in MainContent */}
-        <Header /> {/* Header is part of the main content area layout */}
+
+      <div className="main-content-area">
+        {/* Header 컴포넌트에 userName prop을 전달합니다. */}
+        <Header userName={userName} />
 
         {/* --- Content previously from MainContent.jsx starts here --- */}
         <h1 className="page-title">포지션 제안 현황</h1>
@@ -64,10 +108,31 @@ function CandidateDashboard() {
         {/* Tabs and Content Area */}
         <div className="tabs-container">
           <div className="tabs">
-            <button className="tab-button active">전체</button>
-            <button className="tab-button">포지션 제안</button>
-            <button className="tab-button">면접 제안</button>
-            <button className="tab-button">결과발표</button>
+            {/* 각 버튼에 className을 동적으로 부여하고 onClick 핸들러를 추가합니다. */}
+            <button
+              className={`tab-button ${activeTab === 'all' ? 'active' : ''}`}
+              onClick={() => handleTabClick('all')}
+            >
+              전체
+            </button>
+            <button
+              className={`tab-button ${activeTab === 'positionOffer' ? 'active' : ''}`}
+              onClick={() => handleTabClick('positionOffer')}
+            >
+              포지션 제안
+            </button>
+            <button
+              className={`tab-button ${activeTab === 'interviewOffer' ? 'active' : ''}`}
+              onClick={() => handleTabClick('interviewOffer')}
+            >
+              면접 제안
+            </button>
+            <button
+              className={`tab-button ${activeTab === 'resultAnnouncement' ? 'active' : ''}`}
+              onClick={() => handleTabClick('resultAnnouncement')}
+            >
+              결과발표
+            </button>
           </div>
 
           <div className="filter-options">
@@ -83,11 +148,38 @@ function CandidateDashboard() {
           </div>
         </div>
 
-        {/* No content area (placeholder image) */}
-        <div className="empty-state">
+        {/* 선택된 탭에 따라 다른 콘텐츠를 표시하는 부분 (예시) */}
+        {/* activeTab 상태에 따라 다른 컴포넌트나 내용을 렌더링할 수 있습니다. */}
+        {activeTab === 'all' && (
+          <div className="tab-content">
+            {/* 전체 탭에 해당하는 내용 */}
+            <p>전체 제안 목록이 여기에 표시됩니다.</p>
+          </div>
+        )}
+        {activeTab === 'positionOffer' && (
+          <div className="tab-content">
+            {/* 포지션 제안 탭에 해당하는 내용 */}
+            <p>포지션 제안 목록이 여기에 표시됩니다.</p>
+          </div>
+        )}
+        {activeTab === 'interviewOffer' && (
+          <div className="tab-content">
+            {/* 면접 제안 탭에 해당하는 내용 */}
+            <p>면접 제안 목록이 여기에 표시됩니다.</p>
+          </div>
+        )}
+        {activeTab === 'resultAnnouncement' && (
+          <div className="tab-content">
+            {/* 결과 발표 탭에 해당하는 내용 */}
+            <p>결과 발표 목록이 여기에 표시됩니다.</p>
+          </div>
+        )}
+
+
+        {/* 기존의 empty-state는 이제 조건부 렌더링 내부에 두거나, 필요에 따라 조정 */}
+        {/* <div className="empty-state">
           <img src="/path/to/empty_state_image.png" alt="No content" className="empty-image" />
-          {/* Placeholder for "No content" text if any */}
-        </div>
+        </div> */}
         {/* --- Content previously from MainContent.jsx ends here --- */}
 
       </div>
