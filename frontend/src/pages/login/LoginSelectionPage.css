@@ -228,7 +228,7 @@ html {
     font-weight: 500;
     position: relative;
     overflow: hidden;
-
+}
 .tab-button.active {
     border-bottom: 3px solid #007bff; 
     color: #007bff;
