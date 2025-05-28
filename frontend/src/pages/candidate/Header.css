@@ -1,0 +1,46 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  z-index: 100; /* Ensure header is on top */
+}
+
+.header-left {
+  /* No specific content in the image, but can be used for toggling sidebar */
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.header-icon {
+  font-size: 20px;
+  color: #666;
+  margin-left: 20px;
+  cursor: pointer;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  margin-left: 25px;
+  font-size: 15px;
+  color: #333;
+}
+
+.user-profile span {
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #ccc; /* Placeholder background */
+  object-fit: cover;
+}
