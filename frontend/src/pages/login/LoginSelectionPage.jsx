@@ -118,7 +118,6 @@ function LoginSelectionPage() {
 
         alert('로그인 성공!');
         if(receivedUserType === 'candidate'){
-          // ✅ 기업회원 전용 페이지로 이동
           navigate('/candidate/dashboard', { replace: true });
         }else if(receivedUserType === 'company'){
           navigate('/company/dashboard', { replace: true });
