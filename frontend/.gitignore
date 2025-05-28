@@ -24,3 +24,6 @@ yarn-error.log*
 
 # github token
 .env
+
+__pycache__/
+*.py[cod]
