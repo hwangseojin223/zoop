@@ -1,155 +1,384 @@
-import React, { useEffect, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
+import { motion, useInView, animate } from 'framer-motion';
 import Navbar from '../../components/Navbar';
+import { useNavigate } from 'react-router-dom';
 import './About.css';
 
+const wordVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: custom => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: custom * 0.3,
+      duration: 0.6,
+      ease: 'easeOut'
+    }
+  })
+};
+
+const slideVariants = {
+  hidden: { opacity: 0, x: -100 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.8,
+      ease: 'easeOut'
+    }
+  }
+};
+
+const counterVariants = {
+  hidden: { opacity: 0, y: 50 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } }
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, scale: 0.9 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.5, type: 'spring', stiffness: 100 } }
+};
+
+const TEXT = {
+  ko: {
+    hero: "채용, 그 이상의 자동화를 만듭니다",
+    slide1: "이제, 채용은 더 빠르고 간단해야 합니다",
+    words: [
+      { text: '연결은', isEmphasized: true },
+      { text: '자동으로,', isEmphasized: false },
+      { text: '제안은', isEmphasized: true },
+      { text: '즉시,', isEmphasized: false },
+      { text: '채용은', isEmphasized: true },
+      { text: '손쉽게', isEmphasized: false }
+    ],
+    fillerWords: ['자동으로,', '즉시,', '손쉽게'],
+    slide3: ['채용의', '새로운', '기준,', 'ZOOP에서', '시작됩니다'],
+    statsTitle: "채용의 혁신, 숫자로 증명하다",
+    stats: [
+      { key: "timeSaved", label: "채용 시간 단축" },
+      { key: "matchAccuracy", label: "인재 매칭 정확도" },
+      { key: "interviewsConducted", label: "AI 면접 진행" }
+    ],
+    processTitle: "채용의 모든 과정을 자동화",
+    processSteps: [
+      { step: "Step 1", title: "조건 입력", desc: "기업이 원하는 인재의 조건을 간단히 입력하세요. 직무, 기술, 경험 등을 자유롭게 설정 가능합니다." },
+      { step: "Step 2", title: "AI 분석 & 매칭", desc: "ZOOP의 AI가 전 세계 인재 풀에서 최적의 후보자를 찾아 자동으로 연락합니다." },
+      { step: "Step 3", title: "AI 면접", desc: "AI가 1차 면접을 진행해 후보자의 역량을 심층 분석하고 결과를 제공합니다." }
+    ],
+    testimonialTitle: "기업들이 ZOOP을 선택한 이유",
+    testimonials: [
+      { text: "“ZOOP 덕분에 채용 시간이 70% 단축되었고, 최적의 인재를 빠르게 찾을 수 있었습니다.”", author: "— TechCorp, CTO" },
+      { text: "“AI 면접 기능은 놀라울 정도로 정확했고, 인사팀의 업무 부담을 크게 줄여줬습니다.”", author: "— InnoVate, HR Manager" },
+      { text: "“ZOOP은 채용의 패러다임을 바꿨습니다. 이제 채용은 전략적 결정입니다.”", author: "— FutureWorks, CEO" }
+    ],
+    ctaTitle: "채용의 미래, 지금 시작하세요",
+    ctaDesc: "ZOOP과 함께라면 기업의 채용이 더 빠르고, 더 스마트해집니다.",
+    ctaButton: "지금 시작하기"
+  },
+  en: {
+    hero: "Beyond Automation for Recruitment",
+    slide1: "Now, recruitment should be faster and simpler.",
+    words: [
+      { text: 'Connection', isEmphasized: true },
+      { text: 'Automated,', isEmphasized: false },
+      { text: 'Suggestion', isEmphasized: true },
+      { text: 'Instant,', isEmphasized: false },
+      { text: 'Hiring', isEmphasized: true },
+      { text: 'Easy', isEmphasized: false }
+    ],
+    fillerWords: ['Automated,', 'Instant,', 'Easy'],
+    slide3: ['Recruitment', 'Redefined,', 'Starts', 'with', 'ZOOP'],
+    statsTitle: "Recruitment Innovation, Proven by Numbers",
+    stats: [
+      { key: "timeSaved", label: "Time Saved" },
+      { key: "matchAccuracy", label: "Matching Accuracy" },
+      { key: "interviewsConducted", label: "AI Interviews" }
+    ],
+    processTitle: "Automating Every Step of Hiring",
+    processSteps: [
+      { step: "Step 1", title: "Input Requirements", desc: "Easily enter your ideal candidate’s requirements. Freely set role, skills, and experience." },
+      { step: "Step 2", title: "AI Analysis & Matching", desc: "ZOOP’s AI automatically contacts optimal candidates from a global talent pool." },
+      { step: "Step 3", title: "AI Interview", desc: "AI conducts the first interview, thoroughly analyzing the candidate and providing results." }
+    ],
+    testimonialTitle: "Why Companies Choose ZOOP",
+    testimonials: [
+      { text: "“Thanks to ZOOP, hiring time was reduced by 70%, and we found top talent quickly.”", author: "— TechCorp, CTO" },
+      { text: "“The AI interview feature was incredibly accurate and greatly reduced our HR workload.”", author: "— InnoVate, HR Manager" },
+      { text: "“ZOOP has changed the recruitment paradigm. Hiring is now a strategic decision.”", author: "— FutureWorks, CEO" }
+    ],
+    ctaTitle: "Start the Future of Hiring Today",
+    ctaDesc: "With ZOOP, your company’s recruitment is faster and smarter.",
+    ctaButton: "Start Now"
+  }
+};
+
 export default function About() {
-  const [visibleIndex, setVisibleIndex] = useState(0);
-  const [showTextAfterPlane, setShowTextAfterPlane] = useState(false);
+  const navigate = useNavigate();
 
-  // 스크롤 위치에 따라 visibleIndex 업데이트
-  const handleScroll = () => {
-    const sections = document.querySelectorAll('.scroll-slide');
-    const scrollTop = window.scrollY + window.innerHeight * 0.6;
+  // 언어 상태: 'ko' 또는 'en'
+  const [lang, setLang] = useState('ko');
 
+  const slideRef1 = useRef(null);
+  const slideRef2 = useRef(null);
+  const slideRef3 = useRef(null);
+  const statsRef = useRef(null);
+  const processRef = useRef(null);
+  const testimonialRef = useRef(null);
+  const ctaRef = useRef(null);
 
-    sections.forEach((section, index) => {
-      const offsetTop = section.offsetTop;
-      const offsetBottom = offsetTop + section.offsetHeight;
+  const slideInView1 = useInView(slideRef1, { margin: '-40% 0px -40% 0px' });
+  const slideInView2 = useInView(slideRef2, { margin: '-40% 0px -40% 0px' });
+  const slideInView3 = useInView(slideRef3, { margin: '-40% 0px -40% 0px' });
+  const statsInView = useInView(statsRef, { margin: '-20% 0px -20% 0px' });
+  const processInView = useInView(processRef, { margin: '-20% 0px -20% 0px' });
+  const testimonialInView = useInView(testimonialRef, { margin: '-20% 0px -20% 0px' });
+  const ctaInView = useInView(ctaRef, { margin: '-20% 0px -20% 0px' });
 
-      if (scrollTop >= offsetTop && scrollTop < offsetBottom) {
-        setVisibleIndex(index);
+  const words = TEXT[lang].words;
+  const fillerWords = TEXT[lang].fillerWords;
+  const [planeX, setPlaneX] = useState(0);
+
+  useEffect(() => {
+    if (!slideInView2) return;
+    const controls = animate(0, 105, {
+      duration: 1.5,
+      onUpdate: latest => setPlaneX(latest),
+      ease: 'easeInOut'
+    });
+    return () => controls.stop();
+  }, [slideInView2]);
+
+  const revealThresholds = [15, 45, 80];
+
+  // Stats counter effect
+  const [stats, setStats] = useState({
+    timeSaved: 0,
+    matchAccuracy: 0,
+    interviewsConducted: 0
+  });
+
+  useEffect(() => {
+    if (!statsInView) return;
+    const controls = animate(0, 1, {
+      duration: 2,
+      onUpdate: latest => {
+        setStats({
+          timeSaved: Math.round(latest * 70),
+          matchAccuracy: Math.round(latest * 95),
+          interviewsConducted: Math.round(latest * 10000)
+        });
       }
     });
-  };
+    return () => controls.stop();
+  }, [statsInView]);
 
-  // 스크롤 이벤트 등록
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // 비행기 애니메이션이 끝난 후 텍스트 표시
-  useEffect(() => {
-    if (visibleIndex === 1) {
-      setShowTextAfterPlane(false);
-      const timer = setTimeout(() => {
-        setShowTextAfterPlane(true);
-      }, 1200); // 비행기 애니메이션 시간과 동일
-      return () => clearTimeout(timer);
-    } else {
-      setShowTextAfterPlane(false);
-    }
-  }, [visibleIndex]);
+  // Navbar에서 언어 변경 (KOR/ENG) 버튼 클릭 시 호출
+  const handleLangChange = (selected) => setLang(selected);
 
   return (
     <>
-      <Navbar />
-
-      {/* Hero Section */}
-      <section
-        className="hero-banner"
-        style={{ backgroundImage: "url('/info/about_banner.jpg')" }}
-      >
+      <Navbar onLangChange={handleLangChange} />
+      <section className="hero-banner" style={{
+        backgroundImage: "url('/info/about_banner.jpg')",
+        backgroundAttachment: 'fixed',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        position: 'relative'
+      }}>
         <div className="overlay">
-          <h1>채용, 그 이상의 자동화를 만듭니다</h1>
+          <motion.h1
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.2, ease: 'easeOut' }}
+          >
+            {TEXT[lang].hero}
+          </motion.h1>
         </div>
+        <div className="particles-auto" />
       </section>
 
-      {/* Scroll Section */}
       <section className="scroll-unlock-section">
-        {/* 문장 1 */}
-        <div className={`scroll-slide ${visibleIndex === 0 ? 'visible' : ''}`}>
-          <h2 className="fade-text">기회는 기다리지 않습니다</h2>
-        </div>
+        <motion.div className="scroll-slide" ref={slideRef1} variants={slideVariants} initial="hidden" animate={slideInView1 ? 'visible' : 'hidden'}>
+          <motion.h2 className="fade-text white-text" variants={slideVariants}>
+            {TEXT[lang].slide1}
+          </motion.h2>
+        </motion.div>
 
-        {/* 문장 2 + 비행기 */}
-        <div className={`scroll-slide ${visibleIndex === 1 ? 'visible' : ''}`}>
-        {visibleIndex === 1 && (
-          <div className="plane-text-wrapper">
-            <svg
-              className="paper-plane-svg"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="60"
-              height="60"
-              fill="white"
-            >
-              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+        <motion.div className="scroll-slide" ref={slideRef2} initial="hidden" animate={slideInView2 ? 'visible' : 'hidden'} style={{ position: 'relative' }}>
+          <motion.div
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: `${planeX}%`,
+              transform: 'translate(-50%, -50%) rotate(45deg)',
+              zIndex: 2
+            }}
+          >
+            <svg className="plane-effect" style={{ filter: 'drop-shadow(0 4px 12px rgba(0, 255, 213, 0.5))' }} width="50" height="50" viewBox="0 0 24 24" fill="none">
+              <path d="M2 12L22 2L12 22L8 14L2 12Z" fill="rgba(0, 255, 213, 0.9)" stroke="#00ffd5" strokeWidth="2" />
             </svg>
-            <h2 className="plane-trail-text show">우리는 먼저 연결하고, 먼저 제안하고, 먼저 만납니다.</h2>
-          </div>
-        )}
-        </div>
+          </motion.div>
 
-        {/* 문장 3 */}
-        <div className={`scroll-slide last ${visibleIndex === 2 ? 'visible' : ''}`}>
-          <h2 className="fade-text">ZOOP은 새로운 채용의 물결을 이끕니다.</h2>
+          <motion.h2 className="fade-text white-text" style={{
+            display: 'flex',
+            gap: '1rem',
+            justifyContent: 'center',
+            flexWrap: 'nowrap',
+            position: 'relative',
+            zIndex: 1,
+            backgroundImage: `linear-gradient(to right, rgba(255,255,255,0) ${planeX}%, white ${planeX + 10}%)`,
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}>
+            {words.map((word, i) => {
+              const isFiller = fillerWords.includes(word.text);
+              const thresholdIndex = fillerWords.indexOf(word.text);
+              const shouldShow = isFiller ? planeX > revealThresholds[thresholdIndex] : true;
+              const customDelay = word.isEmphasized ? Math.floor(i / 2) : i / 2;
+
+              return (
+                <motion.span
+                  key={i}
+                  initial="hidden"
+                  animate={slideInView2 && shouldShow ? 'visible' : 'hidden'}
+                  variants={word.isEmphasized ? wordVariants : {
+                    hidden: { opacity: 0, y: 30, scale: 0.8 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      scale: 1,
+                      transition: { duration: 0.4, type: 'spring', stiffness: 300 }
+                    }
+                  }}
+                  custom={customDelay}
+                  style={{ display: 'inline-block' }}
+                  className={word.isEmphasized ? 'highlighted-word' : ''}
+                >
+                  {word.text}
+                </motion.span>
+              );
+            })}
+          </motion.h2>
+        </motion.div>
+
+        <motion.div className="scroll-slide last" ref={slideRef3}>
+          <motion.h2
+            className="fade-text white-text"
+            initial={{ opacity: 0, y: 40 }}
+            animate={slideInView3 ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 1, ease: 'easeOut' }}
+            style={{
+              fontWeight: 700,
+              fontSize: '2.8rem',
+              background: 'linear-gradient(90deg, #ffffff, #00ffd5)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              textShadow: '0 0 50px rgba(0, 255, 213, 0.6)',
+              display: 'flex',
+              gap: '0.6rem',
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+              textAlign: 'center'
+            }}
+          >
+            {TEXT[lang].slide3.map((word, i) => (
+              <motion.span
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                animate={slideInView3 ? { opacity: 1, y: 0 } : {}}
+                transition={{ delay: i * 0.2 + 0.2, duration: 0.6, ease: 'easeOut' }}
+                style={{ display: 'inline-block' }}
+              >
+                {word}
+              </motion.span>
+            ))}
+          </motion.h2>
+        </motion.div>
+      </section>
+
+      <section className="stats-section" ref={statsRef}>
+        <div className="stats-overlay">
+          <motion.h2
+            initial={{ opacity: 0, y: 30 }}
+            animate={statsInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+          >
+            {TEXT[lang].statsTitle}
+          </motion.h2>
+          <div className="stats-grid">
+            <motion.div variants={counterVariants} initial="hidden" animate={statsInView ? 'visible' : 'hidden'}>
+              <h3>{stats.timeSaved}%</h3>
+              <p>{TEXT[lang].stats[0].label}</p>
+            </motion.div>
+            <motion.div variants={counterVariants} initial="hidden" animate={statsInView ? 'visible' : 'hidden'}>
+              <h3>{stats.matchAccuracy}%</h3>
+              <p>{TEXT[lang].stats[1].label}</p>
+            </motion.div>
+            <motion.div variants={counterVariants} initial="hidden" animate={statsInView ? 'visible' : 'hidden'}>
+              <h3>{stats.interviewsConducted.toLocaleString()}+</h3>
+              <p>{TEXT[lang].stats[2].label}</p>
+            </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section
-        className="about-stats-banner"
-        style={{ backgroundImage: "url('/info/about2.jpg')" }}
-      >
-        <div className="stats-gradient"></div>
-        <div className="stats-overlay show">
-          <div className="stats-text-block">
-            <h3>채용 1건당 약 350만원 절감</h3>
-            <h3>불필요한 인사/홍보비용 연 1,200억 감축 기대</h3>
-          </div>
+      <section className="process-section" ref={processRef}>
+        <motion.h2
+          initial={{ opacity: 0, y: 30 }}
+          animate={processInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+        >
+          {TEXT[lang].processTitle}
+        </motion.h2>
+        <div className="process-steps">
+          {TEXT[lang].processSteps.map((step, idx) => (
+            <motion.div key={idx} className="process-card" variants={cardVariants} initial="hidden" animate={processInView ? 'visible' : 'hidden'}>
+              <span>{step.step}</span>
+              <h3>{step.title}</h3>
+              <p>{step.desc}</p>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* 기타 섹션들 */}
-      <section
-        className="about-mission-section"
-        style={{ backgroundImage: "url('/info/mission_background.jpg')" }}
-      >
-        <div className="mission-card">
-          <h4>Team Mission</h4>
-          <p>
-            ZOOP은 바꾸고 싶은 세상의 모습이 있고 생각만 해도 가슴 뛰는 목표가 있는 조직입니다.<br />
-            어렵고, 불편하고, 멀게 느껴지는 채용이 아닌 누구에게나 쉽고 상식적인 채용 환경을 만드는 것이 우리의 존재 이유입니다.
-          </p>
+      <section className="testimonial-section" ref={testimonialRef}>
+        <motion.h2
+          initial={{ opacity: 0, y: 30 }}
+          animate={testimonialInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+        >
+          {TEXT[lang].testimonialTitle}
+        </motion.h2>
+        <div className="testimonial-carousel">
+          {TEXT[lang].testimonials.map((t, idx) => (
+            <motion.div key={idx} className="testimonial-card" variants={cardVariants} initial="hidden" animate={testimonialInView ? 'visible' : 'hidden'}>
+              <p>{t.text}</p>
+              <span>{t.author}</span>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      <section className="about-vision-section">
-        <h2>ZOOP이 바꿀 채용</h2>
-        <p>모두를 위한, 새로운 채용의 기준을 만들어 갑니다</p>
-        <div className="vision-cards">
-          <div className="vision-card">
-            <span>ZOOP 스코어</span>
-            <h3>상식적인 채용 평가는 모두를 위한 기회를 만듭니다</h3>
-          </div>
-          <div className="vision-card">
-            <span>ZOOP AI 인터뷰</span>
-            <h3>정량화된 기술 분석과 공정한 AI면접이 가능합니다</h3>
-          </div>
-        </div>
+      <section className="cta-section" ref={ctaRef} aria-labelledby="cta-heading">
+        <motion.div
+          className="cta-content"
+          initial={{ opacity: 0, y: 50 }}
+          animate={ctaInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8 }}
+        >
+          <h2 id="cta-heading">{TEXT[lang].ctaTitle}</h2>
+          <p>{TEXT[lang].ctaDesc}</p>
+          <motion.button
+            className="cta-button"
+            whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(0,255,213,0.5)' }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ duration: 0.3 }}
+            onClick={() => navigate('/auth/applicant/signup')}
+          >
+            {TEXT[lang].ctaButton}
+          </motion.button>
+        </motion.div>
       </section>
-
-      {/* Footer */}
-      <footer className="about-footer">
-        <div className="footer-columns">
-          <div>
-            <h4>서비스</h4>
-            <ul><li>공지사항</li><li>자주 묻는 질문</li><li>고객센터</li></ul>
-          </div>
-          <div>
-            <h4>회사</h4>
-            <ul><li>회사 소개</li><li>채용</li><li>블로그</li></ul>
-          </div>
-          <div>
-            <h4>문의</h4>
-            <ul><li>제휴 문의</li><li>IR 문의</li><li>홍보 문의</li></ul>
-          </div>
-        </div>
-        <div className="footer-legal">
-          <small>© ZOOP Corp. All rights reserved.</small>
-        </div>
-      </footer>
     </>
   );
 }

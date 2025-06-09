@@ -97,7 +97,7 @@
     align-items: center;
   }
   
-  .auth-buttons span::after {
+  /* .auth-buttons span::after {
     content: '|';
     margin: 0 0.5rem;
     color: rgba(0, 0, 0, 0.6);
@@ -105,7 +105,7 @@
   
   .zoop-navbar.about .auth-buttons span::after {
     color: rgba(255, 255, 255, 0.6);
-  }
+  } */
   
   /* 햄버거 메뉴는 반응형에서만 사용 */
   .hamburger {
