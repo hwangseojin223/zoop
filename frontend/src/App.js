@@ -30,6 +30,8 @@ import Careers from './pages/info/Careers';
 // 챗봇 import
 import Chatbot from './components/Chatbot';
 import './components/Chatbot.css';
+// candidate
+import CandidateDashboard from './pages/candidate/CandidateDashboard';
 
 function AppContent() {
   const { setAuthState } = useAuth();
@@ -78,6 +80,17 @@ function AppContent() {
             </PrivateRoute>
           }
         />
+
+        {/*개인회원 대시보드*/}
+        <Route
+          path='/candidate/dashboard'
+          element={
+            <PrivateRoute allowedUserType='candidate'>
+              <CandidateDashboard />
+            </PrivateRoute>
+          }
+        />
+        
         <Route
           path="/company/recruit/create"
           element={
