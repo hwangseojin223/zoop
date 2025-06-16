@@ -4,3 +4,7 @@ pytesseract
 Pillow
 
 //pip install fastapi uvicorn pytesseract pillow
+
+openai
+python-dotenv
+PyPDF2

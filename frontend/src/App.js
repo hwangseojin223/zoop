@@ -1,46 +1,47 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-//index
+// index
 import Index from './pages/Index';
-
-//signup
+// signup
 import Signup from './pages/signup/Signup';
 import CompanySignupProcess from './pages/signup/CompanySignupProcess';
 import CompanyAdminSignup from './pages/signup/CompanyAdminSignup';
 import SignupSuccess from './pages/signup/SignupSuccess';
 import ApplicantSignupSuccess from './pages/signup/ApplicantSignupSuccess';
 import ApplicantSignupProcess from './pages/signup/ApplicantSignupProcess';
-
 import LoginSelectionPage from './pages/login/LoginSelectionPage';
 import GoogleAuthCallback from './pages/auth/GoogleAuthCallback';
-
 import PrivateRoute from './routes/PrivateRoute';
 import PublicOnlyRoute from './routes/PublicOnlyRoute';
-
 // company
 import CompanyDashboard from './pages/company/CompanyDashboard';
 import RecruitCreate from './pages/company/RecruitCreate';
 import CandidateList from './pages/company/CandidateList';
 import ResponderList from './pages/company/ResponderList';
-
-//info
+// info
 import About from './pages/info/About';
 import Notice from './pages/info/Notice';
 import Support from './pages/info/Support';
 import FAQ from './pages/info/FAQ';
 import Careers from './pages/info/Careers';
 
+// 챗봇 import
+import Chatbot from './components/Chatbot';
+import './components/Chatbot.css';
+// candidate
+import CandidateDashboard from './pages/candidate/CandidateDashboard';
 
 function AppContent() {
   const { setAuthState } = useAuth();
+  const [chatbotOpen, setChatbotOpen] = useState(false);
+  const btnRef = useRef(null);
 
   useEffect(() => {
     const token = localStorage.getItem('jwtToken');
     const userType = localStorage.getItem('userType');
     const userId = localStorage.getItem('userId');
-
     if (token && userType && userId) {
       setAuthState({ token, userType, userId });
     }
@@ -49,7 +50,6 @@ function AppContent() {
   return (
     <Router>
       <Routes>
-        {/* 로그아웃 상태에서만 접근 가능한 페이지 */}
         <Route
           path="/"
           element={
@@ -66,14 +66,12 @@ function AppContent() {
         <Route path="/auth/applicant/signup/process" element={<ApplicantSignupProcess />} />
         <Route path="/auth/login" element={<LoginSelectionPage />} />
         <Route path="/google-auth" element={<GoogleAuthCallback />} />
-
-        {/* 회사 소개 (공개 접근 가능) */}
         <Route path="/about" element={<About />} />
-
-        {/* 공고별 후보자 목록 페이지 */}
+        <Route path="/notice" element={<Notice />} />
+        <Route path="/support" element={<Support />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/careers" element={<Careers />} />
         <Route path="/company/candidates/:postId" element={<CandidateList />} />
-
-        {/* 로그인된 기업회원만 접근 가능 */}
         <Route
           path="/company/dashboard"
           element={
@@ -82,6 +80,17 @@ function AppContent() {
             </PrivateRoute>
           }
         />
+
+        {/*개인회원 대시보드*/}
+        <Route
+          path='/candidate/dashboard'
+          element={
+            <PrivateRoute allowedUserType='candidate'>
+              <CandidateDashboard />
+            </PrivateRoute>
+          }
+        />
+        
         <Route
           path="/company/recruit/create"
           element={
@@ -110,6 +119,59 @@ function AppContent() {
           }
         />
       </Routes>
+
+      {/* 챗봇 버튼 */}
+      <button
+        ref={btnRef}
+        className={`chatbot-mint-btn${chatbotOpen ? ' open' : ''}`}
+        onClick={() => setChatbotOpen(open => !open)}
+        aria-label={chatbotOpen ? "챗봇 닫기" : "챗봇 열기"}
+      >
+        {chatbotOpen ? (
+          // 챗봇이 열렸으면 X SVG 아이콘
+          <span className="chatbot-x-rect">
+            <svg
+              width={34}
+              height={34}
+              viewBox="0 0 32 32"
+              fill="none"
+              stroke="#757575"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ display: "block" }}
+              aria-hidden="true"
+              focusable="false"
+            >
+              <line x1="8" y1="8" x2="24" y2="24" />
+              <line x1="24" y1="8" x2="8" y2="24" />
+            </svg>
+          </span>
+        ) : (
+          // 챗봇 닫혔으면 채팅 아이콘
+          <img
+            src="/chat.png"
+            alt="챗봇 아이콘"
+            style={{
+              width: 34,
+              height: 34,
+              objectFit: "contain",
+              display: "block",
+              background: "transparent",
+              border: "none",
+            }}
+          />
+        )}
+      </button>
+
+
+
+      {/* 챗봇 창 */}
+      <Chatbot
+        open={chatbotOpen}
+        onClose={() => setChatbotOpen(false)}
+        anchorRef={btnRef}
+      />
     </Router>
   );
 }

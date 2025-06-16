@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
 
-const Navbar = () => {
+const Navbar = ({ onLangChange }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { authState, setAuthState } = useAuth();
@@ -93,7 +93,35 @@ const Navbar = () => {
 
       <div className="auth-buttons desktop-only">
         {isAboutPage ? (
-          <span>KOR | ENG</span>
+          <span>
+            <button
+              onClick={() => onLangChange('ko')}
+              style={{
+                background: "none",
+                border: "none",
+                color: "inherit",
+                cursor: "pointer",
+                fontWeight: 600,
+                fontSize: "1em"
+              }}
+            >
+              KOR
+            </button>
+            {' | '}
+            <button
+              onClick={() => onLangChange('en')}
+              style={{
+                background: "none",
+                border: "none",
+                color: "inherit",
+                cursor: "pointer",
+                fontWeight: 600,
+                fontSize: "1em"
+              }}
+            >
+              ENG
+            </button>
+          </span>
         ) : authState.token ? (
           <button className="btn-filled" onClick={handleLogout}>로그아웃</button>
         ) : (
@@ -115,7 +143,35 @@ const Navbar = () => {
 
         <div className="auth-buttons mobile-only">
           {isAboutPage ? (
-            <span>KOR | ENG</span>
+            <span>
+              <button
+                onClick={() => onLangChange('ko')}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "inherit",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  fontSize: "1em"
+                }}
+              >
+                KOR
+              </button>
+              {' | '}
+              <button
+                onClick={() => onLangChange('en')}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "inherit",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  fontSize: "1em"
+                }}
+              >
+                ENG
+              </button>
+            </span>
           ) : authState.token ? (
             <button className="btn-filled" onClick={handleLogout}>로그아웃</button>
           ) : (

@@ -4,222 +4,241 @@
 
 
 html, body {
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-    position: relative;
-    width: 100vw;       /* ✅ 강제 고정 */
-    box-sizing: border-box;
-  
-  }
-  
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  position: relative;
+  width: 100vw;
+  box-sizing: border-box;
+}
+
 /* ====== 네비게이션 ====== */
 .zoop-navbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: nowrap;
-    padding: 1.2rem 2.5rem;
-    background: transparent;
-    box-shadow: none;
-    width: 100%;
-    position: absolute;
-    top: 0;
-    z-index: 10;
-  }
-  
-  .logo-img {
-    height: 56px;
-    flex-shrink: 0;
-    margin-left: 15rem;
-  }
-  
-  .nav-links {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
-    flex: 1;
-    flex-wrap: wrap;
-    margin-left: 0rem; /* ✅ 균형 맞추기 */
-  }
-  
-  
-  .nav-links a {
-    text-decoration: none;
-    color: #333;
-    font-size: 0.95rem;
-    white-space: nowrap;
-  }
-  
-  .auth-buttons {
-    display: flex;
-    gap: 0.5rem;
-    flex-shrink: 0;
-    white-space: nowrap;
-    margin-right: 15rem; /* ✅ ✅ ✅ 핵심 포인트 */
-  }
-  
-  
-  .auth-buttons button {
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-weight: bold;
-    font-size: 0.9rem;
-    border: 1px solid #30c59b;
-    cursor: pointer;
-  }
-  
-  .btn-outline {
-    background-color: white;
-    color: #30c59b;
-  }
-  
-  .btn-filled {
-    background-color: #30c59b;
-    color: white;
-    border: none;
-  }
-  
-  
-  /* ====== 배너 영역 ====== */
-  .hero-section {
-    width: 100%;
-    height: 100vh;          /* ✅ 화면 높이 꽉 채우기 */
-    overflow: hidden;
-    position: relative;
-    background-color: #f5f5f5; /* 여백이 보여질 때 대비한 배경 */
-  }
-  
-  
-  .hero-image {
-    display: block;
-    width: 100vw;       /* ✅ 브라우저 너비만큼만 */
-    height: 100vh;
-    object-fit: cover;
-  }
-  
-  
-  
-  /* ====== 메인 문구 ====== */
-  .hero-text {
-    position: absolute;
-    top: 12%;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-  }
-  
-  .hero-text h1 {
-    font-size: 3.4rem;
-    font-weight: 700; /* ✅ 최종 두께 */
-    color: #111;
-    margin-bottom: 2.2rem;
-  }
-  
-  /* ====== CTA 버튼 ====== */
-  .cta-button {
-    font-size: 1.05rem;
-    padding: 0.9rem 2rem;
-    background-color: #dff6ea;
-    color: #111;
-    border: none;
-    border-radius: 999px;
-    font-weight: 600;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-  }
-  
-  .cta-button:hover {
-    background-color: #c9f2e3;
-    transform: translateY(-2px);
-  }
-  
-  /* ===== subtitle fade-in section ===== */
-  .subtitle-section {
-    padding: 5rem 1rem 6rem; /* 🔼 위쪽 여백 줄임 */
-    background-color: white; /* ✅ 흰 배경 */
-    opacity: 0;
-    transform: translateY(40px);
-    transition: all 1s ease;
-    text-align: center;
-  }
-  
-  .subtitle-section.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  
-  .subtitle-content p {
-    font-size: 1.6rem;       /* ✅ 더 큼 */
-    font-weight: 700;        /* ✅ 더 굵게 */
-    color: #222;
-    line-height: 1.8;
-    margin: 0.5rem 0;
-  }
-  
-  
-  /* ===== footer section ===== */
-  .footer-section {
-    background-color: #f5f6f7;
-    padding: 4rem 2rem;
-    font-size: 0.95rem;
-    color: #444;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .footer-grid {
-    max-width: 1000px;
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 2rem;
-    margin-bottom: 3rem;
-  }
-  
-  .footer-grid strong {
-    display: block;
-    margin-bottom: 1rem;
-    color: #111;
-    font-weight: 600;
-  }
-  
-  .footer-grid p {
-    margin: 0.4rem 0;
-    font-size: 0.9rem;
-    color: #555;
-  }
-  
-  .footer-bottom {
-    max-width: 1000px;
-    width: 100%;
-    border-top: 1px solid #ddd;
-    padding-top: 2rem;
-    font-size: 0.85rem;
-    text-align: left;
-  }
-  
-  .footer-bottom strong {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 0.8rem;
-  }
-  
-  .footer-terms {
-    margin-top: 1rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    font-size: 0.8rem;
-    font-weight: bold;
-    color: #111;
-  }
-  
-  .footer-icons {
-    margin-top: 1.5rem;
-    font-size: 1.3rem;
-    display: flex;
-    gap: 1rem;
-  }
-  
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  padding: 1.2rem 2.5rem;
+  background: transparent;
+  box-shadow: none;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  z-index: 10;
+}
+.logo-img {
+  height: 56px;
+  flex-shrink: 0;
+  margin-left: 15rem;
+}
+.nav-links {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex: 1;
+  flex-wrap: wrap;
+  margin-left: 0rem;
+}
+.nav-links a {
+  text-decoration: none;
+  color: #333;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+.auth-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  white-space: nowrap;
+  margin-right: 15rem;
+}
+.auth-buttons button {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  border: 1px solid #30c59b;
+  cursor: pointer;
+}
+.btn-outline {
+  background-color: white;
+  color: #30c59b;
+}
+.btn-filled {
+  background-color: #30c59b;
+  color: white;
+  border: none;
+}
+
+/* ====== 배너 영역 ====== */
+.hero-section {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  background-color: #f5f5f5;
+}
+.hero-image {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+}
+
+/* ====== 메인 문구 ====== */
+.hero-text {
+  position: absolute;
+  top: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+.hero-text h1 {
+  font-size: 3.4rem;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 2.2rem;
+}
+/* ====== CTA 버튼 ====== */
+.cta-button {
+  font-size: 1.05rem;
+  padding: 0.9rem 2rem;
+  background-color: #dff6ea;
+  color: #111;
+  border: none;
+  border-radius: 999px;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+.cta-button:hover {
+  background-color: #c9f2e3;
+  transform: translateY(-2px);
+}
+
+/* ===== subtitle fade-in section ===== */
+.subtitle-section {
+  padding: 5rem 1rem 6rem;
+  background-color: white;
+  opacity: 0;
+  transform: translateY(40px);
+  transition: all 1s ease;
+  text-align: center;
+}
+.subtitle-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.subtitle-content p {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #222;
+  line-height: 1.8;
+  margin: 0.5rem 0;
+}
+
+/* ===== 존재이유/파장 레이더 섹션 ===== */
+.reason-section-custom {
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 560px;
+  background: #fafbfb;
+  position: relative;
+  z-index: 2;
+}
+.radar-canvas-container {
+  width: 1100px;
+  height: 480px;
+  background: #fff;
+  border-radius: 46px;
+  box-shadow: 0 6px 38px #e6e8f150;
+  margin: 40px 0 70px 0;
+  position: relative;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.radar-center-content {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 10;
+}
+.radar-icon {
+  position: absolute;
+  z-index: 5;
+}
+.radar-icon-topright {
+  left: 77%; top: 17%;
+  width: 52px; height: 52px;
+}
+.radar-icon-bottomleft {
+  left: 18%; top: 75%;
+  width: 46px; height: 46px;
+}
+.radar-icon-bottomright {
+  left: 81%; top: 78%;
+  width: 65px; height: 65px;
+}
+
+/* ===== footer section ===== */
+.footer-section {
+  background-color: #f5f6f7;
+  padding: 4rem 2rem;
+  font-size: 0.95rem;
+  color: #444;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.footer-grid {
+  max-width: 1000px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+.footer-grid strong {
+  display: block;
+  margin-bottom: 1rem;
+  color: #111;
+  font-weight: 600;
+}
+.footer-grid p {
+  margin: 0.4rem 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+.footer-bottom {
+  max-width: 1000px;
+  width: 100%;
+  border-top: 1px solid #ddd;
+  padding-top: 2rem;
+  font-size: 0.85rem;
+  text-align: left;
+}
+.footer-bottom strong {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.8rem;
+}
+.footer-terms {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #111;
+}
+.footer-icons {
+  margin-top: 1.5rem;
+  font-size: 1.3rem;
+  display: flex;
+  gap: 1rem;
+}
