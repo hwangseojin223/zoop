@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name="CandidateController", description = "개인회원(후보자) 관련 API")
 @RestController
@@ -36,10 +38,10 @@ public class CandidateController {
     //     return new ResponseEntity<>(candidates, HttpStatus.OK); // 200 상태 코드
     // }
 
-    // 후보자 추가
+    // 1. 후보자 추가
     @Operation(summary = "개인회원 정보 등록", description = "새로운 개인회원(후보자) 정보를 시스템에 등록합니다.")
     @ApiResponses(value={
-        @ApiResponse(responseCode="201", description="개인회우너 정보 등록 성공 및 등록된 개인회원 정보 반환",
+        @ApiResponse(responseCode="201", description="개인회원 정보 등록 성공 및 등록된 개인회원 정보 반환",
             content = @Content(schema = @Schema(implementation = Candidate.class))),
         @ApiResponse(responseCode = "400", description = "잘못된 요청(예: 필수 필드 누락, 데이터 형식 오류 등",
             content = @Content(schema = @Schema(implementation = String.class))),
@@ -61,5 +63,16 @@ public class CandidateController {
         
         // 저장된 후보자와 함께 201 CREATED 상태 코드 반환
         return new ResponseEntity<>(savedCandidate, HttpStatus.CREATED);
+    }
+
+    // 2. 회원가입시 아이디 중복체크를 위한 메서드
+    @GetMapping("/check-id")
+    public ResponseEntity<String> checkGithubLoginDuplicate(@RequestParam String githubLogin) {
+        boolean isDuplicate = candidateService.isDuplicateGithubLogin(githubLogin);
+        if (isDuplicate) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("이미 사용 중인 아이디입니다.");
+        } else {
+            return ResponseEntity.ok("사용 가능한 아이디입니다.");
+        }
     }
 }

@@ -7,4 +7,5 @@ public interface ResponderDto {
     String getLanguages();
     Double getScore();
     String getPortfolioAnalysis();
+    String getFilePath();
 }

@@ -20,7 +20,8 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
             p.post_location AS location,
             p.post_programming_language AS languages,
             ar.analysis_score AS score,
-            TO_CHAR(ar.analysis_data) AS portfolioAnalysis
+            TO_CHAR(ar.analysis_data) AS portfolioAnalysis,
+            f.portfolio_file_path AS filePath
         FROM 
             job_cand_progress jcp
         JOIN 
@@ -31,6 +32,9 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
             ai_analysis_results ar 
             ON jcp.job_candidate_id = ar.job_candidate_id 
             AND ar.analysis_type = 'portfolio'
+        LEFT JOIN 
+            portfolios f 
+            ON jcp.job_candidate_id = f.job_candidate_id
         WHERE 
             jcp.job_cand_curr_stage = '3n'
             AND jcp.post_id = :postId

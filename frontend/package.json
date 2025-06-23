@@ -11,13 +11,15 @@
     "@testing-library/user-event": "^13.5.0",
     "framer-motion": "^12.12.1",
     "frontend": "file:",
+    "pdfjs-dist": "^4.8.69",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-pdf": "^9.2.1",
     "react-router-dom": "^6.30.0",
     "react-scripts": "5.0.1",
     "recharts": "^2.15.3",
-    "styled-components": "^6.1.18",
     "save": "^2.9.0",
+    "styled-components": "^6.1.18",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

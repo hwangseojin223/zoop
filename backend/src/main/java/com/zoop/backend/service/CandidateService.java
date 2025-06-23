@@ -58,5 +58,9 @@ public class CandidateService {
         }
     }
 
-    // 추가 메서드 작성 가능
+    // 회원가입시 아이디 중복확인을 위한 메서드
+    public boolean isDuplicateGithubLogin(String githubLogin) {
+        return candidateRepository.existsByGithubLogin(githubLogin);
+    }
+
 }

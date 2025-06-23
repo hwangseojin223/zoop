@@ -11,7 +11,8 @@ import com.zoop.backend.domain.dto.ResponderDto;
 import com.zoop.backend.service.JobCandProgressService;
 
 import lombok.RequiredArgsConstructor;
-
+import lombok.extern.slf4j.Slf4j;
+@Slf4j
 @RestController
 @RequestMapping("/api/responder")
 @RequiredArgsConstructor
@@ -27,9 +28,9 @@ public class JobCandProgressController {
     // URL 예시: /api/post/1
     @GetMapping("{postId}")
     public List<ResponderDto> getCandidatesAtStage3nByPost(@PathVariable Long postId) {
-        System.out.println("Controller: 요청 들어옴, postId=" + postId);
+        log.info("Controller: 요청 들어옴, postId=" + postId);
         List<ResponderDto> list = jobCandProgressService.getCandidatesAtStage3nByPost(postId);
-        System.out.println("리스트 크기 : " + list.size());
+        log.info("리스트 크기 : " + list.size());
 
         return list;
     }
