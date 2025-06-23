@@ -25,5 +25,8 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
     Optional<Candidate> findByGoogleId(String googleId);
     // Optional<Candidate> findByGithubId(String githubId);
     // Optional<Candidate> findByNaverId(String naverId);
+
+    // ✅ 회원가입시 아이디 중복 확인용 메서드 추가 --> 지훈
+    boolean existsByGithubLogin(String githubLogin);
 }
 

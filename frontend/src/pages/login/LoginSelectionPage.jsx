@@ -255,7 +255,7 @@ function LoginSelectionPage() {
                 onClick={() => navigate('/')}
               />
             </div>
-            <button type="button" className="signup-button" onClick={() => navigate('/auth/individual/signup')}>
+            <button type="button" className="signup-button" onClick={() => navigate('/auth/applicant/signup')}>
               개인 통합회원 가입
             </button>
           </div>
