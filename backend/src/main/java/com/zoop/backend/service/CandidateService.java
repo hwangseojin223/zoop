@@ -58,5 +58,5 @@ public class CandidateService {
         }
     }
 
-    // 추가 메서드 작성 가능
+    
 }

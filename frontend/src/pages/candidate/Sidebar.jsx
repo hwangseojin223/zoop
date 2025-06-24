@@ -1,8 +1,11 @@
+// src/pages/candidate/Sidebar.jsx
+
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import './Sidebar.css';
 
 function Sidebar() {
-  const [expandedMenuId, setExpandedMenuId] = useState(null);
+  const [expandedMenuId, setExpandedMenuId] = useState(null); // 올바른 변수명
 
   const handleMenuItemClick = (menuId) => {
     setExpandedMenuId(expandedMenuId === menuId ? null : menuId);
@@ -10,13 +13,16 @@ function Sidebar() {
 
   return (
     <div className="sidebar">
-      <div className="logo">
-        <img src="../../logo_zoop.png" alt="zoop" />
-      </div>
+      <Link to="/" className="logo-link">
+        <div className="logo">
+          <img src="../../logo_zoop.png" alt="zoop" />
+        </div>
+      </Link>
+
       <ul className="menu-list">
         {/* 'My 홈' 메뉴 아이템 */}
         <li
-          className={`menu-item ${expandedMenuId === 'myHome' ? 'active' : ''}`} // 💡 고유 ID: 'myHome'
+          className={`menu-item ${expandedMenuId === 'myHome' ? 'active' : ''}`}
           onClick={() => handleMenuItemClick('myHome')}
         >
           <span className="icon"></span> My 홈
@@ -34,7 +40,7 @@ function Sidebar() {
 
         {/* '받은 제안' 메뉴 아이템 */}
         <li
-          className={`menu-item ${expandedMenuId === 'receivedProposals' ? 'active' : ''}`} // 💡 고유 ID: 'receivedProposals'
+          className={`menu-item ${expandedMenuId === 'receivedProposals' ? 'active' : ''}`}
           onClick={() => handleMenuItemClick('receivedProposals')}
         >
           <span className="icon">📝</span> 받은 제안
@@ -49,7 +55,7 @@ function Sidebar() {
 
         {/* '이력서/자소서' 메뉴 아이템 */}
         <li
-          className={`menu-item ${expandedMenuId === 'resumeCoverLetter' ? 'active' : ''}`} // 💡 고유 ID: 'resumeCoverLetter'
+          className={`menu-item ${expandedMenuId === 'resumeCoverLetter' ? 'active' : ''}`}
           onClick={() => handleMenuItemClick('resumeCoverLetter')}
         >
           <span className="icon">✉️</span> 이력서/자소서
@@ -74,7 +80,7 @@ function Sidebar() {
         >
           <span className="icon">🔍</span> 지원한 공고
           <span className="arrow">{expandedMenuId === 'appliedJobs' ? '▲' : '▼'}</span>
-          {expandedMenuId === 'appliedJobs' && (
+          {expandedMenuId === 'appliedJobs' && ( // <-- 이 부분을 'expandedId'에서 'expandedMenuId'로 수정했습니다.
             <ul className="sub-menu">
               <li className="sub-menu-item">내 지원 현황</li>
               <li className="sub-menu-item">기업별 지원 내역</li>
