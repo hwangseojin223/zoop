@@ -14,7 +14,7 @@
 }
 
 .logo img {
-  height: 24px; /* Adjust as needed */
+  height: 60px; /* Adjust as needed */
 }
 
 .menu-list {
@@ -36,12 +36,12 @@
 }
 
 .menu-item:hover {
-  background-color: #f0f2f5;
+  background-color: #e8f8f4; /* 연한 민트색으로 변경 */
 }
 
 .menu-item.active {
-  background-color: #e6f7ff; /* Light blue for active item */
-  color: #007bff; /* Blue text for active */
+  background-color: #e0f5f0; /* 연한 민트색 배경으로 변경 */
+  color: #30C59B; /* 텍스트 색상을 #30C59B로 변경 */
   font-weight: bold;
 }
 
@@ -56,9 +56,9 @@
   transition: transform 0.2s ease-in-out; /* 화살표 회전 애니메이션 */
 }
 
-/* new-badge는 그대로 유지 */
+/* new-badge는 그대로 유지하되 색상만 변경 */
 .new-badge {
-  background-color: #ff4d4f; /* Red */
+  background-color: #30C59B; /* 민트색으로 변경 */
   color: white;
   font-size: 10px;
   padding: 2px 6px;
@@ -67,7 +67,7 @@
   font-weight: normal;
 }
 
-/* sub-menu의 기본 스타일 (이제 JSX에서 조건부 렌더링되므로 display: none이 필요 없음) */
+/* sub-menu의 기본 스타일 */
 .sub-menu {
   list-style: none;
   padding: 0;
@@ -75,10 +75,6 @@
   background-color: #f7f9fc; /* Slightly darker for sub-menu background */
   border-top: 1px solid #eee;
   width: 100%; /* 부모 .menu-item의 전체 너비 사용 */
-  /* position: absolute; /* 이 부분이 있으면 메뉴 아이템 안에서 겹쳐 보일 수 있습니다. */
-  /* left: 0; */
-  /* top: 100%; */ /* 주석 처리하거나 제거: flex-wrap에 의해 자연스럽게 아래로 내려갑니다. */
-  /* z-index: 10; */ /* 필요하다면 유지 */
 }
 
 .sub-menu-item {
@@ -89,11 +85,20 @@
 }
 
 .sub-menu-item:hover {
-  background-color: #e9eef2;
+  background-color: #e8f8f4; /* 연한 민트색으로 변경 */
 }
 
 .sub-menu-item.active {
-  background-color: #dcf2ff; /* Lighter blue for active sub-menu item */
-  color: #007bff;
+  background-color: #d0f0e8; /* 연한 민트색 배경으로 변경 */
+  color: #30C59B; /* 텍스트 색상을 #30C59B로 변경 */
   font-weight: bold;
 }
+
+
+.logo-link {
+  text-decoration: none; /* 밑줄 제거 */
+  color: inherit; /* 부모 요소의 글자 색상 상속 (필요시) */
+  display: block; /* Link를 블록 요소로 만들어 클릭 영역을 확장 (로고 이미지 크기에 따라 조절) */
+  /* 로고 이미지의 중앙 정렬 등을 위해 flexbox 또는 text-align을 사용할 수도 있습니다. */
+}
+
