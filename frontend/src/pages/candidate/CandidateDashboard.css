@@ -13,7 +13,6 @@
 }
 
 /* --- Styles previously from MainContent.css start here --- */
-/* (Paste all the content from the previous MainContent.css here) */
 
 .page-title {
   font-size: 26px;
@@ -24,32 +23,8 @@
 
 /* Info Box */
 .info-box {
-  background-color: #e6f7ff; /* Light blue */
-  border: 1px solid #b3e0ff; /* Slightly darker blue border */
-  border-radius: 8px;
-  padding: 18px 25px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-}
-.main-content {
-  flex-grow: 1;
-  padding: 30px;
-  background-color: #f7f9fc;
-}
-
-.page-title {
-  font-size: 26px;
-  color: #333;
-  margin-bottom: 25px;
-  font-weight: bold;
-}
-
-/* Info Box */
-.info-box {
-  background-color: #e6f7ff; /* Light blue */
-  border: 1px solid #b3e0ff; /* Slightly darker blue border */
+  background-color: #e0f5f0; /* 연한 민트색으로 변경 */
+  border: 1px solid #b3e0d3; /* 약간 더 진한 민트색 테두리 */
   border-radius: 8px;
   padding: 18px 25px;
   display: flex;
@@ -69,11 +44,11 @@
 .info-box .icon {
   font-size: 20px;
   margin-right: 10px;
-  color: #1890ff; /* Blue for the sparkle icon */
+  color: #30C59B; /* 민트색으로 변경 */
 }
 
 .highlight-button {
-  background-color: #007bff; /* Blue */
+  background-color: #30C59B; /* 민트색으로 변경 */
   color: white;
   border: none;
   border-radius: 5px;
@@ -85,7 +60,7 @@
 }
 
 .highlight-button:hover {
-  background-color: #0056b3;
+  background-color: #28a583; /* 약간 더 진한 민트색 */
 }
 
 .highlight-button .arrow-right {
@@ -106,6 +81,7 @@
   display: flex;
   align-items: center;
   margin-bottom: 15px;
+  gap:10px;
 }
 
 .filter-row:last-child {
@@ -123,7 +99,7 @@
 .filter-row .tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 15px;
 }
 
 .filter-row .tag {
@@ -136,66 +112,12 @@
 }
 
 .filter-row .tag.blue {
-  background-color: #e6f7ff; /* Light blue */
-  color: #007bff;
+  background-color: #e0f5f0; /* 연한 민트색으로 변경 */
+  color: #30C59B; /* 민트색으로 변경 */
   cursor: pointer;
-  border: 1px solid #91d5ff;
+  border: 1px solid #b3e0d3; /* 약간 더 진한 민트색 테두리 */
 }
 
-.modify-button {
-  background-color: #e0e0e0;
-  color: #555;
-  border: none;
-  border-radius: 5px;
-  padding: 8px 15px;
-  font-size: 14px;
-  cursor: pointer;
-  margin-left: auto; /* Push to the right */
-}
-
-.modify-button:hover {
-  background-color: #ccc;
-}
-
-/* Call to Action for Highlight */
-.call-to-action {
-  background-color: #fffbe6; /* Light yellow */
-  border: 1px solid #ffe58f; /* Yellow border */
-  border-radius: 8px;
-  padding: 18px 25px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-}
-
-.call-to-action p {
-  margin: 0;
-  font-size: 16px;
-  color: #555;
-}
-
-.highlight-cta-button {
-  background-color: #ffc107; /* Yellow */
-  color: #333;
-  border: none;
-  border-radius: 5px;
-  padding: 10px 18px;
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  font-weight: bold;
-}
-
-.highlight-cta-button:hover {
-  background-color: #e0a800;
-}
-
-.highlight-cta-button .icon {
-  font-size: 18px;
-  margin-right: 8px;
-}
 
 /* Tabs and Filter Options */
 .tabs-container {
@@ -226,9 +148,9 @@
 }
 
 .tab-button.active {
-  color: #007bff;
+  color: #30C59B; /* 민트색으로 변경 */
   font-weight: bold;
-  border-bottom-color: #007bff;
+  border-bottom-color: #30C59B; /* 민트색으로 변경 */
 }
 
 .filter-options {

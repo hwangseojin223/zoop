@@ -1,5 +1,17 @@
 package com.zoop.backend.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
 import com.zoop.backend.config.GithubBridgeConfig;
 import com.zoop.backend.domain.dto.FilterRequestDto;
 import com.zoop.backend.domain.dto.GithubCandidateDto;
@@ -8,13 +20,6 @@ import com.zoop.backend.repository.GithubSearchResultRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
-import java.time.LocalDateTime;
-import java.util.*;
 
 @RequiredArgsConstructor
 @Service

@@ -1,6 +1,7 @@
 package com.zoop.backend.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -36,4 +37,14 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
             AND jcp.post_id = :postId
     """, nativeQuery = true)
     List<ResponderDto> findCandidatesAtStage3nByPost(@Param("postId") Long postId);
+
+
+    List<JobCandProgress> findByCandidate_CandidateId(Integer candidateId);
+    // Optional<JobCandProgress> findByPost_PostIdAndCandidate_CandidateId(Integer postId, Integer candidateId);
+
+    @Query(value = "SELECT * FROM job_cand_progress WHERE post_id = :postId AND candidate_id = :candidateId", nativeQuery = true)
+    Optional<JobCandProgress> findByPost_PostIdAndCandidate_CandidateId(
+        @Param("postId") Integer postId, 
+        @Param("candidateId") Integer candidateId
+    );
 }

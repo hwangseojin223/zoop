@@ -1,30 +1,24 @@
-// src/main/java/com/zoop/backend/service/SocialAuthService.java
-
 package com.zoop.backend.service;
 
-import com.zoop.backend.domain.entity.Candidate; // Candidate 엔티티 임포트
-import com.zoop.backend.repository.CandidateRepository; // CandidateRepository 임포트
-import com.zoop.backend.util.JwtUtil; // 자체 JWT 유틸리티 임포트
+import java.time.LocalDateTime; // Candidate 엔티티 임포트
+import java.util.HashMap; // CandidateRepository 임포트
+import java.util.Map; // 자체 JWT 유틸리티 임포트
+import java.util.Optional; // 설정 값 주입을 위한 Value 어노테이션 임포트
 
-import org.springframework.beans.factory.annotation.Value; // 설정 값 주입을 위한 Value 어노테이션 임포트
-import org.springframework.http.HttpHeaders; // HTTP 헤더 관련 클래스 임포트
-import org.springframework.http.MediaType; // 미디어 타입 관련 클래스 임포트
-import org.springframework.stereotype.Service; // 서비스 컴포넌트로 선언하기 위한 Service 어노테이션 임포트
-import org.springframework.transaction.annotation.Transactional; // 트랜잭션 관리를 위한 Transactional 어노테이션 임포트
+import org.springframework.beans.factory.annotation.Value; // HTTP 헤더 관련 클래스 임포트
+import org.springframework.http.HttpHeaders; // 미디어 타입 관련 클래스 임포트
+import org.springframework.http.MediaType; // 서비스 컴포넌트로 선언하기 위한 Service 어노테이션 임포트
+import org.springframework.stereotype.Service; // 트랜잭션 관리를 위한 Transactional 어노테이션 임포트
+import org.springframework.transaction.annotation.Transactional; // 요청 본문 구성
+import org.springframework.web.reactive.function.BodyInserters; // WebClient 클래스
+import org.springframework.web.reactive.function.client.WebClient; // WebClient HTTP 응답 예외
+import org.springframework.web.reactive.function.client.WebClientResponseException; // JSON 노드 표현
 
-// WebClient (비동기 HTTP 클라이언트) 관련 임포트 - spring-boot-starter-webflux 의존성 필요
-import org.springframework.web.reactive.function.BodyInserters; // 요청 본문 구성
-import org.springframework.web.reactive.function.client.WebClient; // WebClient 클래스
-import org.springframework.web.reactive.function.client.WebClientResponseException; // WebClient HTTP 응답 예외
-
-// JSON 파싱을 위한 라이브러리 (Jackson ObjectMapper) 임포트
-import com.fasterxml.jackson.databind.JsonNode; // JSON 노드 표현
-import com.fasterxml.jackson.databind.ObjectMapper; // JSON 파서
-
-import java.time.LocalDateTime; // 시간 관리를 위해 추가 (Java 8+ 시간 API)
-import java.util.HashMap; // Map 구현체 임포트
-import java.util.Map; // Map 인터페이스 임포트
-import java.util.Optional; // Optional 클래스 임포트 (null 가능성 있는 값 처리)
+import com.fasterxml.jackson.databind.JsonNode; // JSON 파서
+import com.fasterxml.jackson.databind.ObjectMapper; // 시간 관리를 위해 추가 (Java 8+ 시간 API)
+import com.zoop.backend.domain.entity.Candidate; // Map 구현체 임포트
+import com.zoop.backend.repository.CandidateRepository; // Map 인터페이스 임포트
+import com.zoop.backend.util.JwtUtil; // Optional 클래스 임포트 (null 가능성 있는 값 처리)
 
 
 @Service // 이 클래스를 Spring 서비스 빈으로 등록합니다.

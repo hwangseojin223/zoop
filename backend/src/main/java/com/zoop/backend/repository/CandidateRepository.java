@@ -1,8 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-
 package com.zoop.backend.repository;
 
 /**
@@ -23,7 +18,5 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
     Optional<Candidate> findByGithubLogin(String githubLogin); // githubLogin 필드로 조회
     Optional<Candidate> findByCandidateEmail(String candidateEmail); // candidateEmail 필드로 조회
     Optional<Candidate> findByGoogleId(String googleId);
-    // Optional<Candidate> findByGithubId(String githubId);
-    // Optional<Candidate> findByNaverId(String naverId);
 }
 
