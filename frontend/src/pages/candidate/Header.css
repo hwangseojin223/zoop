@@ -8,10 +8,6 @@
   z-index: 100; /* Ensure header is on top */
 }
 
-.header-left {
-  /* No specific content in the image, but can be used for toggling sidebar */
-}
-
 .header-right {
   display: flex;
   align-items: center;
