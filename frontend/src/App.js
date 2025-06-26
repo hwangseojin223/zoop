@@ -20,6 +20,7 @@ import CompanyDashboard from './pages/company/CompanyDashboard';
 import RecruitCreate from './pages/company/RecruitCreate';
 import CandidateList from './pages/company/CandidateList';
 import ResponderList from './pages/company/ResponderList';
+import StatePage from './pages/company/StatePage';
 // info
 import About from './pages/info/About';
 import Notice from './pages/info/Notice';
@@ -64,6 +65,7 @@ function AppContent() {
         <Route path="/auth/company/signup/success" element={<SignupSuccess />} />
         <Route path="/auth/applicant/signup/success" element={<ApplicantSignupSuccess />} />
         <Route path="/auth/applicant/signup/process" element={<ApplicantSignupProcess />} />
+        <Route path="/auth/applicant/signup/process/:token" element={<ApplicantSignupProcess />} />
         <Route path="/auth/login" element={<LoginSelectionPage />} />
         <Route path="/google-auth" element={<GoogleAuthCallback />} />
         <Route path="/about" element={<About />} />
@@ -80,6 +82,7 @@ function AppContent() {
             </PrivateRoute>
           }
         />
+        <Route path="/company/state/:postId" element={<StatePage />} />
 
         {/*개인회원 대시보드*/}
         <Route

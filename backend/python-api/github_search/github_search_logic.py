@@ -1,6 +1,7 @@
 import requests, re, os, base64
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+from math import log1p, sqrt
 
 load_dotenv()
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -130,11 +131,11 @@ def get_user_score(username):
         total_forks = sum(repo.get("forks_count", 0) for repo in repos)
 
         score = (
-            public_repos * 1 +
-            followers * 2 +
-            total_stars * 3 +
-            total_forks * 1.5
-        )
+            log1p(total_stars) * 4 +
+            sqrt(followers) * 3 +
+            log1p(total_forks) * 2 +
+            log1p(public_repos) * 1
+            )
         return round(score, 1)
     except Exception as e:
         print(f"❌ Failed to calculate score for {username}: {e}")

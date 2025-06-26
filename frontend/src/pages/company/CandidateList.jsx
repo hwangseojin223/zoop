@@ -3,10 +3,15 @@ import { useParams } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import { FaGithub, FaEnvelope } from 'react-icons/fa';
 
+
 export default function CandidateList() {
   const { postId } = useParams();
   const [candidates, setCandidates] = useState([]);
   const [postTitle, setPostTitle] = useState('');
+
+  // 로딩중 
+  const [loadingId, setLoadingId] = useState(null);
+
 
   useEffect(() => {
     fetch(`http://localhost:8081/api/postings/info/${postId}`)
@@ -24,6 +29,43 @@ export default function CandidateList() {
       })
       .catch(err => console.error('❌ 후보자 목록 오류:', err));
   }, [postId]);
+
+  
+  // 메일 보내기 버튼 클릭 시 발생할 이벤트
+  const sendInvitation = async (postId, githubLogin, companyAdminId, candidateEmail) => {
+    const payload = {
+      postId: parseInt(postId),
+      githubLogin,
+      companyAdminId,
+      candidateEmail, // ✅ 추가
+    };
+
+
+    try {
+      setLoadingId(githubLogin); // 👉 로딩 시작
+
+      const res = await fetch("http://localhost:8081/api/invitations/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        alert("📨 초대 메일을 전송했습니다!");
+        console.log("전달한 데이터 : ", payload);
+      } else {
+        alert("❌ 전송 실패");
+      }
+    } catch (err) {
+      console.error("메일 전송 오류:", err);
+      alert("⚠️ 서버 오류로 전송에 실패했습니다.");
+    } finally {
+      setLoadingId(null); // 👉 로딩 종료
+    }
+  };
+
 
   const Card = ({ c }) => (
     <li
@@ -56,23 +98,48 @@ export default function CandidateList() {
         <p>📅 검색일: {c.githubSearchDate?.substring(0, 10)}</p>
       </div>
       {c.candidateEmail !== 'not_found@example.com' && (
-        <a
-          href={`mailto:${c.candidateEmail}`}
+        <button
+          className="invite-button"
+          onClick={() => sendInvitation(postId, c.githubLogin, 42, c.candidateEmail)}
+          disabled={loadingId === c.githubLogin}
           style={{
             backgroundColor: '#30c59b',
             color: 'white',
             padding: '0.5rem 1rem',
             borderRadius: '999px',
-            textDecoration: 'none',
             fontWeight: 500,
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem'
+            justifyContent: 'center',
+            width: '160px',
+            height: '42px',
+            border: 'none',
+            cursor: 'pointer',
+            position: 'relative',opacity: loadingId === c.githubLogin ? 0.6 : 1,          // ✅ 흐리게
+            filter: loadingId === c.githubLogin ? 'blur(0.5px)' : 'none' // ✅ 흐림 효과도 가능
           }}
         >
-          <FaEnvelope /> 이메일 보내기
-        </a>
+          {loadingId === c.githubLogin ? (
+            <div
+              style={{
+                width: '20px',
+                height: '20px',
+                border: '3px solid #fff',
+                borderTop: '3px solid transparent',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }}
+            />
+          ) : (
+            <>
+              <FaEnvelope />
+              <span>이메일 보내기</span>
+            </>
+          )}
+        </button>
       )}
+
+
     </li>
   );
 

@@ -1,9 +1,21 @@
 package com.zoop.backend.controller;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.zoop.backend.domain.dto.FilterRequestDto;
+import com.zoop.backend.domain.dto.GithubSearchResultWithStageDto;
 import com.zoop.backend.domain.entity.GithubSearchResult;
 import com.zoop.backend.repository.GithubSearchResultRepository;
 import com.zoop.backend.service.GithubBridgeService;
+import com.zoop.backend.service.GithubSearchResultService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,12 +26,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.data.repository.query.Param;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
 @Tag(name="GithubSearchController", description = "GitHub 후보자 검색 관련 API")
 @RestController
 @RequestMapping("/api/github-search")
@@ -28,6 +34,7 @@ public class GithubSearchController {
 
     private final GithubBridgeService githubBridgeService;
     private final GithubSearchResultRepository resultRepo;
+    private final GithubSearchResultService githubSearchResultsService;
 
     @Operation(summary = "GitHub 후보자 검색 및 결과 저장", description = "FastAPI를 통해 GitHub에서 후보자를 검색하고 결과를 저장합니다.")
     @ApiResponses(value={
@@ -64,5 +71,10 @@ public class GithubSearchController {
         return ResponseEntity.ok(list);
     }
     
+    @Operation(summary = "job_cand_curr_stage를 조회하기 위함.", description = "")
+    @GetMapping("/{postId}/states")
+    public List<GithubSearchResultWithStageDto> getSearchResults(@PathVariable Long postId) {
+        return githubSearchResultsService.getSearchResultsWithStage(postId);
+    }
     
 }

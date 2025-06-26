@@ -11,14 +11,12 @@ package com.zoop.backend.domain.entity;
   * @author hwangseojin
   */
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Date;
- 
-import jakarta.persistence.Column; // java.sql.Timestamp 클래스 임포트
-import jakarta.persistence.Entity; // java.util.Date 클래스 임포트 (CANDIDATE_REGISTRATION_DATE 컬럼이 DATE 타입이므로 사용)
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue; // java.sql.Timestamp 클래스 임포트
+import jakarta.persistence.GenerationType; // java.util.Date 클래스 임포트 (CANDIDATE_REGISTRATION_DATE 컬럼이 DATE 타입이므로 사용)
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
@@ -28,7 +26,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity // 이 클래스가 JPA 엔티티임을 나타냅니다.
+@Entity(name = "Candidate") // 이 클래스가 JPA 엔티티임을 나타냅니다.
 @Table(name = "CANDIDATES") // 이 엔티티가 매핑될 실제 데이터베이스 테이블 이름을 지정합니다.
 @Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor // Lombok 어노테이션
 public class Candidate {
