@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, Link, useSearchParams } from 'react-router-dom'; 
+import { useNavigate, Link, useSearchParams, useLocation  } from 'react-router-dom'; 
 import axios from 'axios';
 import './LoginSelectionPage.css';
 import Navbar from '../../components/Navbar';
@@ -17,6 +17,7 @@ function LoginSelectionPage() {
   const { setAuthState } = useAuth();
   const [searchParams] = useSearchParams(); // URL 쿼리 파라미터를 읽기 위한 훅 (소셜 로그인 에러 확인 등)
 
+
   const socialConfig = {
     google: {
       // .env 파일에서 REACT_APP_GOOGLE_CLIENT_ID 환경 변수 값을 불러옴
@@ -30,6 +31,21 @@ function LoginSelectionPage() {
        // prompt: 'consent', // 동의 화면 항상 표시 (개발 또는 테스트 시 유용)
     }
   };
+
+  //-------------------------------------------------------------------------
+  // 초대 링크 누르고 들어온 사람이 회원가입이 되어있는 경우 -> 지훈추가
+  //-------------------------------------------------------------------------
+  const location = useLocation();     // state를 전달받기 위함
+  const fromInvite = location.state?.fromInvite || false;  // location.state가 존재하고 그 안에 fromInvite가 있으면 그 값을 쓰고, 없으면 false
+  const presetGithubLogin = location.state?.githubLogin || ''; // 마찬가지로 state에서 넘어온 githubLogin이 있으면 쓰고, 없으면 빈 문자열로 초기화
+
+  useEffect(() => {
+    if (fromInvite && presetGithubLogin) {
+      setLoginId(presetGithubLogin); // 👈 아이디 자동 기입
+    }
+  }, [fromInvite, presetGithubLogin]);
+
+  //-------------------------------------------------------------------------
 
   useEffect(() => {
     const savedId = localStorage.getItem('savedLoginId');

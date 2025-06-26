@@ -1,5 +1,9 @@
 package com.zoop.backend.controller;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -7,7 +11,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.zoop.backend.domain.dto.CandidateSignupRequest;
 import com.zoop.backend.domain.entity.Candidate;
+import com.zoop.backend.domain.entity.Invitation;
+import com.zoop.backend.repository.CandidateRepository;
+import com.zoop.backend.repository.InvitationRepository;
 import com.zoop.backend.service.CandidateService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,9 +25,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+@Slf4j
 @Tag(name="CandidateController", description = "개인회원(후보자) 관련 API")
 @RestController
 @RequestMapping("auth/applicant/signup")
@@ -27,6 +38,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class CandidateController {
 
     private final CandidateService candidateService;
+    private final CandidateRepository candidateRepository;
+    private final InvitationRepository invitationRepository;
 
     // // 모든 후보자 리스트 조회
     // @GetMapping
@@ -54,13 +67,46 @@ public class CandidateController {
             required = true,
             content = @Content(schema = @Schema(implementation = Candidate.class))
         )
-        @RequestBody Candidate candidate) {
-        // 입력받은 candidate 정보 출력
-        System.out.println(candidate.toString());
+        @RequestBody CandidateSignupRequest request) {
+        // 1. 입력받은 candidate 정보 출력
+        log.info("회원가입 요청: {}", request.toString());
         
-        // 후보자 저장
+        // 2. Candidate 객체 생성(엔티티로 변환)
+        Candidate candidate = new Candidate();
+        candidate.setCandidateName(request.getCandidateName());
+        candidate.setCandidateEmail(request.getCandidateEmail());
+        candidate.setCandidatePassword(request.getCandidatePassword());
+        candidate.setCandidatePhoneNumber(request.getCandidatePhoneNumber());
+        candidate.setCandidateRegistrationDate(request.getCandidateRegistrationDate());
+        candidate.setCandidateUpdatedAt(request.getCandidateUpdatedAt());
+        candidate.setCandidateCreatedAt(request.getCandidateCreatedAt());
+        candidate.setGithubLogin(request.getGithubLogin());
+        candidate.setGoogleId(request.getGoogleId());
+        
+        // 3. 저장
         Candidate savedCandidate = candidateService.save(candidate);
-        
+
+        // 4. 토큰기반 Invitation 업데이트
+        // 만약 InvitationToken이 전달된다면
+        if(request.getInvitationToken() != null){  
+            
+            // 토큰을 기반하여 Invitation조회
+            Optional<Invitation> optional = invitationRepository.findByInvitationUniqueToken(request.getInvitationToken());
+
+            // 만약 그런 Invitation이 존재한다면
+            if (optional.isPresent()) {
+                Invitation invitation = optional.get();     // 전달받은 invitation
+
+                // 만약 candidateId가 비어있다면
+                if(invitation.getCandidateId() == null) {
+
+                    // candidateId 업데이트
+                    invitation.setCandidateId(savedCandidate.getCandidateId());
+                    invitationRepository.save(invitation);
+                }
+            }
+        }
+
         // 저장된 후보자와 함께 201 CREATED 상태 코드 반환
         return new ResponseEntity<>(savedCandidate, HttpStatus.CREATED);
     }
@@ -75,4 +121,25 @@ public class CandidateController {
             return ResponseEntity.ok("사용 가능한 아이디입니다.");
         }
     }
+
+    // 3. 링크를 타고 온 회원의 경우 회원가입 되어있는지 확인하는 메서드
+    @GetMapping("/check-exists")
+    public ResponseEntity<Map<String, Boolean>> checkCandidateExists(@RequestParam String githubLogin) {
+        boolean exists = candidateRepository.existsByGithubLogin(githubLogin);
+
+        if (exists) {
+            Candidate candidate = candidateRepository.findByGithubLogin(githubLogin).orElseThrow();
+            // invitation 테이블에서 githubLogin이 같은 초대 찾기
+            List<Invitation> invitations = invitationRepository.findAllByGithubLogin(githubLogin);
+            for (Invitation invitation : invitations) {
+                if (invitation.getCandidateId() == null) {
+                    invitation.setCandidateId(candidate.getCandidateId());
+                    invitationRepository.save(invitation);
+                    log.info("candidate_id: {}", candidate.getCandidateId());
+                }
+            }
+        }
+        return ResponseEntity.ok(Map.of("exists", exists));
+    }
+
 }

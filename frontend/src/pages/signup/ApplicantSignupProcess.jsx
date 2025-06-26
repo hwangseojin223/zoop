@@ -2,7 +2,7 @@
 // 이메일 인증 + 아이디 중복확인 기능이 모두 포함됨
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 
 export default function ApplicantSignupProcess() {
@@ -45,6 +45,64 @@ export default function ApplicantSignupProcess() {
   && document.getElementById('password')?.value
   && document.getElementById('phone')?.value
   && document.getElementById('candidate_name')?.value;
+
+  // 링크를 클릭하여 들어온 개인회원의 경우 토큰
+  const { token } = useParams();  // 초대 링크에서 token 추출
+  const [invitationToken, setToken] = useState('');  // ✅ invitationToken 저장용
+  const [fromInvite, setFromInvite] = useState(false);
+
+  //------------------------------------------------------------------------------
+  // token이 존재할 경우 → 백엔드에 token 전달 및 githubLogin 가져오기
+  //------------------------------------------------------------------------------
+  useEffect(() => {
+
+    console.log("📦 useEffect 실행됨", token);
+    if (token) {
+      fetch(`http://localhost:8081/api/invitations/clicked/${token}`, {  // --> InvitationController
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: null
+      })
+        .then(res => {
+          console.log("📡 응답 상태코드:", res.status);
+          return res.json();
+        })
+        .then(async data => {
+          const login = data.githubLogin;
+
+
+          // ✅ 가입 여부 확인
+          const res = await fetch(`http://localhost:8081/auth/applicant/signup/check-exists?githubLogin=${login}`); // --> 
+          if (res.ok) {
+            const json = await res.json();
+            if (json.exists) {
+              // 이미 가입된 사용자 → 로그인 페이지로 이동
+              navigate("/auth/login", {
+                state: {
+                  fromInvite: true,
+                  githubLogin: login,
+                },
+              });
+              return;
+            }
+          }
+
+          // ✅ 가입되지 않은 사용자 → githubLogin 고정 입력
+          setFromInvite(true);
+          setIdCheck(login);
+          setIsIdAvailable(true);
+          setToken(token);
+          console.log("전달받은 토큰: ", token);
+          console.log("전달받은 데이터: ", data);
+        })
+        .catch(err => {
+          console.error("초대 클릭 처리 실패", err);
+        });
+    }
+  }, [token]);
+
 
   // 타이머
   useEffect(() => {
@@ -198,6 +256,7 @@ export default function ApplicantSignupProcess() {
       candidateRegistrationDate: new Date().toISOString(),
       candidateCreatedAt: new Date().toISOString(),
       candidateUpdatedAt: new Date().toISOString(),
+      invitationToken: invitationToken,
     };
     try {
       const response = await fetch('http://localhost:8081/auth/applicant/signup/process', {
@@ -205,9 +264,14 @@ export default function ApplicantSignupProcess() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-      if (response.ok) navigate('/auth/applicant/signup/success');
-      else alert('회원가입 실패');
-    } catch (error) {
+      if (response.ok) {    //요청 성공 , 상태코드 200 ~ 299
+        navigate('/auth/applicant/signup/success');
+        console.log("회원가입 완료. 전달한 데이터: ", formData);
+      }
+      else {    // 요청 성공, 서버에서 응답은 왔지만 상태코드가 실패인경우
+        alert('회원가입 실패');
+      }
+    } catch (error) {   // fetch요청 자체가 실패한 경우
       console.error('오류 발생:', error);
       alert('서버 오류');
     }
@@ -224,12 +288,29 @@ export default function ApplicantSignupProcess() {
           <div>
             <label className="block mb-1 font-medium">아이디</label>
             <div className="flex gap-2">
-              <input type="text" className="flex-1 border px-3 py-2 rounded" value={idCheck} onChange={e => {
-                setIdCheck(e.target.value);
-                setIsIdAvailable(null);
-                setIdMessage('');
-              }} placeholder="4~20자 영문, 숫자, _ 사용" />
-              <button type="button" onClick={checkDuplicateId} className="bg-emerald-500 text-white px-3 py-2 rounded-xl hover:bg-emerald-600">중복확인</button>
+              <input
+                type="text"
+                className="flex-1 border px-3 py-2 rounded"
+                value={idCheck}
+                onChange={e => {
+                  if (!fromInvite) {
+                    setIdCheck(e.target.value);
+                    setIsIdAvailable(null);
+                    setIdMessage('');
+                  }
+                }}
+                placeholder="4~20자 영문, 숫자, _ 사용"
+                disabled={fromInvite}
+              />
+              {!fromInvite && (
+                <button
+                  type="button"
+                  onClick={checkDuplicateId}
+                  className="bg-emerald-500 text-white px-3 py-2 rounded-xl hover:bg-emerald-600"
+                >
+                  중복확인
+                </button>
+              )}
             </div>
             {idMessage && <p className={`mt-1 text-sm ${isIdAvailable ? 'text-emerald-600' : 'text-red-500'}`}>{idMessage}</p>}
           </div>
