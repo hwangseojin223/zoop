@@ -29,7 +29,8 @@ public interface GithubSearchResultRepository extends JpaRepository<GithubSearch
             g.analysisScore,
             a.analysisScore,
             a.analysisData,
-            j.jobCandCurrStage
+            j.jobCandCurrStage,
+            p.companyAdminId
         )
         FROM GithubSearchResult g
         LEFT JOIN AiAnalysisResults a ON g.aiGithubAnalysisId = a.analysisId
@@ -39,7 +40,9 @@ public interface GithubSearchResultRepository extends JpaRepository<GithubSearch
                                         FROM Candidate c
                                         WHERE c.githubLogin = g.githubLogin
                                     )
+        JOIN Post p ON g.postId = p.postId
         WHERE g.postId = :postId
+        AND g.candidateEmail != 'not_found@example.com'
     """)
     List<GithubSearchResultWithStageDto> findSearchResultsWithStageByPostId(@Param("postId") Long postId);
 

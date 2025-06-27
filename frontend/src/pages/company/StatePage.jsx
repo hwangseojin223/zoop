@@ -10,6 +10,9 @@ export default function StatePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [tab, setTab] = useState('전체');
   const resultsPerPage = 6;
+  const [sending, setSending] = useState(false);
+  const [companyAdminId, setCompanyAdminId] = useState(0);
+
 
   useEffect(() => {
     fetch(`http://localhost:8081/api/github-search/${postId}/states`)
@@ -19,7 +22,13 @@ export default function StatePage() {
         }
         return res.json();
       })
-      .then(setSearchResults)
+      .then((data) => {
+        setSearchResults(data);
+        console.log(data);
+        if (data.length > 0 && data[0].companyAdminId) {
+          setCompanyAdminId(data[0].companyAdminId);
+        }
+      })
       .catch((err) => {
         console.error('❌ 데이터 불러오기 실패:', err);
         setSearchResults([]);
@@ -32,8 +41,66 @@ export default function StatePage() {
     );
   };
 
-  const handleSendEmail = () => {
-    console.log('선택된 유저에게 이메일 전송:', selected);
+  /**
+   * 메일 보내기
+   */
+ const handleSendEmail = async () => {
+    console.log(searchResults);
+    const targets = searchResults.filter(r => selected.includes(r.githubLogin));
+    setSending(true); // 👉 버튼 비활성화 시작
+
+    // 실제 서비스에선 아래 코드 사용.
+    // const payloads = targets.map(r => ({
+    //   postId: parseInt(postId),
+    //   githubLogin: r.githubLogin,
+    //   companyAdminId: r.companyAdminId, // 실제 관리자 ID로 대체 필요
+    //   candidateEmail: r.candidateEmail,
+    // }));
+
+    // ✅ 테스트용 이메일 3개 넣기
+    const payloads = [
+      {
+        postId: parseInt(postId),
+        githubLogin: "testuser1",
+        companyAdminId: companyAdminId,
+        candidateEmail: "ezenkenneth93@gmail.com"
+      },
+      {
+        postId: parseInt(postId),
+        githubLogin: "testuser2",
+        companyAdminId: companyAdminId,
+        candidateEmail: "kenneth_lyu@naver.com"
+      },
+      {
+        postId: parseInt(postId),
+        githubLogin: "testuser3",
+        companyAdminId: companyAdminId,
+        candidateEmail: "kenneth93@naver.com"
+      }
+    ];
+
+    try {
+      const res = await fetch("http://localhost:8081/api/invitations/send-multiple", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payloads),
+      });
+
+      if (res.ok) {
+        alert("📨 메일을 성공적으로 보냈습니다.");
+        console.log("누구한테 보냈게? : ", JSON.stringify(payloads));
+        console.log("선택된 사람은 누구게? : ", JSON.stringify(targets));
+      } else {
+        alert("❌ 메일 전송 실패");
+      }
+    } catch (err) {
+      console.error("메일 전송 오류:", err);
+      alert("⚠️ 서버 오류로 전송에 실패했습니다.");
+    } finally {
+      setSending(false); // 👉 버튼 다시 활성화
+    }
   };
 
   const getStageLabel = (code) => {
@@ -152,10 +219,45 @@ export default function StatePage() {
           <div className="mt-8 text-right">
             <button
               onClick={handleSendEmail}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-6 rounded-md"
+              disabled={sending}
+              className={`relative flex items-center justify-center min-w-[200px] bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-6 rounded-md transition-opacity duration-200 ${
+                sending ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
-              ✉ 이메일 보내기 ({selected.length}명)
+              {/* 스피너가 있을 때 */}
+              {sending ? (
+                <>
+                  <svg
+                    className="animate-spin h-4 w-4 mr-2 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    />
+                  </svg>
+                  전송 중...
+                </>
+              ) : (
+                <>
+                  ✉ 이메일 보내기 ({selected.length}명)
+                  {/* 전송 중일 때도 공간을 차지하도록 invisible 처리 */}
+                  <span className="invisible absolute">전송 중...</span>
+                </>
+              )}
             </button>
+
           </div>
         )}
 

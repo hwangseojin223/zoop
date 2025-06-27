@@ -2,6 +2,7 @@ package com.zoop.backend.controller;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -64,5 +65,15 @@ public class InvitationController {
         log.info("가입페이지로 전달한 데이터 : {}", response.get("githubLogin"));
         return ResponseEntity.ok(response);
     }
+
+    // 메일 일괄전송
+    @PostMapping("/send-multiple")
+    public ResponseEntity<String> sendMultipleInvitations(@RequestBody List<InvitationSendRequest> requests) {
+        for (InvitationSendRequest request : requests) {
+            invitationService.sendInvitation(request);
+        }
+        return ResponseEntity.ok("📨 여러 명에게 초대 메일을 전송했습니다.");
+    }
+
 }
 
