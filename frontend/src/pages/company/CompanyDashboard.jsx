@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
+import CompanySidebar from '../../components/CompanySidebar';
 import { FaEdit } from 'react-icons/fa';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
@@ -80,75 +81,11 @@ const handleStartRecruit = (draftId) => {
       <Navbar />
 
       <div className="dashboard-container" style={{ display: 'flex', marginTop: '6rem', alignItems: 'flex-start' }}>
-      <aside
-        style={{
-            ...hoverBoxStyle,
-            marginTop: '7.6rem',
-            marginLeft: '3rem',
-            padding: '2rem',
-            width: '280px',
-            position: 'sticky',
-            top: '6rem',
-            height: 'fit-content',
-            fontSize: '0.85rem',
-            color: '#222',
-        }}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        >
-        <h3 style={{ fontSize: '1rem', fontWeight: '700', color: '#111', marginBottom: '1.5rem' }}>
-            📢 공고 관리
-        </h3>
-        <button
-            onClick={handleAddDraftPost}
-            style={{
-            backgroundColor: '#30c59b',
-            color: 'white',
-            padding: '0.6rem 1.2rem',
-            border: 'none',
-            borderRadius: '999px',
-            fontWeight: '600',
-            fontSize: '1rem',
-            cursor: 'pointer',
-            width: '100%',
-            marginBottom: '2rem',
-            }}
-        >
-            ➕ 새 공고 추가
-        </button>
-
-        {draftPosts.map((post) => (
-            <div key={post.id} style={{ marginBottom: '1.8rem' }}>
-            <div style={{ fontWeight: '600', fontSize: '0.9rem', color: '#333' }}>
-                {post.title}
-            </div>
-            <div
-                style={{
-                backgroundColor: '#e8f8f0',
-                borderRadius: '10px',
-                padding: '0.9rem 1rem',
-                marginTop: '0.6rem',
-                boxShadow: 'inset 0 0 0.5px rgba(0,0,0,0.05)',
-                }}
-            >
-                <ul
-                style={{
-                    paddingLeft: '0.8rem',
-                    fontSize: '0.9rem',
-                    color: '#444',
-                    lineHeight: '1.6',
-                    margin: 0,
-                }}
-                >
-                <li style={{ cursor: 'pointer' }} onClick={() => handleStartRecruit(post.id)}>
-                    새 채용 시작
-                </li>
-                </ul>
-            </div>
-            </div>
-        ))}
-
-        </aside>
+        <CompanySidebar
+          draftPosts={draftPosts}
+          onAddDraftPost={handleAddDraftPost}
+          onStartRecruit={handleStartRecruit}
+        />
 
 
         <main style={{ flex: 1, padding: '4rem 3rem', backgroundColor: '#fefefe' }}>

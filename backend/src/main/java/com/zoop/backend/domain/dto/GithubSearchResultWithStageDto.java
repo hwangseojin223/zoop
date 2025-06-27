@@ -12,13 +12,15 @@ public class GithubSearchResultWithStageDto {
     private Double aiAnalysisScore;
     private String analysisData;
     private String jobCandCurrStage;
+    private Long companyAdminId;
 
     public GithubSearchResultWithStageDto(String githubLogin, String candidateEmail,
                                         String githubProfileUrl,
                                         Double githubAnalysisScore,
                                         Double aiAnalysisScore,
                                         String analysisData,
-                                        String jobCandCurrStage) {
+                                        String jobCandCurrStage,
+                                        Long companyAdminId) {
         this.githubLogin = githubLogin;
         this.candidateEmail = candidateEmail;
         this.githubProfileUrl = githubProfileUrl;
@@ -26,6 +28,7 @@ public class GithubSearchResultWithStageDto {
         this.aiAnalysisScore = aiAnalysisScore;
         this.analysisData = analysisData;
         this.jobCandCurrStage = jobCandCurrStage;
+        this.companyAdminId = companyAdminId;
     }
 
 

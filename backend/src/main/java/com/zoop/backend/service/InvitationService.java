@@ -53,8 +53,8 @@ public class InvitationService {
         // 5. 메일 전송 (임시 출력)
         try {
             emailService.sendInvitationEmail(
-                // dto.getCandidateEmail(), // 수정된 부분,
-                "ezenkenneth93@gmail.com",
+                dto.getCandidateEmail(), // 수정된 부분,
+                // "ezenkenneth93@gmail.com",
                 dto.getGithubLogin(),
                 token, 
                 post
