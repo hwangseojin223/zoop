@@ -19,6 +19,8 @@ public class PortfolioSubmissionResponseDto {
     private String message;
     private boolean success;
     private String redirectUrl; // 필드 추가
+    private String portfolioFilePath; // S3 URL 반환용 필드 추가
+    private String resumeFilePath; // 이력서 S3 URL 반환용 필드 추가
 
     // 기존 getter/setter 유지
 

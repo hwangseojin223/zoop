@@ -14,7 +14,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zoop.backend.domain.dto.CareerDataDto;
 import com.zoop.backend.domain.dto.PortfolioSubmissionResponseDto;
-import com.zoop.backend.service.FileStorageService;
 import com.zoop.backend.service.PortfolioService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,13 +29,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api/portfolios")
 public class PortfolioController {
 
-    private final FileStorageService fileStorageService;
     private final PortfolioService portfolioService;
     private final ObjectMapper objectMapper;
     
     @Autowired
-    public PortfolioController(FileStorageService fileStorageService, PortfolioService portfolioService, ObjectMapper objectMapper) {
-        this.fileStorageService = fileStorageService;
+    public PortfolioController(PortfolioService portfolioService, ObjectMapper objectMapper) {
         this.portfolioService = portfolioService;
         this.objectMapper = objectMapper;
     }
@@ -56,11 +53,8 @@ public class PortfolioController {
             @Parameter(description = "지원자 ID", required = true)
             @RequestParam("candidateId") Integer candidateId,
             
-            @Parameter(description = "포트폴리오 파일 (선택사항)")
-            @RequestParam(value = "portfolioFile", required = false) MultipartFile portfolioFile,
-            
-            @Parameter(description = "이력서 파일 (필수)")
-            @RequestParam(value = "resumeFile", required = false) MultipartFile resumeFile,
+            @Parameter(description = "포트폴리오 파일 (필수)")
+            @RequestParam(value = "portfolioFile", required = true) MultipartFile portfolioFile,
             
             @Parameter(description = "포트폴리오 내용 설명")
             @RequestParam("portfolioContent") String portfolioContent,
@@ -90,6 +84,12 @@ public class PortfolioController {
             @RequestParam("agreeReceiveRecruitmentInfo") Boolean agreeReceiveRecruitmentInfo
     ) {
         try {
+            // 파일 상태 로그 출력
+            System.out.println("=== PortfolioController.submitPortfolio() 호출됨 ===");
+            System.out.println("[PortfolioController] portfolioFile: " + (portfolioFile != null ? portfolioFile.getOriginalFilename() + " (크기: " + portfolioFile.getSize() + " bytes)" : "null"));
+            System.out.println("[PortfolioController] postId: " + postId);
+            System.out.println("[PortfolioController] candidateId: " + candidateId);
+            
             // JSON 문자열을 객체로 변환
             CareerDataDto careerData = objectMapper.readValue(careerDataJson, CareerDataDto.class);
             
@@ -98,7 +98,6 @@ public class PortfolioController {
                 postId, 
                 candidateId, 
                 portfolioFile, 
-                resumeFile, 
                 portfolioContent, 
                 portfolioUrl, 
                 careerData, 

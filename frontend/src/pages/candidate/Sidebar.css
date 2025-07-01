@@ -1,104 +1,121 @@
-/* Sidebar.css */
+/* Sidebar.css - Finalized Styling */
 
 .sidebar {
   width: 240px;
-  background-color: #ffffff;
+  background-color: #ffffff; /* Sidebar background is white */
   padding: 20px 0;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
-  flex-shrink: 0; /* 사이드바의 너비가 고정되도록 합니다. */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05); /* Retaining a subtle shadow for separation */
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto; /* Enable scrolling if menu content overflows */
+}
+
+.logo-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  padding: 0 20px; /* Add horizontal padding to align with menu items */
+  margin-bottom: 30px; /* Space below the logo before the menu starts */
 }
 
 .logo {
   text-align: center;
-  margin-bottom: 30px;
 }
 
 .logo img {
-  height: 60px; /* Adjust as needed */
+  height: 60px; /* Reverted to 60px to match the screenshot more closely */
+  display: block;
+  margin: 0 auto; /* Center the image */
 }
 
 .menu-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  flex-grow: 1;
 }
 
 .menu-item {
   display: flex;
   align-items: center;
   padding: 12px 20px;
-  color: #555;
+  color: #4A5568; /* Darker grey for better readability */
   font-size: 15px;
   cursor: pointer;
-  position: relative; /* 하위 메뉴의 absolute 포지셔닝 기준 */
-  flex-wrap: wrap; /* 하위 메뉴가 아래 줄로 내려가도록 허용 */
-  transition: background-color 0.2s ease-in-out; /* 부드러운 호버 효과 */
+  position: relative;
+  flex-wrap: wrap; /* IMPORTANT: Allows sub-menu to drop below */
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .menu-item:hover {
-  background-color: #e8f8f4; /* 연한 민트색으로 변경 */
+  background-color: #F7FAFC; /* Very light grey for subtle hover */
+  color: #2D3748; /* Slightly darker text on hover */
 }
 
+/* Specific styling for the active parent menu item (e.g., 'My 홈') */
 .menu-item.active {
-  background-color: #e0f5f0; /* 연한 민트색 배경으로 변경 */
-  color: #30C59B; /* 텍스트 색상을 #30C59B로 변경 */
-  font-weight: bold;
+  background-color: #E6FFFA; /* Lightest mint/teal background for active parent */
+  color: #38B2AC; /* Active text color */
+  font-weight: 600;
 }
 
 .menu-item .icon {
-  margin-right: 10px;
-  font-size: 18px; /* Adjust icon size */
+  margin-right: 12px;
+  font-size: 18px;
+  color: inherit; /* Inherit color from parent menu-item */
 }
 
 .menu-item .arrow {
-  margin-left: auto; /* 화살표를 오른쪽 끝으로 보냅니다. */
-  font-size: 12px;
-  transition: transform 0.2s ease-in-out; /* 화살표 회전 애니메이션 */
+  margin-left: auto;
+  font-size: 10px;
+  color: #A0AEC0;
+  transition: transform 0.2s ease;
 }
 
-/* new-badge는 그대로 유지하되 색상만 변경 */
+/* Rotate arrow for active menu */
+.menu-item.active .arrow {
+  transform: rotate(180deg);
+}
+
 .new-badge {
-  background-color: #30C59B; /* 민트색으로 변경 */
+  background-color: #38B2AC; /* Match new teal color */
   color: white;
   font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 3px 7px;
+  border-radius: 9999px; /* Pill shape */
   margin-left: 8px;
-  font-weight: normal;
+  font-weight: 600;
 }
 
-/* sub-menu의 기본 스타일 */
+/* sub-menu styling */
 .sub-menu {
   list-style: none;
   padding: 0;
-  margin: 0;
-  background-color: #f7f9fc; /* Slightly darker for sub-menu background */
-  border-top: 1px solid #eee;
-  width: 100%; /* 부모 .menu-item의 전체 너비 사용 */
+  margin: 8px 0 0 0; /* Add top margin to push it below the parent text/arrow */
+  background-color: #ffffff; /* Sub-menu background is white */
+  width: 100%; /* Make it take the full width of its parent .menu-item */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Optional: add a subtle shadow for depth */
+  border-radius: 4px; /* Optional: subtle rounded corners */
+  overflow: hidden; /* Ensure content is clipped within rounded corners */
 }
 
 .sub-menu-item {
-  padding: 10px 20px 10px 45px; /* Indent sub-menu items */
+  padding: 10px 20px 10px 52px; /* Indent sub-menu items (icon + its margin + indent) */
   font-size: 14px;
-  color: #666;
+  color: #667587;
   cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .sub-menu-item:hover {
-  background-color: #e8f8f4; /* 연한 민트색으로 변경 */
+  background-color: #F7FAFC; /* Very light grey on sub-menu item hover */
+  color: #38B2AC;
 }
 
+/* Active sub-menu item (e.g., '계정정보 설정') */
 .sub-menu-item.active {
-  background-color: #d0f0e8; /* 연한 민트색 배경으로 변경 */
-  color: #30C59B; /* 텍스트 색상을 #30C59B로 변경 */
-  font-weight: bold;
+  background-color: #E6FFFA; /* Lighter mint/teal background */
+  color: #38B2AC; /* Active text color */
+  font-weight: 600;
 }
-
-
-.logo-link {
-  text-decoration: none; /* 밑줄 제거 */
-  color: inherit; /* 부모 요소의 글자 색상 상속 (필요시) */
-  display: block; /* Link를 블록 요소로 만들어 클릭 영역을 확장 (로고 이미지 크기에 따라 조절) */
-  /* 로고 이미지의 중앙 정렬 등을 위해 flexbox 또는 text-align을 사용할 수도 있습니다. */
-}
-

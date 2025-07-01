@@ -40,3 +40,5 @@ backend/target/
 .env
 backend/target/backend/target/
 backend\python-api\github_search\__pycache__
+backend/python-api/chatbot/.env
+backend/python-api/github_search/.env

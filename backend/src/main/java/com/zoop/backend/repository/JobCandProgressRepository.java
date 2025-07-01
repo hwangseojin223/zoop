@@ -33,10 +33,10 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
             ON jcp.job_candidate_id = ar.job_candidate_id 
             AND ar.analysis_type = 'portfolio'
         WHERE 
-            jcp.job_cand_curr_stage = '3n'
+            jcp.job_cand_curr_stage = '2y'
             AND jcp.post_id = :postId
     """, nativeQuery = true)
-    List<ResponderDto> findCandidatesAtStage3nByPost(@Param("postId") Long postId);
+    List<ResponderDto> findCandidatesAtStage2yByPost(@Param("postId") Long postId);
 
 
     List<JobCandProgress> findByCandidate_CandidateId(Integer candidateId);
@@ -47,4 +47,6 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
         @Param("postId") Integer postId, 
         @Param("candidateId") Integer candidateId
     );
+
+    Optional<JobCandProgress> findByJobCandidateId(Long jobCandidateId);
 }

@@ -1,15 +1,17 @@
 package com.zoop.backend.service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.zoop.backend.domain.dto.PostingRequestDto;
 import com.zoop.backend.domain.entity.CompanyAdmin;
 import com.zoop.backend.domain.entity.Post;
 import com.zoop.backend.repository.CompanyAdminRepository;
 import com.zoop.backend.repository.PostRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Service
 public class PostService {
@@ -25,6 +27,11 @@ public class PostService {
     @Autowired
     public void setCompanyAdminRepository(CompanyAdminRepository companyAdminRepository) {
         this.companyAdminRepository = companyAdminRepository;
+    }
+
+    public Post getPostById(Long postId) {
+        Optional<Post> post = postRepository.findById(postId);
+        return post.orElse(null);
     }
 
     // 오버로드된 createPost(dto, loginId) 메서드

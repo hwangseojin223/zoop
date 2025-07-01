@@ -1,44 +1,69 @@
-// Header.jsx
+// c/pages/candidate/Header.jsx
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react'; // useState와 useRef가 여기에 import 되어 있어야 합니다.
 import './Header.css';
-import { useAuth } from '../../context/AuthContext'; // AuthContext 경로 확인
+import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 function Header() {
-  // 초기 상태를 '아이디' 대신 빈 문자열이나 null로 설정하는 것이 좋습니다.
+  // --- FIX IS HERE ---
+  // 이 부분에 isDropdownOpen과 setIsDropdownOpen 상태를 선언해야 합니다.
   const [displayedUserName, setDisplayedUserName] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // <--- 이 라인이 Header 함수 내부에 있어야 합니다.
   const { authState, logout } = useAuth();
   const navigate = useNavigate();
+  const dropdownRef = useRef(null); // 드롭다운 요소를 참조하기 위한 ref
 
   useEffect(() => {
-    // authState에 loginId 또는 userName 정보가 있다면 표시
-    if (authState?.loginId) { // authState에 loginId가 있다면
-      setDisplayedUserName(authState.loginId); // loginId를 표시
-    } else if (authState?.userName) { // loginId는 없지만 userName이 있다면
-       setDisplayedUserName(authState.userName); // userName을 표시
+    if (authState?.loginId) {
+      setDisplayedUserName(authState.loginId);
+    } else if (authState?.userName) {
+       setDisplayedUserName(authState.userName);
     } else {
-      // 로그인 정보가 없을 때
       setDisplayedUserName('게스트');
     }
-  }, [authState]); // authState가 변경될 때마다 실행
+  }, [authState]);
+
+  // 드롭다운 외부 클릭 감지 로직
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false); // 드롭다운 외부 클릭 시 닫기
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownRef]);
 
   // 로그아웃 처리 함수
   const handleLogout = () => {
     if (logout) {
       logout();
       console.log("로그아웃 되었습니다.");
-      navigate('/auth/login'); // 실제 로그인 페이지 경로로 수정
+      navigate('/auth/login');
     } else {
       console.error("AuthContext에서 logout 함수를 찾을 수 없습니다.");
-      // AuthContext에 logout 함수가 없다면 로컬 스토리지 직접 삭제 및 이동
       localStorage.removeItem('jwtToken');
       localStorage.removeItem('userType');
       localStorage.removeItem('userId');
-      localStorage.removeItem('loginId'); // <-- loginId도 제거
-      localStorage.removeItem('userName'); // <-- userName도 제거
-      navigate('/auth/login'); // 실제 로그인 페이지 경로로 수정
+      localStorage.removeItem('loginId');
+      localStorage.removeItem('userName');
+      navigate('/auth/login');
     }
+    setIsDropdownOpen(false); // 로그아웃 후 드롭다운 닫기
+  };
+
+  // 드롭다운 토글 함수
+  const toggleDropdown = () => {
+    setIsDropdownOpen(prev => !prev);
+  };
+
+  // 마이페이지, 설정 등 클릭 핸들러 (예시)
+  const handleMenuItemClick = (path) => {
+    navigate(path);
+    setIsDropdownOpen(false); // 메뉴 클릭 후 드롭다운 닫기
   };
 
   return (
@@ -50,15 +75,23 @@ function Header() {
         <span className="header-icon" aria-label="알림">🔔</span>
         <span className="header-icon" aria-label="메시지">✉️</span>
         <span className="header-icon" aria-label="채팅">💬</span>
-        <div className="user-profile">
-          {/* 표시할 사용자 정보 (로그인 ID 또는 이름) */}
-          <span>{displayedUserName}</span>
+        {/* User Profile Area - 클릭 시 드롭다운 토글 */}
+        <div className="user-profile" onClick={toggleDropdown} ref={dropdownRef}>
           <img src="../../person.png" alt="User Avatar" className="user-avatar" />
-          {/* 로그인 상태일 때만 로그아웃 버튼을 표시 */}
-          {authState?.token && (
-             <button onClick={handleLogout} className="logout-button">
-               로그아웃
-             </button>
+          <span>{displayedUserName}</span>
+
+          {/* 드롭다운 메뉴 (isDropdownOpen 상태에 따라 표시) */}
+          {isDropdownOpen && ( // <--- isDropdownOpen이 정의되어 있습니다.
+            <div className="dropdown-menu">
+              <div className="dropdown-item" onClick={() => handleMenuItemClick('/mypage')}>마이페이지</div>
+              <div className="dropdown-item" onClick={() => handleMenuItemClick('/settings')}>설정</div>
+              {/* 로그아웃 버튼은 드롭다운 항목 중 하나로 배치 */}
+              {authState?.token && (
+                <div className="dropdown-item logout-dropdown-item" onClick={handleLogout}>
+                  로그아웃
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
