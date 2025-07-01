@@ -20,4 +20,7 @@ public class InterviewScheduleResponseDto {
     private String status;
     private String message;
     private boolean success;
+
+    
 }
+

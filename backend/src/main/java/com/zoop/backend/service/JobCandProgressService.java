@@ -17,10 +17,10 @@ public class JobCandProgressService {
     private final JobCandProgressRepository jobCandProgressRepository;
 
     @Transactional(readOnly = true)
-    public List<ResponderDto> getCandidatesAtStage3nByPost(Long postId) {
-        System.out.println("Repository 메서드 실행 직전");
-        List<ResponderDto> list = jobCandProgressRepository.findCandidatesAtStage3nByPost(postId);
-        System.out.println("Repository 메서드 실행 직후: " + list.size());
+    public List<ResponderDto> getCandidatesAtStage2yByPost(Long postId) {
+        System.out.println("2y 스테이지 후보자 조회: " + postId);
+        List<ResponderDto> list = jobCandProgressRepository.findCandidatesAtStage2yByPost(postId);
+        System.out.println("조회된 후보자 수: " + list.size());
         return list;
     }
 }

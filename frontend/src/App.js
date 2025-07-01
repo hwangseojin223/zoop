@@ -34,7 +34,8 @@ import './components/Chatbot.css';
 import CandidateDashboard from './pages/candidate/CandidateDashboard';
 // PortfolioSubmissionPage 컴포넌트를 임포트합니다. 실제 파일 경로에 맞게 수정해주세요.
 import PortfolioSubmissionPage from './pages/candidate/PortfolioSubmissionPage';
-
+import InterviewPage from './pages/candidate/InterviewPage';
+import InterviewSession from './pages/candidate/InterviewSession';
 
 function AppContent() {
   const { setAuthState } = useAuth();
@@ -130,6 +131,22 @@ function AppContent() {
           element={
             <PrivateRoute allowedUserType="company">
               <ResponderList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+    path="/interview/:id"
+    element={
+      <PrivateRoute allowedUserType='candidate'> {/* 개인회원만 접근 허용 */}
+        <InterviewPage />
+      </PrivateRoute>
+    }
+  />
+        <Route
+          path="/interview-session/:scheduleId"
+          element={
+            <PrivateRoute allowedUserType='candidate'>
+              <InterviewSession />
             </PrivateRoute>
           }
         />

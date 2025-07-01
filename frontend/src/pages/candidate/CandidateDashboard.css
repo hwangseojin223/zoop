@@ -141,16 +141,24 @@
   border-bottom: 2px solid transparent; /* 기본 밑줄 없음 */
   transition: all 0.2s ease-in-out; /* 부드러운 전환 효과 */
   white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+  outline: none;
+  -webkit-tap-highlight-color: transparent; 
 }
 
 .tab-button:hover {
-  color: #333;
+  color: #30C59B; /* 호버 시 글자색 민트색으로 변경 */
+  background-color: #e0f5f0; /* 호버 시 배경색을 연한 민트색으로 변경 */
+  border-radius: 4px;
+  background-color: #e0f5f0 !important;
+  color: #30C59B !important;
 }
 
 .tab-button.active {
   color: #30C59B; /* 민트색으로 변경 */
   font-weight: bold;
   border-bottom-color: #30C59B; /* 민트색으로 변경 */
+  background-color: #e0f5f0; /* 활성 탭 배경색 연한 민트색 */
+  border-radius: 4px; 
 }
 
 .filter-options {
@@ -181,4 +189,108 @@
   max-width: 250px; /* Adjust size as needed */
   height: auto;
   opacity: 0.8; /* Make it slightly faded */
+}
+
+.job-posting-item {
+  border: 1px solid #e0e0e0;
+  margin: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  list-style-type: none;
+
+  /* --- Main Flex Container for the entire item --- */
+  display: flex;
+  align-items: flex-end; /* Align bottom of content group with bottom of button */
+  justify-content: space-between; /* Push content group left, button group right */
+  gap: 15px;     
+}
+.job-posting-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start; /* Align content elements to the left */
+
+  flex-shrink: 1;
+  min-width: 0;/* Ensure it takes full width */
+}
+
+.company-title-row {
+  display: flex; /* Make this row a flex container */
+  align-items: baseline; /* Align text baselines (good for h3 and p) */
+  gap: 10px; /* Space between company name and job title */
+  margin-bottom: 5px; /* Space below this row */
+}
+/* Ensure margins on h3 and p are controlled within the flex row */
+.company-title-row h3 {
+    margin: 0; /* Remove default margin from h3 */
+    font-size: 1.2em; /* Adjust as needed */
+}
+
+.company-title-row p {
+    margin: 0; /* Remove default margin from p */
+    font-size: 1em; /* Adjust as needed */
+    color: #555;
+    white-space: nowrap; /* Prevent job title from wrapping if short */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Add ellipsis if it's too long */
+}
+.job-posting-dates {
+    /* Styles for the dates group */
+}
+.job-posting-dates p {
+    margin: 0; /* Remove default paragraph margins */
+    line-height: 1.3; /* Adjust line height for dates */
+    font-size: 0.9em; /* Smaller font for dates */
+    color: #777;
+}
+
+
+ul {
+  list-style-type: none; /* This removes the bullet points */
+  padding: 0;           /* Also common to remove default padding */
+  margin: 0;            /* And default margin for lists */
+}
+
+.submit-portfolio-button,
+.interview-scheduler-button,
+.interview-button {
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease;
+  flex-shrink: 0;
+  margin-top: 0;
+}
+
+.submit-portfolio-button {
+  background-color: #30C59B; 
+}
+
+.submit-portfolio-button:hover {
+  background-color: #033426;
+}
+
+
+.interview-scheduler-button {
+  background-color: #30C59B; 
+}
+
+.interview-scheduler-button:hover {
+  background-color: #033426;
+}
+
+.interview-button{
+background-color: #30C59B;
+}
+
+.interview-button:hover{
+  
 }

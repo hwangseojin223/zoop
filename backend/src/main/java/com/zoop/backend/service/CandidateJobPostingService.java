@@ -35,12 +35,20 @@ public List<JobPostingResponseDto> getJobPostingsForCandidate(Integer candidateI
         for (JobCandProgress progress : progressList) {
             if (progress.getPost() != null && progress.getPost().getCompany() != null) {
                 try {
+                    String postedDate = progress.getPost().getPostPostedDate() != null ? 
+                progress.getPost().getPostPostedDate().toString() : null;
+                    String expiryDate = progress.getPost().getPostExpiryDate() != null ? 
+                progress.getPost().getPostExpiryDate().toString() : null;
+
                     JobPostingResponseDto dto = new JobPostingResponseDto(
                             progress.getPost().getPostId(),
                             progress.getPost().getPostTitle(),
                             progress.getPost().getCompany().getCompanyName(),
                             progress.getPost().getPostLocation(),
-                            progress.getJobCandCurrStage()
+                            progress.getJobCandCurrStage(),
+                            progress.getPost().getPostProgrammingLanguage(),
+                            postedDate,
+                            expiryDate
                     );
                     result.add(dto);
                 } catch (Exception e) {

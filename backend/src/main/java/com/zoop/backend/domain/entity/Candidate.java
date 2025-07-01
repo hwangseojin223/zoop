@@ -66,4 +66,23 @@ public class Candidate {
 
     // @Column(name = "naver_id", unique = true)
     // private String naverId;
+
+    // 사용자 설정 정보 필드들
+    @Column(name="preferred_job", length=100)
+    private String preferredJob;
+    
+    @Column(name="preferred_region", length=100)
+    private String preferredRegion;
+    
+    @Column(name="preferred_salary", length=100)
+    private String preferredSalary;
+    
+    @Column(name="preferred_company_size", length=100)
+    private String preferredCompanySize;
+    
+    @Column(name="preferred_commute_time", length=100)
+    private String preferredCommuteTime;
+    
+    @Column(name="preferred_benefit", length=100)
+    private String preferredBenefit;
 }

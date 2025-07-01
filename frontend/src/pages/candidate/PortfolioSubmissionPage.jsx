@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import Header from './Header';
+import './PortfolioSubmissionPage.css';
 
 function PortfolioSubmissionPage() {
   const { postId } = useParams();
   const navigate = useNavigate();
+  const { authState } = useAuth();
 
   // Portfolio form input states
   const [portfolioFile, setPortfolioFile] = useState(null);
@@ -29,12 +33,48 @@ function PortfolioSubmissionPage() {
   const [agreeFutureProposals, setAgreeFutureProposals] = useState(false);
   const [agreeReceiveRecruitmentInfo, setAgreeReceiveRecruitmentInfo] = useState(false);
 
+  // Job posting information
+  const [jobPosting, setJobPosting] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const candidateId = 13;
+  // 실제 로그인한 사용자의 ID 사용
+  const candidateId = authState.userId ? parseInt(authState.userId, 10) : null;
 
   useEffect(() => {
-    console.log(`포트폴리오 제출 페이지 로드 - 공고 ID: ${postId}, 사용자 ID: ${candidateId}`);
-  }, [postId, candidateId]);
+    // 사용자가 로그인하지 않았거나 candidateId가 없으면 대시보드로 리다이렉트
+    if (!candidateId) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+
+    const fetchJobPosting = async () => {
+      try {
+        console.log(`포트폴리오 제출 페이지 로드 - 공고 ID: ${postId}, 사용자 ID: ${candidateId}`);
+        
+        // 공고 정보 가져오기
+        const response = await fetch(`http://localhost:8081/api/posts/${postId}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setJobPosting(data);
+        console.log('공고 정보:', data);
+        
+      } catch (error) {
+        console.error('공고 정보를 가져오는 중 오류 발생:', error);
+        // 오류 발생 시 기본값 설정
+        setJobPosting({
+          postTitle: '공고 정보를 불러올 수 없습니다',
+          companyName: '정보 없음'
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobPosting();
+  }, [postId, candidateId, navigate]);
 
   // Effect to update individual checkboxes when 'agreeAll' changes
   useEffect(() => {
@@ -52,7 +92,6 @@ function PortfolioSubmissionPage() {
       setAgreeAll(false);
     }
   }, [agreeRequiredPersonal, agreeOptionalPersonal, agreeFutureProposals, agreeReceiveRecruitmentInfo]);
-
 
   const handleAddWorkExperience = () => {
     if (workExperiences.length < 5) {
@@ -80,9 +119,22 @@ function PortfolioSubmissionPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate candidateId
+    if (!candidateId) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+
     // Validate required agreement
     if (!agreeRequiredPersonal) {
       alert('필수 개인정보 수집 및 이용에 동의해야 합니다.');
+      return;
+    }
+
+    // Validate portfolio file is required
+    if (!portfolioFile) {
+      alert('포트폴리오 파일을 선택해주세요.');
       return;
     }
 
@@ -92,11 +144,19 @@ function PortfolioSubmissionPage() {
     formData.append('portfolioContent', portfolioContent);
     formData.append('portfolioUrl', portfolioUrl);
 
+    console.log('제출 전 파일 상태:', { portfolioFile, resumeFile });
+    
     if (portfolioFile) {
+      console.log('포트폴리오 파일 추가:', portfolioFile.name, portfolioFile.size);
       formData.append('portfolioFile', portfolioFile);
+    } else {
+      console.log('포트폴리오 파일이 선택되지 않음');
     }
     if (resumeFile) {
+      console.log('이력서 파일 추가:', resumeFile.name, resumeFile.size);
       formData.append('resumeFile', resumeFile);
+    } else {
+      console.log('이력서 파일이 선택되지 않음');
     }
 
     formData.append('careerData', JSON.stringify({
@@ -127,288 +187,394 @@ function PortfolioSubmissionPage() {
 
         const result = await response.json();
         console.log('제출 성공:', result);
-        alert('지원서가 성공적으로 제출되었습니다.'); // Changed alert message
+        alert('지원서가 성공적으로 제출되었습니다.');
         navigate('/candidate/dashboard');
 
     } catch (error) {
-        console.error('지원서 제출 오류:', error); // Changed error message
+        console.error('지원서 제출 오류:', error);
         alert(`지원서 제출 중 오류가 발생했습니다: ${error.message}`);
     }
   };
 
-  return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>지원서 작성</h1>
-      <p>공고 ID: {postId}</p>
-      <p>사용자 ID: {candidateId}</p>
+  if (loading) {
+    return (
+      <div className="portfolio-submission-container">
+        <Header />
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>공고 정보를 불러오는 중입니다...</p>
+        </div>
+      </div>
+    );
+  }
 
-      {/* Instructions/Disclaimer */}
-      <div style={{ border: '1px solid #ddd', padding: '15px', marginBottom: '20px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
-        <p style={{ margin: '0 0 5px 0' }}>토스와 함께,</p>
-        <h2 style={{ margin: '0 0 10px 0', color: '#333' }}>커머스의 성장을 만듭니다.</h2>
-        <p style={{ fontSize: '0.9em', color: '#555' }}>이력서 첨부와 함께 아래 내용을 작성해주시기 바랍니다.</p>
-        <p style={{ fontSize: '0.85em', color: '#777' }}>당사는 지원자분의 역량을 최우선적으로 검토하며, 채용과정에서 지원자의 주민등록번호, 가족관계, 혼인여부, 연봉, 사진, 신체조건, 출신지역에 대한 정보를 요구하지 않습니다.</p>
-        <p style={{ color: 'red', fontSize: '0.9em', fontWeight: 'bold' }}>
-          <strong>① 작성 내용은 제출 후 확인 및 수정이 어렵습니다. 미리 다른 곳에 저장해 두시는 것을 권장합니다.</strong>
-        </p>
+  return (
+    <div className="portfolio-submission-container">
+      <Header />
+      
+      <div className="portfolio-header">
+        <div className="header-content">
+          <h1 className="main-title">지원서 작성</h1>
+          <div className="job-info">
+            <h2 className="job-title">{jobPosting?.postTitle || '공고 제목을 불러올 수 없습니다'}</h2>
+            <p className="company-name">{jobPosting?.companyName || '회사명을 불러올 수 없습니다'}</p>
+          </div>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        {/* Long Answer Questions */}
-        <div style={{ marginBottom: '30px' }}>
-          <label htmlFor="goalStatement" style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-            1. 토스의 Sales Operations Specialist (커머스)로 합류 시 목표하는 점을 자세히 적어주세요. (500자 내외)
-          </label>
-          <textarea
-            id="goalStatement"
-            value={goalStatement}
-            onChange={(e) => setGoalStatement(e.target.value)}
-            rows="10"
-            cols="50"
-            maxLength="700"
-            placeholder="(최대 700자, 공백 포함)"
-            style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box' }}
-            required
-          />
+      {/* Instructions/Disclaimer */}
+      <div className="instructions-card">
+        <div className="company-intro">
+          <p className="company-tagline">토스와 함께,</p>
+          <h2 className="company-title">커머스의 성장을 만듭니다.</h2>
+          <p className="company-description">이력서 첨부와 함께 아래 내용을 작성해주시기 바랍니다.</p>
         </div>
-        <div style={{ marginBottom: '30px' }}>
-          <label htmlFor="suitabilityStatement" style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-            2. 해당 포지션에 본인이 적합하다고 생각하는 이유를 상세히 적어주세요. (500자 내외)
-          </label>
-          <textarea
-            id="suitabilityStatement"
-            value={suitabilityStatement}
-            onChange={(e) => setSuitabilityStatement(e.target.value)}
-            rows="10"
-            cols="50"
-            maxLength="700"
-            placeholder="(최대 700자, 공백 포함)"
-            style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box' }}
-            required
-          />
+        <div className="disclaimer">
+          <p className="disclaimer-text">
+            당사는 지원자분의 역량을 최우선적으로 검토하며, 채용과정에서 지원자의 주민등록번호, 가족관계, 혼인여부, 연봉, 사진, 신체조건, 출신지역에 대한 정보를 요구하지 않습니다.
+          </p>
+          <p className="warning-text">
+            <strong>① 작성 내용은 제출 후 확인 및 수정이 어렵습니다. 미리 다른 곳에 저장해 두시는 것을 권장합니다.</strong>
+          </p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="portfolio-form">
+        {/* Long Answer Questions */}
+        <div className="form-section">
+          <h3 className="section-title">자기소개서</h3>
+          
+          <div className="question-group">
+            <label htmlFor="goalStatement" className="question-label">
+              1. 해당 포지션으로 합류 시 목표하는 점을 자세히 적어주세요.
+              <span className="char-limit">(500자 내외)</span>
+            </label>
+            <textarea
+              id="goalStatement"
+              value={goalStatement}
+              onChange={(e) => setGoalStatement(e.target.value)}
+              maxLength="700"
+              placeholder="(최대 700자, 공백 포함)"
+              className="question-textarea"
+              required
+            />
+            <div className="char-counter">
+              {goalStatement.length}/700자
+            </div>
+          </div>
+
+          <div className="question-group">
+            <label htmlFor="suitabilityStatement" className="question-label">
+              2. 해당 포지션에 본인이 적합하다고 생각하는 이유를 상세히 적어주세요.
+              <span className="char-limit">(500자 내외)</span>
+            </label>
+            <textarea
+              id="suitabilityStatement"
+              value={suitabilityStatement}
+              onChange={(e) => setSuitabilityStatement(e.target.value)}
+              maxLength="700"
+              placeholder="(최대 700자, 공백 포함)"
+              className="question-textarea"
+              required
+            />
+            <div className="char-counter">
+              {suitabilityStatement.length}/700자
+            </div>
+          </div>
         </div>
 
         {/* File Uploads */}
-        <div style={{ marginBottom: '30px' }}>
-          <h3 style={{ marginBottom: '10px' }}>이력서 및 경력기술서*</h3>
-          <label htmlFor="resumeFile" style={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', padding: '10px', borderRadius: '5px', cursor: 'pointer', backgroundColor: '#f0f0f0' }}>
-            <span style={{ marginRight: '10px', color: '#666' }}>📄</span>
-            {resumeFile ? resumeFile.name : '파일 첨부 (최대 50MB)'}
-            <input
-              type="file"
-              id="resumeFile"
-              onChange={(e) => setResumeFile(e.target.files[0])}
-              accept=".pdf,.doc,.docx"
-              style={{ display: 'none' }}
-              required
-            />
-          </label>
-        </div>
+        <div className="form-section">
+          <h3 className="section-title">첨부파일</h3>
+          
+          <div className="file-upload-group">
+            <label className="file-upload-label">
+              <div className="file-upload-content">
+                <div className="file-icon">📄</div>
+                <div className="file-info">
+                  <span className="file-title">이력서 및 경력기술서</span>
+                  <span className="file-subtitle">선택</span>
+                </div>
+                <div className="file-name">
+                  {resumeFile ? resumeFile.name : '파일 첨부 (최대 50MB)'}
+                </div>
+              </div>
+              <input
+                type="file"
+                onChange={(e) => setResumeFile(e.target.files[0])}
+                accept=".pdf,.doc,.docx"
+                className="file-input"
+              />
+            </label>
+          </div>
 
-        <div style={{ marginBottom: '30px' }}>
-          <h3 style={{ marginBottom: '10px' }}>포트폴리오</h3>
-          <label htmlFor="portfolioFile" style={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', padding: '10px', borderRadius: '5px', cursor: 'pointer', backgroundColor: '#f0f0f0' }}>
-            <span style={{ marginRight: '10px', color: '#666' }}>📄</span>
-            {portfolioFile ? portfolioFile.name : '파일 첨부 (최대 50MB)'}
-            <input
-              type="file"
-              id="portfolioFile"
-              onChange={(e) => setPortfolioFile(e.target.files[0])}
-              accept=".pdf,.zip,.rar,.png,.jpg,.jpeg" // Expanded accepted types
-              style={{ display: 'none' }}
-            />
-          </label>
+          <div className="file-upload-group">
+            <label className="file-upload-label">
+              <div className="file-upload-content">
+                <div className="file-icon">📁</div>
+                <div className="file-info">
+                  <span className="file-title">포트폴리오</span>
+                  <span className="file-subtitle">* 필수</span>
+                </div>
+                <div className="file-name">
+                  {portfolioFile ? portfolioFile.name : '파일 첨부 (최대 50MB)'}
+                </div>
+              </div>
+              <input
+                type="file"
+                onChange={(e) => setPortfolioFile(e.target.files[0])}
+                accept=".pdf,.zip,.rar,.png,.jpg,.jpeg"
+                className="file-input"
+                required
+              />
+            </label>
+          </div>
         </div>
 
         {/* Career Section */}
-        <fieldset style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-          <legend style={{ fontWeight: 'bold', fontSize: '1.1em', padding: '0 10px' }}>경력</legend>
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ marginRight: '20px' }}>
+        <div className="form-section">
+          <h3 className="section-title">경력 정보</h3>
+          
+          <div className="career-type-selector">
+            <label className="radio-option">
               <input
                 type="radio"
                 value="experienced"
                 checked={isExperienced === true}
                 onChange={() => setIsExperienced(true)}
-                style={{ marginRight: '5px' }}
+                className="radio-input"
               />
-              경력
+              <span className="radio-custom"></span>
+              <span className="radio-label">경력</span>
             </label>
-            <label>
+            <label className="radio-option">
               <input
                 type="radio"
                 value="newbie"
                 checked={isExperienced === false}
                 onChange={() => setIsExperienced(false)}
-                style={{ marginRight: '5px' }}
+                className="radio-input"
               />
-              신입 (경력 없음)
+              <span className="radio-custom"></span>
+              <span className="radio-label">신입 (경력 없음)</span>
             </label>
           </div>
 
           {isExperienced && (
-            <div style={{ marginBottom: '15px' }}>
-              <label htmlFor="totalYearsOfExperience" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>총 경력 기간*</label>
-              <input
-                type="number"
-                id="totalYearsOfExperience"
-                value={totalYearsOfExperience}
-                onChange={(e) => setTotalYearsOfExperience(e.target.value)}
-                placeholder="0"
-                required={isExperienced}
-                style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', width: '80px', marginRight: '5px' }}
-              />
-              <span style={{ fontWeight: 'bold' }}>년</span>
+            <div className="experience-years">
+              <label htmlFor="totalYearsOfExperience" className="experience-label">
+                총 경력 기간 <span className="required">*</span>
+              </label>
+              <div className="years-input-group">
+                <input
+                  type="number"
+                  id="totalYearsOfExperience"
+                  value={totalYearsOfExperience}
+                  onChange={(e) => setTotalYearsOfExperience(e.target.value)}
+                  placeholder="0"
+                  required={isExperienced}
+                  className="years-input"
+                />
+                <span className="years-unit">년</span>
+              </div>
             </div>
           )}
-        </fieldset>
+        </div>
 
         {isExperienced && (
-          <fieldset style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-            <legend style={{ fontWeight: 'bold', fontSize: '1.1em', padding: '0 10px' }}>업무 경험</legend>
-            <p style={{ fontSize: '0.9em', color: '#666', marginBottom: '15px' }}>최근 재직 기준으로 5개까지 작성할 수 있어요.</p>
+          <div className="form-section">
+            <h3 className="section-title">업무 경험</h3>
+            <p className="section-description">최근 재직 기준으로 5개까지 작성할 수 있어요.</p>
+            
             {workExperiences.map((experience, index) => (
-              <div key={index} style={{ border: '1px solid #e0e0e0', padding: '15px', margin: '10px 0', borderRadius: '8px', backgroundColor: '#fdfdfd', position: 'relative' }}>
+              <div key={index} className="experience-card">
                 {workExperiences.length > 1 && (
-                    <button type="button" onClick={() => handleRemoveWorkExperience(index)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2em', color: '#999' }}>X</button>
+                  <button 
+                    type="button" 
+                    onClick={() => handleRemoveWorkExperience(index)} 
+                    className="remove-experience-btn"
+                  >
+                    ✕
+                  </button>
                 )}
-                <div style={{ marginBottom: '10px' }}>
-                  <label htmlFor={`companyName-${index}`} style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>회사명*</label>
-                  <input
-                    type="text"
-                    id={`companyName-${index}`}
-                    value={experience.companyName}
-                    onChange={(e) => handleWorkExperienceChange(index, 'companyName', e.target.value)}
-                    placeholder="회사명을 검색해주세요."
-                    required
-                    style={{ width: 'calc(100% - 22px)', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-                  />
-                </div>
-                <div style={{ marginBottom: '10px' }}>
-                  <label htmlFor={`jobTitle-${index}`} style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>담당 직무명*</label>
-                  <input
-                    type="text"
-                    id={`jobTitle-${index}`}
-                    value={experience.jobTitle}
-                    onChange={(e) => handleWorkExperienceChange(index, 'jobTitle', e.target.value)}
-                    placeholder="(예시) Frontend Developer"
-                    required
-                    style={{ width: 'calc(100% - 22px)', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-                  />
-                </div>
-                <div>
-                  <label htmlFor={`startDate-${index}`} style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>재직 기간*</label>
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <input
-                      type="date"
-                      id={`startDate-${index}`}
-                      value={experience.startDate}
-                      onChange={(e) => handleWorkExperienceChange(index, 'startDate', e.target.value)}
-                      required
-                      style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginRight: '10px' }}
-                    />
-                    <span style={{ marginRight: '10px' }}> ~ </span>
-                    {!experience.currentlyWorking && (
+                
+                <div className="experience-form">
+                  <div className="form-row">
+                    <div className="form-field">
+                      <label htmlFor={`companyName-${index}`} className="field-label">
+                        회사명 <span className="required">*</span>
+                      </label>
                       <input
-                        type="date"
-                        id={`endDate-${index}`}
-                        value={experience.endDate}
-                        onChange={(e) => handleWorkExperienceChange(index, 'endDate', e.target.value)}
-                        required={!experience.currentlyWorking}
-                        style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                        type="text"
+                        id={`companyName-${index}`}
+                        value={experience.companyName}
+                        onChange={(e) => handleWorkExperienceChange(index, 'companyName', e.target.value)}
+                        placeholder="회사명을 검색해주세요."
+                        required
+                        className="form-input"
                       />
-                    )}
-                    <label style={{ marginLeft: '15px' }}>
+                    </div>
+                    
+                    <div className="form-field">
+                      <label htmlFor={`jobTitle-${index}`} className="field-label">
+                        담당 직무명 <span className="required">*</span>
+                      </label>
                       <input
-                        type="checkbox"
-                        checked={experience.currentlyWorking}
-                        onChange={(e) => handleWorkExperienceChange(index, 'currentlyWorking', e.target.checked)}
-                        style={{ marginRight: '5px' }}
+                        type="text"
+                        id={`jobTitle-${index}`}
+                        value={experience.jobTitle}
+                        onChange={(e) => handleWorkExperienceChange(index, 'jobTitle', e.target.value)}
+                        placeholder="(예시) Frontend Developer"
+                        required
+                        className="form-input"
                       />
-                      재직중
-                    </label>
+                    </div>
+                  </div>
+                  
+                  <div className="form-row">
+                    <div className="form-field">
+                      <label className="field-label">
+                        재직 기간 <span className="required">*</span>
+                      </label>
+                      <div className="date-range">
+                        <input
+                          type="date"
+                          value={experience.startDate}
+                          onChange={(e) => handleWorkExperienceChange(index, 'startDate', e.target.value)}
+                          required
+                          className="date-input"
+                        />
+                        <span className="date-separator">~</span>
+                        {!experience.currentlyWorking && (
+                          <input
+                            type="date"
+                            value={experience.endDate}
+                            onChange={(e) => handleWorkExperienceChange(index, 'endDate', e.target.value)}
+                            required={!experience.currentlyWorking}
+                            className="date-input"
+                          />
+                        )}
+                        <label className="currently-working">
+                          <input
+                            type="checkbox"
+                            checked={experience.currentlyWorking}
+                            onChange={(e) => handleWorkExperienceChange(index, 'currentlyWorking', e.target.checked)}
+                            className="checkbox-input"
+                          />
+                          <span className="checkbox-custom"></span>
+                          재직중
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             ))}
+            
             {workExperiences.length < 5 && (
-              <button type="button" onClick={handleAddWorkExperience} style={{ padding: '8px 15px', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', marginTop: '10px' }}>+ 추가</button>
+              <button 
+                type="button" 
+                onClick={handleAddWorkExperience} 
+                className="add-experience-btn"
+              >
+                + 업무 경험 추가
+              </button>
             )}
-          </fieldset>
+          </div>
         )}
 
-        {/* Agreement Section (NEW from third image) */}
-        <div style={{ borderTop: '1px solid #eee', paddingTop: '20px', marginTop: '30px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
-            <input
-              type="checkbox"
-              id="agreeAll"
-              checked={agreeAll}
-              onChange={() => setAgreeAll(!agreeAll)}
-              style={{ marginRight: '10px', transform: 'scale(1.2)' }}
-            />
-            <label htmlFor="agreeAll" style={{ fontWeight: 'bold', fontSize: '1.1em' }}>전체 동의</label>
-            <span style={{ marginLeft: '10px', color: '#666', fontSize: '0.9em' }}>아래의 필수와 선택의 항목에 모두 동의할게요.</span>
+        {/* Agreement Section */}
+        <div className="form-section agreement-section">
+          <h3 className="section-title">개인정보 수집 및 이용 동의</h3>
+          
+          <div className="agreement-all">
+            <label className="agreement-all-label">
+              <input
+                type="checkbox"
+                id="agreeAll"
+                checked={agreeAll}
+                onChange={() => setAgreeAll(!agreeAll)}
+                className="checkbox-input large"
+              />
+              <span className="checkbox-custom large"></span>
+              <span className="agreement-all-text">전체 동의</span>
+              <span className="agreement-all-subtext">아래의 필수와 선택의 항목에 모두 동의할게요.</span>
+            </label>
           </div>
 
-          <div style={{ borderBottom: '1px solid #eee', margin: '15px 0' }}></div>
+          <div className="agreement-divider"></div>
 
-          <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
-            <input
-              type="checkbox"
-              id="agreeRequiredPersonal"
-              checked={agreeRequiredPersonal}
-              onChange={() => setAgreeRequiredPersonal(!agreeRequiredPersonal)}
-              style={{ marginRight: '10px' }}
-            />
-            <label htmlFor="agreeRequiredPersonal" style={{ flexGrow: 1 }}>필수 개인정보 수집 및 이용 동의</label>
-            <a href="#" style={{ color: '#007bff', textDecoration: 'none', fontSize: '0.9em' }}>보기</a>
+          <div className="agreement-items">
+            <div className="agreement-item">
+              <label className="agreement-item-label">
+                <input
+                  type="checkbox"
+                  id="agreeRequiredPersonal"
+                  checked={agreeRequiredPersonal}
+                  onChange={() => setAgreeRequiredPersonal(!agreeRequiredPersonal)}
+                  className="checkbox-input"
+                />
+                <span className="checkbox-custom"></span>
+                <span className="agreement-text">필수 개인정보 수집 및 이용 동의</span>
+              </label>
+              <a href="#" className="agreement-link">보기</a>
+            </div>
+
+            <div className="agreement-item">
+              <label className="agreement-item-label">
+                <input
+                  type="checkbox"
+                  id="agreeOptionalPersonal"
+                  checked={agreeOptionalPersonal}
+                  onChange={() => setAgreeOptionalPersonal(!agreeOptionalPersonal)}
+                  className="checkbox-input"
+                />
+                <span className="checkbox-custom"></span>
+                <span className="agreement-text">선택 개인정보 수집 및 이용 동의</span>
+              </label>
+              <a href="#" className="agreement-link">보기</a>
+            </div>
+
+            <div className="agreement-item">
+              <label className="agreement-item-label">
+                <input
+                  type="checkbox"
+                  id="agreeFutureProposals"
+                  checked={agreeFutureProposals}
+                  onChange={() => setAgreeFutureProposals(!agreeFutureProposals)}
+                  className="checkbox-input"
+                />
+                <span className="checkbox-custom"></span>
+                <span className="agreement-text">선택 추후 적합한 포지션 제안을 위한 개인정보 수집 및 이용에 동의합니다</span>
+              </label>
+              <a href="#" className="agreement-link">보기</a>
+            </div>
+            <p className="agreement-note">제안에 동의해주셔야 추후 더 적합한 포지션을 채용담당자로부터 제안 받을 수 있어요.</p>
+
+            <div className="agreement-item">
+              <label className="agreement-item-label">
+                <input
+                  type="checkbox"
+                  id="agreeReceiveRecruitmentInfo"
+                  checked={agreeReceiveRecruitmentInfo}
+                  onChange={() => setAgreeReceiveRecruitmentInfo(!agreeReceiveRecruitmentInfo)}
+                  className="checkbox-input"
+                />
+                <span className="checkbox-custom"></span>
+                <span className="agreement-text">선택 추후 공개채용 등이 오픈되었을 때 채용정보를 수신하는 것에 동의합니다</span>
+              </label>
+              <a href="#" className="agreement-link">보기</a>
+            </div>
           </div>
 
-          <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
-            <input
-              type="checkbox"
-              id="agreeOptionalPersonal"
-              checked={agreeOptionalPersonal}
-              onChange={() => setAgreeOptionalPersonal(!agreeOptionalPersonal)}
-              style={{ marginRight: '10px' }}
-            />
-            <label htmlFor="agreeOptionalPersonal" style={{ flexGrow: 1 }}>선택 개인정보 수집 및 이용 동의</label>
-            <a href="#" style={{ color: '#007bff', textDecoration: 'none', fontSize: '0.9em' }}>보기</a>
-          </div>
-
-          <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
-            <input
-              type="checkbox"
-              id="agreeFutureProposals"
-              checked={agreeFutureProposals}
-              onChange={() => setAgreeFutureProposals(!agreeFutureProposals)}
-              style={{ marginRight: '10px' }}
-            />
-            <label htmlFor="agreeFutureProposals" style={{ flexGrow: 1 }}>선택 추후 적합한 포지션 제안을 위한 개인정보 수집 및 이용에 동의합니다</label>
-            <a href="#" style={{ color: '#007bff', textDecoration: 'none', fontSize: '0.9em' }}>보기</a>
-          </div>
-          <p style={{ marginLeft: '30px', fontSize: '0.8em', color: '#888', marginTop: '-5px', marginBottom: '10px' }}>제안에 동의해주셔야 추후 더 적합한 포지션을 채용담당자로부터 제안 받을 수 있어요.</p>
-
-
-          <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
-            <input
-              type="checkbox"
-              id="agreeReceiveRecruitmentInfo"
-              checked={agreeReceiveRecruitmentInfo}
-              onChange={() => setAgreeReceiveRecruitmentInfo(!agreeReceiveRecruitmentInfo)}
-              style={{ marginRight: '10px' }}
-            />
-            <label htmlFor="agreeReceiveRecruitmentInfo" style={{ flexGrow: 1 }}>선택 추후 공개채용 등이 오픈되었을 때 채용정보를 수신하는 것에 동의합니다</label>
-            <a href="#" style={{ color: '#007bff', textDecoration: 'none', fontSize: '0.9em' }}>보기</a>
-          </div>
-
-          <p style={{ fontSize: '0.85em', color: '#d9534f', marginTop: '20px' }}>
+          <p className="agreement-warning">
             * 이 사항에 해당할 경우, 채용 전형의 진행이 중지되거나 채용이 취소될 수 있습니다.
           </p>
         </div>
 
-        <button type="submit" style={{ marginTop: '30px', padding: '12px 25px', fontSize: '1.2em', background: '#007bff', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', width: '100%' }}>제출하기</button>
+        <button type="submit" className="submit-button">
+          지원서 제출하기
+        </button>
       </form>
     </div>
   );
