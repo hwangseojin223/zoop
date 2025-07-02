@@ -1,31 +1,90 @@
-import React from 'react';
+import React, { useState } from 'react';
+import Navbar from '../../components/Navbar';
+import '../../components/Navbar.css';
+import './Notice.css';
+import { Link } from 'react-router-dom';
 
-function Notice() {
-  return (
-    <div style={{ padding: "3rem", maxWidth: "700px", margin: "0 auto" }}>
-      <h1>공지사항</h1>
-      <ul style={{ marginTop: "2.2rem" }}>
-        <li>
-          <strong>[2024-06-01]</strong> 신규 채용 공고 시스템 오픈 안내<br />
-          <span style={{ color: "#199f87", fontSize: "0.97rem" }}>
-            채용 공고 작성, 지원자 관리 등 다양한 기능이 추가되었습니다.
-          </span>
-        </li>
-        <li style={{ marginTop: "1.5rem" }}>
-          <strong>[2024-05-15]</strong> 개인정보처리방침 변경 안내<br />
-          <span style={{ color: "#199f87", fontSize: "0.97rem" }}>
-            개인정보 관련 정책이 변경되었으니 이용에 참고해 주세요.
-          </span>
-        </li>
-        <li style={{ marginTop: "1.5rem" }}>
-          <strong>[2024-05-01]</strong> 서비스 정기점검 안내<br />
-          <span style={{ color: "#199f87", fontSize: "0.97rem" }}>
-            5월 3일(금) 00:00~06:00까지 시스템 점검이 진행됩니다.
-          </span>
-        </li>
+const noticeList = [
+  {
+    title: '서비스 점검 안내',
+    date: '2025-07-01',
+    summary: '7월 10일(수) 00:00~02:00까지 서비스 점검이 예정되어 있습니다.',
+    detail: (
+      <ul style={{ textAlign: "left", marginTop: 10, marginBottom: 0 }}>
+        <li>서비스 점검 시간: 2024년 7월 10일(수) 00:00~02:00</li>
+        <li>점검 중 일부 기능이 제한될 수 있습니다.</li>
+        <li>더 나은 서비스 제공을 위한 점검이니 양해 부탁드립니다.</li>
       </ul>
+    ),
+  },
+  {
+    title: '신규 기능 오픈 안내',
+    date: '2025-07-05',
+    summary: '구직자 맞춤 알림 기능이 추가되었습니다. 많은 이용 바랍니다.',
+    detail: (
+      <ul style={{ textAlign: "left", marginTop: 10, marginBottom: 0 }}>
+        <li>구직자 맞춤 알림: 희망 조건 등록 시 채용공고 알림을 받을 수 있습니다.</li>
+        <li>설정 방법: 내 정보 &gt; 알림 설정에서 원하는 조건을 추가하세요.</li>
+        <li>추가 문의는 고객센터로 연락해 주세요.</li>
+      </ul>
+    )
+  },
+  {
+    title: '챗봇 기능 안내',
+    date: '2025-07-10',
+    summary: '챗봇 기능이 업데이트 되었습니다. 많은 이용 바랍니다.',
+    detail: (
+      <ul style={{ textAlign: "left", marginTop: 10, marginBottom: 0 }}>
+        <li>상담 챗봇: 24시간 빠른 상담이 가능합니다.</li>
+        <li>주요 기능: 자주 묻는 질문 안내, 1:1 문의 접수, 실시간 답변 제공</li>
+        <li>고객센터 메뉴에서 챗봇을 이용해 보세요.</li>
+      </ul>
+    )
+  },
+  {
+    title: '[ZOOP] 고객센터 채팅상담 서비스 일시중단 안내',
+    date: '2025-07-15',
+    summary: '' ,
+    detail: (
+      <ul style={{ textAlign: "left", marginTop: 10, marginBottom: 0 }}>
+        <li>중단 일정: 2025년 7월 22일(월) 02:00~03:00</li>
+        <li>사유: 시스템 안정화 작업</li>
+        <li>작업 시간 동안 채팅 상담이 일시적으로 중단됩니다.</li>
+        <li>불편을 드려 죄송합니다.</li>
+      </ul>
+    )
+  }
+];
+
+const Notice = () => {
+  const [openIndex, setOpenIndex] = useState(null);
+
+  const handleToggle = (idx) => {
+    setOpenIndex(openIndex === idx ? null : idx);
+  };
+
+  return (
+    <div className="notice-page">
+      <Navbar />
+      <div className="notice-page-container">
+        <div className="notice-title-bar">
+          <h1>공지사항</h1>
+        </div>
+        <div className="notice-list">
+          {noticeList.map((notice, idx) => (
+            <div className="notice-item" key={idx}>
+              <h2 onClick={() => handleToggle(idx)} style={{ cursor: 'pointer' }}>{notice.title}</h2>
+              <p style={{ color: '#888', fontSize: '0.95em', margin: 0 }}>{notice.date}</p>
+              <p>{notice.summary}</p>
+              {openIndex === idx && (
+                <div className="notice-detail">{notice.detail}</div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
-}
+};
 
 export default Notice;
