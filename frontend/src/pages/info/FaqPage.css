@@ -1,0 +1,431 @@
+/* src/pages/FaqPage.css */
+
+ .top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px 400px;
+  min-width: 700px;
+  flex-wrap: nowrap;
+  box-sizing: border-box;
+  
+}
+
+
+
+.top-nav .logo {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #4a4a4a;
+  white-space: nowrap;
+  min-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 200px;
+  text-align: center;
+  margin-right: 400px; /* 로고와 메뉴 간격 */
+}
+
+.top-nav nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 100px;         /* 메뉴간 간격 줄임 */
+  align-items: center;   /* 세로 중앙 정렬 */
+}
+
+.top-nav nav a {
+  text-decoration: none;
+  color: #777; 
+  font-size: 1em;
+  transition: color 0.2s ease-in-out;
+}
+
+.top-nav nav a:hover {
+  color: #333;
+}
+
+.top-nav nav a, .top-nav nav button {
+  text-decoration: none;
+  color: #777; 
+  font-size: 1.1em;
+  white-space: nowrap;    /* 한 줄로만 표시 */
+  min-width: 100px;       /* 최소 너비 확보(한 줄 보장) */
+  display: flex;
+  align-items: center;
+  height: 48px;           /* 메뉴 높이 통일 */
+  justify-content: center;
+  transition: color 0.2s;
+  background: none;       /* 버튼도 a와 스타일 통일 */
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+
+.top-nav nav a:hover, .top-nav nav button:hover {
+  color: #333;
+} */
+
+
+
+
+
+
+/* 상단 헤더 로고와 메뉴 간격 */
+/* .top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px 400px;
+}
+
+.top-nav .logo {
+  margin-right: 320px;
+}
+
+/* (선택) nav ul 아이템들 간에도 gap을 주고 싶다면 */
+/* .top-nav nav ul {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+} */
+.top-nav nav ul {
+  gap: 15px;
+}
+/* 자주 묻는 질문 링크 배경 초록색 고정 */
+/* .top-nav nav ul li a[href$="#signup-login"] {
+  background-color: #d2fdf1;
+  color: #333;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+} */
+
+/* 호버 시에도 배경 유지 (필요시) */
+/* .top-nav nav ul li a[href$="#signup-login"]:hover {
+  background-color: #30C59B;
+  color: #666;
+} */ 
+
+
+.faq-page-container {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 10px;
+  background-color: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 30px;
+  font-size: 1em;
+  font-weight: 700;
+}
+
+/* FAQ 섹션 스타일 */
+.faq-section {
+  margin-bottom: 25px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  overflow: hidden; /* 아코디언 효과를 위해 */
+}
+
+.section-title {
+  background-color: #f5f5f5;
+  padding: 18px 25px;
+  font-size: 1em;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.3s ease;
+}
+
+.section-title:hover {
+  background-color: #eeeeee;
+}
+
+.section-title.open {
+  background-color: #e0e0e0;
+}
+
+.section-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease-out, padding 0.4s ease-out;
+  padding: 0 25px; /* 초기 패딩 0 */
+  background-color: #fdfdfd;
+}
+
+.section-content.active {
+  max-height: 500px; /* 내용 길이에 따라 조절, 충분히 큰 값으로 설정 */
+  padding: 20px 25px; /* 활성화 시 패딩 적용 */
+}
+
+.section-content p {
+  line-height: 1.6;
+  color: #000000;
+  margin-bottom: 10px;
+}
+
+.section-content ul {
+  list-style-type: disc;
+  margin-left: 20px;
+  padding-left: 0;
+  color: #666;
+}
+
+.section-content ul li {
+  margin-bottom: 4px;
+}
+
+/* FAQ 리스트 및 아이템 스타일 */
+.faq-list {
+  list-style: none; /* 기본 리스트 스타일 제거 */
+  padding: 0;
+  margin: 0;
+}
+
+.faq-item {
+  border-bottom: 1px solid #ececec;
+  padding: 15px 0;
+}
+
+.faq-item:last-child {
+  border-bottom: none;
+}
+
+.question-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.1em;
+  color: #444;
+  cursor: pointer;
+  padding-bottom: 5px;
+  transition: color 0.3s ease;
+}
+
+.question-title:hover {
+  color: #30C59B; /* 토스 색상 */
+}
+
+.question-title.open {
+  color: #30C59B; /* 클릭 시 색상 변화 */
+}
+
+.toggle-icon {
+  font-size: 0.8em;
+  color: #888;
+  transition: transform 0.3s ease;
+}
+
+.question-title.open .toggle-icon,
+.section-title.open .toggle-icon {
+  transform: rotate(180deg);
+}
+
+.answer-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+  padding: 0; /* 초기 패딩 0 */
+  color: #666;
+  font-size: 1em;
+}
+
+.answer-content.active {
+  max-height: 150px; /* 내용 길이에 따라 조절, 충분히 큰 값으로 설정 */
+  padding-top: 10px; /* 활성화 시 패딩 적용 */
+}
+
+/* 1:1 문의, 공지사항 등 별도 섹션 */
+.separate-section {
+    margin-top: 40px;
+    margin-bottom: 25px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.separate-section .section-title {
+    background-color: #e6f7ff; /* 다른 배경색 */
+    color: #30C59B; /* 토스 색상 */
+    cursor: default; /* 클릭 비활성화 */
+}
+
+.separate-section .section-title:hover {
+    background-color: #e6f7ff; /* hover 시에도 색상 유지 */
+}
+
+.separate-section .section-content.active {
+    max-height: none; /* 항상 열려있도록 */
+    padding: 20px 25px;
+}
+
+.contact-button {
+    background-color: #30C59B; /* 토스 색상 */
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+}
+
+.contact-button:hover {
+    background-color: #30C59B;
+}
+
+/* 전체 레이아웃: 사이드바 + FAQ 본문 */
+.faq-layout {
+  display: flex;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  box-sizing: border-box;
+}
+
+/* 사이드바 스타일 */
+.sidebar {
+  width: 220px;
+  margin-right: 30px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  height: fit-content;
+  position: sticky;
+  top: 40px;
+}
+
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu li {
+  padding: 12px 10px;
+  color: #333;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.sidebar-menu li:hover {
+  background-color: #30C59B;
+  color: #ffffff;
+}
+
+ /*오른쪽 하단 Q 버튼 
+.floating-q-button {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  font-size: 1.5em;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  z-index: 1000;
+}*/
+
+.floating-q-button:hover {
+  background-color: #ff0000;
+}
+
+/* 로그인/회원가입 섹션 */
+.auth-buttons {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-buttons button {
+  background-color: #6808e6;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-size: 0.95em;
+}
+
+.auth-buttons button:hover {
+  background-color: #fc007e;
+}
+
+/* 로그인/회원가입 팝업 */
+.auth-popup {
+  display: none;
+  position: fixed;
+  top: 100px;
+  right: 30px;
+  width: 300px;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  z-index: 1001;
+}
+
+.auth-popup.active {
+  display: block;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 16px; /* 버튼 간격 */
+}
+
+/* .faq-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px 400px;
+}
+
+.faq-button:hover {
+  background-color: #30C59B;
+} */
+
+.faq-button, .nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;   /* 네비 메뉴와 동일 */
+  padding: 0 16px;
+  font-size: 1em;
+  color: #777;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+.faq-button:hover, .nav-link:hover {
+  background: #f7f7f7;
+  color: #111;
+}

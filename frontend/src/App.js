@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -20,13 +20,6 @@ import CompanyDashboard from './pages/company/CompanyDashboard';
 import RecruitCreate from './pages/company/RecruitCreate';
 import CandidateList from './pages/company/CandidateList';
 import ResponderList from './pages/company/ResponderList';
-// info
-import About from './pages/info/About';
-import Notice from './pages/info/Notice';
-import Support from './pages/info/Support';
-import FAQ from './pages/info/FAQ';
-import Careers from './pages/info/Careers';
-
 // 챗봇 import
 import Chatbot from './components/Chatbot';
 import './components/Chatbot.css';
@@ -36,6 +29,14 @@ import CandidateDashboard from './pages/candidate/CandidateDashboard';
 import PortfolioSubmissionPage from './pages/candidate/PortfolioSubmissionPage';
 import InterviewPage from './pages/candidate/InterviewPage';
 import InterviewSession from './pages/candidate/InterviewSession';
+
+// info - lazy loading으로 변경
+const About = lazy(() => import('./pages/info/About'));
+const Notice = lazy(() => import('./pages/info/Notice'));
+const Support = lazy(() => import('./pages/info/Support'));
+const CustomerServicePage = lazy(() => import('./pages/info/CustomerServicePage'));
+const FaqPage = lazy(() => import('./pages/info/FaqPage'));
+const Careers = lazy(() => import('./pages/info/Careers'));
 
 function AppContent() {
   const { setAuthState } = useAuth();
@@ -53,7 +54,8 @@ function AppContent() {
 
   return (
     <Router>
-      <Routes>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Routes>
         <Route
           path="/"
           element={
@@ -72,8 +74,8 @@ function AppContent() {
         <Route path="/google-auth" element={<GoogleAuthCallback />} />
         <Route path="/about" element={<About />} />
         <Route path="/notice" element={<Notice />} />
-        <Route path="/support" element={<Support />} />
-        <Route path="/faq" element={<FAQ />} />
+        <Route path="/support" element={<CustomerServicePage />} />
+        <Route path="/faq" element={<FaqPage />} />
         <Route path="/careers" element={<Careers />} />
         <Route path="/company/candidates/:postId" element={<CandidateList />} />
         <Route
@@ -151,6 +153,7 @@ function AppContent() {
           }
         />
       </Routes>
+      </Suspense>
 
       {/* 챗봇 버튼 */}
       <button
