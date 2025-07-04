@@ -1,7 +1,8 @@
 package com.zoop.backend.service;
 
-import java.time.LocalDateTime;
-import java.util.List; // ObjectMapper 임포트 추가
+import java.time.LocalDate;
+import java.time.LocalDateTime; // ObjectMapper 임포트 추가
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,8 +12,12 @@ import org.springframework.web.multipart.MultipartFile; // JobCandProgressReposi
 
 import com.zoop.backend.domain.dto.CareerDataDto;
 import com.zoop.backend.domain.dto.PortfolioSubmissionResponseDto;
+import com.zoop.backend.domain.entity.Candidate;
+import com.zoop.backend.domain.entity.CandidateJobExperience;
 import com.zoop.backend.domain.entity.JobCandProgress;
 import com.zoop.backend.domain.entity.Portfolio;
+import com.zoop.backend.repository.CandidateJobExperienceRepository;
+import com.zoop.backend.repository.CandidateRepository;
 import com.zoop.backend.repository.JobCandProgressRepository;
 import com.zoop.backend.repository.PortfolioRepository;
 
@@ -22,13 +27,19 @@ public class PortfolioService {
     private final PortfolioRepository portfolioRepository;
     private final S3Service s3Service;
     private final JobCandProgressRepository jobCandProgressRepository; // JobCandProgressRepository 주입
+    private final CandidateRepository candidateRepository;
+    private final CandidateJobExperienceRepository candidateJobExperienceRepository;
 
     @Autowired
     public PortfolioService(PortfolioRepository portfolioRepository, S3Service s3Service,
-                            JobCandProgressRepository jobCandProgressRepository) { // 생성자 주입
+                            JobCandProgressRepository jobCandProgressRepository,
+                            CandidateRepository candidateRepository,
+                            CandidateJobExperienceRepository candidateJobExperienceRepository) { // 생성자 주입
         this.portfolioRepository = portfolioRepository;
         this.s3Service = s3Service;
         this.jobCandProgressRepository = jobCandProgressRepository;
+        this.candidateRepository = candidateRepository;
+        this.candidateJobExperienceRepository = candidateJobExperienceRepository;
     }
     
     @Transactional
@@ -99,6 +110,46 @@ public class PortfolioService {
         jobCandProgress.setJobCandCurrStage("2y"); // 포트폴리오 제출 완료 상태로 변경
         jobCandProgress.setJobCandPortfolioSubDate(LocalDateTime.now()); // 포트폴리오 제출 시각 기록
         jobCandProgressRepository.save(jobCandProgress); // 업데이트된 JobCandProgress 저장
+        
+        // --- 후보자 경력구분/총경력기간 저장 ---
+        Candidate candidate = candidateRepository.findById(Long.valueOf(candidateId))
+            .orElseThrow(() -> new RuntimeException("해당 후보자를 찾을 수 없습니다."));
+        System.out.println("[PortfolioService] careerData (full object): " + careerData);
+        if (careerData != null) {
+            System.out.println("[PortfolioService] careerData fields: isExperienced=" + careerData.getIsExperienced() + ", totalYearsOfExperience=" + careerData.getTotalYearsOfExperience() + ", workExperiences=" + careerData.getWorkExperiences());
+        }
+        // Robustly handle isExperienced as String (from CareerDataDto)
+        boolean isExperienced = "true".equalsIgnoreCase(careerData.getIsExperienced());
+        System.out.println("[PortfolioService] isExperienced (parsed): " + isExperienced + " (raw: " + careerData.getIsExperienced() + ")");
+        if (careerData != null) {
+            candidate.setCareerType(isExperienced ? "경력" : "신입");
+            candidate.setTotalCareerPeriod(isExperienced ? String.valueOf(careerData.getTotalYearsOfExperience()) : "0");
+            candidateRepository.save(candidate);
+        }
+
+        // --- 업무경험 저장 (기존 데이터 삭제 후 재저장) ---
+        List<CandidateJobExperience> oldExps = candidateJobExperienceRepository.findByCandidate(candidate);
+        candidateJobExperienceRepository.deleteAll(oldExps);
+        if (careerData != null && isExperienced && careerData.getWorkExperiences() != null) {
+            System.out.println("[PortfolioService] workExperiences size: " + careerData.getWorkExperiences().size());
+            for (var exp : careerData.getWorkExperiences()) {
+                System.out.println("[PortfolioService] workExperience item: companyName=" + exp.getCompanyName() + ", jobTitle=" + exp.getJobTitle() + ", startDate=" + exp.getStartDate() + ", endDate=" + exp.getEndDate());
+                if (exp.getCompanyName() != null && !exp.getCompanyName().isEmpty()
+                    && exp.getJobTitle() != null && !exp.getJobTitle().isEmpty()
+                    && exp.getStartDate() != null && !exp.getStartDate().isEmpty()) {
+                    CandidateJobExperience entity = CandidateJobExperience.builder()
+                        .candidate(candidate)
+                        .companyName(exp.getCompanyName())
+                        .jobTitle(exp.getJobTitle())
+                        .startDate(LocalDate.parse(exp.getStartDate()))
+                        .endDate(exp.getEndDate() != null && !exp.getEndDate().isEmpty() ? LocalDate.parse(exp.getEndDate()) : null)
+                        .build();
+                    candidateJobExperienceRepository.save(entity);
+                } else {
+                    System.out.println("[PortfolioService] 업무경험 저장 SKIP: 필수값 누락");
+                }
+            }
+        }
         
         PortfolioSubmissionResponseDto response = new PortfolioSubmissionResponseDto();
         response.setPortfolioId(savedPortfolio.getPortfolioId());

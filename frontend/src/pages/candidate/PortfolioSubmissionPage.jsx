@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import Header from './Header';
+import PortfolioNavbar from './PortfolioNavbar';
 import './PortfolioSubmissionPage.css';
 
 function PortfolioSubmissionPage() {
@@ -39,6 +39,9 @@ function PortfolioSubmissionPage() {
 
   // 실제 로그인한 사용자의 ID 사용
   const candidateId = authState.userId ? parseInt(authState.userId, 10) : null;
+
+  // New state for veteran proof file
+  const [veteranProofFile, setVeteranProofFile] = useState(null);
 
   useEffect(() => {
     // 사용자가 로그인하지 않았거나 candidateId가 없으면 대시보드로 리다이렉트
@@ -109,6 +112,15 @@ function PortfolioSubmissionPage() {
   const handleWorkExperienceChange = (index, field, value) => {
     const newWorkExperiences = workExperiences.map((exp, i) => {
       if (i === index) {
+        if (field === 'currentlyWorking') {
+          if (value) {
+            // 재직중 체크: endDate를 오늘 날짜로 자동 입력
+            return { ...exp, currentlyWorking: true, endDate: new Date().toISOString().slice(0, 10) };
+          } else {
+            // 체크 해제: endDate를 빈 값으로
+            return { ...exp, currentlyWorking: false, endDate: '' };
+          }
+        }
         return { ...exp, [field]: value };
       }
       return exp;
@@ -174,6 +186,12 @@ function PortfolioSubmissionPage() {
     formData.append('agreeFutureProposals', agreeFutureProposals);
     formData.append('agreeReceiveRecruitmentInfo', agreeReceiveRecruitmentInfo);
 
+    if (veteranProofFile) {
+      formData.append('veteranProofFile', veteranProofFile);
+    }
+
+    console.log("workExperiences to submit:", workExperiences);
+
     try {
         const response = await fetch('/api/portfolios', {
             method: 'POST',
@@ -199,7 +217,7 @@ function PortfolioSubmissionPage() {
   if (loading) {
     return (
       <div className="portfolio-submission-container">
-        <Header />
+        <PortfolioNavbar />
         <div className="loading-container">
           <div className="loading-spinner"></div>
           <p>공고 정보를 불러오는 중입니다...</p>
@@ -210,14 +228,17 @@ function PortfolioSubmissionPage() {
 
   return (
     <div className="portfolio-submission-container">
-      <Header />
+      <PortfolioNavbar />
       
       <div className="portfolio-header">
         <div className="header-content">
-          <h1 className="main-title">지원서 작성</h1>
+          <h1 className="main-title">지원서 작성하기</h1>
           <div className="job-info">
-            <h2 className="job-title">{jobPosting?.postTitle || '공고 제목을 불러올 수 없습니다'}</h2>
-            <p className="company-name">{jobPosting?.companyName || '회사명을 불러올 수 없습니다'}</p>
+            <div className="company-job-container">
+              <span className="company-name">{jobPosting?.companyName || '회사명을 불러올 수 없습니다'}</span>
+              <span className="separator">|</span>
+              <span className="job-title">{jobPosting?.postTitle || '공고 제목을 불러올 수 없습니다'}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -225,8 +246,6 @@ function PortfolioSubmissionPage() {
       {/* Instructions/Disclaimer */}
       <div className="instructions-card">
         <div className="company-intro">
-          <p className="company-tagline">토스와 함께,</p>
-          <h2 className="company-title">커머스의 성장을 만듭니다.</h2>
           <p className="company-description">이력서 첨부와 함께 아래 내용을 작성해주시기 바랍니다.</p>
         </div>
         <div className="disclaimer">
@@ -290,6 +309,28 @@ function PortfolioSubmissionPage() {
           <div className="file-upload-group">
             <label className="file-upload-label">
               <div className="file-upload-content">
+                <div className="file-icon">📁</div>
+                <div className="file-info">
+                  <span className="file-title">포트폴리오</span>
+                  <span className="file-subtitle">* 필수</span>
+                </div>
+                <div className="file-name">
+                  {portfolioFile ? portfolioFile.name : '파일 첨부 (최대 50MB)'}
+                </div>
+              </div>
+              <input
+                type="file"
+                onChange={(e) => setPortfolioFile(e.target.files[0])}
+                accept=".pdf,.zip,.rar,.png,.jpg,.jpeg"
+                className="file-input"
+                required
+              />
+            </label>
+          </div>
+
+          <div className="file-upload-group">
+            <label className="file-upload-label">
+              <div className="file-upload-content">
                 <div className="file-icon">📄</div>
                 <div className="file-info">
                   <span className="file-title">이력서 및 경력기술서</span>
@@ -311,23 +352,23 @@ function PortfolioSubmissionPage() {
           <div className="file-upload-group">
             <label className="file-upload-label">
               <div className="file-upload-content">
-                <div className="file-icon">📁</div>
+                <div className="file-icon">🪪</div>
                 <div className="file-info">
-                  <span className="file-title">포트폴리오</span>
-                  <span className="file-subtitle">* 필수</span>
+                  <span className="file-title">국가보훈대상자 증빙 서류</span>
                 </div>
                 <div className="file-name">
-                  {portfolioFile ? portfolioFile.name : '파일 첨부 (최대 50MB)'}
+                  {veteranProofFile ? veteranProofFile.name : '파일 첨부 (최대 50MB)'}
                 </div>
               </div>
               <input
                 type="file"
-                onChange={(e) => setPortfolioFile(e.target.files[0])}
-                accept=".pdf,.zip,.rar,.png,.jpg,.jpeg"
+                onChange={(e) => setVeteranProofFile(e.target.files[0])}
                 className="file-input"
-                required
               />
             </label>
+            <div style={{ color: '#2574c7', fontSize: 14, marginTop: 4 }}>
+              국가보훈대상자는 관련 법률에 의거 우대합니다. 해당하실 경우, 증빙 서류를 첨부해 주세요.
+            </div>
           </div>
         </div>
 

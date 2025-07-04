@@ -85,4 +85,10 @@ public class Candidate {
     
     @Column(name="preferred_benefit", length=100)
     private String preferredBenefit;
+
+    @Column(name = "CAREER_TYPE", length = 10)
+    private String careerType; // '신입' 또는 '경력'
+
+    @Column(name = "TOTAL_CAREER_PERIOD", length = 20)
+    private String totalCareerPeriod; // 예: '2년 3개월' 또는 '0', '신입'
 }

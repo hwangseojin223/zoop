@@ -169,10 +169,6 @@ function InterviewPage() {
               <span className="label">면접 마감:</span>
               <span className="value">{formatDate(interviewData?.deadlineTime)}</span>
             </div>
-            <div className="interview-info-item">
-              <span className="label">면접 상태:</span>
-              <span className="value status-badge">{interviewData?.status || '정보 없음'}</span>
-            </div>
           </div>
         </div>
 

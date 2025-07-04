@@ -29,7 +29,7 @@ function Sidebar() {
           <span className="arrow">{expandedMenuId === 'myHome' ? '▲' : '▼'}</span>
           {expandedMenuId === 'myHome' && (
             <ul className="sub-menu">
-              <li className="sub-menu-item active">계정정보 설정</li>
+              <li className="sub-menu-item">계정정보 설정</li>
               <li className="sub-menu-item">비밀번호 변경</li>
               <li className="sub-menu-item">로그인 관리</li>
               <li className="sub-menu-item">알림설정</li>
@@ -47,7 +47,7 @@ function Sidebar() {
           <span className="arrow">{expandedMenuId === 'receivedProposals' ? '▲' : '▼'}</span>
           {expandedMenuId === 'receivedProposals' && (
             <ul className="sub-menu">
-              <li className="sub-menu-item active">포지션 제안 현황</li>
+              <li className="sub-menu-item">포지션 제안 현황</li>
               <li className="sub-menu-item">이력서 열람 현황</li>
             </ul>
           )}
@@ -62,7 +62,7 @@ function Sidebar() {
           <span className="arrow">{expandedMenuId === 'resumeCoverLetter' ? '▲' : '▼'}</span>
           {expandedMenuId === 'resumeCoverLetter' && (
             <ul className="sub-menu">
-              <li className="sub-menu-item active">이력서 등록</li>
+              <li className="sub-menu-item">이력서 등록</li>
               <li className="sub-menu-item">이력서 관리</li>
               <li className="sub-menu-item">자소서 관리</li>
             </ul>
