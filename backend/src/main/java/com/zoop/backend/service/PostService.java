@@ -1,6 +1,5 @@
 package com.zoop.backend.service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -14,7 +13,6 @@ import com.zoop.backend.domain.entity.CompanyAdmin;
 import com.zoop.backend.domain.entity.Post;
 import com.zoop.backend.repository.CompanyAdminRepository;
 import com.zoop.backend.repository.PostRepository;
-import lombok.RequiredArgsConstructor;
 
 @Service
 public class PostService {
@@ -83,6 +81,18 @@ public class PostService {
     // 모든 공고 목록 조회 메서드 추가
     public List<Post> getAllPosts() {
         return postRepository.findAllByOrderByPostCreatedAtDesc();
+    }
+
+    // 회사 정보를 포함한 모든 공고 목록 조회
+    public List<Post> getAllPostsWithCompany() {
+        List<Post> posts = postRepository.findAllByOrderByPostCreatedAtDesc();
+        // 회사 정보를 로드하기 위해 각 포스트의 company 필드에 접근
+        posts.forEach(post -> {
+            if (post.getCompany() != null) {
+                post.getCompany().getCompanyName(); // LAZY 로딩 트리거
+            }
+        });
+        return posts;
     }
 
     // 공고 업데이트 메서드 추가
