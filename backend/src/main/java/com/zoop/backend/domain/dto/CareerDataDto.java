@@ -10,7 +10,7 @@ import lombok.Data;
 
 @Data
 public class CareerDataDto {
-    private boolean isExperienced;
+    private String isExperienced;
     private int totalYearsOfExperience;
     private List<WorkExperienceDto> workExperiences;
 }

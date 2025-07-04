@@ -283,21 +283,7 @@ public class AiInterviewScheduleService {
 
     @Transactional
     public String uploadInterviewVideo(Integer scheduleId, MultipartFile videoFile) throws Exception {
-        AiInterviewSchedule schedule = aiInterviewScheduleRepository.findById(scheduleId)
-            .orElseThrow(() -> new RuntimeException("해당 면접 일정을 찾을 수 없습니다."));
-        // 이미 업로드된 경우 중복 방지
-        if (schedule.getVideoFilePath() != null && !schedule.getVideoFilePath().isEmpty()) {
-            throw new RuntimeException("이미 영상이 업로드되어 있습니다.");
-        }
-        String videoUrl = s3Service.uploadInterviewVideoFile(videoFile); // videos/ 경로 사용
-        schedule.setVideoFilePath(videoUrl);
-        aiInterviewScheduleRepository.save(schedule);
-        // 면접 영상 업로드 성공 시 JobCandProgress 상태를 3y로 변경
-        JobCandProgress jobCandProgress = jobCandProgressRepository
-            .findByJobCandidateId(schedule.getJobCandidateId().longValue())
-            .orElseThrow(() -> new RuntimeException("해당 후보자 진행 상태를 찾을 수 없습니다."));
-        jobCandProgress.setJobCandCurrStage("3y");
-        jobCandProgressRepository.save(jobCandProgress);
-        return videoUrl;
+        // 이 메서드는 더 이상 schedule의 videoFilePath를 사용하지 않습니다.
+        throw new UnsupportedOperationException("영상 업로드는 ai_interview_videos 테이블을 사용하세요.");
     }
 }
