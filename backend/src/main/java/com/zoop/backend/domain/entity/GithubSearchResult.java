@@ -42,4 +42,9 @@ public class GithubSearchResult {
 
     // Optional: 추후 AI 분석 결과 연결
     private Long aiGithubAnalysisId;
+
+    // JobCandProgress 상태 정보 (DB에 저장되지 않는 임시 필드)
+    @Transient
+    @JsonProperty("jobCandCurrStage")
+    private String jobCandCurrStage;
 }

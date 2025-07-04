@@ -6,9 +6,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 
 import com.zoop.backend.domain.entity.Candidate;
 import com.zoop.backend.service.CandidateService;
+import com.zoop.backend.repository.CandidateRepository;
+import com.zoop.backend.repository.GithubSearchResultRepository;
+import com.zoop.backend.domain.entity.GithubSearchResult;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -17,14 +23,23 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.Optional;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.time.LocalDateTime;
 
 @Tag(name="CandidateController", description = "개인회원(후보자) 관련 API")
 @RestController
-@RequestMapping("auth/applicant/signup")
+@RequestMapping("/api/candidates")
 @RequiredArgsConstructor
 public class CandidateController {
 
     private final CandidateService candidateService;
+    private final CandidateRepository candidateRepository;
+    private final GithubSearchResultRepository githubSearchResultRepository;
+    private static final Logger log = LoggerFactory.getLogger(CandidateController.class);
 
     // // 모든 후보자 리스트 조회
     // @GetMapping
@@ -61,5 +76,69 @@ public class CandidateController {
         
         // 저장된 후보자와 함께 201 CREATED 상태 코드 반환
         return new ResponseEntity<>(savedCandidate, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/email/{githubLogin}")
+    public ResponseEntity<?> getEmailByGithubLogin(@PathVariable String githubLogin) {
+        log.info("🔍 githubLogin={}으로 이메일 조회 요청", githubLogin);
+        
+        // 1. candidates 테이블에서 조회
+        Optional<Candidate> candidate = candidateRepository.findByGithubLogin(githubLogin);
+        if (candidate.isPresent()) {
+            log.info("✅ candidates 테이블에서 이메일 조회 성공: {}", candidate.get().getCandidateEmail());
+            return ResponseEntity.ok(Map.of("email", candidate.get().getCandidateEmail()));
+        }
+        
+        // 2. 없으면 github_search_results에서 조회
+        List<GithubSearchResult> gsrList = githubSearchResultRepository.findByGithubLogin(githubLogin);
+        if (!gsrList.isEmpty() && gsrList.get(0).getCandidateEmail() != null) {
+            log.info("✅ github_search_results 테이블에서 이메일 조회 성공: {}", gsrList.get(0).getCandidateEmail());
+            return ResponseEntity.ok(Map.of("email", gsrList.get(0).getCandidateEmail()));
+        }
+        
+        log.warn("❌ githubLogin={}에 해당하는 이메일을 찾을 수 없습니다.", githubLogin);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "이메일을 찾을 수 없습니다."));
+    }
+
+    @PutMapping("/email/{candidateId}")
+    public ResponseEntity<?> updateEmail(@PathVariable Long candidateId, @RequestBody Map<String, String> request) {
+        log.info("📧 candidateId={}의 이메일 변경 요청", candidateId);
+        
+        String newEmail = request.get("email");
+        if (newEmail == null || newEmail.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "이메일 주소가 필요합니다."));
+        }
+        
+        try {
+            Optional<Candidate> candidateOpt = candidateRepository.findById(candidateId);
+            if (candidateOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "사용자를 찾을 수 없습니다."));
+            }
+            
+            Candidate candidate = candidateOpt.get();
+            
+            // 기존 이메일과 같은지 확인
+            if (newEmail.equals(candidate.getCandidateEmail())) {
+                return ResponseEntity.ok(Map.of("message", "동일한 이메일 주소입니다."));
+            }
+            
+            // 새 이메일이 이미 다른 사용자에게 사용되고 있는지 확인
+            Optional<Candidate> existingEmailUser = candidateRepository.findByCandidateEmail(newEmail);
+            if (existingEmailUser.isPresent() && !existingEmailUser.get().getCandidateId().equals(candidateId)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "이미 사용 중인 이메일 주소입니다."));
+            }
+            
+            // 이메일 변경
+            candidate.setCandidateEmail(newEmail);
+            candidate.setCandidateUpdatedAt(LocalDateTime.now());
+            candidateRepository.save(candidate);
+            
+            log.info("✅ candidateId={}의 이메일 변경 성공: {}", candidateId, newEmail);
+            return ResponseEntity.ok(Map.of("message", "이메일이 성공적으로 변경되었습니다.", "email", newEmail));
+            
+        } catch (Exception e) {
+            log.error("❌ 이메일 변경 중 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "이메일 변경 중 오류가 발생했습니다."));
+        }
     }
 }

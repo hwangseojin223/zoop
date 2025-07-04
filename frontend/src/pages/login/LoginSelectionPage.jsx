@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, Link, useSearchParams } from 'react-router-dom'; 
+import { useNavigate, Link, useSearchParams, useLocation } from 'react-router-dom'; 
 import axios from 'axios';
 import './LoginSelectionPage.css';
 import Navbar from '../../components/Navbar';
@@ -14,8 +14,19 @@ function LoginSelectionPage() {
   const [keepLoggedIn, setKeepLoggedIn] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { setAuthState } = useAuth();
   const [searchParams] = useSearchParams(); // URL 쿼리 파라미터를 읽기 위한 훅 (소셜 로그인 에러 확인 등)
+
+  // navigate state에서 githubLogin과 메시지 가져오기
+  useEffect(() => {
+    if (location.state?.githubLogin) {
+      setLoginId(location.state.githubLogin);
+    }
+    if (location.state?.message) {
+      setError(location.state.message);
+    }
+  }, [location.state]);
 
   const socialConfig = {
     google: {

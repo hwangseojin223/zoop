@@ -18,6 +18,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 
 @Entity
 @Table(name = "post")
@@ -81,6 +83,18 @@ public class Post {
     
     @Column(name = "post_updated_at")
     private LocalDateTime postUpdatedAt;
-    
-    // 필요한 경우 추가 필드 및 관계 매핑
+
+    @Lob
+    @Column(name = "post_ideal_candidate")
+    private String postIdealCandidate;
+
+    @PrePersist
+    public void onCreate() {
+        postCreatedAt = postUpdatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void onUpdate() {
+        postUpdatedAt = LocalDateTime.now();
+    }
 }
