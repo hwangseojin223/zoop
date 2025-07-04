@@ -73,7 +73,7 @@ function AppContent() {
         <Route path="/auth/applicant/signup/success" element={<ApplicantSignupSuccess />} />
         <Route path="/auth/applicant/signup/process" element={<ApplicantSignupProcess />} />
         <Route path="/auth/applicant/signup/process/:token" element={<ApplicantSignupProcess />} />
-        <Route path="/login" element={<LoginSelectionPage />} />
+        <Route path="/auth/login" element={<LoginSelectionPage />} />
         <Route path="/google-auth" element={<GoogleAuthCallback />} />
         <Route path="/about" element={<About />} />
         <Route path="/notice" element={<Notice />} />
