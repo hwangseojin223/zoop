@@ -61,9 +61,6 @@ public class AiInterviewSchedule {
     @Column(name = "ai_interview_updated_at", nullable = false)
     private LocalDateTime aiInterviewUpdatedAt;
     
-    @Column(name = "video_file_path", length = 1000)
-    private String videoFilePath;
-    
     @PrePersist
     protected void onCreate() {
         aiInterviewCreatedAt = LocalDateTime.now();
