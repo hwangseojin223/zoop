@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 
 import Sidebar from './Sidebar';
-import Header from './Header';
+import PortfolioNavbar from './PortfolioNavbar';
 import JobSelectionModal from './JobSelectionModal';
 import RegionSelectionModal from './RegionSelectionModal';
 import SalarySelectionModal from './SalarySelectionModal';
@@ -14,6 +14,52 @@ import InterviewSchedulerModal from './InterviewSchedulerModal';
 import BenefitSelectionModal from './BenefitSelectionModal';
 
 import './CandidateDashboard.css';
+
+// DB 날짜 포맷을 Date 객체로 변환하는 함수
+function parseDbDate(str) {
+  if (!str || typeof str !== 'string') return null;
+  // ISO 포맷(yyyy-MM-ddTHH:mm:ss)도 지원
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(str)) {
+    const d = new Date(str);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  // 기존 yy/MM/dd HH:mm:ss.SSS... 포맷
+  const [date, time] = str.split(' ');
+  if (!date || !time) return null;
+  const [yy, MM, dd] = date.split('/');
+  if (!yy || !MM || !dd) return null;
+  const yyyy = Number(yy) < 50 ? '20' + yy : '19' + yy;
+  const timePart = time.split('.')[0];
+  const isoString = `${yyyy}-${MM}-${dd}T${timePart}`;
+  const d = new Date(isoString);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+// Date 객체를 KST(로컬)로 변환해서 표시하는 함수
+function formatUtcToKst(dateObj) {
+  if (!dateObj || !(dateObj instanceof Date) || isNaN(dateObj.getTime())) return '';
+  return dateObj.toLocaleString('ko-KR', { hour12: false });
+}
+
+// 남은 시간을 계산하는 함수
+function calculateRemainingTime(deadlineDate) {
+  if (!deadlineDate || !(deadlineDate instanceof Date) || isNaN(deadlineDate.getTime())) return '';
+  
+  const now = new Date();
+  const diffMs = deadlineDate - now;
+  
+  if (diffMs <= 0) return '면접 종료';
+  
+  const diffMin = Math.floor(diffMs / 60000);
+  const hours = Math.floor(diffMin / 60);
+  const minutes = diffMin % 60;
+  
+  if (hours > 0) {
+    return `${hours}시간 ${minutes}분 남음`;
+  } else {
+    return `${minutes}분 남음`;
+  }
+}
 
 function CandidateDashboard() {
   // useAuth 훅을 사용하여 인증 상태 정보를 가져옵니다.
@@ -68,6 +114,11 @@ function CandidateDashboard() {
 
   // 복리후생 모달 관련 상태
   const [isBenefitModalOpen, setIsBenefitModalOpen] = useState(false);
+
+  // 대시보드 마운트 시 항상 최신 데이터 fetch
+  useEffect(() => {
+    fetchJobPostings();
+  }, []);
 
   // 컴포넌트가 처음 마운트되거나 candidateId가 변경될 때 데이터를 가져오는 useEffect 훅
   useEffect(() => {
@@ -141,15 +192,25 @@ function CandidateDashboard() {
             console.log("면접 정보 조회 성공:", interviewData);
             
             // 면접 정보를 scheduledInterviews에 저장
-            setScheduledInterviews(prev => ({
-              ...prev,
-              [postId]: {
-                date: new Date(interviewData.scheduledTime).toLocaleDateString('ko-KR'),
-                time: new Date(interviewData.scheduledTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
-                link: interviewData.interviewLink,
-                scheduleId: interviewData.scheduleId
-              }
-            }));
+            const scheduledDate = parseDbDate(interviewData.scheduledTime);
+            const deadlineDate = parseDbDate(interviewData.deadlineTime);
+            console.log('면접 API 응답:', interviewData);
+            console.log('파싱 결과 scheduledDate:', scheduledDate, 'deadlineDate:', deadlineDate);
+            setScheduledInterviews(prev => {
+              const updated = {
+                ...prev,
+                [postId]: {
+                  date: formatUtcToKst(scheduledDate),
+                  time: '',
+                  iso: scheduledDate,
+                  deadline: deadlineDate,
+                  link: interviewData.interviewLink,
+                  scheduleId: interviewData.scheduleId
+                }
+              };
+              console.log('scheduledInterviews 저장:', updated);
+              return updated;
+            });
           } else {
             console.error("면접 정보 조회 실패:", interviewResponse.status);
           }
@@ -185,51 +246,49 @@ function CandidateDashboard() {
   };
 
   // 면접 페이지로 이동하는 함수
-const navigateToInterview = async (postId) => {
-  try {
-    // 1. 현재 로그인한 사용자의 candidateId 가져오기
-    // 이 부분은 실제 애플리케이션의 인증 방식에 따라 달라집니다.
-    // 예시: localStorage에서 가져오거나, AuthContext에서 가져오기
-    const candidateId = localStorage.getItem('userId'); // 또는 useAuth().authState.userId;
-    
-    if (!candidateId) {
-      alert('사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
-      return; // candidateId가 없으면 함수 종료
-    }
-
-    // 2. 백엔드 API 호출 URL 수정
-    // 쿼리 파라미터 형식으로 postId와 candidateId를 전달합니다.
-    // URL에 'http://localhost:8081'과 '/api/interviews/by-post-candidate' 경로가 정확한지 확인하세요.
-    const response = await fetch(`http://localhost:8081/api/interviews/by-post-candidate?postId=${postId}&candidateId=${candidateId}`);
-    
-    // 3. 응답 확인 및 에러 처리 강화
-    if (!response.ok) {
-      // 응답이 JSON 형식이 아닐 수도 있으므로 text()로 먼저 시도
-      const errorText = await response.text();
-      console.error("API 응답 오류:", response.status, errorText);
-      // JSON 파싱 시도 (JSON 형태의 에러 응답일 경우)
-      try {
-        const errorData = JSON.parse(errorText);
-        throw new Error(errorData.message || '면접 일정을 조회하는데 실패했습니다.');
-      } catch (parseError) {
-        // JSON 파싱 실패 시 일반 텍스트 에러 메시지 사용
-        throw new Error(`면접 일정을 조회하는데 실패했습니다. (HTTP ${response.status}: ${errorText.substring(0, 100)}...)`);
+  const navigateToInterview = async (postId) => {
+    try {
+      // 1. 현재 로그인한 사용자의 candidateId 가져오기
+      const candidateId = localStorage.getItem('userId');
+      if (!candidateId) {
+        alert('사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
+        return;
       }
+
+      // 2. scheduledInterviews에서 면접 일정 확인
+      const interview = scheduledInterviews[postId];
+      if (interview && interview.iso) {
+        const interviewDateTime = new Date(interview.iso);
+        const now = new Date();
+        if (interviewDateTime > now) {
+          alert('아직 면접 시작 시간이 되지 않았습니다.');
+          return;
+        }
+      }
+
+      // 3. 백엔드 API 호출 URL 수정
+      const response = await fetch(`http://localhost:8081/api/interviews/by-post-candidate?postId=${postId}&candidateId=${candidateId}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API 응답 오류:", response.status, errorText);
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.message || '면접 일정을 조회하는데 실패했습니다.');
+        } catch (parseError) {
+          throw new Error(`면접 일정을 조회하는데 실패했습니다. (HTTP ${response.status}: ${errorText.substring(0, 100)}...)`);
+        }
+      }
+      const data = await response.json();
+      if (data && data.scheduleId) {
+        navigate(`/interview/${data.scheduleId}`);
+      } else {
+        alert('해당 공고에 대한 면접 일정을 찾을 수 없습니다.');
+      }
+    } catch (error) {
+      console.error('면접 페이지로 이동 중 오류 발생:', error);
+      alert(`면접 페이지로 이동할 수 없습니다: ${error.message}`);
     }
-    
-    const data = await response.json(); // 응답이 성공적일 때만 JSON 파싱
-    
-    // 4. 응답 데이터에서 scheduleId 확인 및 페이지 이동
-    if (data && data.scheduleId) {
-      navigate(`/interview/${data.scheduleId}`);
-    } else {
-      alert('해당 공고에 대한 면접 일정을 찾을 수 없습니다.');
-    }
-  } catch (error) {
-    console.error('면접 페이지로 이동 중 오류 발생:', error);
-    alert(`면접 페이지로 이동할 수 없습니다: ${error.message}`);
-  }
-};
+  };
 
   // 직무 모달 관련 함수
   const openJobModal = () => {
@@ -413,9 +472,15 @@ const navigateToInterview = async (postId) => {
         const newScheduledInterviews = {};
         interviewResults.forEach(result => {
           if (result && result.interviewData) {
+            const scheduledDate = parseDbDate(result.interviewData.scheduledTime);
+            const deadlineDate = parseDbDate(result.interviewData.deadlineTime);
+            console.log('면접 API 응답(일괄):', result.interviewData);
+            console.log('파싱 결과 scheduledDate2:', scheduledDate, 'deadlineDate2:', deadlineDate);
             newScheduledInterviews[result.postId] = {
-              date: new Date(result.interviewData.scheduledTime).toLocaleDateString('ko-KR'),
-              time: new Date(result.interviewData.scheduledTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+              date: formatUtcToKst(scheduledDate),
+              time: '',
+              iso: scheduledDate,
+              deadline: deadlineDate,
               link: result.interviewData.interviewLink,
               scheduleId: result.interviewData.scheduleId
             };
@@ -423,10 +488,24 @@ const navigateToInterview = async (postId) => {
         });
         
         setScheduledInterviews(newScheduledInterviews);
-        console.log('기존 면접 일정 로드 완료:', newScheduledInterviews);
+        console.log('최종 scheduledInterviews:', newScheduledInterviews);
       }
     } catch (error) {
       console.error('기존 면접 일정 로드 중 오류:', error);
+    }
+  };
+
+  // 대시보드 마운트 시 항상 최신 데이터 fetch
+  const fetchJobPostings = async () => {
+    try {
+      const response = await fetch(`http://localhost:8081/api/candidates/${candidateId}/job-postings`);
+      if (response.ok) {
+        const data = await response.json();
+        setJobPostings(data);
+      }
+    } catch (error) {
+      console.error('데이터 가져오기 중 오류:', error);
+      setJobPostings([]);
     }
   };
 
@@ -436,7 +515,7 @@ const navigateToInterview = async (postId) => {
 
       <div className="main-content-area">
         {/* Header 컴포넌트에 userName 전달 */}
-        <Header userName={userName} />
+        <PortfolioNavbar userName={userName} />
 
         <h1 className="page-title">포지션 제안 현황</h1>
 
@@ -454,36 +533,54 @@ const navigateToInterview = async (postId) => {
           <div className="filter-row">
             <span className="label">희망 근무 조건</span>
             <div className="tags">
-              <span className="tag static-tag">직무</span>
-              <span className="tag blue interactive-tag" onClick={openJobModal}>
-                {selectedJob}
-              </span>
-              <span className="tag static-tag">지역</span>
-              <span className="tag blue interactive-tag" onClick={openRegionModal}>
-                {selectedRegion}
-              </span>
-
+              {/* 직무 관련 그룹 */}
+              <div className="tag-group">
+                <span className="tag static-tag">직무</span>
+                <span className="tag blue interactive-tag" onClick={openJobModal}>
+                  {selectedJob}
+                </span>
+              </div>
+              
+              {/* 지역 관련 그룹 */}
+              <div className="tag-group">
+                <span className="tag static-tag">지역</span>
+                <span className="tag blue interactive-tag" onClick={openRegionModal}>
+                  {selectedRegion}
+                </span>
+              </div>
+              
+              {/* 조건 관련 그룹 */}
+              <div className="tag-group">
+                <span className="tag static-tag">연봉</span>
+                <span className="tag blue interactive-tag" onClick={openSalaryModal}>
+                  {selectedSalary}
+                </span>
+              </div>
+              
+              {/* 복리후생 그룹 */}
+              <div className="tag-group">
+                <span className="tag static-tag">복리후생</span>
+                <span className="tag blue interactive-tag" onClick={openBenefitModal}>
+                  {selectedBenefits.length > 0 ? selectedBenefits.join(', ') : '입력해주세요'}
+                </span>
+              </div>
+              
+              {/* 기업 관련 그룹 */}
+              <div className="tag-group">
+                <span className="tag static-tag">기업규모</span>
+                <span className="tag blue interactive-tag" onClick={openCompanySizeModal}>
+                  {selectedCompanySize}
+                </span>
+              </div>
+              
+              {/* 출근 관련 그룹 */}
+              <div className="tag-group">
+                <span className="tag static-tag">출근소요시간</span>
+                <span className="tag blue interactive-tag" onClick={openCommuteTimeModal}>
+                  {selectedCommuteTime}
+                </span>
+              </div>
             </div>
-          </div>
-
-          {/* 두 번째 filter-row 구조 변경 (연봉 클릭 기능 추가) */}
-          <div className="filter-row second-row">
-            <span className="tag static-tag">연봉</span>
-            <span className="tag blue interactive-tag" onClick={openSalaryModal}>
-              {selectedSalary}
-            </span>
-            <span className="tag static-tag">복리후생</span>
-            <span className="tag blue interactive-tag" onClick={openBenefitModal}>
-              {selectedBenefits.length > 0 ? selectedBenefits.join(', ') : '입력해주세요'}
-            </span>
-            <span className="tag static-tag">기업규모</span>
-            <span className="tag blue interactive-tag" onClick={openCompanySizeModal}>
-              {selectedCompanySize}
-            </span>
-            <span className="tag static-tag">출근소요시간</span>
-            <span className="tag blue interactive-tag" onClick={openCommuteTimeModal}>
-              {selectedCommuteTime}
-            </span>
           </div>
         </div>
 
@@ -507,13 +604,13 @@ const navigateToInterview = async (postId) => {
               className={`tab-button ${activeTab === 'interviewOffer' ? 'active' : ''}`}
               onClick={() => handleTabClick('interviewOffer')}
             >
-              면접 제안
+              면접
             </button>
             <button
               className={`tab-button ${activeTab === 'resultAnnouncement' ? 'active' : ''}`}
               onClick={() => handleTabClick('resultAnnouncement')}
             >
-              결과발표
+              결과
             </button>
           </div>
 
@@ -524,7 +621,7 @@ const navigateToInterview = async (postId) => {
             <select className="dropdown">
               <option>확인안한 제안 제외</option>
             </select>
-            <select className="dropdown">
+            <select className="dropdown">ㄴ
               <option>20개씩</option>
             </select>
           </div>
@@ -549,13 +646,6 @@ const navigateToInterview = async (postId) => {
                   <p>등록일: {post.postPostedDate}</p>
                   <p>마감일: {post.postExpiryDate}</p>
                 </div>
-                
-                {/* 3n 상태이고, 면접 일정이 저장되어 있다면 정보 표시 */}
-                {post.jobCandCurrStage === '3n' && scheduledInterviews[post.postId] && (
-                  <div className="interview-info">
-                    <p>면접 일정: {scheduledInterviews[post.postId].date} {scheduledInterviews[post.postId].time}</p>
-                  </div>
-                )}
               </div>
               
               {/* jobCandCurrStage 값에 따라 버튼 표시 로직 추가 */}
@@ -579,15 +669,31 @@ const navigateToInterview = async (postId) => {
                 </button>
               )}
               {post.jobCandCurrStage === '3n' && (
-                <button 
-                  onClick={() => navigateToInterview(post.postId)}
-                  className="action-button interview-button">
-                  면접 보러가기
-                </button>
+                (() => {
+                  const interview = scheduledInterviews[post.postId];
+                  const now = new Date();
+                  const isInterviewStarted = interview && interview.iso && new Date(interview.iso) <= now;
+                  const remainingTime = interview && interview.deadline ? calculateRemainingTime(new Date(interview.deadline)) : '';
+                  
+                  return (
+                    <button 
+                      onClick={() => navigateToInterview(post.postId)}
+                      className={`action-button interview-button ${!isInterviewStarted ? 'disabled' : ''}`}
+                      disabled={!isInterviewStarted}>
+                      {interview && interview.date
+                        ? isInterviewStarted 
+                          ? remainingTime || '면접 보러가기'
+                          : `${interview.date} (시작 대기중)`
+                        : '면접 일정'}
+                    </button>
+                  );
+                })()
               )}
               {post.jobCandCurrStage === '3y' && (
-                <button className="action-button waiting-result-button" disabled>
-                  면접 완료 - 결과 대기 중
+                <button 
+                  onClick={() => navigate(`/interview-result/${post.postId}`)}
+                  className="action-button result-button">
+                  결과 취합 중
                 </button>
               )}
               {post.jobCandCurrStage === '4n' && (
@@ -656,32 +762,41 @@ const navigateToInterview = async (postId) => {
                   <p>등록일: {post.postPostedDate}</p>
                   <p>마감일: {post.postExpiryDate}</p>
                 </div>
-                
-                {/* 3n 상태이고, 면접 일정이 저장되어 있다면 정보 표시 */}
-                {post.jobCandCurrStage === '3n' && scheduledInterviews[post.postId] && (
-                  <div className="interview-info">
-                    <p>면접 일정: {scheduledInterviews[post.postId].date} {scheduledInterviews[post.postId].time}</p>
-                  </div>
-                )}
               </div>
               
               {/* jobCandCurrStage 값에 따라 버튼 표시 */}
-              {post.jobCandCurrStage === '2y' ? (
+              {post.jobCandCurrStage === '3y' ? (
+                <button 
+                  onClick={() => navigate(`/interview-result/${post.postId}`)}
+                  className="action-button result-button">
+                  결과 취합 중
+                </button>
+              ) : post.jobCandCurrStage === '2y' ? (
                 <button 
                   onClick={() => openInterviewSchedulerModal(post.postId)}
                   className="action-button interview-scheduler-button">
                   면접 일정 정하기
                 </button>
               ) : post.jobCandCurrStage === '3n' ? (
-                <button 
-                  onClick={() => navigateToInterview(post.postId)}
-                  className="action-button interview-button">
-                  면접 보러가기
-                </button>
-              ) : post.jobCandCurrStage === '3y' ? (
-                <button className="action-button waiting-result-button" disabled>
-                  면접 완료 - 결과 대기 중
-                </button>
+                (() => {
+                  const interview = scheduledInterviews[post.postId];
+                  const now = new Date();
+                  const isInterviewStarted = interview && interview.iso && new Date(interview.iso) <= now;
+                  const remainingTime = interview && interview.deadline ? calculateRemainingTime(new Date(interview.deadline)) : '';
+                  
+                  return (
+                    <button 
+                      onClick={() => navigateToInterview(post.postId)}
+                      className={`action-button interview-button ${!isInterviewStarted ? 'disabled' : ''}`}
+                      disabled={!isInterviewStarted}>
+                      {interview && interview.date
+                        ? isInterviewStarted 
+                          ? remainingTime || '면접 보러가기'
+                          : `${interview.date} (시작 대기중)`
+                        : '면접 일정'}
+                    </button>
+                  );
+                })()
               ) : null}
             </li>
           ))}

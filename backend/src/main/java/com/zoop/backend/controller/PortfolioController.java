@@ -84,6 +84,8 @@ public class PortfolioController {
             @RequestParam("agreeReceiveRecruitmentInfo") Boolean agreeReceiveRecruitmentInfo
     ) {
         try {
+            System.out.println("=== [DEBUG] PortfolioController.submitPortfolio() 진입 ===");
+            System.out.println("[PortfolioController] careerDataJson(raw): " + careerDataJson);
             // 파일 상태 로그 출력
             System.out.println("=== PortfolioController.submitPortfolio() 호출됨 ===");
             System.out.println("[PortfolioController] portfolioFile: " + (portfolioFile != null ? portfolioFile.getOriginalFilename() + " (크기: " + portfolioFile.getSize() + " bytes)" : "null"));
