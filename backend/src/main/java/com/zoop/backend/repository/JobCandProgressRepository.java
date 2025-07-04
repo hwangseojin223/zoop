@@ -14,7 +14,7 @@ import com.zoop.backend.domain.entity.JobCandProgress;
 @Repository
 public interface JobCandProgressRepository extends JpaRepository<JobCandProgress, Long> {
 
-     @Query(value = """
+    @Query(value = """
         SELECT 
             c.candidate_email AS email,
             c.candidate_name AS name,
@@ -38,7 +38,6 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
     """, nativeQuery = true)
     List<ResponderDto> findCandidatesAtStage2yByPost(@Param("postId") Long postId);
 
-
     List<JobCandProgress> findByCandidate_CandidateId(Integer candidateId);
     // Optional<JobCandProgress> findByPost_PostIdAndCandidate_CandidateId(Integer postId, Integer candidateId);
 
@@ -49,4 +48,35 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
     );
 
     Optional<JobCandProgress> findByJobCandidateId(Long jobCandidateId);
+
+    List<ResponderDto> findCandidatesAtStage3nByPost(@Param("postId") Long postId);
+
+    Optional<JobCandProgress> findByPostIdAndGithubLogin(Long postId, String githubLogin);
+
+    @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.postId = :postId AND j.jobCandCurrStage = '1n'")
+    List<String> findGithubLoginsByPostIdAndFilteringStage(@Param("postId") Long postId);
+
+    // 전체 후보자 조회 (모든 단계)
+    @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.postId = :postId")
+    List<String> findGithubLoginsByPostId(@Param("postId") Long postId);
+
+    // 미회신자 조회 (1n, 2n)
+    @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.postId = :postId AND j.jobCandCurrStage IN ('1n', '2n')")
+    List<String> findGithubLoginsByPostIdAndNoResponseStage(@Param("postId") Long postId);
+
+    // 회신자 조회 (2y)
+    @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.postId = :postId AND j.jobCandCurrStage = '2y'")
+    List<String> findGithubLoginsByPostIdAndResponseStage(@Param("postId") Long postId);
+
+    // 면접 예정자 조회 (3n)
+    @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.postId = :postId AND j.jobCandCurrStage = '3n'")
+    List<String> findGithubLoginsByPostIdAndInterviewScheduledStage(@Param("postId") Long postId);
+
+    // 면접 완료자 조회 (3y)
+    @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.postId = :postId AND j.jobCandCurrStage = '3y'")
+    List<String> findGithubLoginsByPostIdAndInterviewCompletedStage(@Param("postId") Long postId);
+
+    // postId와 githubLogin 리스트로 JobCandProgress 조회
+    @Query("SELECT j FROM JobCandProgress j WHERE j.postId = :postId AND j.githubLogin IN :githubLogins")
+    List<JobCandProgress> findByPostIdAndGithubLoginIn(@Param("postId") Long postId, @Param("githubLogins") List<String> githubLogins);
 }

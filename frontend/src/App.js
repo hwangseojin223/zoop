@@ -20,6 +20,8 @@ import CompanyDashboard from './pages/company/CompanyDashboard';
 import RecruitCreate from './pages/company/RecruitCreate';
 import CandidateList from './pages/company/CandidateList';
 import ResponderList from './pages/company/ResponderList';
+import IdealCandidate from './pages/company/IdealCandidate';
+
 // 챗봇 import
 import Chatbot from './components/Chatbot';
 import './components/Chatbot.css';
@@ -70,7 +72,8 @@ function AppContent() {
         <Route path="/auth/company/signup/success" element={<SignupSuccess />} />
         <Route path="/auth/applicant/signup/success" element={<ApplicantSignupSuccess />} />
         <Route path="/auth/applicant/signup/process" element={<ApplicantSignupProcess />} />
-        <Route path="/auth/login" element={<LoginSelectionPage />} />
+        <Route path="/auth/applicant/signup/process/:token" element={<ApplicantSignupProcess />} />
+        <Route path="/login" element={<LoginSelectionPage />} />
         <Route path="/google-auth" element={<GoogleAuthCallback />} />
         <Route path="/about" element={<About />} />
         <Route path="/notice" element={<Notice />} />
@@ -117,6 +120,16 @@ function AppContent() {
             </PrivateRoute>
           }
         />
+
+        <Route
+          path="/company/ideal-candidate/:postId"
+          element={
+            <PrivateRoute allowedUserType="company">
+              <IdealCandidate />
+            </PrivateRoute>
+          }
+        />
+
         <Route
           path="/company/candidates"
           element={
@@ -198,8 +211,6 @@ function AppContent() {
           />
         )}
       </button>
-
-
 
       {/* 챗봇 창 */}
       <Chatbot

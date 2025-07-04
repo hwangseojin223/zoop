@@ -1,13 +1,76 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../../components/Navbar';
 import './ApplicantSignupProcess.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import axios from '../../api/axios';
 
 
 //export default는 그 함수를 다른 파일에서 import해서 사용할 수 있도록 내보내는 역할
 export default function ApplicantSignupProcess() {
   const navigate = useNavigate();
-  //==================================================================================================
+  const { token } = useParams(); // URL 파라미터에서 토큰 가져오기
+  
+  // 초대 정보 상태
+  const [invitationData, setInvitationData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // 초대 토큰으로 정보 조회
+  useEffect(() => {
+    const fetchInvitationData = async () => {
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+      
+      try {
+        // 1. 초대 토큰으로 정보 조회
+        const invitationResponse = await axios.post(`/api/invitations/clicked/${token}`);
+        const { githubLogin, isSignedUp } = invitationResponse.data;
+        
+        // 2. 이미 가입된 사용자인 경우 로그인 페이지로 이동
+        if (isSignedUp) {
+          navigate('/login', { 
+            state: { 
+              githubLogin: githubLogin,
+              message: '이미 가입된 계정입니다. 로그인해주세요.' 
+            } 
+          });
+          return;
+        }
+        
+        // 3. 이메일 정보 조회
+        try {
+          const emailResponse = await axios.get(`/api/candidates/email/${githubLogin}`);
+          const { email } = emailResponse.data;
+          
+          // 이메일 파싱 (아이디@도메인)
+          const [emailId, domain] = email.split('@');
+          setEmailLocal(emailId);
+          setEmailDomain(domain);
+          
+          // 이메일이 자동으로 입력되었으므로 인증 완료 상태로 설정
+          setIsEmailVerified(true);
+        } catch (emailError) {
+          console.log('이메일 정보를 찾을 수 없습니다:', emailError);
+          // 이메일이 없어도 계속 진행
+        }
+        
+        // 4. githubLogin을 아이디 입력란에 설정
+        setInvitationData({ githubLogin });
+        
+      } catch (error) {
+        console.error('초대 정보 조회 실패:', error);
+        alert('초대 링크가 유효하지 않습니다.');
+        navigate('/');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchInvitationData();
+  }, [token, navigate]);
+
+//==================================================================================================
 // 이메일 인증
 //==================================================================================================
 
@@ -203,10 +266,27 @@ const handleDomainChange = (e) => {
       <Navbar />
       <div className="applicant-signup-container">
         <h2>ZOOP 통합 개인회원 가입</h2>
+        {isLoading ? (
+          <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <p>초대 정보를 불러오는 중...</p>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit}>
           <div className="applicant-signup-form-group">
             <label htmlFor="candidate_id" className="applicant-signup-label">아이디</label>
-            <input type="text" id="candidate_id" name="candidate_id" className="applicant-signup-input" placeholder="4~20자리/영문, 숫자, 특수문자 '_'사용 가능" />
+            <input 
+              type="text" 
+              id="candidate_id" 
+              name="candidate_id" 
+              className="applicant-signup-input" 
+              placeholder="4~20자리/영문, 숫자, 특수문자 '_'사용 가능"
+              defaultValue={invitationData?.githubLogin || ''}
+              readOnly={!!invitationData?.githubLogin}
+              style={{
+                backgroundColor: invitationData?.githubLogin ? '#f5f5f5' : 'white',
+                color: '#333'
+              }}
+            />
           </div>
 
           <div className="applicant-signup-form-group">
@@ -245,11 +325,17 @@ const handleDomainChange = (e) => {
                   className="form-input"
                   placeholder="이메일 아이디"
                   value={emailLocal}
-                  onChange={(e) => setEmailLocal(e.target.value)}
-                  disabled={isEmailVerified}
+                  onChange={(e) => {
+                    setEmailLocal(e.target.value);
+                    if (isEmailVerified) {
+                      setIsEmailVerified(false);
+                      setCodeSent(false);
+                      setVerificationCode('');
+                    }
+                  }}
                   style={{
                     flex: 1,
-                    backgroundColor: isEmailVerified ? '#f5f5f5' : 'white',
+                    backgroundColor: 'white',
                     color: '#333'
                   }}
                 />
@@ -260,11 +346,17 @@ const handleDomainChange = (e) => {
                     className="applicant-signup-input"
                     placeholder="도메인 입력"
                     value={emailDomain}
-                    onChange={(e) => setEmailDomain(e.target.value)}
-                    disabled={isEmailVerified}
+                    onChange={(e) => {
+                      setEmailDomain(e.target.value);
+                      if (isEmailVerified) {
+                        setIsEmailVerified(false);
+                        setCodeSent(false);
+                        setVerificationCode('');
+                      }
+                    }}
                     style={{
                       flex: 1,
-                      backgroundColor: isEmailVerified ? '#f5f5f5' : 'white',
+                      backgroundColor: 'white',
                       color: '#333'
                     }}
                   />
@@ -272,11 +364,17 @@ const handleDomainChange = (e) => {
                   <select
                     className="applicant-signup-input"
                     value={emailDomain}
-                    onChange={handleDomainChange}
-                    disabled={isEmailVerified}
+                    onChange={(e) => {
+                      handleDomainChange(e);
+                      if (isEmailVerified) {
+                        setIsEmailVerified(false);
+                        setCodeSent(false);
+                        setVerificationCode('');
+                      }
+                    }}
                     style={{
                       flex: 1,
-                      backgroundColor: isEmailVerified ? '#f5f5f5' : 'white',
+                      backgroundColor: 'white',
                       color: '#333'
                     }}
                   >
@@ -288,6 +386,11 @@ const handleDomainChange = (e) => {
                   </select>
                 )}
               </div>
+              {isEmailVerified && (
+                <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#2dc997' }}>
+                  ✅ 이메일이 인증되었습니다. 변경하려면 이메일을 수정하세요.
+                </div>
+              )}
             </div>
 
             <div className="applicant-signup-form-group">
@@ -299,24 +402,25 @@ const handleDomainChange = (e) => {
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value)}
                   placeholder="6자리 인증코드"
-                  disabled={!codeSent || isEmailVerified}
+                  disabled={!codeSent}
                   style={{
                     width: '100%',
-                    backgroundColor: !codeSent || isEmailVerified ? '#f0f0f0' : 'white',
-                    cursor: !codeSent || isEmailVerified ? 'not-allowed' : 'text'
+                    backgroundColor: !codeSent ? '#f0f0f0' : 'white',
+                    cursor: !codeSent ? 'not-allowed' : 'text'
                   }}
                 />
                 <button
                 type="button"
                 className="submit-button"
                 onClick={codeSent ? handleVerifyCode : handleSendCode}
+                disabled={!emailLocal || !emailDomain}
                 style={{
-                    backgroundColor: '#2dc997',
+                    backgroundColor: (!emailLocal || !emailDomain) ? '#ccc' : '#2dc997',
                     fontSize: '0.85rem',
                     padding: '0.4rem 0.8rem',
                     width: '160px',
                     height: '40px',
-                    cursor: 'pointer'
+                    cursor: (!emailLocal || !emailDomain) ? 'not-allowed' : 'pointer'
                 }}
                 >
                 {isSendingCode ? '전송 중...' : codeSent ? '확인' : '인증코드 받기'}
@@ -416,6 +520,7 @@ const handleDomainChange = (e) => {
 
           <button type="submit" className="applicant-signup-button">가입하기</button>
         </form>
+        )}
       </div>
     </>
   );

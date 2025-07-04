@@ -19,4 +19,5 @@ public class PostingRequestDto {
     private LocalDate postPostedDate;
     private LocalDate postExpiryDate;
     private String postStatus;
+    private String postIdealCandidate;  // 인재상 필드 추가
 }

@@ -17,4 +17,10 @@ public interface GithubSearchResultRepository extends JpaRepository<GithubSearch
            "CASE WHEN g.candidateEmail IS NOT NULL THEN 0 ELSE 1 END, " +  // 이메일 있는 사람 먼저
            "g.analysisScore DESC NULLS LAST")                              // 점수 높은 순
     List<GithubSearchResult> findSortedByEmailPresenceAndScore(@Param("postId") Long postId);
+
+    @Query("SELECT g FROM GithubSearchResult g WHERE g.postId = :postId AND g.githubLogin IN :githubLogins")
+    List<GithubSearchResult> findByPostIdAndGithubLoginIn(@Param("postId") Long postId, @Param("githubLogins") List<String> githubLogins);
+
+    @Query("SELECT g FROM GithubSearchResult g WHERE g.githubLogin = :githubLogin ORDER BY g.githubSearchDate DESC")
+    List<GithubSearchResult> findByGithubLogin(@Param("githubLogin") String githubLogin);
 }

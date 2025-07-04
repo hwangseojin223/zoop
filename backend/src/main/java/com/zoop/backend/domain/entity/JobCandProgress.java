@@ -86,4 +86,7 @@ public class JobCandProgress {
     @Column(name = "job_cand_updated_at")
     private LocalDateTime jobCandUpdatedAt;
 
+    @Column(name = "github_login", length = 255)
+    private String githubLogin;
+
 }
