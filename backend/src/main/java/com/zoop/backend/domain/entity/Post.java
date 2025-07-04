@@ -44,6 +44,10 @@ public class Post {
     private LocalDateTime postCreatedAt;
     private LocalDateTime postUpdatedAt;
 
+    @Lob
+    @Column(name = "post_ideal_candidate")
+    private String postIdealCandidate;
+
     @PrePersist
     public void onCreate() {
         postCreatedAt = postUpdatedAt = LocalDateTime.now();
