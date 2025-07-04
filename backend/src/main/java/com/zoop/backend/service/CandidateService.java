@@ -8,9 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import com.zoop.backend.domain.entity.Candidate;
 import com.zoop.backend.repository.CandidateRepository;
+import com.zoop.backend.repository.InvitationRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,6 +29,10 @@ public class CandidateService {
     private BCryptPasswordEncoder passwordEncoder;
     @Autowired
     private final CandidateRepository candidateRepository;
+    private final InvitationRepository invitationRepository;
+    
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public List<Candidate> findAll() {
         return candidateRepository.findAll();
@@ -39,22 +47,34 @@ public class CandidateService {
             // 비밀번호 암호화 전/후 로그 출력
             logger.info("암호화 전 비밀번호: {}", candidate.getCandidatePassword());
             logger.info("암호화된 비밀번호: {}", encrypted);
-            logger.info("저장할 값1 : {}", candidate.toString());
             
             candidate.setCandidatePassword(encrypted);
             
+            // 저장할 값 로그 출력
+            logger.info("저장할 값1 : {}", candidate);
+            
             // 후보자 저장
             Candidate savedCandidate = candidateRepository.save(candidate);
+            logger.info("저장된 후보자 ID: {}", savedCandidate.getCandidateId());
             
+            // invitations 테이블 업데이트는 별도 트랜잭션에서 처리
+            updateInvitationAsync(savedCandidate.getGithubLogin(), savedCandidate.getCandidateId());
             
-            // // 저장된 후보자 정보 로그 출력
-            logger.info("회원 저장 성공, 회원 ID: {}", savedCandidate.getCandidateId());
-            logger.info("저장할 값2 : {}", candidate.toString());
             return savedCandidate;
         } catch (Exception e) {
-            // 예외 발생 시 에러 로그 출력
             logger.error("회원 저장 중 오류 발생: {}", e.getMessage(), e);
-            throw e;  // 예외를 다시 던져서 처리
+            throw e;
+        }
+    }
+    
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void updateInvitationAsync(String githubLogin, Long candidateId) {
+        try {
+            invitationRepository.updateCandidateIdByGithubLogin(githubLogin, candidateId);
+            logger.info("✅ invitations 테이블 업데이트 성공: githubLogin={}, candidateId={}", githubLogin, candidateId);
+        } catch (Exception invitationError) {
+            logger.warn("⚠️ invitations 테이블 업데이트 실패 (회원가입은 성공): {}", invitationError.getMessage());
+            // invitations 업데이트 실패해도 회원가입은 성공으로 처리
         }
     }
 
