@@ -1,12 +1,10 @@
 package com.zoop.backend.domain.dto;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import java.time.LocalDate;
 
-@Getter
-@Setter
+import lombok.Data;
+
+@Data
 public class PostingRequestDto {
     private Long companyId;             // ✅ 추가
     private Long companyAdminId;  

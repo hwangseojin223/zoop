@@ -25,12 +25,11 @@ public class JobCandProgressController {
     // }
 
     // URL 예시: /api/post/1
-    @GetMapping("{postId}")
-    public List<ResponderDto> getCandidatesAtStage3nByPost(@PathVariable Long postId) {
-        System.out.println("Controller: 요청 들어옴, postId=" + postId);
-        List<ResponderDto> list = jobCandProgressService.getCandidatesAtStage3nByPost(postId);
-        System.out.println("리스트 크기 : " + list.size());
-
+    @GetMapping("/stage2y/{postId}")
+    public List<ResponderDto> getCandidatesAtStage2yByPost(@PathVariable Long postId) {
+        System.out.println("2y 스테이지 후보자 조회 API 호출: " + postId);
+        List<ResponderDto> list = jobCandProgressService.getCandidatesAtStage2yByPost(postId);
+        System.out.println("API 응답 후보자 수: " + list.size());
         return list;
     }
 }

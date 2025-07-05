@@ -1,0 +1,69 @@
+.notice-page-container {
+  max-width: 800px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 8px;
+  padding: 40px 30px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+}
+
+.notice-list {
+  margin-top: 24px;
+}
+
+.notice-item {
+  border-bottom: 1px solid #eee;
+  padding: 16px 24px;
+}
+
+.notice-item:last-child {
+  border-bottom: none;
+}
+
+.notice-item h2 {
+  margin: 0 0 8px 0;
+  color: #30C59B;
+  font-size: 1.2em;
+}
+
+.notice-item p {
+  margin: 3px 0;
+  color: #555;
+}
+
+/* Notice.css */
+.notice-title-bar {
+  max-width: 800px;
+  margin: 0 auto;
+  /* 위 여백은 필요에 따라 조절 */
+  padding: 43px 0 0 0;
+}
+
+.notice-title-bar h1 {
+  font-size: 2.4em;    /* 글씨 크기 조절 */
+  font-weight: 700;
+  color: #222;         /* 진한 회색 */
+  margin: 168px 0px 25px;  /* 아래 여백, 위쪽 여백 0 */
+  letter-spacing: -1px;
+  text-align: left;    /* 왼쪽 정렬 */
+}
+
+:root {
+  --adaptiveGrey800: #222;
+}
+
+.notice-page .top-nav .logo {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #4a4a4a;
+    white-space: nowrap;      /* 한 줄로만 표시 */
+    /* min-width: 100px;          너무 좁아지지 않게 */
+    overflow: hidden;         /*혹시 넘치면 잘림 처리 */
+    text-overflow: ellipsis;  /* 넘치면 ... */
+    width: 200px;
+}
+
+/* 네비게이션 관련 클래스 스코프 한정 */
+.notice-page .nav-links { /* ... */ }
+.notice-page .nav-list { /* ... */ }
+.notice-page .top-nav { /* ... */ }

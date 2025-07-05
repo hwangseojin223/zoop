@@ -1,8 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-
 package com.zoop.backend.domain.entity;
 
 
@@ -11,14 +6,12 @@ package com.zoop.backend.domain.entity;
   * @author hwangseojin
   */
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Date;
- 
-import jakarta.persistence.Column; // java.sql.Timestamp 클래스 임포트
-import jakarta.persistence.Entity; // java.util.Date 클래스 임포트 (CANDIDATE_REGISTRATION_DATE 컬럼이 DATE 타입이므로 사용)
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue; // java.sql.Timestamp 클래스 임포트
+import jakarta.persistence.GenerationType; // java.util.Date 클래스 임포트 (CANDIDATE_REGISTRATION_DATE 컬럼이 DATE 타입이므로 사용)
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
@@ -73,4 +66,29 @@ public class Candidate {
 
     // @Column(name = "naver_id", unique = true)
     // private String naverId;
+
+    // 사용자 설정 정보 필드들
+    @Column(name="preferred_job", length=100)
+    private String preferredJob;
+    
+    @Column(name="preferred_region", length=100)
+    private String preferredRegion;
+    
+    @Column(name="preferred_salary", length=100)
+    private String preferredSalary;
+    
+    @Column(name="preferred_company_size", length=100)
+    private String preferredCompanySize;
+    
+    @Column(name="preferred_commute_time", length=100)
+    private String preferredCommuteTime;
+    
+    @Column(name="preferred_benefit", length=100)
+    private String preferredBenefit;
+
+    @Column(name = "CAREER_TYPE", length = 10)
+    private String careerType; // '신입' 또는 '경력'
+
+    @Column(name = "TOTAL_CAREER_PERIOD", length = 20)
+    private String totalCareerPeriod; // 예: '2년 3개월' 또는 '0', '신입'
 }

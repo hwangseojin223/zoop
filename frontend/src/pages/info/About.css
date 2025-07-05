@@ -329,3 +329,8 @@
     height: 40px;
   }
 }
+
+/* 네비게이션 관련 클래스 스코프 한정 */
+.about-page .nav-links { /* ... */ }
+.about-page .nav-list { /* ... */ }
+.about-page .top-nav { /* ... */ }

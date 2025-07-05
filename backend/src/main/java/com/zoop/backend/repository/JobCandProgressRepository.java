@@ -33,9 +33,10 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
             ON jcp.job_candidate_id = ar.job_candidate_id 
             AND ar.analysis_type = 'portfolio'
         WHERE 
-            jcp.job_cand_curr_stage = '3n'
+            jcp.job_cand_curr_stage = '2y'
             AND jcp.post_id = :postId
     """, nativeQuery = true)
+<<<<<<< HEAD
     List<ResponderDto> findCandidatesAtStage3nByPost(@Param("postId") Long postId);
 
     Optional<JobCandProgress> findByPostIdAndGithubLogin(Long postId, String githubLogin);
@@ -66,4 +67,19 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
     // postId와 githubLogin 리스트로 JobCandProgress 조회
     @Query("SELECT j FROM JobCandProgress j WHERE j.postId = :postId AND j.githubLogin IN :githubLogins")
     List<JobCandProgress> findByPostIdAndGithubLoginIn(@Param("postId") Long postId, @Param("githubLogins") List<String> githubLogins);
+=======
+    List<ResponderDto> findCandidatesAtStage2yByPost(@Param("postId") Long postId);
+
+
+    List<JobCandProgress> findByCandidate_CandidateId(Integer candidateId);
+    // Optional<JobCandProgress> findByPost_PostIdAndCandidate_CandidateId(Integer postId, Integer candidateId);
+
+    @Query(value = "SELECT * FROM job_cand_progress WHERE post_id = :postId AND candidate_id = :candidateId", nativeQuery = true)
+    Optional<JobCandProgress> findByPost_PostIdAndCandidate_CandidateId(
+        @Param("postId") Integer postId, 
+        @Param("candidateId") Integer candidateId
+    );
+
+    Optional<JobCandProgress> findByJobCandidateId(Long jobCandidateId);
+>>>>>>> feat/90/personal-dashboard
 }
