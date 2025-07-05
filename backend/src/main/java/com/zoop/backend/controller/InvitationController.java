@@ -8,13 +8,16 @@ import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.zoop.backend.domain.dto.InvitationSendRequest;
+import com.zoop.backend.domain.dto.modal.InvitationSentDateResponse;
 import com.zoop.backend.domain.entity.Invitation;
 import com.zoop.backend.repository.InvitationRepository;
 import com.zoop.backend.service.InvitationService;
@@ -74,6 +77,18 @@ public class InvitationController {
         }
         return ResponseEntity.ok("📨 여러 명에게 초대 메일을 전송했습니다.");
     }
+
+
+    /**합친 이후 */
+    @GetMapping("/{postId}/{githubLogin}/sent-times")
+    public ResponseEntity<List<InvitationSentDateResponse>> getAllInvitationSentTimes(
+            @PathVariable Long postId,
+            @PathVariable String githubLogin) {
+
+        List<InvitationSentDateResponse> response = invitationService.getAllInvitationSentDates(postId, githubLogin);
+        return ResponseEntity.ok(response);
+    }
+
 
 }
 

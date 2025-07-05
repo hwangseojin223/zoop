@@ -71,6 +71,8 @@ public class GithubSearchController {
         return ResponseEntity.ok(list);
     }
     
+
+    // 20250626
     @Operation(summary = "job_cand_curr_stage를 조회하기 위함.", description = "")
     @GetMapping("/{postId}/states")
     public List<GithubSearchResultWithStageDto> getSearchResults(@PathVariable Long postId) {

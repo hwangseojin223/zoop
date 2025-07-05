@@ -66,9 +66,24 @@ public class Candidate {
     @Column(name="google_id", unique=true)
     private String googleId;
 
-    // @Column(name = "github_id", unique = true) 
-    // private String githubId;
+    @Column(name = "GITHUB_ID")
+    private String githubId;
+    
+    @Column(name = "PREFERRED_JOB")
+    private String preferredJob;
 
-    // @Column(name = "naver_id", unique = true)
-    // private String naverId;
+    @Column(name = "PREFERRED_REGION")
+    private String preferredRegion;
+
+    @Column(name = "PREFERRED_SALARY")
+    private String preferredSalary;
+
+    @Column(name = "PREFERRED_COMPANY_SIZE")
+    private String preferredCompanySize;
+
+    @Column(name = "PREFERRED_COMMUTE_TIME")
+    private String preferredCommuteTime;
+
+    @Column(name = "PREFERRED_BENEFIT")
+    private String preferredBenefit;
 }
