@@ -37,6 +37,9 @@ public class JobCandProgress {
     @Column(name = "post_id")
     private Long postId;
 
+    @Column(name = "github_login", length = 100)
+    private String githubLogin;
+
     @Column(name = "candidate_id")
     private Long candidateId;
 

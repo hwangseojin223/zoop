@@ -3,6 +3,7 @@ package com.zoop.backend.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -10,8 +11,14 @@ import org.springframework.stereotype.Repository;
 import com.zoop.backend.domain.dto.ResponderDto;
 import com.zoop.backend.domain.entity.JobCandProgress;
 
+import jakarta.transaction.Transactional;
+
 @Repository
 public interface JobCandProgressRepository extends JpaRepository<JobCandProgress, Long> {
+
+    // postId와 githubLogin으로 중복 확인
+    boolean existsByPostIdAndGithubLogin(Long postId, String githubLogin);
+
 
      @Query(value = """
         SELECT 
@@ -40,4 +47,14 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
             AND jcp.post_id = :postId
     """, nativeQuery = true)
     List<ResponderDto> findCandidatesAtStage3nByPost(@Param("postId") Long postId);
-}
+
+
+    // 이메일 전송시 jobCandCurrStage를 2n으로 업데이트
+    @Modifying
+    @Transactional
+    @Query("UPDATE JobCandProgress j SET j.jobCandCurrStage = :stage " +
+        "WHERE j.postId = :postId AND j.githubLogin = :githubLogin")
+    int updateStageByPostIdAndGithubLogin(@Param("postId") Long postId,
+                                        @Param("githubLogin") String githubLogin,
+                                        @Param("stage") String stage);
+    }

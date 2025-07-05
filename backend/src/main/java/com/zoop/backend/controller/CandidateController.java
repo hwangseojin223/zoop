@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.zoop.backend.domain.dto.CandidateSignupRequest;
+import com.zoop.backend.domain.dto.finding.FindGithubLoginRequest;
+import com.zoop.backend.domain.dto.finding.FindGithubLoginResponse;
 import com.zoop.backend.domain.entity.Candidate;
 import com.zoop.backend.domain.entity.Invitation;
 import com.zoop.backend.repository.CandidateRepository;
@@ -33,7 +35,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Slf4j
 @Tag(name="CandidateController", description = "개인회원(후보자) 관련 API")
 @RestController
-@RequestMapping("auth/applicant/signup")
+// @RequestMapping("auth/applicant/signup")
+@RequestMapping("api/candidate")
 @RequiredArgsConstructor
 public class CandidateController {
 
@@ -140,6 +143,12 @@ public class CandidateController {
             }
         }
         return ResponseEntity.ok(Map.of("exists", exists));
+    }
+
+    /** 합친 이후 */
+    @PostMapping("/find-id")
+    public FindGithubLoginResponse findGithubLogin(@RequestBody FindGithubLoginRequest request) {
+        return candidateService.findGithubLogin(request);
     }
 
 }

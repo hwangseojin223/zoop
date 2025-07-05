@@ -5,14 +5,14 @@
 
 package com.zoop.backend.repository;
 
-/**
-  *
-  * @author hwangseojin
-  */
-
+import java.time.LocalDateTime;
 import java.util.Optional; // entity 패키지 임포트
 
 import org.springframework.data.jpa.repository.JpaRepository; // Spring Data JPA의 JpaRepository 임포트
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.zoop.backend.domain.entity.Candidate; // Optional 클래스 임포트
 
@@ -28,5 +28,22 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
 
     // ✅ 회원가입시 아이디 중복 확인용 메서드 추가 --> 지훈
     boolean existsByGithubLogin(String githubLogin);
+
+    /** 합친 후 */
+    Optional<Candidate> findByCandidateNameAndCandidateEmail(String name, String email);
+
+    Optional<Candidate> findByGithubLoginAndCandidateEmailAndCandidateNameAndCandidatePhoneNumber(
+        String githubLogin,
+        String candidateEmail,
+        String candidateName,
+        String candidatePhoneNumber
+    );
+
+    // ✅ candidate_updated_at 업데이트 메서드
+    @Modifying
+    @Transactional
+    @Query("UPDATE Candidate c SET c.candidateUpdatedAt = :updatedAt WHERE c.candidateId = :candidateId")
+    void updateCandidateUpdatedAt(@Param("candidateId") Long candidateId, @Param("updatedAt") LocalDateTime updatedAt);
+
 }
 

@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 
@@ -56,6 +57,11 @@ public class PostService {
         post.setPostUpdatedAt(LocalDateTime.now());
 
         return postRepository.save(post);
+    }
+
+    // companyId를 사용하여 post조회
+    public List<Post> getPostsByCompanyId(Long companyId) {
+        return postRepository.findByCompanyId(companyId);
     }
 
 }

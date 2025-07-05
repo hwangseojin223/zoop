@@ -21,9 +21,9 @@ import lombok.ToString;
 
 @Entity
 @Table(name = "invitations", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"post_id", "github_login"}),
-    @UniqueConstraint(columnNames = {"invitation_unique_token"}),
-    @UniqueConstraint(columnNames = {"candidate_id"})
+    // @UniqueConstraint(columnNames = {"post_id", "github_login"}),
+    @UniqueConstraint(columnNames = {"invitation_unique_token"})
+    // @UniqueConstraint(columnNames = {"candidate_id"})
 })
 @Getter
 @Setter

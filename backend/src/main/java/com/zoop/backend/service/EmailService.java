@@ -123,4 +123,35 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    /** 비밀번호 재설정 이메일 (추가 후) */
+        public void sendPasswordResetEmail(String toEmail, String githubLogin, String resetLink) throws MessagingException {
+        String subject = "[ZOOP] 비밀번호 재설정 안내";
+
+        String body = String.format("""
+        <div style="font-family:Arial, sans-serif; background-color:#f9f9f9; padding:20px;">
+            <h2 style="color:#333;">안녕하세요 %s 님,</h2>
+            <p style="font-size:15px; color:#555;">ZOOP에서 비밀번호 재설정을 요청하셨습니다.</p>
+            <p style="font-size:14px; color:#777;">아래 버튼을 클릭하여 비밀번호를 재설정해주세요. <strong>해당 링크는 1시간 동안만 유효합니다.</strong></p>
+
+            <div style="margin-top:30px; text-align:center;">
+                <a href="%s" style="background-color:#28a745; color:#fff; text-decoration:none; padding:12px 24px; border-radius:6px; font-weight:bold; display:inline-block;">
+                    🔒 비밀번호 재설정하기
+                </a>
+            </div>
+
+            <p style="margin-top:30px; font-size:13px; color:#999;">본인이 요청하지 않은 경우 이 메일은 무시하셔도 됩니다.</p>
+            <p style="font-size:13px; color:#777;">감사합니다.<br/>ZOOP 팀 드림</p>
+        </div>
+        """, githubLogin, resetLink);
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setTo(toEmail);      // 수신자 설정
+        helper.setSubject(subject); // 이메일 제목 설정
+        helper.setText(body, true); // 이메일 본문 내용 설정
+
+        mailSender.send(message);
+    }
 }

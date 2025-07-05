@@ -35,7 +35,7 @@ export default function ResponderList() {
 
   // 회신자 목록 로드
   useEffect(() => {
-    fetch(`http://localhost:8081/api/responder/${postId}`)
+    fetch(`http://localhost:8081/api/progress/${postId}`)
       .then(res => res.json())
       .then(setResponder)
       .catch(err => console.error('❌ 후보자 목록 오류:', err));

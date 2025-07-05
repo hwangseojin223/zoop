@@ -30,16 +30,12 @@ public interface GithubSearchResultRepository extends JpaRepository<GithubSearch
             a.analysisScore,
             a.analysisData,
             j.jobCandCurrStage,
-            p.companyAdminId
+            p.companyAdminId,
+            j.jobCandidateId  
         )
         FROM GithubSearchResult g
         LEFT JOIN AiAnalysisResults a ON g.aiGithubAnalysisId = a.analysisId
-        LEFT JOIN JobCandProgress j ON g.postId = j.postId
-                                    AND j.candidateId IN (
-                                        SELECT c.candidateId
-                                        FROM Candidate c
-                                        WHERE c.githubLogin = g.githubLogin
-                                    )
+        LEFT JOIN JobCandProgress j ON g.postId = j.postId AND g.githubLogin = j.githubLogin
         JOIN Post p ON g.postId = p.postId
         WHERE g.postId = :postId
         AND g.candidateEmail != 'not_found@example.com'

@@ -74,7 +74,7 @@ export default function ApplicantSignupProcess() {
 
 
           // ✅ 가입 여부 확인
-          const res = await fetch(`http://localhost:8081/auth/applicant/signup/check-exists?githubLogin=${login}`); // --> 
+          const res = await fetch(`http://localhost:8081/api/candidate/check-exists?githubLogin=${login}`); // --> 
           if (res.ok) {
             const json = await res.json();
             if (json.exists) {
@@ -170,7 +170,7 @@ export default function ApplicantSignupProcess() {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:8081/auth/applicant/signup/check-id?githubLogin=${idCheck}`);
+      const res = await fetch(`http://localhost:8081/api/candidate/check-id?githubLogin=${idCheck}`);
       if (res.ok) {
         setIdMessage('사용 가능한 아이디입니다.');
         setIsIdAvailable(true);
@@ -259,7 +259,7 @@ export default function ApplicantSignupProcess() {
       invitationToken: invitationToken,
     };
     try {
-      const response = await fetch('http://localhost:8081/auth/applicant/signup/process', {
+      const response = await fetch('http://localhost:8081/api/candidate/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -278,155 +278,194 @@ export default function ApplicantSignupProcess() {
   };
 
   return (
-    <>
-      <Navbar />
-        <div className="max-w-xl mx-auto mt-24 mb-16 p-6 border rounded-2xl  shadow-md bg-white">
-        <h2 className="text-2xl font-bold mb-6 text-center">ZOOP 통합 개인회원 가입</h2>
-        <form onSubmit={handleSubmit} className="space-y-5">
+  <>
+    <Navbar />
+    <div className="max-w-[500px] mx-auto mt-24 mb-16 p-8 border border-gray-200 rounded-2xl shadow-xl bg-white">
+      <h2 className="text-3xl font-bold text-green-700 mb-8 text-center">ZOOP 통합 개인회원 가입</h2>
+      <form onSubmit={handleSubmit} className="space-y-6">
 
-          {/* 아이디 입력 + 중복확인 */}
-          <div>
-            <label className="block mb-1 font-medium">아이디</label>
-            <div className="flex gap-2">
+        {/* 아이디 입력 */}
+        <div>
+          <label className="block mb-2 font-semibold">아이디</label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={idCheck}
+              onChange={e => {
+                if (!fromInvite) {
+                  setIdCheck(e.target.value);
+                  setIsIdAvailable(null);
+                  setIdMessage('');
+                }
+              }}
+              className="flex-1 border border-gray-300 px-4 py-2 rounded-lg"
+              placeholder="4~20자 영문, 숫자, _ 사용"
+              disabled={fromInvite}
+            />
+            {!fromInvite && (
+              <button
+                type="button"
+                onClick={checkDuplicateId}
+                className="bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600"
+              >
+                중복확인
+              </button>
+            )}
+          </div>
+          {idMessage && (
+            <p className={`mt-1 text-sm ${isIdAvailable ? 'text-green-600' : 'text-red-500'}`}>{idMessage}</p>
+          )}
+        </div>
+
+        {/* 비밀번호 */}
+        <div>
+          <label htmlFor="password" className="block mb-2 font-semibold">비밀번호</label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={handlePasswordChange}
+            placeholder="영문자+숫자 조합, 최소 8자리"
+            className="w-full border border-gray-300 px-4 py-2 rounded-lg"
+          />
+          {passwordMessage && (
+            <p className={`mt-1 text-sm ${isPasswordValid ? 'text-green-600' : 'text-red-500'}`}>
+              {passwordMessage}
+            </p>
+          )}
+        </div>
+
+        {/* 이름 */}
+        <div>
+          <label htmlFor="candidate_name" className="block mb-2 font-semibold">이름</label>
+          <input
+            id="candidate_name"
+            type="text"
+            placeholder="이름을 입력해주세요"
+            className="w-full border border-gray-300 px-4 py-2 rounded-lg"
+          />
+        </div>
+
+        {/* 휴대폰 */}
+        <div>
+          <label htmlFor="phone" className="block mb-2 font-semibold">휴대폰</label>
+          <input
+            id="phone"
+            type="text"
+            placeholder="하이픈(-) 제외"
+            className="w-full border border-gray-300 px-4 py-2 rounded-lg"
+          />
+        </div>
+
+        {/* 이메일 입력 */}
+        <div>
+          <label className="block mb-2 font-semibold">이메일</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={emailLocal}
+              onChange={e => setEmailLocal(e.target.value)}
+              disabled={isEmailVerified}
+              className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white text-base"
+            />
+            <span className="text-lg font-semibold text-gray-600">@</span>
+            {customInput ? (
               <input
                 type="text"
-                className="flex-1 border px-3 py-2 rounded"
-                value={idCheck}
-                onChange={e => {
-                  if (!fromInvite) {
-                    setIdCheck(e.target.value);
-                    setIsIdAvailable(null);
-                    setIdMessage('');
-                  }
-                }}
-                placeholder="4~20자 영문, 숫자, _ 사용"
-                disabled={fromInvite}
+                value={emailDomain}
+                onChange={e => setEmailDomain(e.target.value)}
+                disabled={isEmailVerified}
+                className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white text-base"
               />
-              {!fromInvite && (
-                <button
-                  type="button"
-                  onClick={checkDuplicateId}
-                  className="bg-emerald-500 text-white px-3 py-2 rounded-xl hover:bg-emerald-600"
-                >
-                  중복확인
-                </button>
-              )}
-            </div>
-            {idMessage && <p className={`mt-1 text-sm ${isIdAvailable ? 'text-emerald-600' : 'text-red-500'}`}>{idMessage}</p>}
-          </div>
-
-          {/* 비밀번호 */}
-          <div>
-            <label htmlFor="password" className="block mb-1 font-medium">비밀번호</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={handlePasswordChange}
-              placeholder="영문자+숫자 조합, 최소 8자리"
-              className="w-full border px-3 py-2 rounded"
-            />
-            {passwordMessage && (
-              <p className={`mt-1 text-sm ${isPasswordValid ? 'text-emerald-600' : 'text-red-500'}`}>
-                {passwordMessage}
-              </p>
-            )}
-          </div>
-
-
-          {/* 나머지 이메일 인증, 이름, 휴대폰 등은 그대로 유지 */}
-          <div>
-            <label htmlFor="candidate_name" className="block mb-1 font-medium">이름</label>
-            <input id="candidate_name" type="text" placeholder="이름을 입력해주세요" className="w-full border px-3 py-2 rounded" />
-          </div>
-          <div>
-            <label htmlFor="phone" className="block mb-1 font-medium">휴대폰</label>
-            <input id="phone" type="text" placeholder="하이픈(-) 제외" className="w-full border px-3 py-2 rounded" />
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">이메일</label>
-            <div className="flex gap-2">
-              <input type="text" value={emailLocal} onChange={e => setEmailLocal(e.target.value)} className="flex-1 border px-3 py-2 rounded" disabled={isEmailVerified} />
-              <span>@</span>
-              {customInput ? (
-                <input type="text" value={emailDomain} onChange={e => setEmailDomain(e.target.value)} className="flex-1 border px-3 py-2 rounded" disabled={isEmailVerified} />
-              ) : (
-                <select value={emailDomain} onChange={handleDomainChange} className="flex-1 border px-3 py-2 rounded" disabled={isEmailVerified}>
-                  <option value="">선택</option>
-                  <option value="naver.com">naver.com</option>
-                  <option value="gmail.com">gmail.com</option>
-                  <option value="daum.net">daum.net</option>
-                  <option value="custom">직접 입력</option>
-                </select>
-              )}
-            </div>
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">인증코드 입력</label>
-            <div className="flex gap-2">
-              <input type="text" value={verificationCode} onChange={e => setVerificationCode(e.target.value)} placeholder="6자리 인증코드" className="flex-1 border px-3 py-2 rounded" disabled={!codeSent || isEmailVerified} />
-             <button
-                type="button"
-                onClick={codeSent ? handleVerifyCode : handleSendCode}
-                disabled={isSendingCode}
-                className="
-                  bg-emerald-500 text-white
-                  w-32 py-2 rounded-xl
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                  flex items-center justify-center
-                "
+            ) : (
+              <select
+                value={emailDomain}
+                onChange={handleDomainChange}
+                disabled={isEmailVerified}
+                className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white text-base"
               >
-                {isSendingCode ? '전송 중...' : codeSent ? '확인' : '인증코드 받기'}
-              </button>
-
-            </div>
-            {codeSent && !isEmailVerified && (
-              <div className="text-sm text-gray-600 mt-2">
-                남은 시간: {Math.floor(resendTimer / 60)}:{String(resendTimer % 60).padStart(2, '0')}
-                {resendTimer === 0 && (
-                  <button type="button" onClick={handleResend} className="ml-2 text-emerald-600 underline">다시 보내기</button>
-                )}
-              </div>
+                <option value="">선택</option>
+                <option value="naver.com">naver.com</option>
+                <option value="gmail.com">gmail.com</option>
+                <option value="daum.net">daum.net</option>
+                <option value="custom">직접 입력</option>
+              </select>
             )}
           </div>
 
-          {/* 동의사항 체크박스 */}
-          <div className="border p-4 rounded bg-gray-50">
-            <label className="block font-semibold">
-              <input type="checkbox" checked={allAgree} onChange={handleAllAgreeChange} className="mr-2" />전체 동의
-            </label>
-            <p className="text-sm text-gray-500">(필수) 개인회원 약관 동의, 개인정보 수집 및 이용 동의를 포함합니다.</p>
-            <div className="mt-3 space-y-2">
-              {Object.entries(individualAgree).map(([key, value]) => (
-                <label key={key} className="block text-sm">
-                  <input type="checkbox" name={key} checked={value} onChange={handleIndividualAgreeChange} className="mr-2" />
-                  {(key === 'terms' || key === 'privacy') ? '(필수)' : '(선택)'} {key === 'terms' ? '개인회원 약관' :
+        </div>
+
+        {/* 인증코드 */}
+        <div>
+          <label className="block mb-2 font-semibold">인증코드 입력</label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={verificationCode}
+              onChange={e => setVerificationCode(e.target.value)}
+              placeholder="6자리 인증코드"
+              disabled={!codeSent || isEmailVerified}
+              className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white"
+            />
+            <button
+              type="button"
+              onClick={codeSent ? handleVerifyCode : handleSendCode}
+              disabled={isSendingCode}
+              className="bg-emerald-500 text-white w-32 py-2 rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSendingCode ? '전송 중...' : codeSent ? '확인' : '인증코드 받기'}
+            </button>
+          </div>
+          {codeSent && !isEmailVerified && (
+            <div className="text-sm text-gray-600 mt-2">
+              남은 시간: {Math.floor(resendTimer / 60)}:{String(resendTimer % 60).padStart(2, '0')}
+              {resendTimer === 0 && (
+                <button type="button" onClick={handleResend} className="ml-2 text-green-600 underline">다시 보내기</button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* 약관 동의 */}
+        <div className="border border-gray-200 p-4 rounded-xl bg-gray-50">
+          <label className="block font-semibold">
+            <input type="checkbox" checked={allAgree} onChange={handleAllAgreeChange} className="mr-2" />
+            전체 동의
+          </label>
+          <p className="text-sm text-gray-500">(필수) 약관 및 개인정보 수집 동의를 포함합니다.</p>
+          <div className="mt-3 space-y-2">
+            {Object.entries(individualAgree).map(([key, value]) => (
+              <label key={key} className="block text-sm">
+                <input type="checkbox" name={key} checked={value} onChange={handleIndividualAgreeChange} className="mr-2" />
+                {(key === 'terms' || key === 'privacy') ? '(필수)' : '(선택)'} {
+                  key === 'terms' ? '개인회원 약관' :
                   key === 'privacy' ? '개인정보 수집 및 이용' :
                   key === 'location' ? '위치기반서비스 이용약관' :
                   key === 'emailMarketing' ? '마케팅 정보 수신 - 이메일' :
-                  '마케팅 정보 수신 - SMS/MMS'}
-                </label>
-              ))}
-            </div>
+                  '마케팅 정보 수신 - SMS/MMS'
+                }
+              </label>
+            ))}
           </div>
+        </div>
 
-          {/* 가입하기 버튼 */}
-          {errorMessage && <p className="text-red-600 text-sm">⚠ {errorMessage}</p>}
-          <button
-            type="submit"
-            disabled={!isFormValid}
-            className={`
-              w-full py-2 rounded font-semibold
-              ${isFormValid
-                ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                : 'bg-emerald-500 opacity-50 cursor-not-allowed text-white'}
-            `}
-          >
-            가입하기
-          </button>
+        {/* 에러 메시지 & 제출 버튼 */}
+        {errorMessage && <p className="text-red-600 text-sm font-medium">⚠ {errorMessage}</p>}
+        <button
+          type="submit"
+          disabled={!isFormValid}
+          className={`
+            w-full py-3 rounded-2xl font-semibold
+            ${isFormValid
+              ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+              : 'bg-emerald-500 opacity-50 text-white cursor-not-allowed'}
+          `}
+        >
+          가입하기
+        </button>
+      </form>
+    </div>
+  </>
+);
 
-        </form>
-      </div>
-    </>
-  );
 }

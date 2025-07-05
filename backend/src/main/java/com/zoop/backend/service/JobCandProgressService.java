@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.zoop.backend.domain.dto.InvitationSendRequest;
 import com.zoop.backend.domain.dto.ResponderDto;
 import com.zoop.backend.repository.JobCandProgressRepository;
 
@@ -26,5 +27,17 @@ public class JobCandProgressService {
         log.info("Repository 메서드 실행 직후: {}", list.size());
 
         return list != null ? list : List.of(); // 자바 9 이상이면 List.of(), 이하에서는 Collections.emptyList()
+    }
+
+    public void updateProgressStageBulk(List<InvitationSendRequest> dtos) {
+        for (InvitationSendRequest dto : dtos) {
+            log.info("Service : 전달받은 데이터: {} ", dtos);
+            jobCandProgressRepository.updateStageByPostIdAndGithubLogin(
+                dto.getPostId(),
+                dto.getGithubLogin(),
+                "2n"
+            );
+            log.info("Service: Repository로 전달 완료");
+        }
     }
 }

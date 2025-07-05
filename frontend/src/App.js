@@ -12,6 +12,9 @@ import SignupSuccess from './pages/signup/SignupSuccess';
 import ApplicantSignupSuccess from './pages/signup/ApplicantSignupSuccess';
 import ApplicantSignupProcess from './pages/signup/ApplicantSignupProcess';
 import LoginSelectionPage from './pages/login/LoginSelectionPage';
+import FindIdPage from './pages/login/FindIdPage';
+import FindPasswordPage from './pages/login/FindPasswordPage';
+import ResetPasswordPage from './pages/login/ResetPasswordPage';
 import GoogleAuthCallback from './pages/auth/GoogleAuthCallback';
 import PrivateRoute from './routes/PrivateRoute';
 import PublicOnlyRoute from './routes/PublicOnlyRoute';
@@ -67,6 +70,9 @@ function AppContent() {
         <Route path="/auth/applicant/signup/process" element={<ApplicantSignupProcess />} />
         <Route path="/auth/applicant/signup/process/:token" element={<ApplicantSignupProcess />} />
         <Route path="/auth/login" element={<LoginSelectionPage />} />
+        <Route path="/find-id" element={<FindIdPage />} />
+        <Route path="/find-password" element={<FindPasswordPage />} />
+        <Route path="/auth/applicant/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/google-auth" element={<GoogleAuthCallback />} />
         <Route path="/about" element={<About />} />
         <Route path="/notice" element={<Notice />} />

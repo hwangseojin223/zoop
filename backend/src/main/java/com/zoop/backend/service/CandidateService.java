@@ -9,6 +9,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.zoop.backend.domain.dto.finding.FindGithubLoginRequest;
+import com.zoop.backend.domain.dto.finding.FindGithubLoginResponse;
 import com.zoop.backend.domain.entity.Candidate;
 import com.zoop.backend.repository.CandidateRepository;
 
@@ -61,6 +63,15 @@ public class CandidateService {
     // 회원가입시 아이디 중복확인을 위한 메서드
     public boolean isDuplicateGithubLogin(String githubLogin) {
         return candidateRepository.existsByGithubLogin(githubLogin);
+    }
+
+    /** 합친 이후 */
+    public FindGithubLoginResponse findGithubLogin(FindGithubLoginRequest request) {
+        Candidate candidate = candidateRepository
+                .findByCandidateNameAndCandidateEmail(request.getName(), request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("일치하는 회원이 없습니다."));
+
+        return new FindGithubLoginResponse(candidate.getGithubLogin());
     }
 
 }

@@ -47,5 +47,11 @@ public interface InvitationRepository extends JpaRepository<Invitation, Long> {
     // """)
     // boolean isGithubLoginAlreadySignedUp(@Param("token") String token);
 
+
+    /**합친 이후 */
+    List<Invitation> findAllByPostIdAndGithubLoginOrderByInvitationSentDateDesc(Long postId, String githubLogin);
+
+    
+
 }
 

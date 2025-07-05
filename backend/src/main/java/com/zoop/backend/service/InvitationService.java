@@ -6,14 +6,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.zoop.backend.domain.dto.InvitationSendRequest;
+import com.zoop.backend.domain.dto.modal.InvitationSentDateResponse;
 import com.zoop.backend.domain.entity.Invitation;
 import com.zoop.backend.domain.entity.Post;
 import com.zoop.backend.repository.InvitationRepository;
 import com.zoop.backend.repository.PostRepository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -66,4 +69,14 @@ public class InvitationService {
 
         log.info("📨 메일 발송: 초대 링크 → https://zoop.kr/invite/" + token);
     }
+
+
+    /**합친 이후 */
+    public List<InvitationSentDateResponse> getAllInvitationSentDates(Long postId, String githubLogin) {
+        List<Invitation> invitations = invitationRepository.findAllByPostIdAndGithubLoginOrderByInvitationSentDateDesc(postId, githubLogin);
+        return invitations.stream()
+                .map(inv -> new InvitationSentDateResponse(inv.getInvitationSentDate()))
+                .collect(Collectors.toList());
+    }
+
 }

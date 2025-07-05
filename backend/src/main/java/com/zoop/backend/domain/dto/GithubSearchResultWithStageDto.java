@@ -13,6 +13,7 @@ public class GithubSearchResultWithStageDto {
     private String analysisData;
     private String jobCandCurrStage;
     private Long companyAdminId;
+    private Long jobCandidateId; // ✅ 추가된 필드
 
     public GithubSearchResultWithStageDto(String githubLogin, String candidateEmail,
                                         String githubProfileUrl,
@@ -20,7 +21,8 @@ public class GithubSearchResultWithStageDto {
                                         Double aiAnalysisScore,
                                         String analysisData,
                                         String jobCandCurrStage,
-                                        Long companyAdminId) {
+                                        Long companyAdminId,
+                                        Long jobCandidateId) {
         this.githubLogin = githubLogin;
         this.candidateEmail = candidateEmail;
         this.githubProfileUrl = githubProfileUrl;
@@ -29,8 +31,8 @@ public class GithubSearchResultWithStageDto {
         this.analysisData = analysisData;
         this.jobCandCurrStage = jobCandCurrStage;
         this.companyAdminId = companyAdminId;
+        this.jobCandidateId = jobCandidateId;
     }
-
 
     // Getters 생략 가능 (Lombok 사용 시 @Getter)
 }

@@ -7,12 +7,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function CompanyDashboard() {
-  const [openSection, setOpenSection] = useState('공고1');
-  const [notice1Name, setNotice1Name] = useState('공고 1');
-  const [notice2Name, setNotice2Name] = useState('공고 2');
-  const [notice3Name, setNotice3Name] = useState('공고 3');
-  const [editing, setEditing] = useState('');
-  const [tempName, setTempName] = useState('');
   const [companyInfo, setCompanyInfo] = useState(null);
   const { authState } = useAuth();
   const navigate = useNavigate();
@@ -30,21 +24,6 @@ export default function CompanyDashboard() {
     if (authState.userId) fetchCompanyInfo();
   }, [authState.userId]);
 
-  const handleToggle = (name) => {
-    setOpenSection(openSection === name ? '' : name);
-  };
-
-  const startEditing = (name, currentValue) => {
-    setEditing(name);
-    setTempName(currentValue);
-  };
-
-  const handleEditSave = () => {
-    if (editing === '공고1') setNotice1Name(tempName);
-    if (editing === '공고2') setNotice2Name(tempName);
-    if (editing === '공고3') setNotice3Name(tempName);
-    setEditing('');
-  };
 
   const hoverBoxStyle = {
     backgroundColor: '#fff',
@@ -65,15 +44,6 @@ export default function CompanyDashboard() {
     e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)';
   };
 
-  const [draftPosts, setDraftPosts] = useState([]);
-const handleAddDraftPost = () => {
-  const newId = draftPosts.length + 1;
-  setDraftPosts([...draftPosts, { id: newId, title: `공고 ${newId}` }]);
-};
-
-const handleStartRecruit = (draftId) => {
-  navigate('/company/recruit/create', { state: { draftId } });
-};
 
 
   return (
@@ -81,11 +51,7 @@ const handleStartRecruit = (draftId) => {
       <Navbar />
 
       <div className="dashboard-container" style={{ display: 'flex', marginTop: '6rem', alignItems: 'flex-start' }}>
-        <CompanySidebar
-          draftPosts={draftPosts}
-          onAddDraftPost={handleAddDraftPost}
-          onStartRecruit={handleStartRecruit}
-        />
+        <CompanySidebar/>
 
 
         <main style={{ flex: 1, padding: '4rem 3rem', backgroundColor: '#fefefe' }}>
