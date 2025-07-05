@@ -57,8 +57,8 @@ public class AiInterviewScheduleService {
                 System.err.println("전체 JobCandProgress 레코드 수: " + allRecords.size());
                 for (JobCandProgress record : allRecords) {
                     System.err.println("레코드 - jobCandidateId: " + record.getJobCandidateId() + 
-                                     ", postId: " + (record.getPost() != null ? record.getPost().getPostId() : "null") + 
-                                     ", candidateId: " + (record.getCandidate() != null ? record.getCandidate().getCandidateId() : "null"));
+                                    ", postId: " + (record.getPost() != null ? record.getPost().getPostId() : "null") + 
+                                    ", candidateId: " + (record.getCandidate() != null ? record.getCandidate().getCandidateId() : "null"));
                 }
                 
                 return new RuntimeException("해당 공고에 대한 후보자 진행 상태를 찾을 수 없습니다. postId: " + requestDto.getPostId() + ", candidateId: " + requestDto.getCandidateId());

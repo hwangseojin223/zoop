@@ -63,28 +63,61 @@ export default function CompanyDashboard() {
 
   // 저장된 공고 불러오기
   useEffect(() => {
-    fetch(`http://localhost:8081/api/postings/all`, {
+    // JWT 토큰이 있으면 바로 공고를 불러오도록 수정
+    const token = localStorage.getItem('jwtToken');
+    if (!token) {
+      console.log('JWT 토큰이 없습니다.');
+      setLoading(false);
+      return;
+    }
+    
+    console.log('공고 목록을 불러오는 중...');
+    fetch(`http://localhost:8081/api/posts/all`, {
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
     })
-      .then((res) => res.json())
+      .then((res) => {
+        console.log('API 응답 상태:', res.status);
+        if (!res.ok) {
+          throw new Error(`API 호출 실패: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((data) => {
-        setPostings(data);
+        console.log('받은 공고 데이터:', data);
+        // API 응답이 배열인지 확인
+        if (Array.isArray(data)) {
+          setPostings(data);
+          console.log(`${data.length}개의 공고를 로드했습니다.`);
+        } else {
+          console.error('API 응답이 배열이 아님:', data);
+          setPostings([]);
+        }
         setLoading(false);
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error('공고 조회 오류:', error);
         setPostings([]);
         setLoading(false);
       });
-  }, []);
+  }, []); // 의존성 배열을 비워서 컴포넌트 마운트 시 한 번만 실행
+
+  // 디버깅을 위한 로그 추가
+  useEffect(() => {
+    console.log('현재 상태 - loading:', loading, 'postings 길이:', postings.length);
+  }, [loading, postings]);
 
   // 선택된 공고의 상세 정보
   useEffect(() => {
     if (selectedPostId) {
       setLoadingPostDetail(true);
-      fetch(`http://localhost:8081/api/postings/info/${selectedPostId}`, {
-        headers: { 'Content-Type': 'application/json' },
+      fetch(`http://localhost:8081/api/posts/info/${selectedPostId}`, {
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
+        },
       })
         .then((res) => res.json())
         .then((data) => {
@@ -205,7 +238,7 @@ export default function CompanyDashboard() {
     });
   };
 
-  const activePostings = postings.filter(post => post.postStatus === 'ACTIVE');
+  const activePostings = postings?.filter(post => post.postStatus === 'ACTIVE') || [];
 
   // 탭 변경
   const handleTabChange = (tab) => setActiveTab(tab);
@@ -256,15 +289,18 @@ export default function CompanyDashboard() {
   const handleEditSave = async () => {
     setEditLoading(true);
     try {
-      const res = await fetch(`http://localhost:8081/api/postings/${selectedPostId}`, {
+      const res = await fetch(`http://localhost:8081/api/posts/${selectedPostId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
+        },
         body: JSON.stringify({ postTitle: editTitle, postDescription: editDesc })
       });
       if (res.ok) {
         setShowEditModal(false);
         // 상세 정보 갱신
-        const detailRes = await fetch(`http://localhost:8081/api/postings/info/${selectedPostId}`);
+        const detailRes = await fetch(`http://localhost:8081/api/posts/info/${selectedPostId}`);
         setSelectedPostDetail(await detailRes.json());
       } else {
         alert('수정에 실패했습니다.');
@@ -278,12 +314,21 @@ export default function CompanyDashboard() {
   const handleDelete = async () => {
     setDeleteLoading(true);
     try {
-      const res = await fetch(`http://localhost:8081/api/postings/${selectedPostId}`, { method: 'DELETE' });
+      const res = await fetch(`http://localhost:8081/api/posts/${selectedPostId}`, { 
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
+        },
+      });
       if (res.ok) {
         setShowDeleteModal(false);
         setSelectedPostId(null);
         // 목록 갱신
-        const listRes = await fetch('http://localhost:8081/api/postings/all');
+        const listRes = await fetch(`http://localhost:8081/api/posts/all`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
+          },
+        });
         setPostings(await listRes.json());
       } else {
         alert('삭제에 실패했습니다.');
@@ -391,7 +436,7 @@ export default function CompanyDashboard() {
     if (postings.length > 0) fetchInterviewScheduledCandidates();
   }, [postings]);
 
-  const closedPostings = postings.filter(post => post.postStatus === 'CLOSED');
+  const closedPostings = postings?.filter(post => post.postStatus === 'CLOSED') || [];
 
   // 후보자 목록 필터 버튼 부분
   const filterLabels = ['전체', '미회신자', '회신자', '면접 예정자', '면접 완료자'];
