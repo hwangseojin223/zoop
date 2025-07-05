@@ -76,7 +76,7 @@ public class AuthController {
         // 1. userType에 따라 사용자 조회
         if ("company".equals(userType)) {
             // 기업회원 로그인 처리
-            CompanyAdmin admin = adminRepo.findByLoginId(loginId).orElse(null);
+            CompanyAdmin admin = adminRepo.findByCompanyAdminLogin(loginId).orElse(null);
 
             if (admin == null) {
                 // 로그 추가 (디버깅용)

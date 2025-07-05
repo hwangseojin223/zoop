@@ -3,6 +3,7 @@ package com.zoop.backend.domain.entity;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -12,6 +13,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -20,7 +23,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "post")
+@Table(name = "Post")
 @Data
 @Builder
 @NoArgsConstructor
@@ -29,7 +32,7 @@ public class Post {
     
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "post_seq")
-    @SequenceGenerator(name = "post_seq", sequenceName = "post_id_seq", allocationSize = 1)
+    @SequenceGenerator(name = "post_seq", sequenceName = "post_seq", allocationSize = 1)
     @Column(name = "post_id")
     private Long postId;
     
@@ -40,6 +43,7 @@ public class Post {
     // 관계 매핑에 insertable=false, updatable=false 추가
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", insertable = false, updatable = false)
+    @JsonIgnore
     private Company company;
     
     @Column(name = "company_admin_id")
@@ -81,7 +85,6 @@ public class Post {
     
     @Column(name = "post_updated_at")
     private LocalDateTime postUpdatedAt;
-<<<<<<< HEAD
 
     @Lob
     @Column(name = "post_ideal_candidate")
@@ -96,8 +99,4 @@ public class Post {
     public void onUpdate() {
         postUpdatedAt = LocalDateTime.now();
     }
-=======
-    
-    // 필요한 경우 추가 필드 및 관계 매핑
->>>>>>> feat/90/personal-dashboard
 }

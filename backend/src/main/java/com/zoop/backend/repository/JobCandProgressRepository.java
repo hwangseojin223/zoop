@@ -36,43 +36,40 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
             jcp.job_cand_curr_stage = '2y'
             AND jcp.post_id = :postId
     """, nativeQuery = true)
-<<<<<<< HEAD
-    List<ResponderDto> findCandidatesAtStage3nByPost(@Param("postId") Long postId);
+    List<ResponderDto> findCandidatesAtStage2yByPost(@Param("postId") Long postId);
 
-    Optional<JobCandProgress> findByPostIdAndGithubLogin(Long postId, String githubLogin);
+    // post와 githubLogin으로 JobCandProgress 조회
+    Optional<JobCandProgress> findByPost_PostIdAndGithubLogin(Long postId, String githubLogin);
 
-    @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.postId = :postId AND j.jobCandCurrStage = '1n'")
+    // postId와 githubLogin 리스트로 JobCandProgress 조회
+    @Query("SELECT j FROM JobCandProgress j WHERE j.post.postId = :postId AND j.githubLogin IN :githubLogins")
+    List<JobCandProgress> findByPostIdAndGithubLoginIn(@Param("postId") Long postId, @Param("githubLogins") List<String> githubLogins);
+
+    // 필터링 단계별 githubLogin 조회
+    @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.post.postId = :postId AND j.jobCandCurrStage = '1n'")
     List<String> findGithubLoginsByPostIdAndFilteringStage(@Param("postId") Long postId);
 
     // 전체 후보자 조회 (모든 단계)
-    @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.postId = :postId")
+    @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.post.postId = :postId")
     List<String> findGithubLoginsByPostId(@Param("postId") Long postId);
 
     // 미회신자 조회 (1n, 2n)
-    @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.postId = :postId AND j.jobCandCurrStage IN ('1n', '2n')")
+    @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.post.postId = :postId AND j.jobCandCurrStage IN ('1n', '2n')")
     List<String> findGithubLoginsByPostIdAndNoResponseStage(@Param("postId") Long postId);
 
     // 회신자 조회 (2y)
-    @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.postId = :postId AND j.jobCandCurrStage = '2y'")
+    @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.post.postId = :postId AND j.jobCandCurrStage = '2y'")
     List<String> findGithubLoginsByPostIdAndResponseStage(@Param("postId") Long postId);
 
     // 면접 예정자 조회 (3n)
-    @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.postId = :postId AND j.jobCandCurrStage = '3n'")
+    @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.post.postId = :postId AND j.jobCandCurrStage = '3n'")
     List<String> findGithubLoginsByPostIdAndInterviewScheduledStage(@Param("postId") Long postId);
 
     // 면접 완료자 조회 (3y)
-    @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.postId = :postId AND j.jobCandCurrStage = '3y'")
+    @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.post.postId = :postId AND j.jobCandCurrStage = '3y'")
     List<String> findGithubLoginsByPostIdAndInterviewCompletedStage(@Param("postId") Long postId);
 
-    // postId와 githubLogin 리스트로 JobCandProgress 조회
-    @Query("SELECT j FROM JobCandProgress j WHERE j.postId = :postId AND j.githubLogin IN :githubLogins")
-    List<JobCandProgress> findByPostIdAndGithubLoginIn(@Param("postId") Long postId, @Param("githubLogins") List<String> githubLogins);
-=======
-    List<ResponderDto> findCandidatesAtStage2yByPost(@Param("postId") Long postId);
-
-
     List<JobCandProgress> findByCandidate_CandidateId(Integer candidateId);
-    // Optional<JobCandProgress> findByPost_PostIdAndCandidate_CandidateId(Integer postId, Integer candidateId);
 
     @Query(value = "SELECT * FROM job_cand_progress WHERE post_id = :postId AND candidate_id = :candidateId", nativeQuery = true)
     Optional<JobCandProgress> findByPost_PostIdAndCandidate_CandidateId(
@@ -81,5 +78,4 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
     );
 
     Optional<JobCandProgress> findByJobCandidateId(Long jobCandidateId);
->>>>>>> feat/90/personal-dashboard
 }
