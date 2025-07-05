@@ -240,7 +240,7 @@ const handleDomainChange = (e) => {
 
     try {
 
-      const response = await fetch('http://localhost:8081/auth/applicant/signup/process', {
+      const response = await fetch('http://localhost:8081/api/candidates/process', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
