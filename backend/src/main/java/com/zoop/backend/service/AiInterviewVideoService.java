@@ -1,0 +1,54 @@
+package com.zoop.backend.service;
+
+import java.time.LocalDateTime;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.zoop.backend.domain.entity.AiInterviewSchedule;
+import com.zoop.backend.domain.entity.AiInterviewVideo;
+import com.zoop.backend.repository.AiInterviewScheduleRepository;
+import com.zoop.backend.repository.AiInterviewVideoRepository;
+
+@Service
+public class AiInterviewVideoService {
+    private final AiInterviewVideoRepository aiInterviewVideoRepository;
+    private final AiInterviewScheduleRepository aiInterviewScheduleRepository;
+    private final S3Service s3Service;
+    private final AiInterviewScheduleService aiInterviewScheduleService;
+
+    @Autowired
+    public AiInterviewVideoService(AiInterviewVideoRepository aiInterviewVideoRepository,
+                                   AiInterviewScheduleRepository aiInterviewScheduleRepository,
+                                   S3Service s3Service,
+                                   AiInterviewScheduleService aiInterviewScheduleService) {
+        this.aiInterviewVideoRepository = aiInterviewVideoRepository;
+        this.aiInterviewScheduleRepository = aiInterviewScheduleRepository;
+        this.s3Service = s3Service;
+        this.aiInterviewScheduleService = aiInterviewScheduleService;
+    }
+
+    @Transactional
+    public AiInterviewVideo uploadInterviewVideo(Integer scheduleId, Integer questionNumber, String questionContent, MultipartFile videoFile) throws Exception {
+        AiInterviewSchedule schedule = aiInterviewScheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new RuntimeException("해당 면접 일정을 찾을 수 없습니다."));
+        // S3 업로드
+        String videoUrl = s3Service.uploadInterviewVideoFile(videoFile);
+        // DB 저장
+        AiInterviewVideo video = AiInterviewVideo.builder()
+                .aiInterviewSchedule(schedule)
+                .questionNumber(questionNumber)
+                .questionContent(questionContent)
+                .videoFilePath(videoUrl)
+                .videoCreatedAt(LocalDateTime.now())
+                .build();
+        AiInterviewVideo saved = aiInterviewVideoRepository.save(video);
+        // 마지막 질문(3번) 업로드 시 면접 완료 처리
+        if (questionNumber == 3) {
+            aiInterviewScheduleService.completeInterview(scheduleId);
+        }
+        return saved;
+    }
+} 

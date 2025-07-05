@@ -7,13 +7,15 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.NoArgsConstructor; // <-- JoinColumn 임포트
+import lombok.Setter; // <-- ManyToOne 임포트
 
 @Entity
 @Table(name = "job_cand_progress")
@@ -34,11 +36,19 @@ public class JobCandProgress {
     @Column(name = "job_candidate_id")
     private Long jobCandidateId;
 
-    @Column(name = "post_id")
-    private Long postId;
+    // @Column(name = "post_id")
+    // private Long postId;
+    // Post 엔티티와의 ManyToOne 관계 매핑 추가
+    @ManyToOne // JobCandProgress는 하나의 Post에 속합니다.
+    @JoinColumn(name = "post_id", nullable = false) // JobCandProgress 테이블의 post_id 컬럼과 매핑
+    private Post post;
 
-    @Column(name = "candidate_id")
-    private Long candidateId;
+    // @Column(name = "candidate_id")
+    // private Long candidateId;
+    // Candidate 엔티티와의 ManyToOne 관계 매핑 추가
+    @ManyToOne // JobCandProgress는 하나의 Candidate에 속합니다.
+    @JoinColumn(name = "candidate_id", nullable = false) // JobCandProgress 테이블의 candidate_id 컬럼과 매핑
+    private Candidate candidate; 
 
     @Column(name = "invitation_id")
     private Long invitationId;

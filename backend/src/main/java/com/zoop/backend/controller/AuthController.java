@@ -1,17 +1,16 @@
 package com.zoop.backend.controller;
 
 import java.util.Map;
-import java.util.Optional;
-import org.slf4j.Logger; 
-import org.slf4j.LoggerFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestBody; // RequestBody 임포트
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping; // RequestBody 임포트
+import org.springframework.web.bind.annotation.RestController;
 
 import com.zoop.backend.domain.dto.LoginRequest;
 import com.zoop.backend.domain.dto.SocialLoginCallbackRequest;
@@ -19,19 +18,7 @@ import com.zoop.backend.domain.entity.Candidate;
 import com.zoop.backend.domain.entity.CompanyAdmin; // Candidate 엔티티 임포트
 import com.zoop.backend.repository.CandidateRepository;
 import com.zoop.backend.repository.CompanyAdminRepository; // CandidateRepository 임포트
-import com.zoop.backend.util.JwtUtil;
 import com.zoop.backend.service.SocialAuthService;
-
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.zoop.backend.domain.dto.LoginRequest;
-import com.zoop.backend.domain.entity.CompanyAdmin;
-import com.zoop.backend.repository.CompanyAdminRepository;
 import com.zoop.backend.util.JwtUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
