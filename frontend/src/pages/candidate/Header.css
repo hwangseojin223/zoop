@@ -18,11 +18,26 @@
 }
 
 .header-icon {
-  font-size: 20px;
-  color: #666;
   margin-left: 20px;
   cursor: pointer;
-  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  transition: all 0.2s ease;
+}
+
+.header-icon img {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) saturate(100%) invert(40%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(0.6);
+  transition: all 0.2s ease;
+}
+
+.header-icon:hover img {
+  filter: brightness(0) saturate(100%) invert(30%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(0.7);
+  transform: scale(1.1);
 }
 
 .user-profile {

@@ -1,118 +1,69 @@
-import React, { useState, useEffect } from 'react';
-import './CustomerServicePage.css'; // 헤더 스타일 사용
-import './FaqButton.css';
-import FaqButton from './FaqButton';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import './FaqPage.css';
 
-const FaqPage = () => {
-  const location = useLocation();
-  const [activeIndex, setActiveIndex] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState('회원가입/로그인');
-  const [menuOpen, setMenuOpen] = useState(false);
+const navLinks = [
+  { label: '고객센터', href: '/customer' },
+  { label: '자주 묻는 질문', href: '/faq', active: true },
+  { label: '채용 공고', href: '/recruit' },
+];
 
-  useEffect(() => {
-    const hash = location.hash;
-    if (hash === '#service-usage') setSelectedCategory('서비스 이용');
-    if (hash === '#signup-login') setSelectedCategory('회원가입/로그인');
-  }, [location]);
+const faqList = [
+  {
+    q: '회원가입 인증 메일이 오지 않아요.',
+    a: '스팸함을 확인하거나, 메일 주소를 다시 한 번 확인해 주세요. 그래도 받지 못했다면 고객센터로 문의해 주세요.'
+  },
+  {
+    q: '이력서 파일은 어떤 형식으로 제출해야 하나요?',
+    a: 'PDF, DOCX, HWP 등 주요 문서 형식을 지원합니다. 파일 용량은 10MB 이내로 제출해 주세요.'
+  },
+  {
+    q: '채용 공고에 지원했는데 결과는 어디서 확인하나요?',
+    a: '마이페이지 > 지원내역에서 지원 현황과 결과를 확인할 수 있습니다.'
+  },
+  {
+    q: '면접 일정은 어떻게 조율하나요?',
+    a: '면접 일정은 지원 후 안내되는 링크에서 직접 선택하거나, 담당자와 협의할 수 있습니다.'
+  },
+  {
+    q: '포인트/마일리지는 어떻게 적립되나요?',
+    a: '이력서 제출, 면접 참여 등 다양한 활동을 통해 포인트/마일리지가 자동 적립됩니다.'
+  },
+  {
+    q: '기업회원 전환은 어떻게 하나요?',
+    a: '마이페이지 > 회원정보에서 기업회원 전환 신청이 가능합니다. 추가 서류가 필요할 수 있습니다.'
+  },
+];
 
-  // FAQ 데이터 배열
-  const faqData = [
-    { category: '회원가입/로그인', question: '회원가입은 어떻게 하나요?(개인/기업별 안내)', answer: "홈페이지 우측 상단의 '회원가입' 버튼을 클릭 후, 이메일 또는 소셜 계정으로 가입할 수 있습니다." },
-    { category: '회원가입/로그인', question: '비밀번호를 잊어버렸어요.', answer: "로그인 페이지에서 '비밀번호 찾기'를 클릭하면, 이메일을 통해 재설정할 수 있습니다." },
-    { category: '서비스 이용', question: '[개인회원] 프로필/이력서는 어떻게 작성하나요?', answer: '고객센터에 문의해 주세요. 오류 화면을 캡처하면 더 빠른 처리가 가능합니다.' },
-    { category: '서비스 이용', question: '[개인회원] 구인 공고는 어떻게 확인하고 지원하나요?', answer: '고객센터에 문의해 주세요. 오류 화면을 캡처하면 더 빠른 처리가 가능합니다.' },
-    { category: '서비스 이용', question: '[기업회원] 채용 공고는 어떻게 등록하나요?', answer: '고객센터에 문의해 주세요. 오류 화면을 캡처하면 더 빠른 처리가 가능합니다.' },
-    { category: '서비스 이용', question: '[기업회원] 후보자 정보는 어떻게 검색하고 열람하나요?', answer: '고객센터에 문의해 주세요. 오류 화면을 캡처하면 더 빠른 처리가 가능합니다.' },
-    { category: '서비스 이용', question: '서비스 이용 중 오류가 발생했어요.', answer: '고객센터에 문의해 주세요. 오류 화면을 캡처하면 더 빠른 처리가 가능합니다.' },
-    { category: '기술관련', question: '어떤 브라우저를 지원하나요?', answer: '앱이나 웹사이트 오류 발생 시, 고객센터에 문의해 주세요. 오류 화면을 캡처하면 더 빠른 처리가 가능합니다.' },
-    { category: '기술관련', question: '모바일 환경에서 이용 가능한가요?', answer: '앱이나 웹사이트 오류 발생 시, 고객센터에 문의해 주세요. 오류 화면을 캡처하면 더 빠른 처리가 가능합니다.' },
-    { category: '기술관련', question: '사이트 속도가 느려요.', answer: '앱이나 웹사이트 오류 발생 시, 고객센터에 문의해 주세요. 오류 화면을 캡처하면 더 빠른 처리가 가능합니다.' }
-  ];
-
-  const categories = [
-    '회원가입/로그인',
-    '서비스 이용',
-    '기술관련',
-    '기타',
-    '1:1문의/문의하기',
-    '이용약관 및 개인정보처리방침',
-    '사용가이드/매뉴얼',
-    '연락처 정보'
-  ];
-
-  const toggleSection = idx => setActiveIndex(activeIndex === idx ? null : idx);
-  const filteredFaqs = faqData.filter(faq => faq.category === selectedCategory);
-
+function FaqPage() {
+  const [openIdx, setOpenIdx] = useState(null);
   return (
-    <div className="customer-service-page">
-      <header className="top-nav">
-        <Link to="/customer-service" className="logo" style={{ textDecoration: 'none', color: 'inherit' }}>고객센터</Link>
-        {/* 햄버거 버튼 - 모바일에서만 보임 */}
-        <button
-          className="hamburger mobile-only"
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label={menuOpen ? '메뉴 닫기' : '메뉴 열기'}
-          aria-expanded={menuOpen}
-        >
-          ☰
-        </button>
-
-        {/* 데스크탑 메뉴 - 데스크탑에서만 보임 */}
-        <nav className="nav-list desktop-only">
-          <ul>
-            <li><FaqButton /></li>
-            <li><Link to="/report">피해사건신고</Link></li>
-            <li><Link to="/notice">이벤트</Link></li>
-          </ul>
-        </nav>
-
-        {/* 모바일 햄버거 메뉴 - 모바일에서만 보임 */}
-        {menuOpen && (
-          <div className="hamburger-menu mobile-only">
-            <ul>
-              <li>
-                <FaqButton onClick={() => setMenuOpen(false)} />
-              </li>
-              <li>
-                <Link to="/report" onClick={() => setMenuOpen(false)}>피해사건신고</Link>
-              </li>
-              <li>
-                <Link to="/notice" onClick={() => setMenuOpen(false)}>공지/이벤트</Link>
-              </li>
-            </ul>
-          </div>
-        )}
-      </header>
-
-      <div className="faq-layout" style={{ paddingTop: '80px', display: 'flex', alignItems: 'flex-start' }}>
-        {/* 사이드바: 본문 왼쪽 */}
-        <aside className="sidebar" style={{ width: '220px', marginRight: '30px', background: '#fff', borderRadius: '8px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', position: 'sticky', top: '100px', height: 'fit-content' }}>
-          <ul className="sidebar-menu">
-            {categories.map((category, i) => (
-              <li key={i} className={selectedCategory === category ? 'active' : ''} onClick={() => { setSelectedCategory(category); setActiveIndex(null); }}>
-                {category}
-              </li>
-            ))}
-          </ul>
-        </aside>
-        {/* FAQ 본문: 가운데 정렬 */}
-        <main className="faq-page-container" style={{ flex: 1, maxWidth: '800px', background: '#fff', borderRadius: '8px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', margin: '40px 0' }}>
-          <h1>{selectedCategory} 관련 자주 묻는 질문</h1>
-          {filteredFaqs.map((item, idx) => (
-            <section className="faq-section" key={idx}>
-              <h2 className={`section-title ${activeIndex === idx ? 'open' : ''}`} onClick={() => toggleSection(idx)}>
-                {item.question} <span className="toggle-icon">▼</span>
-              </h2>
-              <div className={`section-content ${activeIndex === idx ? 'active' : ''}`}>
-                <p>{item.answer}</p>
-              </div>
-            </section>
+    <div className="customer-main-bg">
+      <nav className="customer-nav">
+        <div className="customer-nav-logo">고객센터</div>
+        <ul className="customer-nav-links">
+          {navLinks.map(link => (
+            <li key={link.label} className={link.active ? 'active' : ''}>
+              <a href={link.href} target="_blank" rel="noopener noreferrer">{link.label}</a>
+            </li>
           ))}
-        </main>
-      </div>
+        </ul>
+      </nav>
+      <main className="faq-main-content">
+        <h1 className="faq-title">자주 묻는 질문</h1>
+        <ul className="faq-list">
+          {faqList.map((item, idx) => (
+            <li key={item.q} className={`faq-item${openIdx === idx ? ' open' : ''}`}> 
+              <button className="faq-question" onClick={() => setOpenIdx(openIdx === idx ? null : idx)}>
+                <span>{item.q}</span>
+                <span className={`faq-arrow${openIdx === idx ? ' open' : ''}`}>▼</span>
+              </button>
+              {openIdx === idx && <div className="faq-answer">{item.a}</div>}
+            </li>
+          ))}
+        </ul>
+      </main>
     </div>
   );
-};
+}
 
-export default FaqPage;
+export default FaqPage; 
