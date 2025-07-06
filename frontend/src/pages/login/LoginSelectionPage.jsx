@@ -256,7 +256,7 @@ function LoginSelectionPage() {
       <div className="login-page-wrapper">
         <div className="login-container">
           <div className="login-left">
-            <h2>다양한 ZOOP 서비스를 로그인 한 번으로 편리하게 이용하세요.</h2>
+            <h2>다양한 ZOOP 서비스를<br />로그인 한 번으로 편리하게 이용하세요.</h2>
             <div className="zoop-logo">
               <img
                 src="/logo_zoop.png"

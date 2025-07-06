@@ -521,7 +521,9 @@ function CandidateDashboard() {
 
         <div className="info-box company-proposal">
           <p>
-            <span className="icon">✨</span> 기업에게 포지션 제안을 받는 중입니다.
+            <span className="icon">
+              <img src="../../icons/sparkle.svg" alt="sparkle" />
+            </span> 기업에게 포지션 제안을 받는 중입니다.
           </p>
           <button className="highlight-button">
             이력서 하이라이트 신청하기 <span className="arrow-right">›</span>

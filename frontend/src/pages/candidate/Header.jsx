@@ -72,9 +72,15 @@ function Header() {
         {/* Placeholder for menu icon if needed */}
       </div>
       <div className="header-right">
-        <span className="header-icon" aria-label="알림">🔔</span>
-        <span className="header-icon" aria-label="메시지">✉️</span>
-        <span className="header-icon" aria-label="채팅">💬</span>
+        <span className="header-icon" aria-label="알림">
+          <img src="../../icons/bell.svg" alt="알림" />
+        </span>
+        <span className="header-icon" aria-label="메시지">
+          <img src="../../icons/mail.svg" alt="메시지" />
+        </span>
+        <span className="header-icon" aria-label="채팅">
+          <img src="../../icons/message-circle.svg" alt="채팅" />
+        </span>
         {/* User Profile Area - 클릭 시 드롭다운 토글 */}
         <div className="user-profile" onClick={toggleDropdown} ref={dropdownRef}>
           <img src="../../person.png" alt="User Avatar" className="user-avatar" />
