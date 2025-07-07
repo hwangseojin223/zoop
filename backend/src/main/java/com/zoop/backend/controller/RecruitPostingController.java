@@ -1,21 +1,5 @@
 package com.zoop.backend.controller;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.zoop.backend.domain.dto.PostingRequestDto;
 import com.zoop.backend.domain.entity.Post;
 import com.zoop.backend.service.PostService;
@@ -30,52 +14,25 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+import java.util.List;
+
 @Tag(name = "RecruitPostingController", description = "채용 공고 관련 API")
 @RestController
-@RequestMapping("/api/posts")
+@RequestMapping("/api/postings")
 @RequiredArgsConstructor
 public class RecruitPostingController {
 
     private final PostService postService;
-    private final JwtUtil jwtUtil;
-
-    @Operation(summary = "공고 정보 조회", description = "공고 ID로 공고 정보를 조회합니다.")
-    @ApiResponses(value={
-        @ApiResponse(responseCode = "200", description = "공고 정보 조회 성공"),
-        @ApiResponse(responseCode = "404", description = "공고를 찾을 수 없음"),
-        @ApiResponse(responseCode = "500", description = "서버 내부 오류")
-    })
-    @GetMapping("/{postId}")
-    public ResponseEntity<Map<String, Object>> getPost(
-        @Parameter(description = "공고 ID", required = true)
-        @PathVariable Long postId
-    ) {
-        Post post = postService.getPostById(postId);
-        if (post == null) {
-            return ResponseEntity.notFound().build();
-        }
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("postId", post.getPostId());
-        response.put("postTitle", post.getPostTitle());
-        response.put("postDescription", post.getPostDescription());
-        response.put("postProgrammingLanguage", post.getPostProgrammingLanguage());
-        response.put("postLocation", post.getPostLocation());
-        response.put("postHeadcount", post.getPostHeadcount());
-        response.put("postSalaryStart", post.getPostSalaryStart());
-        response.put("postSalaryEnd", post.getPostSalaryEnd());
-        response.put("postPostedDate", post.getPostPostedDate());
-        response.put("postExpiryDate", post.getPostExpiryDate());
-        response.put("postStatus", post.getPostStatus());
-        response.put("companyName", post.getCompany() != null ? post.getCompany().getCompanyName() : "정보 없음");
-        
-        return ResponseEntity.ok(response);
-    }
+    private final JwtUtil jwtUtil; // ✅ 추가됨
 
     @Operation(summary = "새 채용 공고 생성", description = "인증된 사용자가 새로운 채용 공고를 등록합니다.")
     @ApiResponses(value={
         @ApiResponse(responseCode = "200", description = "채용 공고 등록 성공 및 생성된 공고의 ID 반환",
-            content = @Content(schema = @Schema(implementation =Map.class))),
+            content = @Content(schema = @Schema(implementation = Map.class))),
         @ApiResponse(responseCode = "400", description = "잘못된 요청 (필수 데이터 누락, 형식 오류 등)"),
         @ApiResponse(responseCode = "401", description = "인증 실패 (유효하지 않거나 누락된 JWT)"),
         @ApiResponse(responseCode = "500", description = "서버 내부 오류")
@@ -131,6 +88,18 @@ public class RecruitPostingController {
     @GetMapping("/all")
     public ResponseEntity<List<Post>> getAllPosts() {
         List<Post> posts = postService.getAllPosts();
+        return ResponseEntity.ok(posts);
+    }
+
+    @Operation(summary = "공개 공고 목록 조회", description = "공개용으로 사용할 수 있는 모든 공고 목록을 조회합니다.")
+    @ApiResponses(value={
+        @ApiResponse(responseCode = "200", description = "공개 공고 목록 반환",
+            content = @Content(schema = @Schema(implementation = Post.class))),
+        @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    @GetMapping("/public")
+    public ResponseEntity<List<Post>> getPublicPosts() {
+        List<Post> posts = postService.getPublicPosts();
         return ResponseEntity.ok(posts);
     }
 

@@ -1,44 +1,29 @@
 package com.zoop.backend.service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.zoop.backend.domain.dto.PostingRequestDto;
 import com.zoop.backend.domain.entity.CompanyAdmin;
 import com.zoop.backend.domain.entity.Post;
 import com.zoop.backend.repository.CompanyAdminRepository;
 import com.zoop.backend.repository.PostRepository;
+import lombok.RequiredArgsConstructor;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class PostService {
 
-    private PostRepository postRepository;
-    private CompanyAdminRepository companyAdminRepository;
-    
-    @Autowired
-    public void setPostRepository(PostRepository postRepository) {
-        this.postRepository = postRepository;
-    }
-    
-    @Autowired
-    public void setCompanyAdminRepository(CompanyAdminRepository companyAdminRepository) {
-        this.companyAdminRepository = companyAdminRepository;
-    }
+    private final PostRepository postRepository;
+    private final CompanyAdminRepository companyAdminRepository; // ✅ 여기에 주입 선언
 
-    public Post getPostById(Long postId) {
-        Optional<Post> post = postRepository.findById(postId);
-        return post.orElse(null);
-    }
-
-    // 오버로드된 createPost(dto, loginId) 메서드
+    // ✅ 1. 오버로드된 createPost(dto, loginId) 메서드 추가
     public Post createPost(PostingRequestDto dto, String loginId) {
-        CompanyAdmin admin = companyAdminRepository.findByCompanyAdminLogin(loginId)
+        CompanyAdmin admin = companyAdminRepository.findByLoginId(loginId)
             .orElseThrow(() -> new RuntimeException("존재하지 않는 관리자입니다."));
 
         dto.setCompanyAdminId(admin.getCompanyAdminId());
@@ -47,6 +32,7 @@ public class PostService {
         return createPost(dto); // 기존 메서드 호출
     }
     
+
     public Post createPost(PostingRequestDto dto) {
         Post post = new Post();
 
@@ -74,6 +60,10 @@ public class PostService {
         return postRepository.save(post);
     }
 
+    public Post getPostById(Long postId) {
+        return postRepository.findById(postId).orElse(null);
+    }
+
     // 회사별 공고 목록 조회 메서드 추가
     public List<Post> getPostsByCompanyId(Long companyId) {
         return postRepository.findByCompanyIdOrderByPostCreatedAtDesc(companyId);
@@ -82,6 +72,11 @@ public class PostService {
     // 모든 공고 목록 조회 메서드 추가
     public List<Post> getAllPosts() {
         return postRepository.findAllByOrderByPostCreatedAtDesc();
+    }
+
+    // 공개 공고 목록 조회 메서드 추가
+    public List<Post> getPublicPosts() {
+        return postRepository.findByPostStatusOrderByPostCreatedAtDesc("ACTIVE");
     }
 
     // 공고 업데이트 메서드 추가
