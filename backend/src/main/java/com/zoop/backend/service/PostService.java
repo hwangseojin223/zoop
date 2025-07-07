@@ -23,7 +23,7 @@ public class PostService {
 
     // ✅ 1. 오버로드된 createPost(dto, loginId) 메서드 추가
     public Post createPost(PostingRequestDto dto, String loginId) {
-        CompanyAdmin admin = companyAdminRepository.findByLoginId(loginId)
+        CompanyAdmin admin = companyAdminRepository.findByCompanyAdminLogin(loginId)
             .orElseThrow(() -> new RuntimeException("존재하지 않는 관리자입니다."));
 
         dto.setCompanyAdminId(admin.getCompanyAdminId());

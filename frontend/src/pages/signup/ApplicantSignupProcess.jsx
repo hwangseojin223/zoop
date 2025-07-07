@@ -252,11 +252,25 @@ const handleDomainChange = (e) => {
         navigate('/auth/applicant/signup/success');
         // 원한다면 페이지 이동: window.location.href = '/welcome';
       } else {
-        alert('회원가입 실패');
+        // 서버에서 보낸 에러 메시지 읽기
+        const errorData = await response.text();
+        console.error('서버 응답:', response.status, errorData);
+        
+        if (response.status === 400 || response.status === 500) {
+          if (errorData.includes('이미 가입된 GitHub 계정입니다')) {
+            alert('이미 가입된 GitHub 계정입니다. 다른 계정으로 시도해주세요.');
+          } else if (errorData.includes('이미 가입된 이메일 주소입니다')) {
+            alert('이미 가입된 이메일 주소입니다. 다른 이메일로 시도해주세요.');
+          } else {
+            alert('회원가입 중 오류가 발생했습니다: ' + errorData);
+          }
+        } else {
+          alert('회원가입 실패: ' + errorData);
+        }
       }
     } catch (error) {
       console.error('오류 발생:', error);
-      alert('서버 오류');
+      alert('네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.');
     }
   };
 

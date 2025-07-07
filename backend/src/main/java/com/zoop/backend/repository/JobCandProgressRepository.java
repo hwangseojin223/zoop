@@ -78,4 +78,7 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
     );
 
     Optional<JobCandProgress> findByJobCandidateId(Long jobCandidateId);
+
+    // postId와 candidateId로 JobCandProgress 조회
+    Optional<JobCandProgress> findByPost_PostIdAndCandidate_CandidateId(Long postId, Long candidateId);
 }

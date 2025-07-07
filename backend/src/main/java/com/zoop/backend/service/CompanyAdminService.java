@@ -16,7 +16,7 @@ public class CompanyAdminService {
     private final PasswordEncoder passwordEncoder;
     
     public boolean isLoginIdDuplicate(String loginId) {
-        return adminRepository.existsByLoginId(loginId);
+        return adminRepository.existsByCompanyAdminLogin(loginId);
     }
     
 

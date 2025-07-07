@@ -56,7 +56,7 @@ function PortfolioSubmissionPage() {
         console.log(`포트폴리오 제출 페이지 로드 - 공고 ID: ${postId}, 사용자 ID: ${candidateId}`);
         
         // 공고 정보 가져오기
-        const response = await fetch(`http://localhost:8081/api/posts/${postId}`);
+        const response = await fetch(`http://localhost:8081/api/postings/info/${postId}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

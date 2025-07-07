@@ -81,7 +81,7 @@ public class ApplicationController {
             if (existingCandidate != null) {
                 // 기존 지원자인 경우, 이미 이 공고에 지원했는지 확인
                 JobCandProgress existingProgress = jobCandProgressRepository
-                    .findByPostIdAndCandidateId(dto.getPostId(), existingCandidate.getCandidateId())
+                    .findByPost_PostIdAndCandidate_CandidateId(dto.getPostId(), existingCandidate.getCandidateId())
                     .orElse(null);
                 
                 if (existingProgress != null) {
@@ -119,8 +119,8 @@ public class ApplicationController {
 
             // 5. 지원 진행 상태 생성
             JobCandProgress progress = JobCandProgress.builder()
-                .postId(dto.getPostId())
-                .candidateId(candidate.getCandidateId())
+                .post(post)
+                .candidate(candidate)
                 .jobCandCurrStage("1n") // 필터링 단계로 시작
                 .jobCandCreatedAt(LocalDateTime.now())
                 .jobCandUpdatedAt(LocalDateTime.now())
