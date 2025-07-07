@@ -1,6 +1,22 @@
 package com.zoop.backend.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Optional;
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
 import com.zoop.backend.config.GithubBridgeConfig;
 import com.zoop.backend.domain.dto.FilterRequestDto;
 import com.zoop.backend.domain.dto.GithubCandidateDto;
@@ -13,6 +29,7 @@ import com.zoop.backend.repository.PostRepository;
 import com.zoop.backend.domain.entity.Post;
 import com.zoop.backend.repository.JobCandProgressRepository;
 import com.zoop.backend.repository.CandidateRepository;
+import com.zoop.backend.domain.entity.Candidate;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -54,10 +71,10 @@ public class GithubBridgeService {
                 .orElseThrow(() -> new RuntimeException("해당 postId의 공고가 없습니다: " + filter.getPostId()));
 
             // 2. Post 엔티티에서 필터 정보 추출 (콤마로 구분된 문자열을 리스트로 변환)
-            java.util.List<String> languages = post.getPostProgrammingLanguage() != null && !post.getPostProgrammingLanguage().isBlank()
-                ? Arrays.asList(post.getPostProgrammingLanguage().split(",")) : new java.util.ArrayList<>();
-            java.util.List<String> regions = post.getPostLocation() != null && !post.getPostLocation().isBlank()
-                ? Arrays.asList(post.getPostLocation().split(",")) : new java.util.ArrayList<>();
+            List<String> languages = post.getPostProgrammingLanguage() != null && !post.getPostProgrammingLanguage().isBlank()
+                ? Arrays.asList(post.getPostProgrammingLanguage().split(",")) : new ArrayList<>();
+            List<String> regions = post.getPostLocation() != null && !post.getPostLocation().isBlank()
+                ? Arrays.asList(post.getPostLocation().split(",")) : new ArrayList<>();
             int headcount = post.getPostHeadcount() != null ? post.getPostHeadcount() : 5; // 기본값 5
             String idealCandidate = post.getPostIdealCandidate();
 
@@ -137,12 +154,15 @@ public class GithubBridgeService {
                 
                 // === JobCandProgress 저장 ===
                 String githubLogin = (String) user.get("login");
+                Optional<Candidate> candidateOpt = candidateRepository.findByGithubLogin(githubLogin);
+                Candidate candidate = candidateOpt.orElse(null);
+                
                 // postId + githubLogin 조합으로 중복 체크
-                Optional<JobCandProgress> existing = jobCandProgressRepository.findByPostIdAndGithubLogin(post.getPostId(), githubLogin);
+                Optional<JobCandProgress> existing = jobCandProgressRepository.findByPost_PostIdAndGithubLogin(post.getPostId(), githubLogin);
                 JobCandProgress progress = existing.orElseGet(JobCandProgress::new);
                 progress.setPost(post);
                 progress.setGithubLogin(githubLogin);
-                // candidate는 나중에 설정하거나 null로 둠
+                progress.setCandidate(candidate);
                 progress.setJobCandCurrStage("1n");
                 progress.setJobCandCreatedAt(LocalDateTime.now());
                 progress.setJobCandUpdatedAt(LocalDateTime.now());
@@ -213,10 +233,9 @@ public class GithubBridgeService {
             System.out.println("[INFO] " + candidates.size() + "명의 후보자가 저장되었습니다.");
             
         } catch (Exception e) {
-            System.err.println("[ERROR] GitHub 검색 중 오류 발생: " + e.getMessage());
+            System.err.println("[ERROR] fetchFromPythonAndSave 실패: " + e.getMessage());
             e.printStackTrace();
-            // 트랜잭션 롤백을 위해 예외를 다시 던짐
-            throw new RuntimeException("GitHub 검색 중 오류가 발생했습니다: " + e.getMessage(), e);
+            throw new RuntimeException("GitHub 검색 및 저장 중 오류 발생", e);
         }
     }
     
@@ -224,22 +243,25 @@ public class GithubBridgeService {
     @Transactional
     public void saveGithubCandidates(Long postId, List<GithubCandidateDto> candidates) {
         for (GithubCandidateDto dto : candidates) {
-            GithubSearchResult result = new GithubSearchResult();
-            result.setPostId(postId);
-            result.setGithubLogin(dto.getLogin());
-            result.setGithubProfileUrl(dto.getProfileUrl());
-            result.setCandidateEmail(dto.getEmail());
-            result.setGithubSearchDate(LocalDateTime.now());
-            result.setGithubCreatedAt(LocalDateTime.now());
-            resultRepo.save(result); // ✅ githubSearchResultRepository → resultRepo
+            GithubSearchResult result = GithubSearchResult.builder()
+                .postId(postId)
+                .githubLogin(dto.getLogin())
+                .githubProfileUrl(dto.getProfileUrl())
+                .candidateEmail(dto.getEmail())
+                .analysisScore(dto.getScore())
+                .githubSearchDate(LocalDateTime.now())
+                .githubCreatedAt(LocalDateTime.now())
+                .build();
+            
+            resultRepo.save(result);
         }
     }
 
     // 인재상 저장
     public void saveIdealCandidateToPost(Long postId, String idealCandidate) {
-        postRepository.findById(postId).ifPresent(post -> {
-            post.setPostIdealCandidate(idealCandidate);
-            postRepository.save(post);
-        });
+        Post post = postRepository.findById(postId)
+            .orElseThrow(() -> new RuntimeException("Post not found: " + postId));
+        post.setPostIdealCandidate(idealCandidate);
+        postRepository.save(post);
     }
 }

@@ -46,10 +46,17 @@
 }
 
 .info-box .icon {
-  font-size: 24px;
   margin-right: 12px;
-  color: #22c55e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   animation: sparkle 2s ease-in-out infinite;
+}
+
+.info-box .icon img {
+  width: 24px;
+  height: 24px;
+  filter: brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%);
 }
 
 @keyframes sparkle {

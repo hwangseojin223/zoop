@@ -21,6 +21,7 @@ import RecruitCreate from './pages/company/RecruitCreate';
 import CandidateList from './pages/company/CandidateList';
 import ResponderList from './pages/company/ResponderList';
 import IdealCandidate from './pages/company/IdealCandidate';
+// info - lazy loading으로 변경
 
 // 챗봇 import
 import Chatbot from './components/Chatbot';
@@ -74,6 +75,7 @@ function AppContent() {
         <Route path="/auth/applicant/signup/process" element={<ApplicantSignupProcess />} />
         <Route path="/auth/applicant/signup/process/:token" element={<ApplicantSignupProcess />} />
         <Route path="/auth/login" element={<LoginSelectionPage />} />
+        <Route path="/login" element={<LoginSelectionPage />} />
         <Route path="/google-auth" element={<GoogleAuthCallback />} />
         <Route path="/about" element={<About />} />
         <Route path="/notice" element={<Notice />} />

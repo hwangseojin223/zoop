@@ -90,6 +90,16 @@
   font-size: 18px;
   color: inherit;
   transition: transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.menu-item .icon svg {
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
 }
 
 .menu-item:hover .icon {

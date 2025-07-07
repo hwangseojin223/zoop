@@ -33,9 +33,6 @@ public class CandidateService {
     private final CandidateRepository candidateRepository;
     private final InvitationRepository invitationRepository;
     
-    @Autowired
-    private ApplicationContext applicationContext;
-    
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -62,13 +59,24 @@ public class CandidateService {
             Candidate savedCandidate = candidateRepository.save(candidate);
             logger.info("저장된 후보자 ID: {}", savedCandidate.getCandidateId());
             
-            // invitation 업데이트는 나중에 별도로 처리 (회원가입 우선 성공)
-            logger.info("회원가입 성공: githubLogin={}, candidateId={}", savedCandidate.getGithubLogin(), savedCandidate.getCandidateId());
+            // invitations 테이블 업데이트는 별도 트랜잭션에서 처리
+            updateInvitationAsync(savedCandidate.getGithubLogin(), savedCandidate.getCandidateId());
             
             return savedCandidate;
         } catch (Exception e) {
             logger.error("회원 저장 중 오류 발생: {}", e.getMessage(), e);
             throw e;
+        }
+    }
+    
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void updateInvitationAsync(String githubLogin, Long candidateId) {
+        try {
+            invitationRepository.updateCandidateIdByGithubLogin(githubLogin, candidateId);
+            logger.info("✅ invitations 테이블 업데이트 성공: githubLogin={}, candidateId={}", githubLogin, candidateId);
+        } catch (Exception invitationError) {
+            logger.warn("⚠️ invitations 테이블 업데이트 실패 (회원가입은 성공): {}", invitationError.getMessage());
+            // invitations 업데이트 실패해도 회원가입은 성공으로 처리
         }
     }
     
