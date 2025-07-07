@@ -72,7 +72,7 @@ export default function CompanyDashboard() {
     }
     
     console.log('공고 목록을 불러오는 중...');
-    fetch(`http://localhost:8081/api/posts/all`, {
+    fetch(`http://localhost:8081/api/postings/all`, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -113,7 +113,7 @@ export default function CompanyDashboard() {
   useEffect(() => {
     if (selectedPostId) {
       setLoadingPostDetail(true);
-      fetch(`http://localhost:8081/api/posts/info/${selectedPostId}`, {
+      fetch(`http://localhost:8081/api/postings/info/${selectedPostId}`, {
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
@@ -289,7 +289,7 @@ export default function CompanyDashboard() {
   const handleEditSave = async () => {
     setEditLoading(true);
     try {
-      const res = await fetch(`http://localhost:8081/api/posts/${selectedPostId}`, {
+      const res = await fetch(`http://localhost:8081/api/postings/${selectedPostId}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -300,7 +300,7 @@ export default function CompanyDashboard() {
       if (res.ok) {
         setShowEditModal(false);
         // 상세 정보 갱신
-        const detailRes = await fetch(`http://localhost:8081/api/posts/info/${selectedPostId}`);
+        const detailRes = await fetch(`http://localhost:8081/api/postings/info/${selectedPostId}`);
         setSelectedPostDetail(await detailRes.json());
       } else {
         alert('수정에 실패했습니다.');
@@ -314,7 +314,7 @@ export default function CompanyDashboard() {
   const handleDelete = async () => {
     setDeleteLoading(true);
     try {
-      const res = await fetch(`http://localhost:8081/api/posts/${selectedPostId}`, { 
+      const res = await fetch(`http://localhost:8081/api/postings/${selectedPostId}`, { 
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
@@ -324,7 +324,7 @@ export default function CompanyDashboard() {
         setShowDeleteModal(false);
         setSelectedPostId(null);
         // 목록 갱신
-        const listRes = await fetch(`http://localhost:8081/api/posts/all`, {
+        const listRes = await fetch(`http://localhost:8081/api/postings/all`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
           },

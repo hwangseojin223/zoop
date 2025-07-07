@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, UNSAFE_future } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 // index
@@ -56,7 +56,7 @@ function AppContent() {
   }, [setAuthState]);
 
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Suspense fallback={<div>Loading...</div>}>
         <Routes>
         <Route

@@ -59,21 +59,29 @@ public class CandidateController {
         @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     })
     @PostMapping("/process")
-    public ResponseEntity<Candidate> addCandidate(
+    public ResponseEntity<?> addCandidate(
         @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "등록할 개인회원(후보자) 정보",
             required = true,
             content = @Content(schema = @Schema(implementation = Candidate.class))
         )
         @RequestBody Candidate candidate) {
-        // 입력받은 candidate 정보 출력
-        System.out.println(candidate.toString());
-        
-        // 후보자 저장
-        Candidate savedCandidate = candidateService.save(candidate);
-        
-        // 저장된 후보자와 함께 201 CREATED 상태 코드 반환
-        return new ResponseEntity<>(savedCandidate, HttpStatus.CREATED);
+        try {
+            // 입력받은 candidate 정보 출력
+            System.out.println(candidate.toString());
+            
+            // 후보자 저장
+            Candidate savedCandidate = candidateService.save(candidate);
+            
+            // 저장된 후보자와 함께 201 CREATED 상태 코드 반환
+            return new ResponseEntity<>(savedCandidate, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            log.error("회원가입 중 오류 발생: {}", e.getMessage());
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            log.error("회원가입 중 예상치 못한 오류 발생: {}", e.getMessage(), e);
+            return new ResponseEntity<>("회원가입 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping("/email/{githubLogin}")

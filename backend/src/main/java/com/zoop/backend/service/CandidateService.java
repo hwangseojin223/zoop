@@ -1,6 +1,7 @@
 package com.zoop.backend.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +43,24 @@ public class CandidateService {
     @Transactional 
     public Candidate save(Candidate candidate) {
         try {
+            // GitHub 로그인 중복 체크
+            if (candidate.getGithubLogin() != null) {
+                Optional<Candidate> existingCandidate = candidateRepository.findByGithubLogin(candidate.getGithubLogin());
+                if (existingCandidate.isPresent()) {
+                    logger.warn("이미 존재하는 GitHub 로그인: {}", candidate.getGithubLogin());
+                    throw new RuntimeException("이미 가입된 GitHub 계정입니다: " + candidate.getGithubLogin());
+                }
+            }
+            
+            // 이메일 중복 체크
+            if (candidate.getCandidateEmail() != null) {
+                Optional<Candidate> existingEmail = candidateRepository.findByCandidateEmail(candidate.getCandidateEmail());
+                if (existingEmail.isPresent()) {
+                    logger.warn("이미 존재하는 이메일: {}", candidate.getCandidateEmail());
+                    throw new RuntimeException("이미 가입된 이메일 주소입니다: " + candidate.getCandidateEmail());
+                }
+            }
+            
             // 비밀번호 암호화
             String encrypted = passwordEncoder.encode(candidate.getCandidatePassword());
             
