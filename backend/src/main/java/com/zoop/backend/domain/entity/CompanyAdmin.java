@@ -36,19 +36,19 @@ public class CompanyAdmin {
 
     @Column(name = "company_admin_login", nullable = false)
     @Schema(description="로그인 아이디", example="admin_user", requiredMode=RequiredMode.REQUIRED)
-    private String loginId;
+    private String companyAdminLogin;
 
     @Column(name = "company_admin_name", nullable = false)
     @Schema(description="관리자 이름", example="홍길동", requiredMode=RequiredMode.REQUIRED)
-    private String name;
+    private String companyAdminName;
 
     @Column(name = "company_admin_email", nullable = false, unique = true)
     @Schema(description="관리자 이메일 주소", example="admin@example.com", requiredMode=Schema.RequiredMode.REQUIRED)
-    private String email;
+    private String companyAdminEmail;
 
     @Column(name = "company_admin_password", nullable = false)
     @Schema(description="비밀번호(해시된 값)", accessMode=AccessMode.WRITE_ONLY)
-    private String password;
+    private String companyAdminPassword;
 
     @Column(name = "company_admin_created_at", nullable = false)
     @Schema(description="계정 생성일시", accessMode=AccessMode.READ_ONLY)
@@ -86,35 +86,35 @@ public class CompanyAdmin {
     }
 
     public String getLoginId() {
-        return loginId;
+        return companyAdminLogin;
     }
 
     public void setLoginId(String loginId) {
-        this.loginId = loginId;
+        this.companyAdminLogin = loginId;
     }
 
     public String getName() {
-        return name;
+        return companyAdminName;
     }
 
     public void setName(String name) {
-        this.name = name;
+        this.companyAdminName = name;
     }
 
     public String getEmail() {
-        return email;
+        return companyAdminEmail;
     }
 
     public void setEmail(String email) {
-        this.email = email;
+        this.companyAdminEmail = email;
     }
 
     public String getPassword() {
-        return password;
+        return companyAdminPassword;
     }
 
     public void setPassword(String password) {
-        this.password = password;
+        this.companyAdminPassword = password;
     }
 
     public LocalDateTime getCreatedAt() {

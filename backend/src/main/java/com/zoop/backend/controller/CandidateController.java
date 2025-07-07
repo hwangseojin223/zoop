@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
 
 import com.zoop.backend.domain.entity.Candidate;
 import com.zoop.backend.service.CandidateService;
@@ -28,7 +27,6 @@ import java.util.Optional;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.time.LocalDateTime;
 
 @Tag(name="CandidateController", description = "개인회원(후보자) 관련 API")
 @RestController
@@ -98,47 +96,5 @@ public class CandidateController {
         
         log.warn("❌ githubLogin={}에 해당하는 이메일을 찾을 수 없습니다.", githubLogin);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "이메일을 찾을 수 없습니다."));
-    }
-
-    @PutMapping("/email/{candidateId}")
-    public ResponseEntity<?> updateEmail(@PathVariable Long candidateId, @RequestBody Map<String, String> request) {
-        log.info("📧 candidateId={}의 이메일 변경 요청", candidateId);
-        
-        String newEmail = request.get("email");
-        if (newEmail == null || newEmail.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "이메일 주소가 필요합니다."));
-        }
-        
-        try {
-            Optional<Candidate> candidateOpt = candidateRepository.findById(candidateId);
-            if (candidateOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "사용자를 찾을 수 없습니다."));
-            }
-            
-            Candidate candidate = candidateOpt.get();
-            
-            // 기존 이메일과 같은지 확인
-            if (newEmail.equals(candidate.getCandidateEmail())) {
-                return ResponseEntity.ok(Map.of("message", "동일한 이메일 주소입니다."));
-            }
-            
-            // 새 이메일이 이미 다른 사용자에게 사용되고 있는지 확인
-            Optional<Candidate> existingEmailUser = candidateRepository.findByCandidateEmail(newEmail);
-            if (existingEmailUser.isPresent() && !existingEmailUser.get().getCandidateId().equals(candidateId)) {
-                return ResponseEntity.badRequest().body(Map.of("error", "이미 사용 중인 이메일 주소입니다."));
-            }
-            
-            // 이메일 변경
-            candidate.setCandidateEmail(newEmail);
-            candidate.setCandidateUpdatedAt(LocalDateTime.now());
-            candidateRepository.save(candidate);
-            
-            log.info("✅ candidateId={}의 이메일 변경 성공: {}", candidateId, newEmail);
-            return ResponseEntity.ok(Map.of("message", "이메일이 성공적으로 변경되었습니다.", "email", newEmail));
-            
-        } catch (Exception e) {
-            log.error("❌ 이메일 변경 중 오류 발생: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "이메일 변경 중 오류가 발생했습니다."));
-        }
     }
 }

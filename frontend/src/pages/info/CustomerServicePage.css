@@ -1,457 +1,207 @@
-/* CustomerServicePage.css*/
-
-.customer-service-page body {
-    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Dotum', sans-serif; 
-    margin: 0;
-    padding: 0;
-    background-color: #f5f6fa; 
-    color: #333;
-}
-
 .customer-service-page {
-    display: flex;
-    flex-direction: column;
-    min-height: 10vh;
-    width: 100vw;
-    overflow-x: auto;
+  min-height: 100vh;
+  background-color: #f7f9fc;
+  padding: 20px;
 }
 
-.customer-service-page .top-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 30px 400px;
-    min-width: 700px;
-    flex-wrap: nowrap;
-    box-sizing: border-box;
-    
+.customer-service-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
-.customer-service-page .top-nav .logo {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #4a4a4a;
-    white-space: nowrap;      /* 한 줄로만 표시 */
-    min-width: 100px;
-    overflow: hidden;         /*혹시 넘치면 잘림 처리
-    text-overflow: ellipsis;  /* 넘치면 ... */
-    width: 200px;
-    margin-right: 400px; /* 로고와 메뉴 간격 */
-    text-align: center;
-}
-
-.customer-service-page .top-nav nav ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    gap: 100px;         /* 메뉴간 간격 줄임 */
-    align-items: center;   /* 세로 중앙 정렬 */
-}
-
-.customer-service-page .top-nav nav a {
-    text-decoration: none;
-    color: #777; 
-    font-size: 1em;
-    transition: color 0.2s ease-in-out;
-}
-
-.customer-service-page .top-nav nav a:hover {
-    color: #333;
-}
-
-.customer-service-page .top-nav nav a, .customer-service-page .top-nav nav button {
-    text-decoration: none;
-    color: #777; 
-    font-size: 1.1em;
-    white-space: nowrap;    /* 한 줄로만 표시 */
-    min-width: 100px;       /* 최소 너비 확보(한 줄 보장) */
-    display: flex;
-    align-items: center;
-    height: 48px;           /* 메뉴 높이 통일 */
-    justify-content: center;
-    transition: color 0.2s;
-    background: none;       /* 버튼도 a와 스타일 통일 */
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-}
-
-.customer-service-page .top-nav nav a:hover, .customer-service-page .top-nav nav button:hover {
-    color: #333;
-}
-
-.customer-service-page .main-content {
-    flex-grow: 1; 
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0px 0px 20px; 
-    text-align: center;
-    background-color: rgb(255, 255, 255); /* 여기서 메인 콘텐츠 배경색 설정 */
-}
-
-.customer-service-page .hero-section {
-    width: 100%;
-    height: 20vh;
-    /* overflow: flex; 좌우 스크롤 */
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-    padding-top: 40px;
-    padding-bottom: 15px;
-    background-color: rgb(255, 255, 255);
-}
-
-.customer-service-page {
-    width: 100vw;
-    overflow-x: auto;
-}
-
-.customer-service-page .top-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 30px 400px;
-    min-width: 700px;
-    flex-wrap: nowrap;
-    box-sizing: border-box;
-    
-}
-
-@media (max-width: 1200px) {
-  .customer-service-page .top-nav {
-    padding: 30px 60px;
-    min-width: 0;
-  }
-}
-@media (max-width: 768px) {
-  .customer-service-page .top-nav {
-    flex-direction: column;
-    gap: 10px;
-    padding: 15px 20px;
-    min-width: 0;
-  }
-}
-
-.customer-service-page .hero-section h1 {
-    font-size: 3em;
-    color: #222;
-    margin-top: 1px;
-    margin-bottom: 1px;
-    line-height: 1.3;
-}
-
-/* hero-section h2 크기 조정 */
-.customer-service-page .hero-section h2 {
-  color: var(--grey-900, #191f28);
+.customer-service-container h1 {
+  color: #333;
+  margin-bottom: 30px;
   text-align: center;
-  font-size: 30px;
-  font-family: Toss Product Sans OTF;
+}
+
+.customer-service-content {
+  text-align: center;
+  color: #666;
+  font-size: 16px;
+}
+
+.customer-main-bg {
+  min-height: 100vh;
+  background: #fff;
+}
+
+.customer-nav {
+  width: 100%;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  height: 64px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.customer-nav-logo {
+  font-size: 1.2rem;
   font-weight: 700;
-  line-height: 130%;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  color: #3182f6;
+  letter-spacing: -1px;
 }
-/* Search Section */
-.customer-service-page .search-section {
-    width: 50%;
-    max-width: 600px; 
-    margin-top: 20px;
-    margin-bottom: 0px;
+.customer-nav-links {
+  display: flex;
+  gap: 32px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
-
-.customer-service-page .search-bar-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-    padding: 10px 20px;
-    margin-bottom: 10px;
+.customer-nav-links li a {
+  color: #222;
+  font-size: 1rem;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
 }
-
-.customer-service-page .search-input {
-    flex-grow: 1;
-    border: none;
-    outline: none;
-    font-size: 1.1em;
-    padding: 8px 0;
-    color: #444;
+.customer-nav-links li.active a,
+.customer-nav-links li a:hover {
+  color: #222;
 }
 
-.customer-service-page .search-input::placeholder {
-    color: #bbb;
+.customer-main-content {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 60px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.customer-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 60px;
+}
+.customer-hero-img {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 24px;
+}
+.customer-hero-title {
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 28px;
+  text-align: center;
+}
+.customer-search-box {
+  width: 100%;
+  max-width: 420px;
+  margin-bottom: 18px;
+}
+.customer-search-box input {
+  width: 100%;
+  padding: 14px 18px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #f8f9fa;
+  transition: border 0.2s;
+}
+.customer-search-box input:focus {
+  outline: none;
+  border: 1.5px solid #3182f6;
+  background: #fff;
+}
+.customer-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+.customer-category-btn {
+  background: #f3f4f6;
+  color: #222;
+  border: none;
+  border-radius: 16px;
+  padding: 8px 18px;
+  font-size: 0.98rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.customer-category-btn:hover {
+  background: #e5e7eb;
 }
 
-.customer-service-page .search-icon {
-    font-size: 1.2em;
-    color: #aaa;
-    margin-right: 10px;
+.customer-info-section {
+  width: 100vw;
+  background: #f3f7f6;
+  margin-top: 60px;
+  padding: 48px 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 60px;
 }
-
-.customer-service-page .suggestion-tags {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
+.customer-info-left {
+  max-width: 340px;
 }
-
-.customer-service-page .tag-button {
-    background-color: #e0e0e0; 
-    color: #555;
-    border: none;
-    border-radius: 20px;
-    padding: 10px 18px;
-    margin: 4px;
-    font-size: 0.9em;
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-    
+.customer-info-left h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 18px;
+  line-height: 1.5;
 }
-
-.customer-service-page .tag-button:hover {
-    background-color: #d0d0d0;
-    color: #333;
+.customer-info-contacts {
+  font-size: 1.05rem;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
-
-/* Contact Section */
-.customer-service-page .contact-section {
-    background-color: #ffffff; /*f3f8f7*/
-    padding: 60px 40px;
-    display: flex;
-    flex-direction: column; /* 위아래 쌓기 */
-    align-items: center;    /* 가운데 정렬 */
-    text-align: center;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 40px; 
-    /*position: relative;*/
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-    overflow: hidden; 
-    flex-wrap: wrap;
+.customer-info-contacts b {
+  font-weight: 700;
+  color: #3182f6;
 }
-
-.customer-service-page .contact-text {
-  max-width: 600px;
+.customer-info-right {
+  display: flex;
+  align-items: flex-end;
 }
-
-.customer-service-page .contact-image img {
-  width: 220px; /* 이미지 크기 조정 */
+.customer-info-img {
+  width: 120px;
   height: auto;
 }
 
-.customer-service-page .contact-section h2 {
-    font-size: 1.8em;
-    color: #222;
-    margin-bottom: 30px;
-    max-width: 400px; 
-    line-height: 1.4;
-}
-
-.customer-service-page .contact-info-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 25px;
-    flex-grow: 1; 
-}
-
-.customer-service-page .contact-item p {
-    margin: 0;
-    font-size: 0.95em;
-    color: #333;
-}
-
-.customer-service-page .contact-item .phone-number {
-    font-size: 1.3em;
-    font-weight: bold;
-    color: #333;
-    margin-top: 5px;
-}
-
-.customer-service-page .contact-emoji {
-  font-size: 80px;
-  margin-top: 10px;
-}
-
-@media (max-width: 768px) {
-    .customer-service-page .top-nav {
-        flex-direction: column;
-        gap: 10px;
-        padding: 15px 20px;
-    }
-
-    .customer-service-page .top-nav nav ul {
-        gap: 15px;
-    }
-
-    .customer-service-page .top-nav nav li {
-    display: flex;
-    align-items: center;    /* 세로 중앙 정렬 */
-    height: 48px;           /* 메뉴 높이 통일: 원하는 값(예시) */
-}
-
-    .customer-service-page .main-content {
-        padding: 10px 15px;
-    }
-
-    .customer-service-page .hero-section h1 {
-        font-size: 1em;
-    }
-
-    .customer-service-page .search-bar-container {
-        padding: 1px 15px;
-    }
-
-    .customer-service-page .search-input {
-        font-size: 1em;
-    }
-
-    .customer-service-page .search-button {
-        margin-left: 0;
-        width: 100%;
-        margin-top: 10px;
-    }
-
-    .customer-service-page .ai-answer-container {
-        margin: 15px;
-        padding: 15px;
-    }
-
-    .customer-service-page .suggestion-tags {
-        justify-content: center;
-        gap: 8px;
-    }
-
-    .customer-service-page .tag-button {
-        padding: 8px 15px;
-        font-size: 0.85em;
-    }
-
-    .customer-service-page .contact-section {
-        flex-direction: column;
-        align-items: center;
-        padding: 40px 20px;
-        text-align: center;
-    }
-
-    .customer-service-page .contact-section h2 {
-        font-size: 1.6em;
-        margin-bottom: 20px;
-        max-width: none;
-    }
-
-    .customer-service-page .contact-info-grid {
-        grid-template-columns: 1fr; 
-        gap: 15px;
-        width: 100%; 
-        margin-bottom: 30px; 
-    }
-}
-
-@media (max-width: 480px) {
-    .customer-service-page .hero-section h1 {
-        font-size: 1.5em;
-    }
-    .customer-service-page .tag-button {
-        font-size: 0.8em;
-        padding: 7px 12px;
-    }
-} 
-
-.desktop-only { display: block; }
-.mobile-only { display: none; }
-
-@media (max-width: 768px) {
-  .desktop-only { display: none !important; }
-  .mobile-only { display: block !important; }
-  .hamburger-menu {
-    position: absolute;
-    top: 60px;
-    right: 16px;
-    background: #fff;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-    border-radius: 12px;
-    z-index: 1001;
-    width: 180px;
-    padding: 0;
-    animation: fadeIn 0.2s;
+@media (max-width: 900px) {
+  .customer-info-section {
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    padding: 36px 0;
   }
-  .hamburger-menu ul { margin: 0; padding: 0; list-style: none; }
-  .hamburger-menu li { padding: 16px; border-bottom: 1px solid #f1f1f1; }
-  .hamburger-menu li:last-child { border-bottom: none; }
+  .customer-info-right {
+    align-items: center;
+  }
 }
-    .hamburger {
-    background: none;
-    border: none;
-    font-size: 2rem;
-    cursor: pointer;
-    position: absolute;
-    right: 24px;
-    top: 18px;
-    z-index: 1002;
-    }
-
-/* AI 검색 버튼 */
-.customer-service-page .search-button {
-  background: #30C59B;
-  color: white;
-  border: none;
-  padding: 5px 20px;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-left: 10px;
-  font-size: 1em;
-  font-weight: 500;
-  white-space: nowrap;
-  transition: background-color 0.3s ease;
-}
-
-.customer-service-page .search-button:hover {
-  background: #28a085;
-}
-
-.customer-service-page .search-button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-/* AI 답변 컨테이너 */
-.customer-service-page .ai-answer-container {
-  max-width: 800px;
-  margin: 20px auto;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 12px;
-  border-left: 4px solid #30C59B;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.customer-service-page .ai-answer-container h3 {
-  color: #30C59B;
-  margin-bottom: 15px;
-  font-size: 1.2em;
-  font-weight: 600;
-}
-
-.customer-service-page .ai-answer-container p {
-  color: #333;
-  line-height: 1.6;
-  margin: 0;
-  font-size: 1em;
-}
-
-.customer-service-page .suggestion-tags {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-}
-
-/* 네비게이션 관련 클래스 스코프 한정 */
-.customer-service-page .top-nav { /* ... */ }
-.customer-service-page .nav-list { /* ... */ }
-.customer-service-page .nav-links { /* ... */ }
-
+@media (max-width: 700px) {
+  .customer-main-content {
+    padding: 30px 0 0 0;
+  }
+  .customer-hero-title {
+    font-size: 1.3rem;
+  }
+  .customer-info-section {
+    padding: 24px 0;
+  }
+  .customer-info-img {
+    width: 80px;
+  }
+  .customer-nav {
+    padding: 0 10px;
+  }
+  .customer-nav-links {
+    gap: 16px;
+  }
+} 
