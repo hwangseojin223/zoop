@@ -1,20 +1,22 @@
 package com.zoop.backend.repository;
 
-
+import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import com.zoop.backend.domain.entity.Portfolio;
 
-import org.springframework.data.repository.CrudRepository;
+/**
+ *
+ * @author hwangseojin
+ */
 
-public interface PortfolioRepository extends CrudRepository<Portfolio, Long> {
-
-    @Query("SELECT p.portfolioFilePath FROM Portfolio p WHERE p.jobCandidateId = :jobCandId")
-    String findFilePathByJobCandidateId(@Param("jobCandId") Long jobCandidateId);
-
-    /**합친 이후 */
+@Repository
+public interface PortfolioRepository extends JpaRepository<Portfolio, Integer> {
+    List<Portfolio> findByJobCandidateId(Integer jobCandidateId);
+    Optional<Portfolio> findByJobCandidateIdAndPortfolioId(Integer jobCandidateId, Integer portfolioId);
     Optional<Portfolio> findByJobCandidateId(Long jobCandidateId);
+    
 }

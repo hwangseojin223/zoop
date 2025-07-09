@@ -44,7 +44,7 @@ const welcomeMsgs = {
   }
 };
 
-export default function Chatbot({ open, onClose, anchorRef }) {
+export default function Chatbot({ open, onClose, anchorRef, onIdealCandidateUpdate }) {
   const [visible, setVisible] = useState(open);
   const [animClass, setAnimClass] = useState(open ? "open" : "closed");
   const [langOpen, setLangOpen] = useState(false);
@@ -63,6 +63,22 @@ export default function Chatbot({ open, onClose, anchorRef }) {
   const modalRef = useRef(null);
   const scrollRef = useRef(null);
   const isSending = useRef(false);
+
+  // 🟢 (추가) messages가 변경될 때마다 마지막 AI 답변을 onIdealCandidateUpdate로 전달
+  useEffect(() => {
+    if (typeof onIdealCandidateUpdate === "function") {
+      const lastAIMsg = [...messages].reverse().find(m => m.type === "ai");
+      if (lastAIMsg) {
+        onIdealCandidateUpdate({
+          messages,
+          lastAI: typeof lastAIMsg.content === "string"
+            ? lastAIMsg.content
+            : renderToPlain(lastAIMsg.content)
+        });
+      }
+    }
+    // eslint-disable-next-line
+  }, [messages]);
 
   // 언어 바뀔 때 옵션/웰컴 메시지 초기화
   useEffect(() => {

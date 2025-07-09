@@ -10,6 +10,7 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
   const containerRef = useRef(null);
   const modalRef = useRef(null);
   const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
+  const [jobCandidateId, setJobCandidateId] = useState(null);
 
   // 예시: 필요한 값이 없을 경우 대비하여 상태 저장
   const [invitationTimes, setInvitationTimes] = useState([]);
@@ -28,82 +29,212 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
   const [interviewAnalysisOpen, setInterviewAnalysisOpen] = useState(false); // 면접 분석
 
   const [videoBlobUrl, setVideoBlobUrl] = useState(null);
+  const [localStage, setLocalStage] = useState(candidate?.jobCandCurrStage);
 
-
-
+  // candidate가 변경될 때 localStage 동기화
+  useEffect(() => {
+    if (candidate?.jobCandCurrStage) {
+      setLocalStage(candidate.jobCandCurrStage);
+    }
+  }, [candidate?.jobCandCurrStage]);
 
   /** 아코디언 */
   const Accordion = ({ title, open, setOpen, children }) => (
-    <div className="mb-4 border rounded">
+    <div className="mb-6 overflow-hidden">
       <button
         onClick={() => setOpen(prev => !prev)}
-        className="w-full text-left px-4 py-2 bg-emerald-100 hover:bg-emerald-200 font-semibold text-emerald-800"
+        className="w-full text-left px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-t-2xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-between"
       >
-        {title}
+        <span className="text-lg">{title}</span>
+        <div className={`transform transition-transform duration-300 ${open ? 'rotate-180' : 'rotate-0'}`}>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
       </button>
 
-      {open && <div className="p-4 bg-white">{children}</div>}
-
+      <div className={`bg-white shadow-lg transition-all duration-500 ease-in-out ${
+        open ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+      } overflow-hidden rounded-b-2xl`}>
+        <div className="p-6 bg-gradient-to-br from-gray-50 to-white">
+          {children}
+        </div>
+      </div>
     </div>
   );
 
 
+  // jobCandidateId 조회
+  useEffect(() => {
+    if (!isOpen || !candidate || !postId) return;
+
+    fetch(`http://localhost:8081/api/progress/${postId}/${candidate.githubLogin}/job-candidate-id`)
+      .then(res => {
+        if (!res.ok) throw new Error('jobCandidateId 조회 실패');
+        return res.json();
+      })
+      .then(data => {
+        console.log('jobCandidateId 조회 성공:', data.jobCandidateId);
+        console.log("candidate: ", candidate);
+        console.log("postId: ", postId);
+        setJobCandidateId(data.jobCandidateId);
+      })
+      .catch(err => {
+        console.error('jobCandidateId 조회 오류:', err);
+        setJobCandidateId(null);
+      });
+  }, [isOpen, candidate, postId]);
+
   // 모달이 열릴 때 stage에 따라 API 호출
   useEffect(() => {
-    if (!isOpen || !candidate) return;
+    if (!isOpen || !candidate || !jobCandidateId) {
+      console.log("--------------------------------");
+      console.log("isOpen: ", isOpen);
+      console.log("candidate: ", candidate);
+      console.log("jobCandidateId: ", jobCandidateId);
+      console.log("--------------------------------");
+      return;
+    }
 
     const stage = candidate.jobCandCurrStage;
-    const jobCandidateId = candidate.jobCandidateId;
     const githubLogin = candidate.githubLogin;
 
     // invitationSentDate
-    if (["2n", "2y", "3n", "3y", "4n", "4y"].includes(stage)) {
+    if (["2n", "2y", "2p", "3n", "3y", "4n", "4y"].includes(stage)) {
       fetch(`http://localhost:8081/api/invitations/${postId}/${githubLogin}/sent-times`)
-        .then(res => res.json())
-        // .then(data => setInvitationTimes(data))
-        .then(data => setInvitationTimes(data[0].invitationSentDate))
-        .catch(() => setInvitationTimes([]));
+        .then(res => {
+          if (!res.ok) throw new Error('invitationSentDate 조회 실패');
+          return res.json();
+        })
+        .then(data => {
+          console.log("invitationSentDate 조회 성공:", data);
+          if (data && data.length > 0 && data[0].invitationSentDate) {
+            setInvitationTimes(data[0].invitationSentDate);
+            console.log("data: ", data);
+            console.log("data[0]: ", data[0]);
+            console.log("data[0].invitationSentDate: ", data[0].invitationSentDate);
+            console.log("invitationTimes: ", invitationTimes);
+          } else {
+            console.log("invitationSentDate 데이터가 없습니다.");
+            setInvitationTimes(null);
+          }
+        })
+        .catch(err => {
+          console.error('invitationSentDate 조회 오류:', err);
+          setInvitationTimes(null);
+        });
     }
 
     // portfolioSubmissionDate 
-    if (["2y", "3n", "3y", "4n", "4y"].includes(stage)) {
+    if (["2y", "2p", "3n", "3y", "4n", "4y"].includes(stage)) {
       fetch(`http://localhost:8081/api/portfolios/${jobCandidateId}/submission-date`)
-        .then(res => res.json())
-        .then(data => setPortfolioDate(data.portfolioSubmissionDate)) // or .portfolioSubmissionDate
-        .catch(() => setPortfolioDate(null));
+        .then(res => {
+          if (!res.ok) throw new Error('portfolioSubmissionDate 조회 실패');
+          return res.json();
+        })
+        .then(data => {
+          console.log("portfolioSubmissionDate 조회 성공:", data);
+          if (data && data.portfolioSubmissionDate) {
+            setPortfolioDate(data.portfolioSubmissionDate);
+          } else {
+            console.log("portfolioSubmissionDate 데이터가 없습니다.");
+            setPortfolioDate(null);
+          }
+        })
+        .catch(err => {
+          console.error('portfolioSubmissionDate 조회 오류:', err);
+          setPortfolioDate(null);
+        });
     }
 
+    // interviewSchedule
     if (["3n", "3y", "4n", "4y"].includes(stage)) {
-      fetch(`http://localhost:8081/api/interviews/${jobCandidateId}/schedule`)
-        .then(res => res.json())
-        .then(data => setInterviewSchedule(data))
-        .catch(() => setInterviewSchedule(null));
+      fetch(`http://localhost:8081/api/interview-schedules/${jobCandidateId}/schedule`)
+        .then(res => {
+          if (!res.ok) throw new Error('interviewSchedule 조회 실패');
+          return res.json();
+        })
+        .then(data => {
+          console.log("interviewSchedule 조회 성공:", data);
+          if (data) {
+            setInterviewSchedule(data);
+          } else {
+            console.log("interviewSchedule 데이터가 없습니다.");
+            setInterviewSchedule(null);
+          }
+        })
+        .catch(err => {
+          console.error('interviewSchedule 조회 오류:', err);
+          setInterviewSchedule(null);
+        });
     }
 
     // 포트폴리오 분석
-    if (["2y", "3n", "3y", "4n", "4y"].includes(stage)) {
+    if (["2y", "2p", "3n", "3y", "4n", "4y"].includes(stage)) {
       fetch(`http://localhost:8081/api/analysis/${jobCandidateId}/portfolio`)
-        .then(res => res.json())
-        .then(setPortfolioAnalysis)
-        .catch(() => setPortfolioAnalysis(null));
+        .then(res => {
+          if (!res.ok) throw new Error('portfolioAnalysis 조회 실패');
+          return res.json();
+        })
+        .then(data => {
+          console.log("portfolioAnalysis 조회 성공:", data);
+          if (data) {
+            setPortfolioAnalysis(data);
+          } else {
+            console.log("portfolioAnalysis 데이터가 없습니다.");
+            setPortfolioAnalysis(null);
+          }
+        })
+        .catch(err => {
+          console.error('portfolioAnalysis 조회 오류:', err);
+          setPortfolioAnalysis(null);
+        });
     }
 
     
     // 면접 영상
     if (["3y", "4n", "4y"].includes(stage)) {
       fetch(`http://localhost:8081/api/interviews/${jobCandidateId}/video`)
-        .then(res => res.json())
-        .then(data => setInterviewVideoUrl(data.videoUrl))
-        .catch(() => setInterviewVideoUrl(null));
+        .then(res => {
+          if (!res.ok) throw new Error('interviewVideo 조회 실패');
+          return res.json();
+        })
+        .then(data => {
+          console.log("interviewVideo 조회 성공:", data);
+          if (data && data.videoUrl) {
+            setInterviewVideoUrl(data.videoUrl);
+          } else {
+            console.log("interviewVideo 데이터가 없습니다.");
+            setInterviewVideoUrl(null);
+          }
+        })
+        .catch(err => {
+          console.error('interviewVideo 조회 오류:', err);
+          setInterviewVideoUrl(null);
+        });
 
       // 면접 분석
       fetch(`http://localhost:8081/api/analysis/${jobCandidateId}/interview`)
-        .then(res => res.json())
-        .then(setInterviewAnalysis)
-        .catch(() => setInterviewAnalysis(null));
+        .then(res => {
+          if (!res.ok) throw new Error('interviewAnalysis 조회 실패');
+          return res.json();
+        })
+        .then(data => {
+          console.log("interviewAnalysis 조회 성공:", data);
+          if (data) {
+            setInterviewAnalysis(data);
+          } else {
+            console.log("interviewAnalysis 데이터가 없습니다.");
+            setInterviewAnalysis(null);
+          }
+        })
+        .catch(err => {
+          console.error('interviewAnalysis 조회 오류:', err);
+          setInterviewAnalysis(null);
+        });
     }
     
-  }, [isOpen, candidate]);
+  }, [isOpen, candidate, jobCandidateId]);
 
   // useEffect(() => {
   //   console.log("📩 invitationTimes 상태 업데이트:", invitationTimes);
@@ -123,19 +254,60 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
 
   /**포트폴리오를 불러오기 위한 useState */
   useEffect(() => {
-    if (!candidate?.filePath) return;
+    if (!jobCandidateId) return;
 
-    const filename = candidate.filePath.split('/').pop();
-    const url = `http://localhost:8081/api/files/download/${filename}`;
+    // jobCandidateId로 포트폴리오 조회
+    fetch(`http://localhost:8081/api/portfolios/job-candidate/${jobCandidateId}`)
+      .then(res => {
+        if (!res.ok) {
+          if (res.status === 404) {
+            console.log("포트폴리오가 존재하지 않습니다.");
+            return null;
+          }
+          throw new Error('포트폴리오 조회 실패');
+        }
+        return res.json();
+      })
+      .then(portfolio => {
+        if (!portfolio) {
+          setPdfBlobUrl(null);
+          return;
+        }
 
-    fetch(url)
-      .then(res => res.blob())
+        const filePath = portfolio.portfolioFilePath;
+        if (!filePath) {
+          console.log("포트폴리오 파일 경로가 없습니다.");
+          setPdfBlobUrl(null);
+          return;
+        }
+
+        // S3 URL인지 로컬 파일 경로인지 확인
+        const isS3Url = filePath.startsWith('https://') && filePath.includes('s3');
+        
+        let url;
+        if (isS3Url) {
+          // S3 URL인 경우 백엔드 프록시를 통해 다운로드
+          url = `http://localhost:8081/api/files/s3/download?s3Url=${encodeURIComponent(filePath)}`;
+        } else {
+          // 로컬 파일인 경우 기존 방식 사용
+          const filename = filePath.split('/').pop();
+          url = `http://localhost:8081/api/files/download/${filename}`;
+        }
+
+        return fetch(url);
+      })
+      .then(res => {
+        if (!res) return null;
+        if (!res.ok) throw new Error('파일 다운로드 실패');
+        return res.blob();
+      })
       .then(blob => {
+        if (!blob) return;
         const blobUrl = URL.createObjectURL(blob);
         setPdfBlobUrl(blobUrl);
       })
       .catch(err => {
-        console.error("PDF fetch 오류:", err);
+        console.error("포트폴리오 fetch 오류:", err);
         setPdfBlobUrl(null);
       });
 
@@ -143,18 +315,31 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
     return () => {
       if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
     };
-  }, [candidate?.filePath]);
+  }, [jobCandidateId]);
 
   
   /** 면접영상을 불러오기 위한 useState */
   useEffect(() => {
     if (!interviewVideoUrl) return;
 
-    const filename = interviewVideoUrl.split('/').pop(); // 예: "video.mp4"
-    const url = `http://localhost:8081/api/files/download/${filename}`;
+    // S3 URL인지 로컬 파일 경로인지 확인
+    const isS3Url = interviewVideoUrl.startsWith('https://') && interviewVideoUrl.includes('s3');
+    
+    let url;
+    if (isS3Url) {
+      // S3 URL인 경우 백엔드 프록시를 통해 다운로드
+      url = `http://localhost:8081/api/files/s3/download?s3Url=${encodeURIComponent(interviewVideoUrl)}`;
+    } else {
+      // 로컬 파일인 경우 기존 방식 사용
+      const filename = interviewVideoUrl.split('/').pop(); // 예: "video.mp4"
+      url = `http://localhost:8081/api/files/download/${filename}`;
+    }
 
     fetch(url)
-      .then(res => res.blob())
+      .then(res => {
+        if (!res.ok) throw new Error('면접 영상 다운로드 실패');
+        return res.blob();
+      })
       .then(blob => {
         const blobUrl = URL.createObjectURL(blob);
         setVideoBlobUrl(blobUrl);
@@ -190,6 +375,43 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
   const next = () => setCurrentIdx(idx => (idx === numPages - 1 ? 0 : idx + 1));
   const onDocumentLoadSuccess = ({ numPages }) => setNumPages(numPages);
 
+  // 면접초대 버튼 클릭시
+  const handleInterviewInvitation = async () => {
+    if (!jobCandidateId) {
+      alert('후보자 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+
+    const apiUrl = `http://localhost:8081/api/progress/${jobCandidateId}/update-stage-2p`;
+    console.log('면접초대 API 호출 URL:', apiUrl);
+    console.log('jobCandidateId:', jobCandidateId);
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('API 응답 상태:', response.status);
+      console.log('API 응답 헤더:', response.headers);
+
+      if (response.ok) {
+        alert('면접 초대가 성공적으로 처리되었습니다!');
+        // 로컬 상태 업데이트: 2y -> 2p로 변경
+        setLocalStage('2p');
+      } else {
+        const errorText = await response.text();
+        console.error('API 오류 응답:', errorText);
+        alert(`면접 초대 처리 실패: ${errorText}`);
+      }
+    } catch (error) {
+      console.error('면접 초대 API 호출 오류:', error);
+      alert('면접 초대 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+    }
+  };
+
   // 닫기버튼 클릭시
   const handleClose = () => {
     // 아코디언 닫기
@@ -218,52 +440,107 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
 
   if (!isOpen || !candidate) return null;
 
+  // 날짜 포맷 함수 (연. 월. 일. 오전/오후 시:분:초)
+  function formatKoreanDateTime(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date)) return dateString;
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    let hour = date.getHours();
+    const minute = date.getMinutes();
+    const second = date.getSeconds();
+    const isPM = hour >= 12;
+    const ampm = isPM ? '오후' : '오전';
+    let hour12 = hour % 12;
+    if (hour12 === 0) hour12 = 12;
+    return `${year}. ${month}. ${day}. ${ampm} ${hour12}:${minute.toString().padStart(2, '0')}:${second.toString().padStart(2, '0')}`;
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleClose}>
       <div
         ref={modalRef}
-        className="bg-emerald-50 p-10 rounded-2xl shadow-lg border w-[80%] max-w-[1100px] max-h-[80%] relative overflow-y-auto"
+        className="bg-white p-8 rounded-3xl shadow-2xl border border-gray-100 w-[85%] max-w-[1200px] max-h-[85%] relative overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-2xl font-bold text-emerald-700 mb-6 border-b pb-3">회신자 상세 정보</h3>
+        {/* 헤더 */}
+        <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-200">
+          <h3 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+            후보자 상세 정보
+          </h3>
+          <button
+            onClick={handleClose}
+            className="text-gray-400 hover:text-gray-600 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+          >
+            ×
+          </button>
+        </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-10 text-sm">
-          <div><strong>GitHub:</strong> {candidate.githubLogin}</div>
-          <div><strong>이메일:</strong> {candidate.candidateEmail}</div>
-          <div><strong>점수:</strong> {candidate.githubAnalysisScore}</div>
+        {/* 상단 배너형 정보 */}
+        <div className="w-full mb-4 py-2 px-4 bg-gradient-to-r from-amber-500 to-amber-500 text-white rounded-xl shadow flex justify-between items-center">
+          <span className="flex items-center text-base font-semibold">
+            <span className="mr-2">👤</span>{candidate.githubLogin}
+          </span>
+          <span className="flex items-center text-base font-semibold">
+            <span className="mr-2">✉️</span>{candidate.candidateEmail}
+          </span>
+        </div>
 
-          {["2n", "2y", "3n", "3y", "4n", "4y"].includes(candidate.jobCandCurrStage) && (
-            // <div><strong>메일 발송 시각:</strong> {invitationTimes.map((t, idx) => (
-            //   <div key={idx}>{t.invitationSentDate}</div>
-            // ))}</div>
-            <div><strong>메일 발송 시각:</strong> 
-              <div>{invitationTimes}</div>
+        {/* 기본 정보 카드 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 w-full">
+          {/* 분석 점수 카드 */}
+          <div className="bg-gradient-to-br from-emerald-400 to-teal-500 p-4 rounded-2xl shadow-xl flex flex-col items-center justify-center">
+            <span className="text-3xl mb-1">🏆</span>
+            <span className="text-base font-bold text-white">분석 점수</span>
+            <span className="text-2xl font-extrabold text-white mt-1">{candidate.analysisScore ?? 0}</span>
+            <span className="text-xs text-emerald-100">/ 100</span>
+          </div>
+          {/* 메일 발송 시각 카드 */}
+          { ["2n", "2p", "2y", "3n", "3y", "4n", "4y"].includes(localStage) && (
+            <div className="bg-gradient-to-br from-orange-400 to-red-400 p-4 rounded-2xl shadow-xl flex flex-col items-center justify-center">
+              <span className="text-3xl mb-1">✉️</span>
+              <span className="text-base font-bold text-white">메일 발송 시각</span>
+              <span className="text-sm font-medium text-white mt-1">{formatKoreanDateTime(invitationTimes)}</span>
             </div>
           )}
-
-          {["2y", "3n", "3y", "4n", "4y"].includes(candidate.jobCandCurrStage) && (
-            <div><strong>포트폴리오 제출:</strong> {portfolioDate && new Date(portfolioDate).toLocaleString()}</div>
-          )}
-
-          {["3n", "3y", "4n", "4y"].includes(candidate.jobCandCurrStage) && (
-            <div><strong>면접 일정:</strong> {interviewSchedule?.aiInterviewScheduledTime}</div>
-          )}
-
-          {["3y", "4n", "4y"].includes(candidate.jobCandCurrStage) && (
-            <div><strong>면접 여부:</strong> 
-              {interviewSchedule?.status === 'done' ? "완료" : "예정"}
+          {/* 포트폴리오 제출 카드 */}
+          { ["2y","2p", "3n", "3y", "4n", "4y"].includes(localStage) && (
+            <div className="bg-gradient-to-br from-cyan-500 to-blue-400 p-4 rounded-2xl shadow-xl flex flex-col items-center justify-center">
+              <span className="text-3xl mb-1">📁</span>
+              <span className="text-base font-bold text-white">포트폴리오 제출 시각</span>
+              <span className="text-sm font-medium text-white mt-1">{formatKoreanDateTime(portfolioDate)}</span>
             </div>
           )}
-
-          {["4n", "4y"].includes(candidate.jobCandCurrStage) && (
-            <div><strong>합격 여부:</strong> 
-              {candidate.jobCandCurrStage === "4y" ? "합격" : "불합격"}
+          {/* 면접 일정 카드 */}
+          { ["3n", "3y", "4n", "4y"].includes(localStage) && (
+            <div className="bg-gradient-to-br from-indigo-500 to-blue-600 p-4 rounded-2xl shadow-xl flex flex-col items-center justify-center">
+              <span className="text-3xl mb-1">🎤</span>
+              <span className="text-base font-bold text-white">면접 일정</span>
+              <span className="text-sm font-medium text-white mt-1">{formatKoreanDateTime(interviewSchedule?.aiInterviewScheduledTime)}</span>
+            </div>
+          )}
+          {/* 면접 여부 카드 */}
+          { ["3y", "4n", "4y"].includes(localStage) && (
+            <div className="bg-gradient-to-br from-yellow-400 to-amber-400 p-4 rounded-2xl shadow-xl flex flex-col items-center justify-center">
+              <span className="text-3xl mb-1">📝</span>
+              <span className="text-base font-bold text-white">면접 여부</span>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium mt-1 ${interviewSchedule?.status === 'done' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>{interviewSchedule?.status === 'done' ? "완료" : "예정"}</span>
+            </div>
+          )}
+          {/* 합격 여부 카드 */}
+          { ["4n", "4y"].includes(localStage) && (
+            <div className="bg-gradient-to-br from-emerald-600 to-green-500 p-4 rounded-2xl shadow-xl flex flex-col items-center justify-center">
+              <span className="text-3xl mb-1">🥇</span>
+              <span className="text-base font-bold text-white">합격 여부</span>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium mt-1 ${candidate.jobCandCurrStage === "4y" ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}>{candidate.jobCandCurrStage === "4y" ? "합격" : "불합격"}</span>
             </div>
           )}
         </div>
           
         <div className="mt-10">
-        {["2y", "3n", "3y", "4n", "4y"].includes(candidate.jobCandCurrStage) && (
+        {["2y", "2p", "3n", "3y", "4n", "4y"].includes(localStage) && (
           <>
             {/* 📄 포트폴리오 미리보기 */}
             <Accordion
@@ -271,23 +548,44 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
               open={portfolioPreviewOpen}
               setOpen={setPortfolioPreviewOpen}
             >
-              <div className="relative w-full h-[500px] border rounded bg-gray-50 shadow-inner">
-                {/* 확대/축소 버튼 */}
-                <div className="absolute top-2 right-2 z-10 bg-white rounded px-2 py-1 shadow flex space-x-2">
-                  <button onClick={() => setZoom(z => Math.min(z + 0.1, 3))}>＋</button>
-                  <button onClick={() => setZoom(z => Math.max(z - 0.1, 0.2))}>－</button>
+              <div className="relative w-full h-[500px] bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl shadow-inner border border-gray-200">
+                {/* 상단 컨트롤 바 */}
+                <div className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm rounded-xl px-4 py-2 shadow-lg border border-gray-200 flex items-center space-x-3">
+                  <span className="text-sm font-medium text-gray-600">확대/축소</span>
+                  <button 
+                    onClick={() => setZoom(z => Math.min(z + 0.1, 3))}
+                    className="w-8 h-8 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg flex items-center justify-center transition-colors duration-200 font-bold"
+                  >
+                    ＋
+                  </button>
+                  <button 
+                    onClick={() => setZoom(z => Math.max(z - 0.1, 0.2))}
+                    className="w-8 h-8 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg flex items-center justify-center transition-colors duration-200 font-bold"
+                  >
+                    －
+                  </button>
+                  <span className="text-sm font-medium text-gray-600 ml-2">
+                    {Math.round(zoom * 100)}%
+                  </span>
                 </div>
 
-                {/* 왼쪽버튼 */}
+                {/* 페이지 정보 */}
+                <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-sm rounded-xl px-4 py-2 shadow-lg border border-gray-200">
+                  <span className="text-sm font-medium text-gray-600">
+                    페이지 {currentIdx + 1} / {numPages || '?'}
+                  </span>
+                </div>
+
+                {/* 왼쪽 버튼 */}
                 <button
                   onClick={prev}
-                  className="absolute left-2 top-1/2 z-10 bg-white text-xl rounded-full px-2 py-1 shadow border"
+                  className="absolute left-4 top-1/2 z-10 bg-white/90 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-emerald-600 text-2xl rounded-full w-12 h-12 shadow-lg border border-gray-200 flex items-center justify-center transition-all duration-200 transform hover:scale-110"
                 >
                   ‹
                 </button>
 
-                <div ref={containerRef} className="flex justify-center items-center overflow-auto h-full">
-                  {pdfBlobUrl && (
+                <div ref={containerRef} className="flex justify-center items-center overflow-auto h-full p-4">
+                  {pdfBlobUrl ? (
                     <Document
                       file={pdfBlobUrl}
                       onLoadSuccess={onDocumentLoadSuccess}
@@ -295,23 +593,29 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
                     >
                       <Page
                         pageNumber={currentIdx + 1}
-                        height={400 * zoom}  // ✅ 높이에 맞춰서 렌더링
+                        height={400 * zoom}
                         renderAnnotationLayer={false}
                         renderTextLayer={false}
                       />
                     </Document>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-gray-500">
+                      <svg className="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <p className="text-lg font-medium">포트폴리오를 불러오는 중...</p>
+                    </div>
                   )}
                 </div>
 
-                {/* 오른쪽버튼 */}
+                {/* 오른쪽 버튼 */}
                 <button
                   onClick={next}
-                  className="absolute right-2 top-1/2 z-10 bg-white text-xl rounded-full px-2 py-1 shadow border"
+                  className="absolute right-4 top-1/2 z-10 bg-white/90 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-emerald-600 text-2xl rounded-full w-12 h-12 shadow-lg border border-gray-200 flex items-center justify-center transition-all duration-200 transform hover:scale-110"
                 >
                   ›
                 </button>
               </div>
-
             </Accordion>
 
             {/* 📁 포트폴리오 분석 결과 */}
@@ -321,18 +625,44 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
               setOpen={setPortfolioAnalysisOpen}
             >
               {portfolioAnalysis ? (
-                <div className="text-sm space-y-2">
-                  <p><strong>점수:</strong> {portfolioAnalysis.analysisScore}</p>
-                  <p><strong>내용:</strong> {portfolioAnalysis.analysisData}</p>
+                <div className="space-y-6">
+                  {/* 점수 카드 */}
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 rounded-2xl border border-emerald-200 shadow-sm">
+                    <div className="flex items-center mb-3">
+                      <div className="w-3 h-3 bg-emerald-500 rounded-full mr-3"></div>
+                      <h4 className="font-semibold text-emerald-800 text-lg">분석 점수</h4>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-3xl font-bold text-emerald-600 mr-2">{portfolioAnalysis.analysisScore}</span>
+                      <span className="text-sm text-gray-500">/ 100</span>
+                    </div>
+                  </div>
+
+                  {/* 분석 내용 카드 */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-200 shadow-sm">
+                    <div className="flex items-center mb-3">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                      <h4 className="font-semibold text-blue-800 text-lg">상세 분석</h4>
+                    </div>
+                    <div className="bg-white/70 p-4 rounded-xl border border-blue-100">
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{portfolioAnalysis.analysisData}</p>
+                    </div>
+                  </div>
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">분석 결과가 없습니다.</p>
+                <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                  <svg className="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p className="text-lg font-medium">분석 결과가 없습니다.</p>
+                  <p className="text-sm text-gray-400 mt-1">포트폴리오 분석이 진행되지 않았습니다.</p>
+                </div>
               )}
             </Accordion>
           </>
         )}
 
-        {["3y", "4n", "4y"].includes(candidate.jobCandCurrStage) && (
+        {["3y", "4n", "4y"].includes(localStage) && (
           <>
             {/* 🎥 면접 영상 */}
             <Accordion
@@ -341,13 +671,26 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
               setOpen={setInterviewVideoOpen}
             >
               {videoBlobUrl ? (
-                <video
-                  src={videoBlobUrl}
-                  controls
-                  className="w-full h-[400px] object-contain rounded"
-                />
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200 shadow-inner">
+                  <div className="relative">
+                    <video
+                      src={videoBlobUrl}
+                      controls
+                      className="w-full h-[400px] object-contain rounded-xl shadow-lg"
+                    />
+                    <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">
+                      면접 영상
+                    </div>
+                  </div>
+                </div>
               ) : (
-                <p className="text-sm text-gray-500">면접 영상이 없습니다.</p>
+                <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                  <svg className="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  <p className="text-lg font-medium">면접 영상이 없습니다.</p>
+                  <p className="text-sm text-gray-400 mt-1">면접 영상이 아직 업로드되지 않았습니다.</p>
+                </div>
               )}
             </Accordion>
 
@@ -360,12 +703,38 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
               setOpen={setInterviewAnalysisOpen}
             >
               {interviewAnalysis ? (
-                <div className="text-sm space-y-2">
-                  <p><strong>점수:</strong> {interviewAnalysis.analysisScore}</p>
-                  <p><strong>내용:</strong> {interviewAnalysis.analysisData}</p>
+                <div className="space-y-6">
+                  {/* 점수 카드 */}
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-2xl border border-purple-200 shadow-sm">
+                    <div className="flex items-center mb-3">
+                      <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+                      <h4 className="font-semibold text-purple-800 text-lg">면접 점수</h4>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-3xl font-bold text-purple-600 mr-2">{interviewAnalysis.analysisScore}</span>
+                      <span className="text-sm text-gray-500">/ 100</span>
+                    </div>
+                  </div>
+
+                  {/* 분석 내용 카드 */}
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-2xl border border-indigo-200 shadow-sm">
+                    <div className="flex items-center mb-3">
+                      <div className="w-3 h-3 bg-indigo-500 rounded-full mr-3"></div>
+                      <h4 className="font-semibold text-indigo-800 text-lg">면접 분석</h4>
+                    </div>
+                    <div className="bg-white/70 p-4 rounded-xl border border-indigo-100">
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{interviewAnalysis.analysisData}</p>
+                    </div>
+                  </div>
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">분석 결과가 없습니다.</p>
+                <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                  <svg className="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                  <p className="text-lg font-medium">분석 결과가 없습니다.</p>
+                  <p className="text-sm text-gray-400 mt-1">면접 분석이 진행되지 않았습니다.</p>
+                </div>
               )}
             </Accordion>
           </>
@@ -373,10 +742,19 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
       </div>
               
 
-        <div className="mt-8 text-right">
+        <div className="mt-8 flex justify-end gap-3">
+          {/* 면접초대 버튼 - 2y 단계에서만 표시 */}
+          {["2y"].includes(localStage) && (
+            <button
+              onClick={handleInterviewInvitation}
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+            >
+              면접초대
+            </button>
+          )}
           <button
             onClick={handleClose}
-            className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded"
+            className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-8 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
           >
             닫기
           </button>

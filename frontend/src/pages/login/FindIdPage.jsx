@@ -11,7 +11,7 @@ export default function FindIdPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:8081/api/candidate/find-id', {
+      const res = await axios.post('http://localhost:8081/api/candidates/find-id', {
         name,
         email,
       });

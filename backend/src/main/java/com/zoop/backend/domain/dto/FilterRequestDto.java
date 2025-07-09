@@ -14,4 +14,5 @@ public class FilterRequestDto {
     private boolean nationwide;
     private int salary;   // ❗ DB 저장용
     private int headcount; // ❗ DB 저장용
+    private String idealCandidate; // 인재상 저장용
 }

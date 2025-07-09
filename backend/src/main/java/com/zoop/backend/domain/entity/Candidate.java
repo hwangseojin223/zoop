@@ -1,8 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-
 package com.zoop.backend.domain.entity;
 
 
@@ -26,7 +21,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity(name = "Candidate") // 이 클래스가 JPA 엔티티임을 나타냅니다.
+@Entity // 이 클래스가 JPA 엔티티임을 나타냅니다.
 @Table(name = "CANDIDATES") // 이 엔티티가 매핑될 실제 데이터베이스 테이블 이름을 지정합니다.
 @Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor // Lombok 어노테이션
 public class Candidate {
@@ -66,24 +61,34 @@ public class Candidate {
     @Column(name="google_id", unique=true)
     private String googleId;
 
-    @Column(name = "GITHUB_ID")
-    private String githubId;
-    
-    @Column(name = "PREFERRED_JOB")
+    // @Column(name = "github_id", unique = true) 
+    // private String githubId;
+
+    // @Column(name = "naver_id", unique = true)
+    // private String naverId;
+
+    // 사용자 설정 정보 필드들
+    @Column(name="preferred_job", length=100)
     private String preferredJob;
-
-    @Column(name = "PREFERRED_REGION")
+    
+    @Column(name="preferred_region", length=100)
     private String preferredRegion;
-
-    @Column(name = "PREFERRED_SALARY")
+    
+    @Column(name="preferred_salary", length=100)
     private String preferredSalary;
-
-    @Column(name = "PREFERRED_COMPANY_SIZE")
+    
+    @Column(name="preferred_company_size", length=100)
     private String preferredCompanySize;
-
-    @Column(name = "PREFERRED_COMMUTE_TIME")
+    
+    @Column(name="preferred_commute_time", length=100)
     private String preferredCommuteTime;
-
-    @Column(name = "PREFERRED_BENEFIT")
+    
+    @Column(name="preferred_benefit", length=100)
     private String preferredBenefit;
+
+    @Column(name = "CAREER_TYPE", length = 10)
+    private String careerType; // '신입' 또는 '경력'
+
+    @Column(name = "TOTAL_CAREER_PERIOD", length = 20)
+    private String totalCareerPeriod; // 예: '2년 3개월' 또는 '0', '신입'
 }

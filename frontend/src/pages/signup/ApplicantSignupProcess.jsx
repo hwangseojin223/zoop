@@ -2,116 +2,166 @@
 // 이메일 인증 + 아이디 중복확인 기능이 모두 포함됨
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
+import './ApplicantSignupProcess.css';
+import axios from '../../api/axios';
+
 
 export default function ApplicantSignupProcess() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { token: invitationToken } = useParams(); // URL 파라미터에서 초대 토큰 가져오기
+  
+  // ============ [초대 링크 관련 상태 변수들 추가] ============
+  const [fromInvite, setFromInvite] = useState(false); // 초대 링크로 들어왔는지 여부
+  const [isFormValid, setIsFormValid] = useState(false); // 폼 유효성 검사 결과
+  // ============ [초대 링크 관련 상태 변수들 추가 끝] ============
+  //==================================================================================================
+// 이메일 인증
+//==================================================================================================
 
-  // 이메일 관련 상태
-  const [emailLocal, setEmailLocal] = useState('');
-  const [emailDomain, setEmailDomain] = useState('');
-  const [customInput, setCustomInput] = useState(false);
-  const [verificationCode, setVerificationCode] = useState('');
-  const [isEmailVerified, setIsEmailVerified] = useState(false);
-  const [codeSent, setCodeSent] = useState(false);
-  const [resendTimer, setResendTimer] = useState(300);
-  const [isSendingCode, setIsSendingCode] = useState(false);
-  // 비밀번호 형식
-  const [password, setPassword] = useState('');
-  const [passwordMessage, setPasswordMessage] = useState('');
-  const [isPasswordValid, setIsPasswordValid] = useState(false);
+// 1. 상태 정의
+const [emailLocal, setEmailLocal] = useState(''); // 이메일 아이디 부분 (ex. user@example.com 중 'user')
+const [emailDomain, setEmailDomain] = useState(''); // 이메일 도메인 부분 (ex. 'example.com')
+const [customInput, setCustomInput] = useState(false); // 사용자가 직접 도메인을 입력하는지 여부
+const [verificationCode, setVerificationCode] = useState(''); // 입력받은 인증 코드
+const [isEmailVerified, setIsEmailVerified] = useState(false); // 이메일 인증 완료 여부
+const [codeSent, setCodeSent] = useState(false); // 인증 코드가 전송되었는지 여부
+const [resendTimer, setResendTimer] = useState(300); // 재전송 타이머 (단위: 초, 기본 5분)
+const [isSendingCode, setIsSendingCode] = useState(false); // 인증 코드 전송 중 여부 (버튼 비활성화용)
+const [errorMessage, setErrorMessage] = useState(''); // 에러메시지지
 
-  // 아이디 중복확인 상태
-  const [idCheck, setIdCheck] = useState('');
-  const [idMessage, setIdMessage] = useState('');
-  const [isIdAvailable, setIsIdAvailable] = useState(null);
+// ============ [누락된 상태 변수들 추가] ============
+const [password, setPassword] = useState('');
+const [passwordMessage, setPasswordMessage] = useState('');
+const [isPasswordValid, setIsPasswordValid] = useState(false);
+const [idCheck, setIdCheck] = useState('');
+const [idMessage, setIdMessage] = useState('');
+const [isIdAvailable, setIsIdAvailable] = useState(false);
+const [allAgree, setAllAgree] = useState(false);
+const [individualAgree, setIndividualAgree] = useState({
+  terms: false,
+  privacy: false,
+  location: false,
+  emailMarketing: false,
+  smsMarketing: false,
+});
+  // ============ [누락된 상태 변수들 추가 끝] ============
 
-  // 약관 동의 관련 상태
-  const [allAgree, setAllAgree] = useState(false);
-  const [individualAgree, setIndividualAgree] = useState({
-    terms: false,
-    privacy: false,
-    location: false,
-    emailMarketing: false,
-    smsMarketing: false,
-  });
-
-  const [errorMessage, setErrorMessage] = useState('');
-
-  const isFormValid = isIdAvailable && isEmailVerified && isPasswordValid
-  && individualAgree.terms && individualAgree.privacy
-  && emailLocal && emailDomain && idCheck
-  && document.getElementById('password')?.value
-  && document.getElementById('phone')?.value
-  && document.getElementById('candidate_name')?.value;
-
-  // 링크를 클릭하여 들어온 개인회원의 경우 토큰
-  const { token } = useParams();  // 초대 링크에서 token 추출
-  const [invitationToken, setToken] = useState('');  // ✅ invitationToken 저장용
-  const [fromInvite, setFromInvite] = useState(false);
-
-  //------------------------------------------------------------------------------
-  // token이 존재할 경우 → 백엔드에 token 전달 및 githubLogin 가져오기
-  //------------------------------------------------------------------------------
+  // ============ [폼 유효성 검사 useEffect 추가] ============
   useEffect(() => {
-
-    console.log("📦 useEffect 실행됨", token);
-    if (token) {
-      fetch(`http://localhost:8081/api/invitations/clicked/${token}`, {  // --> InvitationController
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: null
-      })
-        .then(res => {
-          console.log("📡 응답 상태코드:", res.status);
-          return res.json();
-        })
-        .then(async data => {
-          const login = data.githubLogin;
-
-
-          // ✅ 가입 여부 확인
-          const res = await fetch(`http://localhost:8081/api/candidate/check-exists?githubLogin=${login}`); // --> 
-          if (res.ok) {
-            const json = await res.json();
-            if (json.exists) {
-              // 이미 가입된 사용자 → 로그인 페이지로 이동
-              navigate("/auth/login", {
-                state: {
-                  fromInvite: true,
-                  githubLogin: login,
-                },
-              });
-              return;
+    console.log('ApplicantSignupProcess - location.state:', location.state);
+    console.log('ApplicantSignupProcess - invitationToken:', invitationToken);
+    
+    // location.state에서 초대 정보 확인
+    if (location.state?.fromInvite && location.state?.githubLogin) {
+      console.log('location.state에서 초대 정보 확인됨:', location.state.githubLogin);
+      setFromInvite(true);
+      setIdCheck(location.state.githubLogin);
+      setIsIdAvailable(true);
+      setIdMessage('초대 링크를 통해 자동 설정된 아이디입니다.');
+    }
+    // 초대 토큰이 있으면 초대 링크로 들어온 것으로 간주
+    else if (invitationToken) {
+      setFromInvite(true);
+      // 초대 토큰을 통해 GitHub 로그인 정보 가져오기
+      const fetchInvitationInfo = async () => {
+        try {
+          const response = await fetch(`http://localhost:8081/api/invitations/clicked/${invitationToken}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            if (data.githubLogin) {
+              setIdCheck(data.githubLogin);
+              setIsIdAvailable(true);
+              setIdMessage('초대 링크를 통해 자동 설정된 아이디입니다.');
             }
           }
-
-          // ✅ 가입되지 않은 사용자 → githubLogin 고정 입력
-          setFromInvite(true);
-          setIdCheck(login);
-          setIsIdAvailable(true);
-          setToken(token);
-          console.log("전달받은 토큰: ", token);
-          console.log("전달받은 데이터: ", data);
-        })
-        .catch(err => {
-          console.error("초대 클릭 처리 실패", err);
-        });
+        } catch (error) {
+          console.error('초대 정보 가져오기 실패:', error);
+        }
+      };
+      fetchInvitationInfo();
     }
-  }, [token]);
+  }, [invitationToken, location.state]);
 
-
-  // 타이머
+  // 폼 유효성 검사
   useEffect(() => {
-    let timer;
-    if (codeSent && !isEmailVerified && resendTimer > 0) {
-      timer = setInterval(() => setResendTimer(prev => prev - 1), 1000);
-    }
-    return () => clearInterval(timer);
-  }, [codeSent, resendTimer, isEmailVerified]);
+    const isValid = 
+      idCheck && 
+      isIdAvailable && 
+      emailLocal && 
+      emailDomain && 
+      isEmailVerified && 
+      isPasswordValid && 
+      individualAgree.terms && 
+      individualAgree.privacy &&
+      document.getElementById('phone')?.value &&
+      document.getElementById('candidate_name')?.value;
+    
+    setIsFormValid(isValid);
+  }, [
+    idCheck, 
+    isIdAvailable, 
+    emailLocal, 
+    emailDomain, 
+    isEmailVerified, 
+    isPasswordValid, 
+    individualAgree.terms, 
+    individualAgree.privacy
+  ]);
+  // ============ [폼 유효성 검사 useEffect 추가 끝] ============
+
+/**
+ * async : 비동기 함수를 명시할떄 사용, Promise를 반환한다. 
+ * fetch : 네트워크 요청
+ * await는 fetch가 완료될때까지 기다린다. 그 전에는 다른 코드가 실행되지 않는다.
+ * encodeURIComponent : 안전한 형식으로 문자열을 인코딩(encoding)하는 내장함수
+ */
+
+// 2. 이메일 인증 코드 요청 함수
+const handleSendCode = async () => {
+  setIsSendingCode(true); // 전송 중 상태로 설정
+  const fullEmail = `${emailLocal}@${emailDomain}`; // 전체 이메일 주소 조합
+  const res = await fetch(`http://localhost:8081/api/email/send?email=${encodeURIComponent(fullEmail)}`, {
+    method: 'POST',
+  });
+
+  if (res.ok) {
+    alert('인증 코드가 전송되었습니다.');
+    setCodeSent(true); // 코드 전송 성공 시 상태 변경
+  } else {
+    alert('코드 전송 실패');
+  }
+  setIsSendingCode(false); // 전송 종료
+};
+
+/**
+ * useEffect는 리액트 함수형 컴포넌트에서 사이드 이펙트를 처리할 수 있게 도와주는 훅입니다. 
+ * 사이드 이펙트란 컴포넌트 내에서 렌더링 외에 발생하는 모든 작업을 의미해요.
+ *   첫 번째 인자로 사이드 이펙트 함수(콜백 함수)를 전달합니다.
+ *   두 번째 인자로 의존성 배열을 전달할 수 있습니다. 이 배열 안에 들어있는 값들이 변경될 때마다 useEffect가 실행됩니다. 
+ *   만약 배열이 비어 있다면, 컴포넌트가 마운트될 때 딱 한 번만 실행됩니다.
+ */
+
+// 3. 인증 코드 입력 후 타이머 작동
+useEffect(() => {
+  let timer;
+  if (codeSent && !isEmailVerified && resendTimer > 0) {
+    // 타이머 작동 조건: 코드 전송됨, 아직 인증되지 않음, 타이머 남아 있음.
+    // 즉, codeSent=True, isEmailVerified=false이고, resendTimer > 0 일 때
+    // set Interval(함수,  time) : time마다 함수를 한번씩 호출한다.
+    timer = setInterval(() => {
+      setResendTimer(prev => prev - 1); // 1초마다 타이머 감소
+    }, 1000);
+  }
+  return () => clearInterval(timer); // 언마운트 또는 조건 해제 시 타이머 정리
+}, [codeSent, resendTimer, isEmailVerified]);
 
   // 비밀번호 입력 시 유효성 검사
   const handlePasswordChange = (e) => {
@@ -128,20 +178,6 @@ export default function ApplicantSignupProcess() {
     }
   };
 
-
-  // 이메일 인증코드 보내기
-  const handleSendCode = async () => {
-    setIsSendingCode(true);
-    const fullEmail = `${emailLocal}@${emailDomain}`;
-    const res = await fetch(`http://localhost:8081/api/email/send?email=${encodeURIComponent(fullEmail)}`, { method: 'POST' });
-    if (res.ok) {
-      alert('인증 코드가 전송되었습니다.');
-      setCodeSent(true);
-    } else {
-      alert('코드 전송 실패');
-    }
-    setIsSendingCode(false);
-  };
 
   // 이메일 인증 확인
   const handleVerifyCode = async () => {
@@ -170,7 +206,7 @@ export default function ApplicantSignupProcess() {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:8081/api/candidate/check-id?githubLogin=${idCheck}`);
+      const res = await fetch(`http://localhost:8081/api/candidates/check-id?githubLogin=${idCheck}`);
       if (res.ok) {
         setIdMessage('사용 가능한 아이디입니다.');
         setIsIdAvailable(true);
@@ -259,21 +295,59 @@ export default function ApplicantSignupProcess() {
       invitationToken: invitationToken,
     };
     try {
-      const response = await fetch('http://localhost:8081/api/candidate/process', {
+
+      const response = await fetch('http://localhost:8081/api/candidates/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
       if (response.ok) {    //요청 성공 , 상태코드 200 ~ 299
+        const candidateData = await response.json();
+        
+        // 초대 링크를 통해 들어온 경우 job_cand_progress 업데이트
+        if (invitationToken) {
+          try {
+            const updateResponse = await fetch('http://localhost:8081/api/progress/update-candidate-id', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                invitationToken: invitationToken,
+                candidateId: candidateData.candidateId
+              }),
+            });
+            
+            if (updateResponse.ok) {
+              console.log('job_cand_progress candidate_id 업데이트 성공');
+            } else {
+              console.error('job_cand_progress candidate_id 업데이트 실패');
+            }
+          } catch (error) {
+            console.error('job_cand_progress 업데이트 중 오류:', error);
+          }
+        }
+        
         navigate('/auth/applicant/signup/success');
-        console.log("회원가입 완료. 전달한 데이터: ", formData);
-      }
-      else {    // 요청 성공, 서버에서 응답은 왔지만 상태코드가 실패인경우
-        alert('회원가입 실패');
+        // 원한다면 페이지 이동: window.location.href = '/welcome';
+      } else {
+        // 서버에서 보낸 에러 메시지 읽기
+        const errorData = await response.text();
+        console.error('서버 응답:', response.status, errorData);
+        
+        if (response.status === 400 || response.status === 500) {
+          if (errorData.includes('이미 가입된 GitHub 계정입니다')) {
+            alert('이미 가입된 GitHub 계정입니다. 다른 계정으로 시도해주세요.');
+          } else if (errorData.includes('이미 가입된 이메일 주소입니다')) {
+            alert('이미 가입된 이메일 주소입니다. 다른 이메일로 시도해주세요.');
+          } else {
+            alert('회원가입 중 오류가 발생했습니다: ' + errorData);
+          }
+        } else {
+          alert('회원가입 실패: ' + errorData);
+        }
       }
     } catch (error) {   // fetch요청 자체가 실패한 경우
       console.error('오류 발생:', error);
-      alert('서버 오류');
+      alert('네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.');
     }
   };
 
@@ -298,7 +372,9 @@ export default function ApplicantSignupProcess() {
                   setIdMessage('');
                 }
               }}
-              className="flex-1 border border-gray-300 px-4 py-2 rounded-lg"
+              className={`flex-1 border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-colors ${
+                fromInvite ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
+              }`}
               placeholder="4~20자 영문, 숫자, _ 사용"
               disabled={fromInvite}
             />
@@ -315,6 +391,13 @@ export default function ApplicantSignupProcess() {
           {idMessage && (
             <p className={`mt-1 text-sm ${isIdAvailable ? 'text-green-600' : 'text-red-500'}`}>{idMessage}</p>
           )}
+          {fromInvite && (
+            <div className="mt-1">
+              <small style={{ color: '#059669', fontSize: '12px' }}>
+                초대 링크를 통해 자동 설정된 아이디입니다.
+              </small>
+            </div>
+          )}
         </div>
 
         {/* 비밀번호 */}
@@ -326,7 +409,7 @@ export default function ApplicantSignupProcess() {
             value={password}
             onChange={handlePasswordChange}
             placeholder="영문자+숫자 조합, 최소 8자리"
-            className="w-full border border-gray-300 px-4 py-2 rounded-lg"
+            className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-colors"
           />
           {passwordMessage && (
             <p className={`mt-1 text-sm ${isPasswordValid ? 'text-green-600' : 'text-red-500'}`}>
@@ -342,7 +425,7 @@ export default function ApplicantSignupProcess() {
             id="candidate_name"
             type="text"
             placeholder="이름을 입력해주세요"
-            className="w-full border border-gray-300 px-4 py-2 rounded-lg"
+            className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-colors"
           />
         </div>
 
@@ -353,7 +436,7 @@ export default function ApplicantSignupProcess() {
             id="phone"
             type="text"
             placeholder="하이픈(-) 제외"
-            className="w-full border border-gray-300 px-4 py-2 rounded-lg"
+            className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-colors"
           />
         </div>
 
@@ -366,7 +449,7 @@ export default function ApplicantSignupProcess() {
               value={emailLocal}
               onChange={e => setEmailLocal(e.target.value)}
               disabled={isEmailVerified}
-              className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white text-base"
+              className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white text-base focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-colors"
             />
             <span className="text-lg font-semibold text-gray-600">@</span>
             {customInput ? (
@@ -375,14 +458,14 @@ export default function ApplicantSignupProcess() {
                 value={emailDomain}
                 onChange={e => setEmailDomain(e.target.value)}
                 disabled={isEmailVerified}
-                className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white text-base"
+                className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white text-base focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-colors"
               />
             ) : (
               <select
                 value={emailDomain}
                 onChange={handleDomainChange}
                 disabled={isEmailVerified}
-                className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white text-base"
+                className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white text-base focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-colors"
               >
                 <option value="">선택</option>
                 <option value="naver.com">naver.com</option>
@@ -405,7 +488,7 @@ export default function ApplicantSignupProcess() {
               onChange={e => setVerificationCode(e.target.value)}
               placeholder="6자리 인증코드"
               disabled={!codeSent || isEmailVerified}
-              className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white"
+              className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-colors"
             />
             <button
               type="button"

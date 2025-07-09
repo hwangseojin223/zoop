@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -13,6 +13,7 @@ import ApplicantSignupSuccess from './pages/signup/ApplicantSignupSuccess';
 import ApplicantSignupProcess from './pages/signup/ApplicantSignupProcess';
 import LoginSelectionPage from './pages/login/LoginSelectionPage';
 import FindIdPage from './pages/login/FindIdPage';
+import InvitationHandler from './components/InvitationHandler';
 import FindPasswordPage from './pages/login/FindPasswordPage';
 import ResetPasswordPage from './pages/login/ResetPasswordPage';
 import GoogleAuthCallback from './pages/auth/GoogleAuthCallback';
@@ -24,18 +25,26 @@ import RecruitCreate from './pages/company/RecruitCreate';
 import CandidateList from './pages/company/CandidateList';
 import ResponderList from './pages/company/ResponderList';
 import StatePage from './pages/company/StatePage';
-// info
-import About from './pages/info/About';
-import Notice from './pages/info/Notice';
-import Support from './pages/info/Support';
-import FAQ from './pages/info/FAQ';
-import Careers from './pages/info/Careers';
+import IdealCandidate from './pages/company/IdealCandidate';
+// info - lazy loading으로 변경
 
 // 챗봇 import
 import Chatbot from './components/Chatbot';
 import './components/Chatbot.css';
 // candidate
 import CandidateDashboard from './pages/candidate/CandidateDashboard';
+// PortfolioSubmissionPage 컴포넌트를 임포트합니다. 실제 파일 경로에 맞게 수정해주세요.
+import PortfolioSubmissionPage from './pages/candidate/PortfolioSubmissionPage';
+import InterviewPage from './pages/candidate/InterviewPage';
+import InterviewSession from './pages/candidate/InterviewSession';
+
+// info - lazy loading으로 변경
+const About = lazy(() => import('./pages/info/About'));
+const Notice = lazy(() => import('./pages/info/Notice'));
+// const Support = lazy(() => import('./pages/info/Support')); // 사용하지 않는 import 주석 처리
+const CustomerServicePage = lazy(() => import('./pages/info/CustomerServicePage'));
+const FaqPage = lazy(() => import('./pages/info/FaqPage'));
+const Careers = lazy(() => import('./pages/info/Careers'));
 
 function AppContent() {
   const { setAuthState } = useAuth();
@@ -52,8 +61,9 @@ function AppContent() {
   }, [setAuthState]);
 
   return (
-    <Router>
-      <Routes>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Routes>
         <Route
           path="/"
           element={
@@ -69,6 +79,10 @@ function AppContent() {
         <Route path="/auth/applicant/signup/success" element={<ApplicantSignupSuccess />} />
         <Route path="/auth/applicant/signup/process" element={<ApplicantSignupProcess />} />
         <Route path="/auth/applicant/signup/process/:token" element={<ApplicantSignupProcess />} />
+        
+        {/* 메일 링크 처리 라우트 */}
+        <Route path="/invite/:token" element={<InvitationHandler />} />
+        
         <Route path="/auth/login" element={<LoginSelectionPage />} />
         <Route path="/find-id" element={<FindIdPage />} />
         <Route path="/find-password" element={<FindPasswordPage />} />
@@ -76,8 +90,8 @@ function AppContent() {
         <Route path="/google-auth" element={<GoogleAuthCallback />} />
         <Route path="/about" element={<About />} />
         <Route path="/notice" element={<Notice />} />
-        <Route path="/support" element={<Support />} />
-        <Route path="/faq" element={<FAQ />} />
+        <Route path="/support" element={<CustomerServicePage />} />
+        <Route path="/faq" element={<FaqPage />} />
         <Route path="/careers" element={<Careers />} />
         <Route path="/company/candidates/:postId" element={<CandidateList />} />
         <Route
@@ -99,7 +113,19 @@ function AppContent() {
             </PrivateRoute>
           }
         />
-        
+
+        {/* 포트폴리오 제출 페이지 라우트 추가 */}
+        {/* URL 파라미터로 postId를 받습니다. */}
+        {/* 개인회원만 접근 가능하도록 PrivateRoute로 감싸는 것이 좋습니다. */}
+        <Route
+          path="/submit-portfolio/:postId"
+          element={
+            <PrivateRoute allowedUserType='candidate'> {/* 개인회원만 접근 허용 */}
+              <PortfolioSubmissionPage />
+            </PrivateRoute>
+          }
+        />
+
         <Route
           path="/company/recruit/create"
           element={
@@ -108,6 +134,16 @@ function AppContent() {
             </PrivateRoute>
           }
         />
+
+        <Route
+          path="/company/ideal-candidate/:postId"
+          element={
+            <PrivateRoute allowedUserType="company">
+              <IdealCandidate />
+            </PrivateRoute>
+          }
+        />
+
         <Route
           path="/company/candidates"
           element={
@@ -127,7 +163,24 @@ function AppContent() {
             </PrivateRoute>
           }
         />
+        <Route
+    path="/interview/:id"
+    element={
+      <PrivateRoute allowedUserType='candidate'> {/* 개인회원만 접근 허용 */}
+        <InterviewPage />
+      </PrivateRoute>
+    }
+  />
+        <Route
+          path="/interview-session/:scheduleId"
+          element={
+            <PrivateRoute allowedUserType='candidate'>
+              <InterviewSession />
+            </PrivateRoute>
+          }
+        />
       </Routes>
+      </Suspense>
 
       {/* 챗봇 버튼 */}
       <button
@@ -172,8 +225,6 @@ function AppContent() {
           />
         )}
       </button>
-
-
 
       {/* 챗봇 창 */}
       <Chatbot

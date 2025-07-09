@@ -1,54 +1,105 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import Navbar from '../../components/Navbar';
-import { motion } from 'framer-motion';
-
-const autoGenerateTitle = ({ position, language, region }) => {
-  return `[${position}] ${language} / ${region}`;
-};
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Navbar from "../../components/Navbar";
+import { motion } from "framer-motion";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { ko } from "date-fns/locale";
 
 const chipStyle = (selected) => ({
-  border: '1.5px solid #30c59b',
-  color: selected ? 'white' : '#30c59b',
-  backgroundColor: selected ? '#30c59b' : 'transparent',
-  borderRadius: '999px',
-  padding: '0.6rem 1.2rem',
-  fontSize: '0.95rem',
-  fontWeight: 500,
-  cursor: 'pointer',
-  transition: 'all 0.2s ease-in-out',
+  border: selected ? "none" : "1.5px solid #e0e3e7",
+  color: selected ? "#fff" : "#22694c",
+  background: selected
+    ? "linear-gradient(90deg,#35d7a1 10%,#35cfce 90%)"
+    : "rgba(244,247,251,0.96)",
+  boxShadow: selected
+    ? "0 2px 12px 0 rgba(53,215,161,0.08)"
+    : "0 1px 6px 0 rgba(0,0,0,0.02)",
+  borderRadius: "24px",
+  padding: "0.7rem 1.5rem",
+  fontSize: "1.01rem",
+  fontWeight: 600,
+  cursor: "pointer",
+  transition: "all 0.18s cubic-bezier(0.4,0,0.2,1)",
+  outline: selected ? "2px solid #35cfce30" : "none",
+  position: "relative",
+  zIndex: 1,
+  boxSizing: "border-box",
+  letterSpacing: "-0.5px",
+  userSelect: "none",
 });
 
 const sliderStyle = {
-  width: '100%',
-  appearance: 'none',
-  height: '14px',
-  borderRadius: '8px',
-  backgroundColor: '#c8f5dc',
-  outline: 'none',
-  accentColor: '#30c59b',
-  transition: 'background 0.3s ease-in-out',
+  width: "100%",
+  appearance: "none",
+  height: "8px",
+  borderRadius: "6px",
+  background: "linear-gradient(90deg, #35d7a1 20%, #35cfce 100%)",
+  outline: "none",
+  marginTop: "0.2rem",
+  marginBottom: "0.7rem",
+  boxShadow: "0 2px 8px rgba(53,215,161,0.05)",
 };
 
 const Section = ({ title, children }) => (
-  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} style={{ marginBottom: '3rem' }}>
-    <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111', marginBottom: '1rem' }}>{title}</h3>
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>{children}</div>
+  <motion.div
+    initial={{ opacity: 0, y: 28 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.48, type: "spring", stiffness: 80 }}
+    style={{
+      marginBottom: "2.5rem",
+      background: "#fff",
+      borderRadius: "20px",
+      boxShadow: "0 6px 32px rgba(53,215,161,0.07)",
+      padding: "2.2rem 2rem 1.6rem 2rem",
+      border: "1.2px solid #e1f7f1",
+    }}
+  >
+    <h3
+      style={{
+        fontSize: "1.18rem",
+        fontWeight: 700,
+        color: "#185f44",
+        marginBottom: "1.2rem",
+        letterSpacing: "-0.5px",
+      }}
+    >
+      {title}
+    </h3>
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.9rem" }}>
+      {children}
+    </div>
   </motion.div>
 );
 
+// SVG 아이콘 컴포넌트 추가
+const ClockIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" style={{verticalAlign: 'middle'}}>
+    <circle cx="11" cy="11" r="9" stroke="#35cfce" strokeWidth="2.2" fill="#eafff7"/>
+    <path d="M11 6.5V11L14.2 13" stroke="#19b47a" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+const CalendarIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{verticalAlign: 'middle'}}>
+    <rect x="3" y="5" width="18" height="16" rx="4" fill="#eafff7" stroke="#35cfce" strokeWidth="2"/>
+    <rect x="7" y="9" width="10" height="6" rx="2" fill="#35cfce" fillOpacity="0.18"/>
+    <path d="M7 5V3.5M17 5V3.5" stroke="#19b47a" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+
+// 날짜를 YYYY-MM-DD로 로컬 타임존 기준 포맷하는 함수
+const formatDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export default function RecruitCreate() {
   const navigate = useNavigate();
-  const { authState } = useAuth();
 
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
-  const [position, setPosition] = useState('');
-  const [language, setLanguage] = useState('');
-  const [region, setRegion] = useState('');
-
+  const [description, setDescription] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
   const [filters, setFilters] = useState({
     roles: [],
     languages: [],
@@ -57,13 +108,6 @@ export default function RecruitCreate() {
     salary: 5000,
     headcount: 5,
   });
-
-  useEffect(() => {
-    if (position && language && region) {
-      const generated = autoGenerateTitle({ position, language, region });
-      setTitle(generated);
-    }
-  }, [position, language, region]);
 
   const toggleSelection = (field, value) => {
     setFilters((prev) => {
@@ -82,117 +126,385 @@ export default function RecruitCreate() {
   };
 
   const handleSubmit = async () => {
+    if (filters.languages.length === 0) {
+      alert("언어를 하나 이상 선택하세요.");
+      return;
+    }
+    if (!filters.nationwide && filters.regions.length === 0) {
+      alert("지역을 선택하거나 전국을 체크하세요.");
+      return;
+    }
+    if (!expiryDate) {
+      alert("마감일을 입력하세요.");
+      return;
+    }
+
     try {
-      if (!title || !description || !expiryDate) {
-        alert('공고 제목, 설명, 마감일을 모두 입력해 주세요.');
-        return;
-      }
-      if (filters.languages.length === 0) {
-        alert('하나 이상의 언어를 선택해 주세요.');
-        return;
-      }
-      if (!filters.nationwide && filters.regions.length === 0) {
-        alert('지역을 선택하거나 "전국"을 체크해주세요.');
-        return;
-      }
-
-      const today = new Date();
-      const expiry = new Date(expiryDate);
-      if (expiry < today) {
-        alert('마감일은 오늘 이후여야 합니다.');
-        return;
-      }
-
-      const postingPayload = {
-        companyId: Number(localStorage.getItem('companyId')),
-        companyAdminId: Number(localStorage.getItem('userId')),
-        postTitle: title,
+      const postData = {
+        postTitle: `채용 공고 - ${filters.languages.join(", ")} 개발자`,
         postDescription: description,
-        postProgrammingLanguage: filters.languages.join(', ') || '기타',
-        postLocation: filters.nationwide ? '전국' : filters.regions.join(', ') || '전국',
+        postProgrammingLanguage: filters.languages.join(","),
+        postLocation: filters.nationwide ? "전국" : filters.regions.join(","),
         postHeadcount: filters.headcount,
-        postSalaryStart: String(filters.salary),
-        postSalaryEnd: String(filters.salary),
-        postPostedDate: new Date().toISOString().substring(0, 10),
+        postSalaryStart: `${filters.salary}만원`,
+        postSalaryEnd: `${filters.salary + 1000}만원`,
+        postPostedDate: new Date().toISOString().split("T")[0],
         postExpiryDate: expiryDate,
-        postStatus: 'OPEN',
+        postStatus: "ACTIVE",
       };
 
-      const postRes = await fetch('http://localhost:8081/api/postings', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8081/api/postings", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('jwtToken')}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
         },
-        body: JSON.stringify(postingPayload),
+        body: JSON.stringify(postData),
       });
 
-      if (!postRes.ok) throw new Error('공고 등록 실패');
-      const postData = await postRes.json();
-      const postId = postData.postId;
+      if (!response.ok) throw new Error("공고 생성에 실패했습니다.");
 
-      const filterDto = {
-        postId,
-        regions: filters.nationwide ? [] : filters.regions,
-        languages: filters.languages,
-        nationwide: filters.nationwide,
-      };
+      const result = await response.json();
+      const postId = result.postId;
 
-      await fetch('http://localhost:8081/api/github-search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(filterDto),
-      });
-
-      navigate(`/company/candidates/${postId}`);
-    } catch (err) {
-      console.error('❌ 등록 오류:', err);
-      alert('공고 등록 중 오류 발생!');
+      const stateData = { filters, description, expiryDate, postId };
+      navigate(`/company/ideal-candidate/${postId}`, { state: stateData });
+    } catch (error) {
+      alert("공고 생성 중 오류가 발생했습니다: " + error.message);
     }
   };
 
   return (
-    <div style={{ fontFamily: 'SUIT, sans-serif', backgroundColor: '#f7f9fa', minHeight: '100vh' }}>
+    <div
+      style={{
+        fontFamily: "SUIT, Pretendard, Montserrat, sans-serif",
+        background: "linear-gradient(120deg, #ffffff 0%, #eafff7 50%, #eaf6ff 100%)",
+        minHeight: "100vh",
+        minWidth: "100vw",
+      }}
+    >
       <Navbar />
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} style={{ padding: '7rem 3rem 4rem' }}>
-        <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '2rem', color: '#111' }}>채용 필터 기준 설정</h2>
+      {/* --- 달력/전체 스타일 글로벌 적용 --- */}
+      <style>
+        {`
+        .react-datepicker {
+          display: flex;
+          flex-direction: row;
+          border: none;
+          box-shadow: none;
+          background: #fff;
+          border-radius: 24px;
+          min-width: 720px;
+          padding: 30px 40px 28px 40px;
+          justify-content: center;
+          gap: 36px;
+        }
+        .react-datepicker__month-container {
+          border: none;
+          background: none;
+          box-shadow: none;
+          margin: 0 10px;
+          width: 320px;
+        }
+        .react-datepicker__header {
+          background: none;
+          border: none;
+          padding: 16px 0 10px 0;
+        }
+        .react-datepicker__current-month,
+        .react-datepicker__current-month--hasYearDropdown {
+          font-weight: 800;
+          color: #19b47a;
+          font-size: 1.9rem;
+          margin-bottom: 0.1em;
+          margin-top: 2px;
+          letter-spacing: -1.5px;
+        }
+        .react-datepicker__day-names,
+        .react-datepicker__week {
+          display: flex;
+          justify-content: space-between;
+          width: 100%;
+        }
+        .react-datepicker__day-name,
+        .react-datepicker__day {
+          font-family: 'SUIT', 'Pretendard', 'Montserrat', sans-serif;
+          color: #148f62;
+          font-size: 1.07rem;
+          font-weight: 500;
+          width: 2.6rem;
+          height: 2.6rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0;
+          border-radius: 50%;
+          transition: background 0.13s, color 0.12s;
+        }
+        .react-datepicker__day--outside-month {
+          color: #b2cec3 !important;
+          opacity: 0.45;
+        }
+        .react-datepicker__day--selected,
+        .react-datepicker__day--keyboard-selected {
+          background: linear-gradient(90deg, #3ee1a8 25%, #35cfce 90%) !important;
+          color: #fff !important;
+          font-weight: 800;
+          box-shadow: 0 2px 10px #35cfce25;
+        }
+        .react-datepicker__day--today:not(.react-datepicker__day--selected) {
+          border: 2px solid #19b47a !important;
+          background: none !important;
+          color: #19b47a !important;
+        }
+        .react-datepicker__navigation {
+          top: 46px;
+        }
+        .react-datepicker__navigation--previous,
+        .react-datepicker__navigation--next {
+          background: none;
+          border: none;
+          width: 38px;
+          height: 38px;
+          outline: none;
+          box-shadow: none;
+          color: #9bddbc;
+          font-size: 2.2rem;
+          transition: color 0.14s;
+        }
+        .react-datepicker__navigation--previous:hover,
+        .react-datepicker__navigation--next:hover {
+          color: #19b47a;
+          background: none;
+        }
+        .react-datepicker__navigation-icon::before {
+          border-color: #b7e1d2;
+          border-width: 0 3px 3px 0;
+          width: 9px;
+          height: 9px;
+        }
+        .react-datepicker__day-name:nth-child(1),
+        .react-datepicker__day--weekend {
+          color: #1adfa0 !important;
+        }
+        .react-datepicker__day:hover {
+          border-radius: 50% !important;
+          background: linear-gradient(90deg, #35cfce 30%, #3ee1a8 100%) !important;
+          color: #fff !important;
+          font-weight: 700;
+          box-shadow: 0 2px 10px #35cfce25;
+        }
+        .react-datepicker__day--selected.react-datepicker__day--weekend,
+        .react-datepicker__day--keyboard-selected.react-datepicker__day--weekend {
+          color: #fff !important;
+        }
+        `}
+      </style>
+      {/* --- 달력/전체 스타일 글로벌 적용 끝 --- */}
+
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.68, type: "spring", stiffness: 70 }}
+        style={{
+          padding: "7.5rem 2vw 5.5rem",
+          maxWidth: 900,
+          margin: "0 auto",
+          width: "99vw",
+        }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          style={{
+            marginBottom: "2.5rem",
+            textAlign: "left",
+          }}
+        >
+          <h2
+            style={{
+              fontSize: "2.25rem",
+              fontWeight: 800,
+              color: "#18684e",
+              letterSpacing: "-1px",
+              marginBottom: "0.28rem",
+              lineHeight: 1.16,
+            }}
+          >
+            채용 필터 기준 설정
+          </h2>
+          <div
+            style={{
+              fontSize: "1.1rem",
+              color: "#1a936f",
+              fontWeight: 500,
+              letterSpacing: "-0.5px",
+              marginTop: "0.1rem",
+            }}
+          >
+            ZOOP의 스마트 필터링으로 맞춤 인재를 추천받으세요.
+          </div>
+        </motion.div>
 
         <Section title="직무">
-          {["개발PM", "데이터엔지니어", "백엔드/서버개발", "앱개발", "보안관제", "정보보안", "프론트엔드", "웹개발", "시스템엔지니어"].map((role) => (
-            <div key={role} onClick={() => {
-              toggleSelection('roles', role);
-              setPosition(role);
-            }} style={chipStyle(filters.roles.includes(role))}>{role}</div>
+          {[
+            "개발PM",
+            "데이터엔지니어",
+            "백엔드/서버개발",
+            "앱개발",
+            "보안관제",
+            "정보보안",
+            "프론트엔드",
+            "웹개발",
+            "시스템엔지니어",
+          ].map((role) => (
+            <motion.div
+              key={role}
+              whileHover={{
+                scale: 1.07,
+                boxShadow: "0 2px 14px #2ed99224",
+              }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => toggleSelection("roles", role)}
+              style={chipStyle(filters.roles.includes(role))}
+            >
+              {role}
+            </motion.div>
           ))}
         </Section>
 
         <Section title="언어">
-          {["Python", "JavaScript", "Java", "C++", "Go", "Ruby", "Kotlin", "TypeScript"].map((lang) => (
-            <div key={lang} onClick={() => {
-              toggleSelection('languages', lang);
-              setLanguage(lang);
-            }} style={chipStyle(filters.languages.includes(lang))}>{lang}</div>
-          ))}
+          {[
+            "Python",
+            "JavaScript",
+            "Java",
+            "C++",
+            "Go",
+            "Ruby",
+            "Kotlin",
+            "TypeScript",
+          ].map((lang) => {
+            const langToFile = {
+              Python: "python.svg",
+              JavaScript: "javascript.svg",
+              Java: "java.svg",
+              "C++": "cpp.svg",
+              Go: "go.svg",
+              Ruby: "ruby.svg",
+              Kotlin: "kotlin.svg",
+              TypeScript: "typescript.svg",
+            };
+            const iconSrc = `/languages/${langToFile[lang]}`;
+            return (
+              <motion.div
+                key={lang}
+                whileHover={{
+                  scale: 1.07,
+                  boxShadow: "0 2px 14px #3ee1a820",
+                }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => toggleSelection("languages", lang)}
+                style={chipStyle(filters.languages.includes(lang))}
+              >
+                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <img src={iconSrc} alt={lang} style={{ width: 24, height: 24, marginRight: 6, verticalAlign: "middle" }} />
+                  {lang}
+                </span>
+              </motion.div>
+            );
+          })}
         </Section>
 
         <Section title="지역">
-          {["서울", "인천", "경기", "부산", "대구", "광주", "대전", "세종", "울산", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주"].map((region) => (
-            <div key={region} onClick={() => {
-              toggleSelection('regions', region);
-              setRegion(region);
-            }} style={chipStyle(filters.regions.includes(region))}>{region}</div>
+          {[
+            "서울",
+            "인천",
+            "경기",
+            "부산",
+            "대구",
+            "광주",
+            "대전",
+            "세종",
+            "울산",
+            "강원",
+            "충북",
+            "충남",
+            "전북",
+            "전남",
+            "경북",
+            "경남",
+            "제주",
+          ].map((region) => (
+            <motion.div
+              key={region}
+              whileHover={{
+                scale: 1.08,
+                boxShadow: "0 2px 14px #3ee1a815",
+              }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => toggleSelection("regions", region)}
+              style={chipStyle(filters.regions.includes(region))}
+            >
+              {region}
+            </motion.div>
           ))}
-          <div onClick={handleNationwideToggle} style={chipStyle(filters.nationwide)}>지역 상관없음 (전국)</div>
+          <motion.div
+            whileHover={{
+              scale: 1.06,
+              boxShadow: "0 2px 10px #3ee1a815",
+            }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleNationwideToggle}
+            style={chipStyle(filters.nationwide)}
+          >
+            지역 상관없음 (전국)
+          </motion.div>
         </Section>
 
         <Section title="연봉 (만원)">
-          <p style={{ marginBottom: '0.5rem', fontSize: '0.95rem', color: '#444' }}>{filters.salary.toLocaleString()}만원</p>
-          <input type="range" min="2000" max="10000" step="100" value={filters.salary} onChange={handleSliderChange('salary')} style={sliderStyle} />
+          <div
+            style={{
+              marginBottom: "0.7rem",
+              fontSize: "1.01rem",
+              color: "#209166",
+              fontWeight: 500,
+              letterSpacing: "-0.3px",
+            }}
+          >
+            {filters.salary.toLocaleString()}만원
+          </div>
+          <input
+            type="range"
+            min="2000"
+            max="10000"
+            step="100"
+            value={filters.salary}
+            onChange={handleSliderChange("salary")}
+            style={sliderStyle}
+          />
         </Section>
 
         <Section title="채용 인원">
-          <p style={{ marginBottom: '0.5rem', fontSize: '0.95rem', color: '#444' }}>{filters.headcount}명</p>
-          <input type="range" min="1" max="100" step="1" value={filters.headcount} onChange={handleSliderChange('headcount')} style={sliderStyle} />
+          <div
+            style={{
+              marginBottom: "0.7rem",
+              fontSize: "1.01rem",
+              color: "#209166",
+              fontWeight: 500,
+            }}
+          >
+            {filters.headcount}명
+          </div>
+          <input
+            type="range"
+            min="1"
+            max="100"
+            step="1"
+            value={filters.headcount}
+            onChange={handleSliderChange("headcount")}
+            style={sliderStyle}
+          />
         </Section>
 
         <Section title="상세 설명">
@@ -202,40 +514,169 @@ export default function RecruitCreate() {
             placeholder="공고에 대한 상세 설명을 입력하세요."
             rows="6"
             style={{
-              padding: '0.8rem',
-              borderRadius: '8px',
-              border: '1px solid #ccc',
-              width: '100%',
-              fontSize: '1rem',
-              resize: 'vertical'
+              padding: "1.2rem",
+              borderRadius: "14px",
+              border: "1.5px solid #c3ede0",
+              width: "100%",
+              fontSize: "1.06rem",
+              resize: "vertical",
+              fontWeight: 500,
+              color: "#22694c",
+              background: "#f6fffa",
+              boxShadow: "0 1.5px 7px rgba(53,215,161,0.03)",
+              outline: "none",
+              transition: "border 0.2s",
             }}
+            onFocus={(e) => (e.target.style.border = "1.5px solid #35cfce")}
+            onBlur={(e) => (e.target.style.border = "1.5px solid #c3ede0")}
           />
         </Section>
 
+        {/* 가로로 넓은 2달짜리 달력 + 버튼 */}
         <Section title="공고 마감일">
-          <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} style={{
-            padding: '0.8rem',
-            borderRadius: '8px',
-            border: '1px solid #ccc',
-            fontSize: '1rem',
-          }} />
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              gap: "2.8rem",
+              alignItems: "flex-start",
+              justifyContent: "center",
+              minHeight: 320,
+              margin: "0 auto",
+            }}
+          >
+            {/* 달력 */}
+            <motion.div
+              initial={{ scale: 0.97, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5, type: "spring" }}
+              style={{
+                minWidth: 760,
+                maxWidth: 900,
+                borderRadius: 24,
+                margin: "0 auto",
+                background: "#fff",
+                border: "none",
+              }}
+            >
+              <DatePicker
+                selected={expiryDate ? new Date(expiryDate) : null}
+                onChange={date => setExpiryDate(date ? formatDate(date) : "")}
+                minDate={new Date()}
+                locale={ko}
+                inline
+                dateFormat="yyyy-MM-dd"
+                calendarStartDay={0}
+                monthsShown={2}
+                showPopperArrow={false}
+              />
+            </motion.div>
+            {/* 빠른 선택 버튼 */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "1rem",
+                marginTop: 22,
+                minWidth: 150,
+              }}
+            >
+              {[7, 14, 30, 60].map((days) => (
+                <motion.button
+                  key={days}
+                  type="button"
+                  whileHover={{
+                    scale: 1.07,
+                    background: "#f8fffd",
+                    color: "#19b47a",
+                    borderColor: "#35cfce",
+                    textShadow: "0 0 8px #35cfce55, 0 1px 2px #fff8"
+                  }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => {
+                    const d = new Date();
+                    d.setDate(d.getDate() + days);
+                    setExpiryDate(formatDate(d));
+                  }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.45rem",
+                    padding: "0.95rem 1.5rem",
+                    background: "#fff",
+                    border: "2px solid #b8ffe3",
+                    borderRadius: "32px",
+                    fontSize: "1.13rem",
+                    fontWeight: 800,
+                    color: "#19b47a",
+                    cursor: "pointer",
+                    transition: "all 0.18s cubic-bezier(0.4,0,0.2,1)",
+                    boxShadow: "none",
+                    minWidth: 130,
+                    justifyContent: "center",
+                    letterSpacing: "-0.2px",
+                    textShadow: "0 0 8px #35cfce33, 0 1px 2px #fff8",
+                  }}
+                >
+                  <ClockIcon />
+                  {`+${days}일`}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+          {/* 마감일 안내 */}
+          {expiryDate && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{
+                marginTop: 32,
+                padding: "1.18rem 2.5rem",
+                background: "linear-gradient(90deg, #eafff7 25%, #35cfce 80%)",
+                borderRadius: "17px",
+                color: "#18684e",
+                fontSize: "1.17rem",
+                fontWeight: 800,
+                textAlign: "center",
+                boxShadow: "0 4px 18px rgba(53,215,161,0.10)",
+                letterSpacing: "-0.2px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 12,
+                border: "1.5px solid #b8ffe3",
+              }}
+            >
+              <CalendarIcon />
+              <span style={{marginLeft: 10}}>
+                마감일: {new Date(expiryDate).toLocaleDateString('ko-KR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  weekday: 'long',
+                })}
+              </span>
+            </motion.div>
+          )}
         </Section>
 
         <motion.button
           onClick={handleSubmit}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.035, background: "linear-gradient(90deg,#35cfce 15%,#35d7a1 85%)" }}
+          whileTap={{ scale: 0.98 }}
           style={{
-            marginTop: '3rem',
-            padding: '1rem 2.5rem',
-            fontSize: '1rem',
-            backgroundColor: '#30c59b',
-            color: 'white',
-            border: 'none',
-            borderRadius: '999px',
-            fontWeight: 600,
-            boxShadow: '0 4px 14px rgba(0,0,0,0.05)',
-            cursor: 'pointer'
+            marginTop: "2.8rem",
+            padding: "1.08rem 2.7rem",
+            fontSize: "1.08rem",
+            background: "linear-gradient(90deg,#3ee1a8 10%,#35cfce 90%)",
+            color: "#fff",
+            border: "none",
+            borderRadius: "32px",
+            fontWeight: 800,
+            letterSpacing: "0.5px",
+            boxShadow: "0 8px 32px rgba(53,215,161,0.14)",
+            cursor: "pointer",
+            transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)",
+            outline: "none",
           }}
         >
           필터링 적용
