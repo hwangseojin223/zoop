@@ -1,31 +1,64 @@
 import React from 'react';
+import './Notice.css';
+import Navbar from '../../components/Navbar';
+
+const dummyNotices = [
+  {
+    id: 1,
+    title: '정부지원 대출찾기 서비스 제공 종료 안내',
+    date: '2025.07.03',
+  },
+  {
+    id: 2,
+    title: '최저금리 정기조회 서비스 제공 종료 안내',
+    date: '2025.07.03',
+  },
+  {
+    id: 3,
+    title: '5월 대출신청 이벤트 당첨자 안내',
+    date: '2025.06.27',
+  },
+  {
+    id: 4,
+    title: '잔소리봇 소비 분석 서비스 종료 안내',
+    date: '2025.06.19',
+  },
+  {
+    id: 5,
+    title: '카드 본인확인 서비스 종료 안내',
+    date: '2025.06.12',
+  },
+  {
+    id: 6,
+    title: '대출신청 이벤트 당첨자 안내',
+    date: '2025.05.20',
+  },
+  {
+    id: 7,
+    title: '위치정보사업 및 위치기반서비스 이용약관 변경 안내',
+    date: '2025.05.10',
+  },
+];
 
 function Notice() {
   return (
-    <div style={{ padding: "3rem", maxWidth: "700px", margin: "0 auto" }}>
-      <h1>공지사항</h1>
-      <ul style={{ marginTop: "2.2rem" }}>
-        <li>
-          <strong>[2024-06-01]</strong> 신규 채용 공고 시스템 오픈 안내<br />
-          <span style={{ color: "#199f87", fontSize: "0.97rem" }}>
-            채용 공고 작성, 지원자 관리 등 다양한 기능이 추가되었습니다.
-          </span>
-        </li>
-        <li style={{ marginTop: "1.5rem" }}>
-          <strong>[2024-05-15]</strong> 개인정보처리방침 변경 안내<br />
-          <span style={{ color: "#199f87", fontSize: "0.97rem" }}>
-            개인정보 관련 정책이 변경되었으니 이용에 참고해 주세요.
-          </span>
-        </li>
-        <li style={{ marginTop: "1.5rem" }}>
-          <strong>[2024-05-01]</strong> 서비스 정기점검 안내<br />
-          <span style={{ color: "#199f87", fontSize: "0.97rem" }}>
-            5월 3일(금) 00:00~06:00까지 시스템 점검이 진행됩니다.
-          </span>
-        </li>
-      </ul>
-    </div>
+    <>
+      <Navbar />
+      <div className="notice-page">
+        <div className="notice-container">
+          <h1 className="notice-title">공지사항</h1>
+          <ul className="notice-list">
+            {dummyNotices.map((notice) => (
+              <li key={notice.id} className="notice-item">
+                <div className="notice-item-title">{notice.title}</div>
+                <div className="notice-item-date">{notice.date}</div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </>
   );
 }
 
-export default Notice;
+export default Notice; 

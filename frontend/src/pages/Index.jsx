@@ -17,8 +17,36 @@ const WAVE_STROKE = 2.1;
 
 export default function Index() {
   const navigate = useNavigate();
-  const { authState, setAuthState } = useAuth();
+  // const { authState, setAuthState } = useAuth(); // 사용하지 않는 변수 주석 처리
   const [mountTime] = useState(() => performance.now());
+
+  // 메인페이지 로드 시 Navbar 스타일 강제 재적용
+  useEffect(() => {
+    const navbar = document.querySelector('.zoop-navbar');
+    if (navbar) {
+      // Navbar 스타일 강제 재적용
+      navbar.style.display = 'grid';
+      navbar.style.gridTemplateColumns = '1fr auto 1fr';
+      navbar.style.alignItems = 'center';
+      navbar.style.padding = '0.8rem 2.5rem';
+      navbar.style.position = 'absolute';
+      navbar.style.top = '0';
+      navbar.style.left = '0';
+      navbar.style.width = '100%';
+      navbar.style.backgroundColor = 'transparent';
+      navbar.style.boxShadow = 'none';
+      navbar.style.zIndex = '10';
+      navbar.style.transition = 'background-color 0.3s ease, backdrop-filter 0.3s ease';
+    }
+
+    const navLinks = document.querySelector('.nav-links');
+    if (navLinks) {
+      navLinks.style.display = 'flex';
+      navLinks.style.justifyContent = 'center';
+      navLinks.style.gap = '1.5rem';
+      navLinks.style.justifySelf = 'center';
+    }
+  }, []);
 
   // subtitle fade-in
   useEffect(() => {

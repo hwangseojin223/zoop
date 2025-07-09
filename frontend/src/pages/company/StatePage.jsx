@@ -7,12 +7,10 @@ import CandidateModal from '../../components/CandidateModal';
 import { pdfjs } from "react-pdf";
 pdfjs.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.mjs`;
 
-
 export default function StatePage() {
   const { postId } = useParams();
   const [searchResults, setSearchResults] = useState([]);
   const [selected, setSelected] = useState([]);
-
   const [currentPage, setCurrentPage] = useState(1);
   const [tab, setTab] = useState('전체');
   const resultsPerPage = 6;
@@ -34,7 +32,7 @@ export default function StatePage() {
       try {
         const res = await fetch(`http://localhost:8081/api/portfolios/${r.jobCandidateId}/file-path`);
         if (!res.ok) throw new Error("포트폴리오 경로 요청 실패");
-        const data = await res.json();         // 👈 JSON으로 받아야 함
+        const data = await res.json();         // 👈 JSON으로 받아야 함     
         const filePath = data.filePath;        // 👈 실제 경로 추출
         console.log("filePath : ", filePath);
         setSelectedCandidate((prev) => ({ ...prev, filePath })); // 기존 r에 filePath 추가
@@ -44,13 +42,10 @@ export default function StatePage() {
     }
   };
 
-
   const closeModal = () => {
     setModalOpen(false);
     setSelectedCandidate(null);
   };
-
-  //========================================================================
 
   useEffect(() => {
     fetch(`http://localhost:8081/api/github-search/${postId}/states`)
@@ -62,7 +57,7 @@ export default function StatePage() {
       })
       .then((data) => {
         setSearchResults(data);
-        // console.log("불러온데이터 : ", data);
+        console.log(data);
         if (data.length > 0 && data[0].companyAdminId) {
           setCompanyAdminId(data[0].companyAdminId);
         }
@@ -82,63 +77,40 @@ export default function StatePage() {
   /**
    * 메일 보내기
    */
-
-  // 메일 보낸 후 job_cand_curr_stage 업데이트하는 함수
-  const updateProgressStage = async (payloads) => {
-    try {
-      const res = await fetch("http://localhost:8081/api/progress/update-stage-2n", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payloads),
-      });
-
-      if (res.ok) {
-        console.log("🎯 진행 단계 2n 업데이트 성공");
-      } else {
-        console.error("❌ 진행 단계 업데이트 실패");
-      }
-    } catch (err) {
-      console.error("서버 오류:", err);
-    }
-  };
-
-
- const handleSendEmail = async () => {
-    console.log("가져온 데이터:", searchResults);
+  const handleSendEmail = async () => {
+    console.log(searchResults);
     const targets = searchResults.filter(r => selected.includes(r.githubLogin));
     setSending(true); // 👉 버튼 비활성화 시작
 
     // 실제 서비스에선 아래 코드 사용.
-    const payloads = targets.map(r => ({
-      postId: parseInt(postId),
-      githubLogin: r.githubLogin,
-      companyAdminId: r.companyAdminId, // 실제 관리자 ID로 대체 필요
-      candidateEmail: r.candidateEmail,
-    }));
+    // const payloads = targets.map(r => ({
+    //   postId: parseInt(postId),
+    //   githubLogin: r.githubLogin,
+    //   companyAdminId: r.companyAdminId, // 실제 관리자 ID로 대체 필요
+    //   candidateEmail: r.candidateEmail,
+    // }));
 
-    // // ✅ 테스트용 이메일 3개 넣기
-    // const payloads = [
-    //   {
-    //     postId: parseInt(postId),
-    //     githubLogin: "testuser1",
-    //     companyAdminId: companyAdminId,
-    //     candidateEmail: "ezenkenneth93@gmail.com"
-    //   },
-    //   {
-    //     postId: parseInt(postId),
-    //     githubLogin: "testuser2",
-    //     companyAdminId: companyAdminId,
-    //     candidateEmail: "kenneth_lyu@naver.com"
-    //   },
-    //   {
-    //     postId: parseInt(postId),
-    //     githubLogin: "testuser3",
-    //     companyAdminId: companyAdminId,
-    //     candidateEmail: "kenneth93@naver.com"
-    //   }
-    // ];
+    // ✅ 테스트용 이메일 3개 넣기
+    const payloads = [
+      {
+        postId: parseInt(postId),
+        githubLogin: "testuser1",
+        companyAdminId: companyAdminId,
+        candidateEmail: "ezenkenneth93@gmail.com"
+      },
+      {
+        postId: parseInt(postId),
+        githubLogin: "testuser2",
+        companyAdminId: companyAdminId,
+        candidateEmail: "kenneth_lyu@naver.com"
+      },
+      {
+        postId: parseInt(postId),
+        githubLogin: "testuser3",
+        companyAdminId: companyAdminId,
+        candidateEmail: "kenneth93@naver.com"
+      }
+    ];
 
     try {
       const res = await fetch("http://localhost:8081/api/invitations/send-multiple", {
@@ -153,7 +125,6 @@ export default function StatePage() {
         alert("📨 메일을 성공적으로 보냈습니다.");
         console.log("누구한테 보냈게? : ", JSON.stringify(payloads));
         console.log("선택된 사람은 누구게? : ", JSON.stringify(targets));
-        await updateProgressStage(payloads);
       } else {
         alert("❌ 메일 전송 실패");
       }
@@ -178,7 +149,6 @@ export default function StatePage() {
     }
   };
 
-
   const filteredResults = searchResults.filter((r) => {
     if (tab === '전체') return true;
     if (tab === '회신자') return r.jobCandCurrStage === '2y';
@@ -200,37 +170,19 @@ export default function StatePage() {
 
   const tabs = ['전체', '회신자', '면접 예정자', '면접 완료자'];
 
-  // hover 이펙트
-  const handleMouseEnter = (e) => {
-    e.currentTarget.style.transform = 'translateY(-4px)';
-    e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.08)';
-  };
-
-  const handleMouseLeave = (e) => {
-    e.currentTarget.style.transform = 'translateY(0)';
-    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)';
-  };
-
-
   return (
     <div className="min-h-screen bg-emerald-50 pt-20">
       <Navbar />
-      {/* ✅ 사이드바 + 메인 컨텐츠를 나란히 배치 */}
-      <div className="flex mt-12 items-start">
-
-        {/* 왼쪽 사이드바 */}
+      <div className="flex">
         <CompanySidebar />
-        
-        {/* 오른쪽 컨텐츠 */}
-        <main className="flex-1 p-10">
+        <div className="flex-1 p-10 font-sans">
           <h1 className="text-3xl font-bold mb-8 text-emerald-700">📊 후보자 상태</h1>
+
           {/* 탭 UI */}
           <div className="flex space-x-4 mb-8">
             {tabs.map((t) => (
               <button
                 key={t}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
                 onClick={() => { setTab(t); setCurrentPage(1); setSelected([]); }}
                 className={`px-4 py-2 rounded-full font-medium transition-all duration-150 border-2 ${
                   tab === t
@@ -245,11 +197,7 @@ export default function StatePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {currentResults.map((r, i) => (
-              <div key={i} 
-                   className="relative bg-white border border-gray-200 rounded-xl shadow p-6 flex flex-col justify-between"
-                   onMouseEnter={handleMouseEnter}
-                   onMouseLeave={handleMouseLeave}
-              >
+              <div key={i} className="relative bg-white border border-gray-200 rounded-xl shadow p-6 flex flex-col justify-between">
                 {tab === '전체' && (
                   <div className="absolute top-3 right-3">
                     <input
@@ -274,7 +222,6 @@ export default function StatePage() {
                   <div>
                     <span className="font-semibold text-emerald-700">상태:</span> {getStageLabel(r.jobCandCurrStage)}
                   </div>
-
                 </div>
 
                 <button
@@ -343,19 +290,18 @@ export default function StatePage() {
                   </>
                 )}
               </button>
-
             </div>
           )}
-          
-          {/* 합친 후 : postId 추가 */}
-          <CandidateModal
-            candidate={selectedCandidate}
-            isOpen={isModalOpen}
-            onClose={closeModal}
-            postId={postId}
-          />
-        </main>
+        </div>
       </div>
+
+      {/* CandidateModal 컴포넌트 */}
+      {isModalOpen && selectedCandidate && (
+        <CandidateModal
+          candidate={selectedCandidate}
+          onClose={closeModal}
+        />
+      )}
     </div>
   );
 }

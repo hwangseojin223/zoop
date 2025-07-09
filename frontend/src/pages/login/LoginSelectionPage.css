@@ -55,7 +55,7 @@ html {
 /* ✅ 로그인 왼쪽 패널 (.login-left) 스타일 */
 /* ============================================================== */
 .login-left {
-    background: linear-gradient(145deg, #eef2f7 0%, #dae4f0 100%); /* ✨ Refined: More vibrant, subtle gradient */
+    background: linear-gradient(145deg, #f7fef9 0%, #f0fdf4 50%, #dcfce7 100%); /* ✨ Very subtle green gradient background */
     color: #333;
     padding: 40px;
     display: flex;
@@ -276,14 +276,34 @@ html {
     font-size: 14px;
     box-sizing: border-box;
     transition: all 0.3s ease; /* ✨ Refined: Smoother transition for all states */
-    background-color: #fcfcfc; /* ✨ New: Very subtle background to make inputs stand out */
+    background: #fcfcfc; /* ✨ New: Very subtle background to make inputs stand out */
 }
 /* ✅ 입력 필드 포커스 스타일 */
 .input-group input:focus {
     outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2); /* ✨ Refined: Larger, softer focus glow */
-    background-color: #fff; /* Ensure white background on focus */
+    border-color: #30C59B;
+    box-shadow: 0 0 0 3px rgba(48, 197, 155, 0.2); /* ✨ Refined: Larger, softer focus glow */
+    background-color: #fff;
+}
+
+/* ✅ 블록 처리된 입력 필드 스타일 */
+.input-group input.disabled-input {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+    border-color: #dee2e6;
+}
+
+.input-group input.disabled-input:focus {
+    border-color: #dee2e6;
+    box-shadow: none;
+    transform: none;
+}
+
+/* ✅ 입력 필드 설명 텍스트 스타일 */
+.input-note {
+    margin-top: 4px;
+    padding-left: 2px;
 }
 /* Placeholder styling for a softer look */
 .input-group input::placeholder {
@@ -345,8 +365,8 @@ html {
 }
 
 .checkbox-label input[type="checkbox"]:checked {
-    background-color: #007bff; /* Blue background when checked */
-    border-color: #007bff;
+    background-color: #30C59B; /* Green background when checked */
+    border-color: #30C59B;
 }
 
 .checkbox-label input[type="checkbox"]:checked::before {
@@ -430,7 +450,7 @@ html {
 }
 
 .find-links a {
-    color: #007bff;
+    color: #666;
     text-decoration: none;
     margin: 0 8px;
     transition: all 0.2s ease-in-out; /* ✨ Refined: Smoother transition for all properties */
@@ -438,7 +458,7 @@ html {
 }
 
 .find-links a:hover {
-    color: #0056b3;
+    color: #333;
     text-decoration: underline;
     transform: translateY(-1px); /* ✨ Refined: Subtle lift on hover */
 }
@@ -499,14 +519,18 @@ html {
     width: 44px;
     height: 44px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
 }
 
-/* ✅ 구글 버튼 안에 있는 이미지 스타일 */
-/* (Assuming all social icons are img tags based on your JSX, so this targets all) */
+/* ✅ 소셜 아이콘 이미지 스타일 */
 .social-icon img {
-    width: 100%;
-    height: 100%;
+    width: 24px;
+    height: 24px;
     object-fit: contain;
+    transition: all 0.2s ease;
 }
 
 /* ✅ 소셜 아이콘 호버 스타일 (img 및 button 모두 적용) */
@@ -672,11 +696,10 @@ html {
     .social-icon {
         width: 40px;
         height: 40px;
-        /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); */
     }
     .social-icon img {
-        width: 55%;
-        height: 55%;
+        width: 22px;
+        height: 22px;
     }
 }
 
@@ -771,9 +794,13 @@ html {
         margin-bottom: 2rem;
     }
 
-    .social-icons img {
+    .social-icon {
         width: 36px;
         height: 36px;
-        cursor: pointer;
+    }
+    
+    .social-icon img {
+        width: 20px;
+        height: 20px;
     }
 }

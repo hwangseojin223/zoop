@@ -1,6 +1,6 @@
 package com.zoop.backend.domain.entity;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,46 +8,63 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
+/**
+ *
+ * @author hwangseojin
+ */
 @Entity
-@Table(name = "PORTFOLIOS")
-@Getter
-@Setter
+@Table(name = "portfolios")
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Portfolio {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "PORTFOLIO_ID")
-    private Long portfolioId;
-
-    @Column(name = "JOB_CANDIDATE_ID", nullable = false)
-    private Long jobCandidateId;
-
-    @Column(name = "PORTFOLIO_SUBMISSION_DATE")
-    private LocalDateTime portfolioSubmissionDate;
-
-    @Column(name = "PORTFOLIO_FILE_PATH")
+@Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "portfolio_seq")
+    @SequenceGenerator(name = "portfolio_seq", sequenceName = "portfolio_id_seq", allocationSize = 1)
+    @Column(name = "portfolio_id")
+    private Integer portfolioId;
+    
+    @Column(name = "job_candidate_id", nullable = false)
+    private Integer jobCandidateId;
+    
+    @Column(name = "portfolio_submission_date", nullable = false)
+    private Date portfolioSubmissionDate;
+    
+    @Column(name = "portfolio_file_path")
     private String portfolioFilePath;
-
+    
+    @Column(name = "portfolio_content")
     @Lob
-    @Column(name = "PORTFOLIO_CONTENT")
     private String portfolioContent;
-
-    @Column(name = "PORTFOLIO_URL")
+    
+    @Column(name = "portfolio_url")
     private String portfolioUrl;
-
-    @Column(name = "PORTFOLIO_CREATED_AT", nullable = false)
-    private LocalDateTime portfolioCreatedAt;
-
-    @Column(name = "PORTFOLIO_UPDATED_AT", nullable = false)
-    private LocalDateTime portfolioUpdatedAt;
+    
+    @Column(name = "portfolio_created_at", nullable = false)
+    private Date portfolioCreatedAt;
+    
+    @Column(name = "portfolio_updated_at", nullable = false)
+    private Date portfolioUpdatedAt;
+    
+    @PrePersist
+    protected void onCreate() {
+        portfolioCreatedAt = new Date();
+        portfolioUpdatedAt = new Date();
+        portfolioSubmissionDate = new Date();
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        portfolioUpdatedAt = new Date();
+    }
 }

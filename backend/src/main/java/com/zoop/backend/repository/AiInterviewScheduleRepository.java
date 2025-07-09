@@ -1,11 +1,21 @@
-// Repository: AiInterviewScheduleRepository.java
 package com.zoop.backend.repository;
 
-import com.zoop.backend.domain.entity.AiInterviewSchedule;
-import org.springframework.data.jpa.repository.JpaRepository;
-
+import java.util.List;
 import java.util.Optional;
 
-public interface AiInterviewScheduleRepository extends JpaRepository<AiInterviewSchedule, Long> {
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import com.zoop.backend.domain.entity.AiInterviewSchedule;
+
+/**
+ *
+ * @author hwangseojin
+ */
+@Repository
+public interface AiInterviewScheduleRepository extends JpaRepository<AiInterviewSchedule, Integer> {
+    List<AiInterviewSchedule> findByJobCandidateId(Integer jobCandidateId);
+    Optional<AiInterviewSchedule> findByJobCandidateIdAndAiInterviewScheduleId(Integer jobCandidateId, Integer scheduleId);
+
     Optional<AiInterviewSchedule> findByJobCandidateId(Long jobCandidateId);
 }

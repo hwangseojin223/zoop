@@ -5,6 +5,7 @@ import java.util.Random;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.zoop.backend.domain.entity.EmailVerification;
 import com.zoop.backend.domain.entity.Post;
@@ -13,12 +14,16 @@ import com.zoop.backend.repository.EmailVerificationRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
+
 @Service
 public class EmailService {
 
     private final JavaMailSender mailSender;
     private final EmailVerificationRepository repository;
     private final Random random = new Random();
+
+    @Value("${zoop.frontend.url:http://localhost:3000}")
+    private String frontendUrl;
 
     public EmailService(JavaMailSender mailSender, EmailVerificationRepository repository) {
         this.mailSender = mailSender;
@@ -60,7 +65,7 @@ public class EmailService {
     public void sendInvitationEmail(String toEmail, String githubLogin, String token, Post post) throws MessagingException {
         
         String subject = "[ZOOP] " + post.getPostTitle() + " - 인터뷰 초대";
-        String link = "http://localhost:3000/auth/applicant/signup/process/" + token;
+        String link = frontendUrl + "/invite/" + token;
 
         String body = String.format("""
         <div style="font-family:Arial, sans-serif; background-color:#f9f9f9; padding:20px;">
@@ -124,6 +129,49 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    /**
+     * 지원 확인 이메일
+     */
+    public void sendApplicationConfirmationEmail(String toEmail, String candidateName, String postTitle) throws MessagingException {
+        String subject = "[ZOOP] " + postTitle + " - 지원 확인";
+        
+        String body = String.format("""
+        <div style="font-family:Arial, sans-serif; background-color:#f9f9f9; padding:20px;">
+            <h2 style="color:#333;">👋 안녕하세요 %s 님,</h2>
+            <p style="font-size:15px; color:#555;">ZOOP 플랫폼에 지원해주셔서 감사합니다.</p>
+
+            <div style="background-color:#fff; border:1px solid #ddd; border-radius:8px; padding:16px; margin-top:20px;">
+                <h3 style="color:#28a745;">📌 %s</h3>
+                <p style="font-size:14px; color:#444;">지원이 성공적으로 접수되었습니다.</p>
+                <p style="font-size:14px; color:#444;">검토 후 결과를 이메일로 안내드리겠습니다.</p>
+            </div>
+
+            <div style="margin-top:30px; padding:16px; background-color:#e8f5e8; border-radius:8px;">
+                <h4 style="color:#28a745; margin-top:0;">📋 지원 절차</h4>
+                <ol style="color:#555; font-size:14px;">
+                    <li>지원서 검토 (1-2일 소요)</li>
+                    <li>1차 AI 면접 (선택사항)</li>
+                    <li>기업 면접</li>
+                    <li>최종 결과 안내</li>
+                </ol>
+            </div>
+
+            <p style="margin-top:30px; font-size:13px; color:#777;">감사합니다.<br/>ZOOP 팀 드림</p>
+        </div>
+        """, candidateName, postTitle);
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setTo(toEmail);
+        helper.setSubject(subject);
+        helper.setText(body, true); // HTML 전송
+
+        mailSender.send(message);
+    }
+
+
+
     /** 비밀번호 재설정 이메일 (추가 후) */
         public void sendPasswordResetEmail(String toEmail, String githubLogin, String resetLink) throws MessagingException {
         String subject = "[ZOOP] 비밀번호 재설정 안내";
@@ -154,4 +202,5 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
 }

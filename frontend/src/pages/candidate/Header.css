@@ -1,15 +1,15 @@
+/* Header.css */
+
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 15px 30px;
-  background-color: #ffffff;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  z-index: 100; /* Ensure header is on top */
-}
-
-.header-left {
-  /* No specific content in the image, but can be used for toggling sidebar */
+  background-color: #f7f9fc;
+  /* To remove the "line" or visual separation around the header: */
+  border: none; /* Explicitly remove any border */
+  box-shadow: none; /* Remove any subtle shadow that might look like a line */
+  z-index: 100;
 }
 
 .header-right {
@@ -18,10 +18,26 @@
 }
 
 .header-icon {
-  font-size: 20px;
-  color: #666;
   margin-left: 20px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  transition: all 0.2s ease;
+}
+
+.header-icon img {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) saturate(100%) invert(40%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(0.6);
+  transition: all 0.2s ease;
+}
+
+.header-icon:hover img {
+  filter: brightness(0) saturate(100%) invert(30%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(0.7);
+  transform: scale(1.1);
 }
 
 .user-profile {
@@ -30,6 +46,16 @@
   margin-left: 25px;
   font-size: 15px;
   color: #333;
+  cursor: pointer; /* Indicates it's clickable */
+  position: relative; /* Crucial for positioning the dropdown relative to this element */
+  padding: 5px; /* Add some padding to make the clickable area larger */
+  border-radius: 8px; /* Optional: subtle rounding on hover */
+  transition: background-color 0.2s ease;
+  gap:5px;
+}
+
+.user-profile:hover {
+    background-color: #f0f0f0; /* Slight highlight on hover */
 }
 
 .user-profile span {
@@ -41,6 +67,51 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: #ccc; /* Placeholder background */
+  background-color: #ccc;
   object-fit: cover;
 }
+
+/* --- Dropdown Menu Styles --- */
+.dropdown-menu {
+  position: absolute; /* Position relative to .user-profile */
+  top: 100%; /* Position below the user-profile div */
+  right: 0; /* Align to the right of the user-profile div */
+  background-color: #ffffff;
+  border-radius: 8px; /* Rounded corners like the screenshot */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* More prominent shadow */
+  min-width: 180px; /* Adjust as needed */
+  z-index: 101; /* Ensure it's above other header elements */
+  overflow: hidden; /* Ensures rounded corners clip content */
+  margin-top: 10px; /* Space between user-profile and dropdown */
+  padding: 8px 0; /* Vertical padding inside the dropdown */
+}
+
+.dropdown-item {
+  padding: 12px 20px; /* Padding for each menu item */
+  color: #333;
+  font-size: 1em;
+  cursor: pointer;
+  white-space: nowrap; /* Prevent text wrapping */
+  transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #f5f5f5; /* Highlight on hover */
+}
+
+.logout-dropdown-item {
+  color: #dc3545; /* Red color for logout item */
+  font-weight: bold;
+}
+
+.logout-dropdown-item:hover {
+  background-color: #ffeaea; /* Lighter red background on hover */
+}
+
+/* Remove the old .logout-button styles if you are no longer using it outside the dropdown */
+/* If you still need a standalone logout button somewhere else, keep its styles */
+/*
+.logout-button {
+  display: none; // Or remove entirely if only in dropdown
+}
+*/

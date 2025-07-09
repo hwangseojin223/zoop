@@ -1,23 +1,45 @@
 package com.zoop.backend.service;
 
-import java.util.List;
-
+import com.zoop.backend.domain.dto.GithubSearchResultDto;
+import com.zoop.backend.domain.entity.GithubSearchResult;
+import com.zoop.backend.repository.GithubSearchResultRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import com.zoop.backend.domain.dto.GithubSearchResultWithStageDto;
 import com.zoop.backend.repository.GithubSearchResultRepository;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GithubSearchResultService {
 
-    private final GithubSearchResultRepository githubSearchResultsRepository;
+    private final GithubSearchResultRepository githubSearchResultRepository;
+
+    @Transactional
+    public GithubSearchResult saveGithubSearchResult(GithubSearchResultDto dto) {
+        GithubSearchResult entity = GithubSearchResult.builder()
+                .postId(dto.getPostId())
+                .githubLogin(dto.getGithubLogin())
+                .githubProfileUrl(dto.getGithubProfileUrl())
+                .analysisScore(dto.getAnalysisScore())
+                .candidateEmail(dto.getCandidateEmail())
+                .githubSearchDate(LocalDateTime.now())
+                .githubCreatedAt(LocalDateTime.now())
+                .aiGithubAnalysisId(dto.getAiGithubAnalysisId())
+                .build();
+
+        return githubSearchResultRepository.save(entity);
+    }
+
+    public Optional<GithubSearchResult> findById(Long githubSearchResultId) {
+        return githubSearchResultRepository.findById(githubSearchResultId);
+    }
 
     public List<GithubSearchResultWithStageDto> getSearchResultsWithStage(Long postId) {
-        return githubSearchResultsRepository.findSearchResultsWithStageByPostId(postId);
+        return githubSearchResultRepository.findSearchResultsWithStageByPostId(postId);
     }
-}
+} 

@@ -1,6 +1,7 @@
 package com.zoop.backend.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,11 +9,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
+import com.zoop.backend.domain.dto.CandidatePreferencesDto;
 import com.zoop.backend.domain.dto.finding.FindGithubLoginRequest;
 import com.zoop.backend.domain.dto.finding.FindGithubLoginResponse;
 import com.zoop.backend.domain.entity.Candidate;
 import com.zoop.backend.repository.CandidateRepository;
+import com.zoop.backend.repository.InvitationRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +33,10 @@ public class CandidateService {
     private BCryptPasswordEncoder passwordEncoder;
     @Autowired
     private final CandidateRepository candidateRepository;
+    private final InvitationRepository invitationRepository;
+    
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public List<Candidate> findAll() {
         return candidateRepository.findAll();
@@ -35,31 +45,120 @@ public class CandidateService {
     @Transactional 
     public Candidate save(Candidate candidate) {
         try {
+            // GitHub 로그인 중복 체크
+            if (candidate.getGithubLogin() != null) {
+                Optional<Candidate> existingCandidate = candidateRepository.findByGithubLogin(candidate.getGithubLogin());
+                if (existingCandidate.isPresent()) {
+                    logger.warn("이미 존재하는 GitHub 로그인: {}", candidate.getGithubLogin());
+                    throw new RuntimeException("이미 가입된 GitHub 계정입니다: " + candidate.getGithubLogin());
+                }
+            }
+            
+            // 이메일 중복 체크
+            if (candidate.getCandidateEmail() != null) {
+                Optional<Candidate> existingEmail = candidateRepository.findByCandidateEmail(candidate.getCandidateEmail());
+                if (existingEmail.isPresent()) {
+                    logger.warn("이미 존재하는 이메일: {}", candidate.getCandidateEmail());
+                    throw new RuntimeException("이미 가입된 이메일 주소입니다: " + candidate.getCandidateEmail());
+                }
+            }
+            
             // 비밀번호 암호화
             String encrypted = passwordEncoder.encode(candidate.getCandidatePassword());
             
             // 비밀번호 암호화 전/후 로그 출력
             logger.info("암호화 전 비밀번호: {}", candidate.getCandidatePassword());
             logger.info("암호화된 비밀번호: {}", encrypted);
-            logger.info("저장할 값1 : {}", candidate.toString());
             
             candidate.setCandidatePassword(encrypted);
             
+            // 저장할 값 로그 출력
+            logger.info("저장할 값1 : {}", candidate);
+            
             // 후보자 저장
             Candidate savedCandidate = candidateRepository.save(candidate);
+            logger.info("저장된 후보자 ID: {}", savedCandidate.getCandidateId());
             
+            // invitations 테이블 업데이트는 별도 트랜잭션에서 처리
+            updateInvitationAsync(savedCandidate.getGithubLogin(), savedCandidate.getCandidateId());
             
-            // // 저장된 후보자 정보 로그 출력
-            logger.info("회원 저장 성공, 회원 ID: {}", savedCandidate.getCandidateId());
-            logger.info("저장할 값2 : {}", candidate.toString());
             return savedCandidate;
         } catch (Exception e) {
-            // 예외 발생 시 에러 로그 출력
             logger.error("회원 저장 중 오류 발생: {}", e.getMessage(), e);
-            throw e;  // 예외를 다시 던져서 처리
+            throw e;
+        }
+    }
+    
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void updateInvitationAsync(String githubLogin, Long candidateId) {
+        try {
+            invitationRepository.updateCandidateIdByGithubLogin(githubLogin, candidateId);
+            logger.info("✅ invitations 테이블 업데이트 성공: githubLogin={}, candidateId={}", githubLogin, candidateId);
+        } catch (Exception invitationError) {
+            logger.warn("⚠️ invitations 테이블 업데이트 실패 (회원가입은 성공): {}", invitationError.getMessage());
+            // invitations 업데이트 실패해도 회원가입은 성공으로 처리
         }
     }
 
+    @Transactional
+    public Candidate updatePreferences(CandidatePreferencesDto preferencesDto) {
+        try {
+            Candidate candidate = candidateRepository.findById(preferencesDto.getCandidateId())
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다. ID: " + preferencesDto.getCandidateId()));
+            
+            // 설정 정보 업데이트
+            if (preferencesDto.getPreferredJob() != null) {
+                candidate.setPreferredJob(preferencesDto.getPreferredJob());
+            }
+            if (preferencesDto.getPreferredRegion() != null) {
+                candidate.setPreferredRegion(preferencesDto.getPreferredRegion());
+            }
+            if (preferencesDto.getPreferredSalary() != null) {
+                candidate.setPreferredSalary(preferencesDto.getPreferredSalary());
+            }
+            if (preferencesDto.getPreferredCompanySize() != null) {
+                candidate.setPreferredCompanySize(preferencesDto.getPreferredCompanySize());
+            }
+            if (preferencesDto.getPreferredCommuteTime() != null) {
+                candidate.setPreferredCommuteTime(preferencesDto.getPreferredCommuteTime());
+            }
+            if (preferencesDto.getPreferredBenefit() != null) {
+                candidate.setPreferredBenefit(preferencesDto.getPreferredBenefit());
+            }
+            
+            // 업데이트 시간 설정
+            candidate.setCandidateUpdatedAt(java.time.LocalDateTime.now());
+            
+            Candidate updatedCandidate = candidateRepository.save(candidate);
+            logger.info("사용자 설정 업데이트 성공, 회원 ID: {}", updatedCandidate.getCandidateId());
+            
+            return updatedCandidate;
+        } catch (Exception e) {
+            logger.error("사용자 설정 업데이트 중 오류 발생: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public CandidatePreferencesDto getPreferences(Long candidateId) {
+        try {
+            Candidate candidate = candidateRepository.findById(candidateId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다. ID: " + candidateId));
+            
+            return CandidatePreferencesDto.builder()
+                .candidateId(candidate.getCandidateId())
+                .preferredJob(candidate.getPreferredJob())
+                .preferredRegion(candidate.getPreferredRegion())
+                .preferredSalary(candidate.getPreferredSalary())
+                .preferredCompanySize(candidate.getPreferredCompanySize())
+                .preferredCommuteTime(candidate.getPreferredCommuteTime())
+                .preferredBenefit(candidate.getPreferredBenefit())
+                .build();
+        } catch (Exception e) {
+            logger.error("사용자 설정 조회 중 오류 발생: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
     // 회원가입시 아이디 중복확인을 위한 메서드
     public boolean isDuplicateGithubLogin(String githubLogin) {
         return candidateRepository.existsByGithubLogin(githubLogin);

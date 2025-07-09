@@ -1,99 +1,202 @@
-/* Sidebar.css */
+/* Sidebar.css - Modern & Sophisticated Design */
 
 .sidebar {
-  width: 240px;
-  background-color: #ffffff;
-  padding: 20px 0;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
-  flex-shrink: 0; /* 사이드바의 너비가 고정되도록 합니다. */
+  width: 260px;
+  background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+  padding: 24px 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  border-right: 1px solid #f0f0f0;
+  position: relative;
+}
+
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, #e0e0e0 50%, transparent 100%);
+}
+
+.logo-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  padding: 0 24px;
+  margin-bottom: 32px;
+  transition: transform 0.2s ease;
+}
+
+.logo-link:hover {
+  transform: scale(1.02);
 }
 
 .logo {
   text-align: center;
-  margin-bottom: 30px;
 }
 
 .logo img {
-  height: 24px; /* Adjust as needed */
+  height: 56px;
+  display: block;
+  margin: 0 auto;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .menu-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  flex-grow: 1;
 }
 
 .menu-item {
   display: flex;
   align-items: center;
-  padding: 12px 20px;
-  color: #555;
+  padding: 14px 24px;
+  color: #4a5568;
   font-size: 15px;
+  font-weight: 500;
   cursor: pointer;
-  position: relative; /* 하위 메뉴의 absolute 포지셔닝 기준 */
-  flex-wrap: wrap; /* 하위 메뉴가 아래 줄로 내려가도록 허용 */
-  transition: background-color 0.2s ease-in-out; /* 부드러운 호버 효과 */
+  position: relative;
+  flex-wrap: wrap;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 2px 12px;
+  border-radius: 12px;
+  letter-spacing: -0.2px;
 }
 
 .menu-item:hover {
-  background-color: #f0f2f5;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #1e293b;
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .menu-item.active {
-  background-color: #e6f7ff; /* Light blue for active item */
-  color: #007bff; /* Blue text for active */
-  font-weight: bold;
+  background: #ffffff;
+  color: #30C59B;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateX(4px);
 }
 
 .menu-item .icon {
-  margin-right: 10px;
-  font-size: 18px; /* Adjust icon size */
+  margin-right: 14px;
+  font-size: 18px;
+  color: inherit;
+  transition: transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.menu-item .icon svg {
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+}
+
+.menu-item:hover .icon {
+  transform: scale(1.1);
 }
 
 .menu-item .arrow {
-  margin-left: auto; /* 화살표를 오른쪽 끝으로 보냅니다. */
+  margin-left: auto;
   font-size: 12px;
-  transition: transform 0.2s ease-in-out; /* 화살표 회전 애니메이션 */
+  color: inherit;
+  opacity: 0.7;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
 }
 
-/* new-badge는 그대로 유지 */
+.menu-item.active .arrow {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+
 .new-badge {
-  background-color: #ff4d4f; /* Red */
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
   color: white;
   font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 4px 8px;
+  border-radius: 12px;
   margin-left: 8px;
-  font-weight: normal;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
+  animation: pulse 2s infinite;
 }
 
-/* sub-menu의 기본 스타일 (이제 JSX에서 조건부 렌더링되므로 display: none이 필요 없음) */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* sub-menu styling */
 .sub-menu {
   list-style: none;
-  padding: 0;
-  margin: 0;
-  background-color: #f7f9fc; /* Slightly darker for sub-menu background */
-  border-top: 1px solid #eee;
-  width: 100%; /* 부모 .menu-item의 전체 너비 사용 */
-  /* position: absolute; /* 이 부분이 있으면 메뉴 아이템 안에서 겹쳐 보일 수 있습니다. */
-  /* left: 0; */
-  /* top: 100%; */ /* 주석 처리하거나 제거: flex-wrap에 의해 자연스럽게 아래로 내려갑니다. */
-  /* z-index: 10; */ /* 필요하다면 유지 */
+  padding: 8px 0;
+  margin: 8px 0 0 0;
+  background: rgba(255, 255, 255, 0.8);
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .sub-menu-item {
-  padding: 10px 20px 10px 45px; /* Indent sub-menu items */
+  padding: 12px 24px 12px 56px;
   font-size: 14px;
-  color: #666;
+  color: #64748b;
   cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  font-weight: 500;
 }
 
 .sub-menu-item:hover {
-  background-color: #e9eef2;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #30C59B;
 }
 
 .sub-menu-item.active {
-  background-color: #dcf2ff; /* Lighter blue for active sub-menu item */
-  color: #007bff;
-  font-weight: bold;
+  background: linear-gradient(135deg, #e6f9f3 0%, #d1fae5 100%);
+  color: #30C59B;
+  font-weight: 600;
+}
+
+/* Scrollbar styling */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #cbd5e1 0%, #94a3b8 100%);
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
 }
