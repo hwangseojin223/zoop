@@ -69,6 +69,14 @@ public class PostService {
         return postRepository.findByCompanyIdOrderByPostCreatedAtDesc(companyId);
     }
 
+    // 회사 관리자의 loginId로 해당 회사의 공고 목록 조회 메서드 추가
+    public List<Post> getPostsByCompanyAdmin(String loginId) {
+        CompanyAdmin admin = companyAdminRepository.findByCompanyAdminLogin(loginId)
+            .orElseThrow(() -> new RuntimeException("존재하지 않는 관리자입니다."));
+        
+        return postRepository.findByCompanyIdOrderByPostCreatedAtDesc(admin.getCompany().getCompanyId());
+    }
+
     // 모든 공고 목록 조회 메서드 추가
     public List<Post> getAllPosts() {
         return postRepository.findAllByOrderByPostCreatedAtDesc();
@@ -76,7 +84,10 @@ public class PostService {
 
     // 공개 공고 목록 조회 메서드 추가
     public List<Post> getPublicPosts() {
-        return postRepository.findByPostStatusOrderByPostCreatedAtDesc("ACTIVE");
+        // 조회 전에 만료된 공고들 상태 업데이트
+        updateExpiredPosts();
+        
+        return postRepository.findActivePostsNotExpired("ACTIVE", LocalDate.now());
     }
 
     // 공고 업데이트 메서드 추가
@@ -107,5 +118,38 @@ public class PostService {
         post.setPostIdealCandidate(idealCandidate);
         post.setPostUpdatedAt(LocalDateTime.now());
         return postRepository.save(post);
+    }
+
+    // 만료된 공고들을 INACTIVE 상태로 업데이트하는 메서드 추가
+    public int updateExpiredPosts() {
+        List<Post> allPosts = postRepository.findAll();
+        int updatedCount = 0;
+        
+        for (Post post : allPosts) {
+            if (post.getPostExpiryDate() != null && 
+                post.getPostExpiryDate().isBefore(LocalDate.now()) && 
+                "ACTIVE".equals(post.getPostStatus())) {
+                
+                post.setPostStatus("INACTIVE");
+                post.setPostUpdatedAt(LocalDateTime.now());
+                postRepository.save(post);
+                updatedCount++;
+                
+                System.out.println("만료된 공고 상태 업데이트: " + post.getPostTitle() + 
+                                 " (만료일: " + post.getPostExpiryDate() + ")");
+            }
+        }
+        
+        System.out.println("총 " + updatedCount + "개의 만료된 공고 상태를 업데이트했습니다.");
+        return updatedCount;
+    }
+
+    // 만료된 공고 목록 조회 메서드 추가
+    public List<Post> getExpiredPosts() {
+        List<Post> allPosts = postRepository.findAll();
+        return allPosts.stream()
+            .filter(post -> post.getPostExpiryDate() != null && 
+                           post.getPostExpiryDate().isBefore(LocalDate.now()))
+            .toList();
     }
 }

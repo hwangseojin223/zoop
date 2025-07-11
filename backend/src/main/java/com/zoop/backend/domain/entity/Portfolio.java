@@ -7,7 +7,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.SequenceGenerator;
@@ -43,12 +42,9 @@ public class Portfolio {
     @Column(name = "portfolio_file_path")
     private String portfolioFilePath;
     
-    @Column(name = "portfolio_content")
-    @Lob
-    private String portfolioContent;
-    
-    @Column(name = "portfolio_url")
-    private String portfolioUrl;
+    @Column(name = "portfolio_analysis_status", nullable = false, length = 20)
+    @Builder.Default
+    private String portfolioAnalysisStatus = "PENDING";
     
     @Column(name = "portfolio_created_at", nullable = false)
     private Date portfolioCreatedAt;
@@ -61,6 +57,9 @@ public class Portfolio {
         portfolioCreatedAt = new Date();
         portfolioUpdatedAt = new Date();
         portfolioSubmissionDate = new Date();
+        if (portfolioAnalysisStatus == null) {
+            portfolioAnalysisStatus = "PENDING";
+        }
     }
     
     @PreUpdate

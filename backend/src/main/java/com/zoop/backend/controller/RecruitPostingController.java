@@ -88,7 +88,37 @@ public class RecruitPostingController {
     @GetMapping("/all")
     public ResponseEntity<List<Post>> getAllPosts() {
         List<Post> posts = postService.getAllPosts();
+        System.out.println("=== 전체 공고 조회 결과 ===");
+        System.out.println("총 공고 수: " + posts.size());
+        for (Post post : posts) {
+            System.out.println("공고 ID: " + post.getPostId() + ", 제목: " + post.getPostTitle() + 
+                             ", 상태: " + post.getPostStatus() + ", 마감일: " + post.getPostExpiryDate());
+        }
+        System.out.println("========================");
         return ResponseEntity.ok(posts);
+    }
+
+    @Operation(summary = "현재 로그인한 회사의 공고 목록 조회", description = "JWT 토큰을 통해 현재 로그인한 회사의 모든 공고 목록을 조회합니다.")
+    @ApiResponses(value={
+        @ApiResponse(responseCode = "200", description = "회사 공고 목록 반환",
+            content = @Content(schema = @Schema(implementation = Post.class))),
+        @ApiResponse(responseCode = "401", description = "인증 실패"),
+        @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    @GetMapping("/company")
+    public ResponseEntity<List<Post>> getPostsByCurrentCompany(
+        @Parameter(description = "JWT 인증 토큰(Bearer prefix 포함)", required = true)
+        @RequestHeader("Authorization") String authHeader
+    ) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            String loginId = jwtUtil.getLoginIdFromToken(token);
+            List<Post> posts = postService.getPostsByCompanyAdmin(loginId);
+            return ResponseEntity.ok(posts);
+        } catch (Exception e) {
+            System.err.println("JWT 인증 실패: " + e.getMessage());
+            return ResponseEntity.status(401).build();
+        }
     }
 
     @Operation(summary = "공개 공고 목록 조회", description = "공개용으로 사용할 수 있는 모든 공고 목록을 조회합니다.")
@@ -100,6 +130,13 @@ public class RecruitPostingController {
     @GetMapping("/public")
     public ResponseEntity<List<Post>> getPublicPosts() {
         List<Post> posts = postService.getPublicPosts();
+        System.out.println("=== 공개 공고 조회 결과 ===");
+        System.out.println("총 공고 수: " + posts.size());
+        for (Post post : posts) {
+            System.out.println("공고 ID: " + post.getPostId() + ", 제목: " + post.getPostTitle() + 
+                             ", 상태: " + post.getPostStatus() + ", 마감일: " + post.getPostExpiryDate());
+        }
+        System.out.println("========================");
         return ResponseEntity.ok(posts);
     }
 
@@ -120,6 +157,30 @@ public class RecruitPostingController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(post);
+    }
+
+    @Operation(summary = "만료된 공고 목록 조회", description = "만료일이 지난 공고들을 조회합니다.")
+    @GetMapping("/expired")
+    public ResponseEntity<List<Post>> getExpiredPosts() {
+        List<Post> expiredPosts = postService.getExpiredPosts();
+        System.out.println("=== 만료된 공고 조회 결과 ===");
+        System.out.println("만료된 공고 수: " + expiredPosts.size());
+        for (Post post : expiredPosts) {
+            System.out.println("공고 ID: " + post.getPostId() + ", 제목: " + post.getPostTitle() + 
+                             ", 상태: " + post.getPostStatus() + ", 만료일: " + post.getPostExpiryDate());
+        }
+        System.out.println("========================");
+        return ResponseEntity.ok(expiredPosts);
+    }
+
+    @Operation(summary = "만료된 공고 상태 업데이트", description = "만료일이 지난 공고들을 INACTIVE 상태로 업데이트합니다.")
+    @PostMapping("/update-expired")
+    public ResponseEntity<Map<String, Object>> updateExpiredPosts() {
+        int updatedCount = postService.updateExpiredPosts();
+        return ResponseEntity.ok(Map.of(
+            "message", "만료된 공고 상태 업데이트 완료",
+            "updatedCount", updatedCount
+        ));
     }
 
     @Operation(summary = "공고 정보 업데이트", description = "기존 공고의 정보를 업데이트합니다.")

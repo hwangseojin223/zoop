@@ -65,4 +65,8 @@ public class AiAnalysisResultService {
     public List<AiAnalysisResult> findAll() {
         return aiAnalysisResultRepository.findAll();
     }
+
+    public List<AiAnalysisResult> findByJobCandidateIdAndAnalysisType(Long jobCandidateId, String analysisType) {
+        return aiAnalysisResultRepository.findByJobCandidateIdAndAnalysisTypeOrderByAnalysisDateDesc(jobCandidateId, analysisType);
+    }
 } 

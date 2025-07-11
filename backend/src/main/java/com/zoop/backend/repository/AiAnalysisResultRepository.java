@@ -24,4 +24,7 @@ public interface AiAnalysisResultRepository extends JpaRepository<AiAnalysisResu
 
     @Query("SELECT a FROM AiAnalysisResult a WHERE a.githubSearchResultId IN :ids")
     List<AiAnalysisResult> findByGithubSearchResultIds(@Param("ids") List<Long> ids);
+
+    @Query("SELECT a FROM AiAnalysisResult a WHERE a.jobCandidateId = :jobCandidateId AND a.analysisType = :analysisType ORDER BY a.analysisDate DESC")
+    List<AiAnalysisResult> findByJobCandidateIdAndAnalysisTypeOrderByAnalysisDateDesc(@Param("jobCandidateId") Long jobCandidateId, @Param("analysisType") String analysisType);
 } 
