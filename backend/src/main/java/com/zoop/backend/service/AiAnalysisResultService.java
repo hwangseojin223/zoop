@@ -66,10 +66,12 @@ public class AiAnalysisResultService {
         return aiAnalysisResultRepository.findAll();
     }
 
-<<<<<<< HEAD
+    // 내 버전: jobCandidateId와 analysisType으로 최신순 정렬 조회
     public List<AiAnalysisResult> findByJobCandidateIdAndAnalysisType(Long jobCandidateId, String analysisType) {
         return aiAnalysisResultRepository.findByJobCandidateIdAndAnalysisTypeOrderByAnalysisDateDesc(jobCandidateId, analysisType);
-=======
+    }
+
+    // 팀 버전: 분석 결과 삭제 기능
     @Transactional
     public boolean deleteById(Long analysisId) {
         Optional<AiAnalysisResult> result = aiAnalysisResultRepository.findById(analysisId);
@@ -78,6 +80,5 @@ public class AiAnalysisResultService {
             return true;
         }
         return false;
->>>>>>> origin/test-experiment-zoop
     }
 } 

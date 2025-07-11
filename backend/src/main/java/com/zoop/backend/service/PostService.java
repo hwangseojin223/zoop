@@ -6,7 +6,6 @@ import com.zoop.backend.domain.entity.Post;
 import com.zoop.backend.repository.CompanyAdminRepository;
 import com.zoop.backend.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
-<<<<<<< HEAD
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -14,8 +13,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-=======
->>>>>>> origin/test-experiment-zoop
 
 @Service
 @RequiredArgsConstructor
@@ -87,14 +84,10 @@ public class PostService {
 
     // 공개 공고 목록 조회 메서드 추가
     public List<Post> getPublicPosts() {
-<<<<<<< HEAD
         // 조회 전에 만료된 공고들 상태 업데이트
         updateExpiredPosts();
         
         return postRepository.findActivePostsNotExpired("ACTIVE", LocalDate.now());
-=======
-        return postRepository.findByPostStatusOrderByPostCreatedAtDesc("ACTIVE");
->>>>>>> origin/test-experiment-zoop
     }
 
     // 공고 업데이트 메서드 추가

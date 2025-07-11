@@ -103,7 +103,7 @@ public class AiAnalysisResultController {
         return ResponseEntity.ok(results);
     }
 
-<<<<<<< HEAD
+    // 내 버전: 직접 지원자의 포트폴리오 AI 분석 결과 조회
     @Operation(summary = "직접 지원자의 AI 분석 결과 조회", description = "특정 직접 지원자의 포트폴리오 AI 분석 결과를 조회합니다.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "AI 분석 결과 반환",
@@ -120,7 +120,9 @@ public class AiAnalysisResultController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(results.get(0)); // 가장 최근 분석 결과 반환
-=======
+    }
+
+    // 팀 버전: AI 분석 결과 삭제 기능
     @Operation(summary = "AI 분석 결과 삭제", description = "특정 AI 분석 결과를 삭제합니다.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "AI 분석 결과 삭제 성공"),
@@ -137,6 +139,5 @@ public class AiAnalysisResultController {
         } else {
             return ResponseEntity.notFound().build();
         }
->>>>>>> origin/test-experiment-zoop
     }
 } 

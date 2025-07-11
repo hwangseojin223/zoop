@@ -1,11 +1,9 @@
 package com.zoop.backend.service;
 
-import java.util.Random;
-
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Value;
 
 import com.zoop.backend.domain.entity.EmailVerification;
 import com.zoop.backend.domain.entity.Post;
@@ -13,6 +11,9 @@ import com.zoop.backend.repository.EmailVerificationRepository;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+
+import java.util.Optional;
+import java.util.Random;
 
 @Service
 public class EmailService {
@@ -36,8 +37,8 @@ public class EmailService {
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         helper.setTo(toEmail);
-        helper.setSubject("[줍(ZOOP)] 이메일 인증 코드입니다");
-        helper.setText("인증 코드는 " + code + " 입니다. 5분 이내에 입력해주세요.");
+        helper.setSubject("[ZOOP] 이메일 인증 코드");
+        helper.setText("인증 코드: " + code, false);
 
         mailSender.send(message);
 
@@ -64,37 +65,8 @@ public class EmailService {
     public void sendInvitationEmail(String toEmail, String githubLogin, String token, Post post) throws MessagingException {
         
         String subject = "[ZOOP] " + post.getPostTitle() + " - 인터뷰 초대";
-<<<<<<< HEAD
+        // 사용자 버전의 더 명확한 경로를 사용하되, 팀 버전의 이스케이프 방식 적용
         String link = frontendUrl + "/auth/applicant/signup/process/" + token;
-
-        String body = String.format("""
-        <div style="font-family:Arial, sans-serif; background-color:#f9f9f9; padding:20px;">
-            <h2 style="color:#333;">👋 안녕하세요 %s 님,</h2>
-            <p style="font-size:15px; color:#555;">ZOOP 플랫폼에서 아래 공고에 대한 인터뷰 초대를 보냈습니다.</p>
-
-            <div style="background-color:#fff; border:1px solid #ddd; border-radius:8px; padding:16px; margin-top:20px;">
-                <h3 style="color:#28a745;">📌 %s</h3>
-                <table style="width:100%%; font-size:14px; color:#444; border-collapse:collapse;">
-                    <tr>
-                        <td style="padding:8px 0; font-weight:bold;">기술스택</td>
-                        <td>%s</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:8px 0; font-weight:bold;">위치</td>
-                        <td>%s</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:8px 0; font-weight:bold;">모집 인원</td>
-                        <td>%s명</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:8px 0; font-weight:bold;">급여</td>
-                        <td>%s ~ %s만원</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:8px 0; font-weight:bold;">공고 기간</td>
-=======
-        String link = frontendUrl + "/invite/" + token;
 
         String body = String.format("""
         <div style=\"font-family:Arial, sans-serif; background-color:#f9f9f9; padding:20px;\">
@@ -122,28 +94,18 @@ public class EmailService {
                     </tr>
                     <tr>
                         <td style=\"padding:8px 0; font-weight:bold;\">공고 기간</td>
->>>>>>> origin/test-experiment-zoop
                         <td>%s ~ %s</td>
                     </tr>
                 </table>
             </div>
 
-<<<<<<< HEAD
-            <div style="margin-top:30px; text-align:center;">
-                <a href="%s" style="background-color:#28a745; color:#fff; text-decoration:none; padding:12px 24px; border-radius:6px; font-weight:bold; display:inline-block;">
-=======
             <div style=\"margin-top:30px; text-align:center;\">
                 <a href=\"%s\" style=\"background-color:#28a745; color:#fff; text-decoration:none; padding:12px 24px; border-radius:6px; font-weight:bold; display:inline-block;\">
->>>>>>> origin/test-experiment-zoop
                     👉 초대 확인하기
                 </a>
             </div>
 
-<<<<<<< HEAD
-            <p style="margin-top:30px; font-size:13px; color:#777;">감사합니다.<br/>ZOOP 팀 드림</p>
-=======
             <p style=\"margin-top:30px; font-size:13px; color:#777;\">감사합니다.<br/>ZOOP 팀 드림</p>
->>>>>>> origin/test-experiment-zoop
         </div>
     """, githubLogin,
             post.getPostTitle(),
@@ -157,10 +119,6 @@ public class EmailService {
             link
         );
 
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/test-experiment-zoop
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
@@ -178,21 +136,6 @@ public class EmailService {
         String subject = "[ZOOP] " + postTitle + " - 지원 확인";
         
         String body = String.format("""
-<<<<<<< HEAD
-        <div style="font-family:Arial, sans-serif; background-color:#f9f9f9; padding:20px;">
-            <h2 style="color:#333;">👋 안녕하세요 %s 님,</h2>
-            <p style="font-size:15px; color:#555;">ZOOP 플랫폼에 지원해주셔서 감사합니다.</p>
-
-            <div style="background-color:#fff; border:1px solid #ddd; border-radius:8px; padding:16px; margin-top:20px;">
-                <h3 style="color:#28a745;">📌 %s</h3>
-                <p style="font-size:14px; color:#444;">지원이 성공적으로 접수되었습니다.</p>
-                <p style="font-size:14px; color:#444;">검토 후 결과를 이메일로 안내드리겠습니다.</p>
-            </div>
-
-            <div style="margin-top:30px; padding:16px; background-color:#e8f5e8; border-radius:8px;">
-                <h4 style="color:#28a745; margin-top:0;">📋 지원 절차</h4>
-                <ol style="color:#555; font-size:14px;">
-=======
         <div style=\"font-family:Arial, sans-serif; background-color:#f9f9f9; padding:20px;\">
             <h2 style=\"color:#333;\">👋 안녕하세요 %s 님,</h2>
             <p style=\"font-size:15px; color:#555;\">ZOOP 플랫폼에 지원해주셔서 감사합니다.</p>
@@ -206,7 +149,6 @@ public class EmailService {
             <div style=\"margin-top:30px; padding:16px; background-color:#e8f5e8; border-radius:8px;\">
                 <h4 style=\"color:#28a745; margin-top:0;\">📋 지원 절차</h4>
                 <ol style=\"color:#555; font-size:14px;\">
->>>>>>> origin/test-experiment-zoop
                     <li>지원서 검토 (1-2일 소요)</li>
                     <li>1차 AI 면접 (선택사항)</li>
                     <li>기업 면접</li>
@@ -214,11 +156,7 @@ public class EmailService {
                 </ol>
             </div>
 
-<<<<<<< HEAD
-            <p style="margin-top:30px; font-size:13px; color:#777;">감사합니다.<br/>ZOOP 팀 드림</p>
-=======
             <p style=\"margin-top:30px; font-size:13px; color:#777;\">감사합니다.<br/>ZOOP 팀 드림</p>
->>>>>>> origin/test-experiment-zoop
         </div>
         """, candidateName, postTitle);
 
@@ -231,10 +169,10 @@ public class EmailService {
 
         mailSender.send(message);
     }
-<<<<<<< HEAD
-=======
 
-    /** 비밀번호 재설정 이메일 (추가 후) */
+    /** 
+     * 비밀번호 재설정 이메일 (팀에서 추가한 기능)
+     */
     public void sendPasswordResetEmail(String toEmail, String githubLogin, String resetLink) throws MessagingException {
         String subject = "[ZOOP] 비밀번호 재설정 안내";
 
@@ -264,5 +202,4 @@ public class EmailService {
 
         mailSender.send(message);
     }
->>>>>>> origin/test-experiment-zoop
 }

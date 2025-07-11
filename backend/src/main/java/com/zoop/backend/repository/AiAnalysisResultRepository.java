@@ -26,11 +26,11 @@ public interface AiAnalysisResultRepository extends JpaRepository<AiAnalysisResu
     @Query("SELECT a FROM AiAnalysisResult a WHERE a.githubSearchResultId IN :ids")
     List<AiAnalysisResult> findByGithubSearchResultIds(@Param("ids") List<Long> ids);
 
-<<<<<<< HEAD
-    @Query("SELECT a FROM AiAnalysisResult a WHERE a.jobCandidateId = :jobCandidateId AND a.analysisType = :analysisType ORDER BY a.analysisDate DESC")
-    List<AiAnalysisResult> findByJobCandidateIdAndAnalysisTypeOrderByAnalysisDateDesc(@Param("jobCandidateId") Long jobCandidateId, @Param("analysisType") String analysisType);
-=======
+    // 팀 버전: 단순 조회
     @Query("SELECT a FROM AiAnalysisResult a WHERE a.jobCandidateId = :jobCandidateId AND a.analysisType = :analysisType")
     List<AiAnalysisResult> findByJobCandidateIdAndAnalysisType(@Param("jobCandidateId") Long jobCandidateId, @Param("analysisType") String analysisType);
->>>>>>> origin/test-experiment-zoop
+    
+    // 내 버전: 분석 날짜순 정렬 조회 (최신 결과 우선 - 매우 유용!)
+    @Query("SELECT a FROM AiAnalysisResult a WHERE a.jobCandidateId = :jobCandidateId AND a.analysisType = :analysisType ORDER BY a.analysisDate DESC")
+    List<AiAnalysisResult> findByJobCandidateIdAndAnalysisTypeOrderByAnalysisDateDesc(@Param("jobCandidateId") Long jobCandidateId, @Param("analysisType") String analysisType);
 } 

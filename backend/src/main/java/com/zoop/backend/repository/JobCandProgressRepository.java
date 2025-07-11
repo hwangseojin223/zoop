@@ -101,46 +101,38 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
 
     List<JobCandProgress> findByCandidate_CandidateId(Integer candidateId);
 
-    @Query(value = "SELECT * FROM job_cand_progress WHERE post_id = :postId AND candidate_id = :candidateId", nativeQuery = true)
-    Optional<JobCandProgress> findByPost_PostIdAndCandidate_CandidateId(
-        @Param("postId") Long postId, 
-        @Param("candidateId") Long candidateId
-    );
-
     Optional<JobCandProgress> findByJobCandidateId(Long jobCandidateId);
 
-<<<<<<< HEAD
     // postId로 JobCandProgress 조회 (모든 지원자)
     List<JobCandProgress> findByPost_PostId(Long postId);
 
-    // 직접 지원한 후보자들 조회 (githubLogin이 null인 경우)
+    // 직접 지원한 후보자들 조회 (githubLogin이 null인 경우) - 내 버전 기능
     List<JobCandProgress> findByPost_PostIdAndGithubLoginIsNull(Long postId);
     
     // postId와 stage로 JobCandProgress 조회 (직접 지원자 - stage "0")
     List<JobCandProgress> findByPost_PostIdAndJobCandCurrStage(Long postId, String stage);
 
-    // stage로 JobCandProgress 조회 (모든 공고의 특정 stage 지원자)
+    // stage로 JobCandProgress 조회 (모든 공고의 특정 stage 지원자) - 내 버전 기능
     List<JobCandProgress> findByJobCandCurrStage(String stage);
 
     // postId와 candidateId로 JobCandProgress 조회
     Optional<JobCandProgress> findByPost_PostIdAndCandidate_CandidateId(Long postId, Long candidateId);
-=======
-    // 이메일 전송시 jobCandCurrStage를 2n으로 업데이트
+
+    // 이메일 전송시 jobCandCurrStage를 2n으로 업데이트 - 팀 버전 기능
     @Transactional
     @Modifying
     @Query("UPDATE JobCandProgress j SET j.jobCandCurrStage = :stage WHERE j.post.postId = :postId AND j.githubLogin = :githubLogin")
     int updateStageByPostIdAndGithubLogin(@Param("postId") Long postId, @Param("githubLogin") String githubLogin, @Param("stage") String stage);
 
-    // invitation token으로 job_cand_progress의 candidate_id 업데이트
+    // invitation token으로 job_cand_progress의 candidate_id 업데이트 - 팀 버전 기능
     @Transactional
     @Modifying
     @Query("UPDATE JobCandProgress j SET j.candidate.candidateId = :candidateId WHERE j.post.postId = :postId AND j.githubLogin = :githubLogin")
     int updateCandidateIdByPostIdAndGithubLogin(@Param("postId") Long postId, @Param("githubLogin") String githubLogin, @Param("candidateId") Long candidateId);
 
-    // 추가된 메서드
-    List<JobCandProgress> findByPost_PostIdAndJobCandCurrStage(Long postId, String stage);
-    List<JobCandProgress> findByPost_PostId(Long postId);
+    // AI 면접 관련 조회 - 팀 버전 기능
     Optional<JobCandProgress> findByAiIntrvwScheduleId(Long aiIntrvwScheduleId);
+    
+    // githubLogin으로 조회 - 팀 버전 기능
     Optional<JobCandProgress> findByGithubLogin(String githubLogin);
->>>>>>> origin/test-experiment-zoop
 }
