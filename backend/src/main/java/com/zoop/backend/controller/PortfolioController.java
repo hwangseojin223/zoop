@@ -151,9 +151,7 @@ public class PortfolioController {
                     .body("포트폴리오 조회 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
-<<<<<<< HEAD
 
-    /** 합친 이후 */
     @GetMapping("/{jobCandidateId}/submission-date")
     public ResponseEntity<?> getPortfolioSubmissionDate(@PathVariable Long jobCandidateId) {
         return portfolioService.getSubmissionDate(jobCandidateId)
@@ -176,6 +174,4 @@ public class PortfolioController {
                     .body("포트폴리오 조회 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
-=======
->>>>>>> feat/93/interview-ai
 }

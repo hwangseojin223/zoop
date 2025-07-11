@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 
 export default function InterviewEvaluation() {
-  const { jobCandidateId } = useParams();
+  const { postId, candidateId } = useParams();
   const navigate = useNavigate();
   const [candidate, setCandidate] = useState(null);
   const [videos, setVideos] = useState([]);
@@ -22,11 +22,11 @@ export default function InterviewEvaluation() {
     fetchInterviewVideos();
     fetchAnalysisResult();
     fetchExistingEvaluation();
-  }, [jobCandidateId]);
+  }, [candidateId]);
 
   const fetchCandidateData = async () => {
     try {
-      const response = await fetch(`http://localhost:8081/api/job-cand-progress/${jobCandidateId}/with-candidate`, {
+      const response = await fetch(`http://localhost:8081/api/job-cand-progress/${candidateId}/with-candidate`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
         },
@@ -42,7 +42,7 @@ export default function InterviewEvaluation() {
 
   const fetchInterviewVideos = async () => {
     try {
-      const response = await fetch(`http://localhost:8081/api/interview-videos/by-job-candidate/${jobCandidateId}`, {
+      const response = await fetch(`http://localhost:8081/api/interview-videos/by-job-candidate/${candidateId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
         },
@@ -69,7 +69,7 @@ export default function InterviewEvaluation() {
         const data = await response.json();
         console.log('전체 분석 결과:', data);
         // 현재 jobCandidateId에 해당하는 분석 결과 찾기
-        const result = data.find(item => item.jobCandidateId === parseInt(jobCandidateId));
+        const result = data.find(item => item.jobCandidateId === parseInt(candidateId));
         console.log('찾은 분석 결과:', result);
         if (result) {
           setAnalysisResult(result);
@@ -82,7 +82,7 @@ export default function InterviewEvaluation() {
 
   const fetchExistingEvaluation = async () => {
     try {
-      const response = await fetch(`http://localhost:8081/api/admin-interview-evaluations/${jobCandidateId}`, {
+      const response = await fetch(`http://localhost:8081/api/admin-interview-evaluations/${candidateId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
         },
@@ -198,7 +198,7 @@ export default function InterviewEvaluation() {
           'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
         },
         body: JSON.stringify({
-          jobCandidateId: parseInt(jobCandidateId),
+          jobCandidateId: parseInt(candidateId),
           evaluatedByAdminId: parseInt(localStorage.getItem('userId')),
           adminIntrvwEvaluationDate: new Date().toISOString(),
           adminIntrvwScore: parseFloat(evaluation.adminIntrvwScore),

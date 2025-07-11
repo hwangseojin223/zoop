@@ -209,11 +209,7 @@ export default function IdealCandidate() {
       loadingInterval = simulateLoading(loadingHeadcount);
       
       // 1. 먼저 인재상을 공고에 저장
-<<<<<<< HEAD
       const idealCandidateResponse = await fetch(`http://localhost:8081/api/postings/${filters.postId}/ideal-candidate`, {
-=======
-      const idealCandidateResponse = await fetch(`http://localhost:8081/api/posts/${filters.postId}/ideal-candidate`, {
->>>>>>> feat/93/interview-ai
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idealCandidate: summary }),
@@ -225,11 +221,7 @@ export default function IdealCandidate() {
         console.error("인재상 저장 오류:", errorText);
         setLoading(false);
         analysisStarted.current = false;
-<<<<<<< HEAD
         throw new Error('인재상 저장에 실패했습니다 (경로: /api/postings/' + filters.postId + '/ideal-candidate): ' + errorText);
-=======
-        throw new Error('인재상 저장에 실패했습니다 (경로: /api/posts/' + filters.postId + '/ideal-candidate): ' + errorText);
->>>>>>> feat/93/interview-ai
       }
 
       // 2. Spring Boot API를 통해 GitHub 검색 실행 (DB 저장 포함)

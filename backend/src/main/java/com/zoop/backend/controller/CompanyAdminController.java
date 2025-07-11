@@ -87,6 +87,8 @@ public class CompanyAdminController {
         Company company = admin.getCompany();
 
         return ResponseEntity.ok(Map.of(
+            "companyId", company.getCompanyId(),
+            "companyAdminId", admin.getCompanyAdminId(),
             "companyName", company.getCompanyName(),
             "businessNumber", company.getBusinessNumber(),
             "address", company.getCompanyAddress(),

@@ -134,3 +134,12 @@ jspm_packages/
 
 # TernJS port file
 .tern-port
+
+
+backend/python-api/github_search/.env
+backend/python-api/chatbot/.env
+backend/python-api/interview_questions/.env
+backend/python-api/interview_analysis/.env
+
+backend/python-api/chatbot/__pycache__
+frontend/.env

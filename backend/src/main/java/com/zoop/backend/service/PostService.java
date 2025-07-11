@@ -14,17 +14,7 @@ import com.zoop.backend.domain.entity.CompanyAdmin;
 import com.zoop.backend.domain.entity.Post;
 import com.zoop.backend.repository.CompanyAdminRepository;
 import com.zoop.backend.repository.PostRepository;
-<<<<<<< HEAD
 import lombok.RequiredArgsConstructor;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-=======
->>>>>>> feat/93/interview-ai
 
 @Service
 public class PostService {
@@ -85,13 +75,6 @@ public class PostService {
         return postRepository.save(post);
     }
 
-<<<<<<< HEAD
-    public Post getPostById(Long postId) {
-        return postRepository.findById(postId).orElse(null);
-    }
-
-=======
->>>>>>> feat/93/interview-ai
     // 회사별 공고 목록 조회 메서드 추가
     public List<Post> getPostsByCompanyId(Long companyId) {
         return postRepository.findByCompanyIdOrderByPostCreatedAtDesc(companyId);
@@ -102,14 +85,11 @@ public class PostService {
         return postRepository.findAllByOrderByPostCreatedAtDesc();
     }
 
-<<<<<<< HEAD
     // 공개 공고 목록 조회 메서드 추가
     public List<Post> getPublicPosts() {
         return postRepository.findByPostStatusOrderByPostCreatedAtDesc("ACTIVE");
     }
 
-=======
->>>>>>> feat/93/interview-ai
     // 공고 업데이트 메서드 추가
     public Post updatePost(Long postId, PostingRequestDto dto) {
         Post post = postRepository.findById(postId)
@@ -139,8 +119,4 @@ public class PostService {
         post.setPostUpdatedAt(LocalDateTime.now());
         return postRepository.save(post);
     }
-<<<<<<< HEAD
-
-=======
->>>>>>> feat/93/interview-ai
 }

@@ -2,16 +2,11 @@ package com.zoop.backend.controller;
 
 import java.io.File;
 import java.io.IOException;
-<<<<<<< HEAD
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 import org.springframework.beans.factory.annotation.Autowired;
-=======
-import java.nio.file.Files;
-
->>>>>>> feat/93/interview-ai
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -20,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-<<<<<<< HEAD
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,11 +23,6 @@ import com.zoop.backend.service.S3Service;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
-=======
-import org.springframework.web.bind.annotation.RestController;
-
-import lombok.extern.slf4j.Slf4j;
->>>>>>> feat/93/interview-ai
 
 @Slf4j
 @RestController
@@ -42,12 +31,9 @@ public class FileController {
 
     @Value("${file.upload-dir}")
     private String uploadDir;
-<<<<<<< HEAD
     
     @Autowired
     private S3Service s3Service;
-=======
->>>>>>> feat/93/interview-ai
 
     @GetMapping("/download/{filename}")
     public ResponseEntity<InputStreamResource> downloadFile(@PathVariable String filename) throws IOException {
@@ -67,7 +53,6 @@ public class FileController {
             .contentLength(file.length())
             .body(resource);
     }
-<<<<<<< HEAD
     
     @GetMapping("/s3/download")
     public ResponseEntity<InputStreamResource> downloadS3File(@RequestParam String s3Url) throws IOException {
@@ -104,6 +89,4 @@ public class FileController {
             return ResponseEntity.notFound().build();
         }
     }
-=======
->>>>>>> feat/93/interview-ai
 }

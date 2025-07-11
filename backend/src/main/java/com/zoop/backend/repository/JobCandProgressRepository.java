@@ -19,7 +19,6 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
 
     // postId와 githubLogin으로 중복 확인
     boolean existsByPostPostIdAndGithubLogin(Long postId, String githubLogin);
-    
 
     @Query(value = """
         SELECT 
@@ -64,42 +63,10 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
             ON jcp.job_candidate_id = ar.job_candidate_id 
             AND ar.analysis_type = 'portfolio'
         WHERE 
-            jcp.job_cand_curr_stage = '2y'
+            jcp.job_cand_curr_stage = '3n'
             AND jcp.post_id = :postId
     """, nativeQuery = true)
-<<<<<<< HEAD
     List<ResponderDto> findCandidatesAtStage3nByPost(@Param("postId") Long postId);
-
-    //  @Query(value = """
-    //     SELECT 
-    //         c.candidate_email AS email,
-    //         c.candidate_name AS name,
-    //         p.post_location AS location,
-    //         p.post_programming_language AS languages,
-    //         ar.analysis_score AS score,
-    //         TO_CHAR(ar.analysis_data) AS portfolioAnalysis,
-    //         f.portfolio_file_path AS filePath
-    //     FROM 
-    //         job_cand_progress jcp
-    //     JOIN 
-    //         candidates c ON jcp.candidate_id = c.candidate_id
-    //     JOIN 
-    //         post p ON jcp.post_id = p.post_id
-    //     LEFT JOIN 
-    //         ai_analysis_results ar 
-    //         ON jcp.job_candidate_id = ar.job_candidate_id 
-    //         AND ar.analysis_type = 'portfolio'
-    //     LEFT JOIN 
-    //         portfolios f 
-    //         ON jcp.job_candidate_id = f.job_candidate_id
-    //     WHERE 
-    //         jcp.job_cand_curr_stage = '2y'
-    //         AND jcp.post_id = :postId
-    // """, nativeQuery = true)
-    // List<ResponderDto> findCandidatesAtStage2yByPost(@Param("postId") Long postId);
-=======
-    List<ResponderDto> findCandidatesAtStage2yByPost(@Param("postId") Long postId);
->>>>>>> feat/93/interview-ai
 
     // post와 githubLogin으로 JobCandProgress 조회
     Optional<JobCandProgress> findByPost_PostIdAndGithubLogin(Long postId, String githubLogin);
@@ -136,21 +103,11 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
 
     @Query(value = "SELECT * FROM job_cand_progress WHERE post_id = :postId AND candidate_id = :candidateId", nativeQuery = true)
     Optional<JobCandProgress> findByPost_PostIdAndCandidate_CandidateId(
-<<<<<<< HEAD
-        @Param("postId") Integer postId, 
-        @Param("candidateId") Integer candidateId
-=======
         @Param("postId") Long postId, 
         @Param("candidateId") Long candidateId
->>>>>>> feat/93/interview-ai
     );
 
     Optional<JobCandProgress> findByJobCandidateId(Long jobCandidateId);
-
-<<<<<<< HEAD
-    // postId와 candidateId로 JobCandProgress 조회
-    Optional<JobCandProgress> findByPost_PostIdAndCandidate_CandidateId(Long postId, Long candidateId);
-
 
     // 이메일 전송시 jobCandCurrStage를 2n으로 업데이트
     @Transactional
@@ -164,18 +121,9 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
     @Query("UPDATE JobCandProgress j SET j.candidate.candidateId = :candidateId WHERE j.post.postId = :postId AND j.githubLogin = :githubLogin")
     int updateCandidateIdByPostIdAndGithubLogin(@Param("postId") Long postId, @Param("githubLogin") String githubLogin, @Param("candidateId") Long candidateId);
 
-}
-=======
     // 추가된 메서드
     List<JobCandProgress> findByPost_PostIdAndJobCandCurrStage(Long postId, String stage);
-    
-    // 모든 postId로 조회하는 메서드 추가
     List<JobCandProgress> findByPost_PostId(Long postId);
-
-    // aiIntrvwScheduleId로 JobCandProgress 조회
     Optional<JobCandProgress> findByAiIntrvwScheduleId(Long aiIntrvwScheduleId);
-
-    // githubLogin으로 JobCandProgress 조회
     Optional<JobCandProgress> findByGithubLogin(String githubLogin);
-} 
->>>>>>> feat/93/interview-ai
+}

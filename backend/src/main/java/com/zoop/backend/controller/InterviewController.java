@@ -32,11 +32,7 @@ public class InterviewController {
     public ResponseEntity<?> getInterviewById(@PathVariable Integer id) {
         try {
             System.out.println("면접 정보 요청 ID: " + id);
-<<<<<<< HEAD
-            InterviewScheduleResponseDto interview = aiInterviewScheduleService.getInterviewSchedule(id);
-=======
             InterviewScheduleResponseDto interview = aiInterviewScheduleService.getInterviewSchedule(id.longValue());
->>>>>>> feat/93/interview-ai
             System.out.println("조회된 면접 정보: " + interview);
             return ResponseEntity.ok(interview);
         } catch (Exception e) {
@@ -53,11 +49,7 @@ public class InterviewController {
             @RequestParam Integer candidateId) {
         try {
             System.out.println("면접 정보 요청 - postId: " + postId + ", candidateId: " + candidateId);
-<<<<<<< HEAD
-            InterviewScheduleResponseDto interview = aiInterviewScheduleService.getInterviewByPostIdAndCandidateId(postId, candidateId);
-=======
             InterviewScheduleResponseDto interview = aiInterviewScheduleService.getInterviewByPostIdAndCandidateId(postId.longValue(), candidateId.longValue());
->>>>>>> feat/93/interview-ai
             System.out.println("조회된 면접 정보 (by post/candidate): " + interview);
             return ResponseEntity.ok(interview);
         } catch (Exception e) {
@@ -67,7 +59,6 @@ public class InterviewController {
                 .body(new ErrorResponse("해당 공고에 대한 면접 일정을 찾을 수 없습니다: " + e.getMessage()));
         }
     }
-
 }
 
 
