@@ -26,6 +26,7 @@ import CandidateList from './pages/company/CandidateList';
 import ResponderList from './pages/company/ResponderList';
 import StatePage from './pages/company/StatePage';
 import IdealCandidate from './pages/company/IdealCandidate';
+import InterviewEvaluation from './pages/company/InterviewEvaluation';
 // info - lazy loading으로 변경
 
 // 챗봇 import
@@ -41,7 +42,7 @@ import InterviewSession from './pages/candidate/InterviewSession';
 // info - lazy loading으로 변경
 const About = lazy(() => import('./pages/info/About'));
 const Notice = lazy(() => import('./pages/info/Notice'));
-// const Support = lazy(() => import('./pages/info/Support')); // 사용하지 않는 import 주석 처리
+const Support = lazy(() => import('./pages/info/Support'));
 const CustomerServicePage = lazy(() => import('./pages/info/CustomerServicePage'));
 const FaqPage = lazy(() => import('./pages/info/FaqPage'));
 const Careers = lazy(() => import('./pages/info/Careers'));
@@ -84,6 +85,7 @@ function AppContent() {
         <Route path="/invite/:token" element={<InvitationHandler />} />
         
         <Route path="/auth/login" element={<LoginSelectionPage />} />
+        <Route path="/login" element={<LoginSelectionPage />} />
         <Route path="/find-id" element={<FindIdPage />} />
         <Route path="/find-password" element={<FindPasswordPage />} />
         <Route path="/auth/applicant/reset-password/:token" element={<ResetPasswordPage />} />

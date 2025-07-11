@@ -120,6 +120,7 @@
 			<artifactId>jakarta.el</artifactId>
 			<version>4.0.2</version>
 		</dependency>
+		
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -127,8 +128,7 @@
 			<scope>runtime</scope>
 		</dependency>
 
-
-<!-- Maven -->
+		<!-- Maven -->
 		<dependency>
 		<groupId>io.netty</groupId>
 		<artifactId>netty-resolver-dns-native-macos</artifactId>
@@ -141,13 +141,13 @@
 			<artifactId>s3</artifactId>
 			 <version>2.25.61</version>
 		</dependency>
+
+		<!-- OpenAI Java Client -->
 		<dependency>
 			<groupId>com.theokanning.openai-gpt3-java</groupId>
 			<artifactId>service</artifactId>
 			<version>0.18.2</version>
 		</dependency>
-
-
 
 	</dependencies>
 

@@ -12,18 +12,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.zoop.backend.domain.dto.CandidateSignupRequest;
 import com.zoop.backend.domain.dto.finding.FindGithubLoginRequest;
 import com.zoop.backend.domain.dto.finding.FindGithubLoginResponse;
 import com.zoop.backend.domain.entity.Candidate;
 import com.zoop.backend.domain.entity.Invitation;
+import com.zoop.backend.domain.entity.GithubSearchResult;
 import com.zoop.backend.repository.CandidateRepository;
 import com.zoop.backend.repository.InvitationRepository;
-import com.zoop.backend.service.CandidateService;
-import com.zoop.backend.repository.CandidateRepository;
 import com.zoop.backend.repository.GithubSearchResultRepository;
-import com.zoop.backend.domain.entity.GithubSearchResult;
+import com.zoop.backend.service.CandidateService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -33,14 +33,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import java.util.List;
-import java.util.Optional;
-import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Slf4j
 @Tag(name="CandidateController", description = "개인회원(후보자) 관련 API")
@@ -53,16 +45,6 @@ public class CandidateController {
     private final CandidateRepository candidateRepository;
     private final InvitationRepository invitationRepository;
     private final GithubSearchResultRepository githubSearchResultRepository;
-
-    // // 모든 후보자 리스트 조회
-    // @GetMapping
-    // public ResponseEntity<List<Candidate>> getAllCandidates() {
-    //     List<Candidate> candidates = candidateService.findAll();
-    //     if (candidates.isEmpty()) {
-    //         return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 데이터가 없으면 204 상태 코드
-    //     }
-    //     return new ResponseEntity<>(candidates, HttpStatus.OK); // 200 상태 코드
-    // }
 
     // 1. 후보자 추가
     @Operation(summary = "개인회원 정보 등록", description = "새로운 개인회원(후보자) 정보를 시스템에 등록합니다.")
@@ -169,25 +151,46 @@ public class CandidateController {
         return ResponseEntity.ok(Map.of("exists", exists));
     }
 
-    /** 합친 이후 */
+    // 4. 후보자 ID로 조회
+    @GetMapping("/{candidateId}")
+    public ResponseEntity<?> getCandidateById(@PathVariable Long candidateId) {
+        log.info("🔍 candidateId={}으로 후보자 정보 조회 요청", candidateId);
+        
+        try {
+            Optional<Candidate> candidate = candidateService.findById(candidateId);
+            if (candidate.isPresent()) {
+                log.info("✅ 후보자 정보 조회 성공: {}", candidate.get().getCandidateName());
+                return ResponseEntity.ok(candidate.get());
+            } else {
+                log.warn("❌ candidateId={}에 해당하는 후보자를 찾을 수 없습니다.", candidateId);
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            log.error("후보자 조회 중 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // 5. 아이디 찾기
     @PostMapping("/find-id")
     public FindGithubLoginResponse findGithubLogin(@RequestBody FindGithubLoginRequest request) {
         return candidateService.findGithubLogin(request);
     }
 
+    // 6. GitHub 로그인으로 이메일 조회
     @GetMapping("/email/{githubLogin}")
     public ResponseEntity<?> getEmailByGithubLogin(@PathVariable String githubLogin) {
         log.info("🔍 githubLogin={}으로 이메일 조회 요청", githubLogin);
     
-    // 1. candidates 테이블에서 조회
-    Optional<Candidate> candidate = candidateRepository.findByGithubLogin(githubLogin);
-    if (candidate.isPresent()) {
-        log.info("✅ candidates 테이블에서 이메일 조회 성공: {}", candidate.get().getCandidateEmail());
-        return ResponseEntity.ok(Map.of("email", candidate.get().getCandidateEmail()));
-    }
-    
-    // 2. 없으면 github_search_results에서 조회
-    List<GithubSearchResult> gsrList = githubSearchResultRepository.findByGithubLogin(githubLogin);
+        // 1. candidates 테이블에서 조회
+        Optional<Candidate> candidate = candidateRepository.findByGithubLogin(githubLogin);
+        if (candidate.isPresent()) {
+            log.info("✅ candidates 테이블에서 이메일 조회 성공: {}", candidate.get().getCandidateEmail());
+            return ResponseEntity.ok(Map.of("email", candidate.get().getCandidateEmail()));
+        }
+        
+        // 2. 없으면 github_search_results에서 조회
+        List<GithubSearchResult> gsrList = githubSearchResultRepository.findByGithubLogin(githubLogin);
         if (!gsrList.isEmpty() && gsrList.get(0).getCandidateEmail() != null) {
             log.info("✅ github_search_results 테이블에서 이메일 조회 성공: {}", gsrList.get(0).getCandidateEmail());
             return ResponseEntity.ok(Map.of("email", gsrList.get(0).getCandidateEmail()));

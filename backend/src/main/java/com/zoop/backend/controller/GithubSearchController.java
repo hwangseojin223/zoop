@@ -54,7 +54,6 @@ public class GithubSearchController {
     private final GithubSearchResultService githubSearchResultService;
     private final JobCandProgressRepository jobCandProgressRepository;
     private final AiAnalysisResultRepository aiAnalysisResultRepository;
-    private final GithubSearchResultService githubSearchResultsService;
 
     @Operation(summary = "GitHub 후보자 검색 및 결과 저장", description = "FastAPI를 통해 GitHub에서 후보자를 검색하고 결과를 저장합니다.")
     @ApiResponses(value={
@@ -166,6 +165,7 @@ public class GithubSearchController {
             aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
             progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
                 c.setJobCandCurrStage(p.getJobCandCurrStage());
+                map.put("jobCandidateId", p.getJobCandidateId());
             });
             return map;
         }).collect(Collectors.toList());
@@ -198,6 +198,7 @@ public class GithubSearchController {
             aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
             progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
                 c.setJobCandCurrStage(p.getJobCandCurrStage());
+                map.put("jobCandidateId", p.getJobCandidateId());
             });
             return map;
         }).collect(Collectors.toList());
@@ -230,6 +231,7 @@ public class GithubSearchController {
             aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
             progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
                 c.setJobCandCurrStage(p.getJobCandCurrStage());
+                map.put("jobCandidateId", p.getJobCandidateId());
             });
             return map;
         }).collect(Collectors.toList());
@@ -262,6 +264,7 @@ public class GithubSearchController {
             aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
             progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
                 c.setJobCandCurrStage(p.getJobCandCurrStage());
+                map.put("jobCandidateId", p.getJobCandidateId());
             });
             return map;
         }).collect(Collectors.toList());
@@ -294,6 +297,7 @@ public class GithubSearchController {
             aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
             progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
                 c.setJobCandCurrStage(p.getJobCandCurrStage());
+                map.put("jobCandidateId", p.getJobCandidateId());
             });
             return map;
         }).collect(Collectors.toList());
@@ -326,6 +330,7 @@ public class GithubSearchController {
             aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
             progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
                 c.setJobCandCurrStage(p.getJobCandCurrStage());
+                map.put("jobCandidateId", p.getJobCandidateId());
             });
             return map;
         }).collect(Collectors.toList());

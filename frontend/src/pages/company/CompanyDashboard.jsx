@@ -77,7 +77,7 @@ export default function CompanyDashboard() {
     }
     
     console.log('공고 목록을 불러오는 중...');
-    fetch(`http://localhost:8081/api/postings/all`, {
+    fetch(`http://localhost:8081/api/posts/all`, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -118,7 +118,7 @@ export default function CompanyDashboard() {
   useEffect(() => {
     if (selectedPostId) {
       setLoadingPostDetail(true);
-      fetch(`http://localhost:8081/api/postings/info/${selectedPostId}`, {
+      fetch(`http://localhost:8081/api/posts/info/${selectedPostId}`, {
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
@@ -329,7 +329,7 @@ export default function CompanyDashboard() {
         setShowDeleteModal(false);
         setSelectedPostId(null);
         // 목록 갱신
-        const listRes = await fetch(`http://localhost:8081/api/postings/all`, {
+        const listRes = await fetch(`http://localhost:8081/api/posts/all`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
           },

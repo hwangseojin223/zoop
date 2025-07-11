@@ -153,7 +153,7 @@ export default function RecruitCreate() {
         postStatus: "ACTIVE",
       };
 
-      const response = await fetch("http://localhost:8081/api/postings", {
+      const response = await fetch("http://localhost:8081/api/posts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

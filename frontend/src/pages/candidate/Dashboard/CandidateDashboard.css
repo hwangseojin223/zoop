@@ -426,3 +426,90 @@ background-color: #30C59B;
 .result-button:hover {
   background-color: #033426;
 }
+
+/* 결과 배지 스타일 */
+.result-badge {
+  cursor: default;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.result-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.result-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.result-badge:hover::before {
+  left: 100%;
+}
+
+/* 합격 배지 특별 효과 */
+.result-badge[style*="background-color: #c6f6d5"] {
+  animation: successPulse 2s ease-in-out infinite;
+}
+
+@keyframes successPulse {
+  0%, 100% { 
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  50% { 
+    box-shadow: 0 2px 8px rgba(56, 161, 105, 0.3);
+  }
+}
+
+/* 불합격 배지 특별 효과 */
+.result-badge[style*="background-color: #fed7d7"] {
+  animation: errorPulse 2s ease-in-out infinite;
+}
+
+@keyframes errorPulse {
+  0%, 100% { 
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  50% { 
+    box-shadow: 0 2px 8px rgba(229, 62, 62, 0.3);
+  }
+}
+
+/* 대기 중 상태 스타일 */
+.pending-status {
+  position: relative;
+  overflow: hidden;
+  animation: pendingPulse 2s ease-in-out infinite;
+}
+
+.pending-status::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.8s;
+}
+
+.pending-status:hover::before {
+  left: 100%;
+}
+
+@keyframes pendingPulse {
+  0%, 100% { 
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  50% { 
+    box-shadow: 0 2px 8px rgba(214, 158, 46, 0.3);
+  }
+}

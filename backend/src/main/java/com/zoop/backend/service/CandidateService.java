@@ -14,8 +14,11 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 import com.zoop.backend.domain.dto.CandidatePreferencesDto;
+<<<<<<< HEAD
 import com.zoop.backend.domain.dto.finding.FindGithubLoginRequest;
 import com.zoop.backend.domain.dto.finding.FindGithubLoginResponse;
+=======
+>>>>>>> feat/93/interview-ai
 import com.zoop.backend.domain.entity.Candidate;
 import com.zoop.backend.repository.CandidateRepository;
 import com.zoop.backend.repository.InvitationRepository;
@@ -159,6 +162,7 @@ public class CandidateService {
             throw e;
         }
     }
+<<<<<<< HEAD
     // 회원가입시 아이디 중복확인을 위한 메서드
     public boolean isDuplicateGithubLogin(String githubLogin) {
         return candidateRepository.existsByGithubLogin(githubLogin);
@@ -173,4 +177,6 @@ public class CandidateService {
         return new FindGithubLoginResponse(candidate.getGithubLogin());
     }
 
+=======
+>>>>>>> feat/93/interview-ai
 }

@@ -1,7 +1,7 @@
 // src/pages/candidate/Sidebar.jsx
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Sidebar.css';
 
 // SVG Icon Components
@@ -105,6 +105,7 @@ const MileageIcon = () => (
 
 function Sidebar() {
   const [expandedMenuId, setExpandedMenuId] = useState(null);
+  const navigate = useNavigate();
 
   const handleMenuItemClick = (menuId) => {
     setExpandedMenuId(expandedMenuId === menuId ? null : menuId);
@@ -112,11 +113,19 @@ function Sidebar() {
 
   return (
     <div className="sidebar">
-      <Link to="/" className="logo-link">
+      <div className="logo-link" onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('로고 클릭됨');
+        // 로고 클릭 플래그 설정
+        sessionStorage.setItem('logoClick', 'true');
+        // 현재 탭에서 홈페이지로 이동 (인증 정보 유지)
+        window.location.replace('/');
+      }}>
         <div className="logo">
-          <img src="../../logo_zoop.png" alt="zoop" />
+          <img src="/logo_zoop.png" alt="zoop" />
         </div>
-      </Link>
+      </div>
 
       <ul className="menu-list">
         {/* 'My 홈' 메뉴 아이템 */}

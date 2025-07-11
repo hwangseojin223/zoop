@@ -91,6 +91,29 @@ public class RecruitPostingController {
         return ResponseEntity.ok(posts);
     }
 
+    @Operation(summary = "공고 정보 조회", description = "특정 공고의 기본 정보를 조회합니다.")
+    @ApiResponses(value={
+        @ApiResponse(responseCode = "200", description = "공고 정보 반환",
+            content = @Content(schema = @Schema(implementation = Post.class))),
+        @ApiResponse(responseCode = "404", description = "해당 공고를 찾을 수 없음"),
+        @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    @GetMapping("/info/{postId}")
+    public ResponseEntity<Post> getPostInfo(
+        @Parameter(description = "조회할 공고의 ID", required = true, example = "1")
+        @PathVariable Long postId
+    ) {
+        Post post = postService.getPostById(postId);
+        if (post == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(post);
+    }
+    public ResponseEntity<List<Post>> getAllPosts() {
+        List<Post> posts = postService.getAllPosts();
+        return ResponseEntity.ok(posts);
+    }
+
     @Operation(summary = "공개 공고 목록 조회", description = "공개용으로 사용할 수 있는 모든 공고 목록을 조회합니다.")
     @ApiResponses(value={
         @ApiResponse(responseCode = "200", description = "공개 공고 목록 반환",

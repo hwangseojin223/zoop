@@ -32,8 +32,12 @@
 
 .customer-nav {
   width: 100%;
+<<<<<<< HEAD
   background: #f8f9fa;
   border-bottom: 1px solid #e5e7eb;
+=======
+  background: #ffffff;
+>>>>>>> feat/93/interview-ai
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -46,7 +50,11 @@
 .customer-nav-logo {
   font-size: 1.2rem;
   font-weight: 700;
+<<<<<<< HEAD
   color: #3182f6;
+=======
+  color: #22c55e;
+>>>>>>> feat/93/interview-ai
   letter-spacing: -1px;
 }
 .customer-nav-links {

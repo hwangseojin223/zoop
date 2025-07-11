@@ -12,7 +12,10 @@ import org.springframework.web.multipart.MultipartFile; // JobCandProgressReposi
 
 import com.zoop.backend.domain.dto.CareerDataDto;
 import com.zoop.backend.domain.dto.PortfolioSubmissionResponseDto;
+<<<<<<< HEAD
 import com.zoop.backend.domain.dto.modal.PortfolioSubmissionDateResponse;
+=======
+>>>>>>> feat/93/interview-ai
 import com.zoop.backend.domain.entity.Candidate;
 import com.zoop.backend.domain.entity.CandidateJobExperience;
 import com.zoop.backend.domain.entity.JobCandProgress;
@@ -85,7 +88,11 @@ public class PortfolioService {
         // --- 핵심 변경 부분 ---
         // 1. postId와 사용자 candidateId를 사용하여 JobCandProgress 레코드를 찾습니다.
         JobCandProgress jobCandProgress = jobCandProgressRepository
+<<<<<<< HEAD
             .findByPost_PostIdAndCandidate_CandidateId(postId, candidateId) // 또는 findByPostIdAndCandidateId
+=======
+            .findByPost_PostIdAndCandidate_CandidateId(postId.longValue(), candidateId.longValue())
+>>>>>>> feat/93/interview-ai
             .orElseThrow(() -> new RuntimeException("해당 공고에 대한 후보자 진행 상태를 찾을 수 없습니다."));
 
         // 2. 찾은 JobCandProgress 레코드의 기본 키(job_candidate_id)를 가져옵니다.
@@ -171,6 +178,7 @@ public class PortfolioService {
     public Optional<Portfolio> getPortfolio(Integer portfolioId) {
         return portfolioRepository.findById(portfolioId);
     }
+<<<<<<< HEAD
 
     public String getFilePathByJobCandId(Long jobCandidateId) {
         // PortfolioRepository에 해당 메서드가 없으므로 임시로 null 반환
@@ -188,4 +196,6 @@ public class PortfolioService {
         return portfolioRepository.findByJobCandidateId(jobCandidateId.intValue()).stream()
                 .findFirst();
     }
+=======
+>>>>>>> feat/93/interview-ai
 }
