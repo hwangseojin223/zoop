@@ -351,7 +351,6 @@ public class GithubSearchController {
         return ResponseEntity.ok(result);
     }
 
-<<<<<<< HEAD
     @Operation(summary = "게시글 ID로 추가 지원자 조회", description = "특정 채용 공고에 직접 지원한 추가 지원자 목록을 조회합니다.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "추가 지원자 목록 반환",
@@ -420,12 +419,12 @@ public class GithubSearchController {
         }).collect(Collectors.toList());
         
         return ResponseEntity.ok(result);
-=======
-        // 20250626
+    }
+
+    // 팀에서 추가한 상태별 조회 기능
     @Operation(summary = "job_cand_curr_stage를 조회하기 위함.", description = "")
     @GetMapping("/{postId}/states")
     public List<GithubSearchResultWithStageDto> getSearchResults(@PathVariable Long postId) {
         return githubSearchResultService.getSearchResultsWithStage(postId);
->>>>>>> origin/test-experiment-zoop
     }
 }

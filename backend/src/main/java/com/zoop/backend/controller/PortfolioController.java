@@ -160,7 +160,6 @@ public class PortfolioController {
         }
     }
 
-<<<<<<< HEAD
     @Operation(summary = "공고별 직접 지원자 조회", description = "특정 공고에 포트폴리오를 제출한 직접 지원자 목록을 조회합니다.")
     @GetMapping("/by-post/{postId}")
     public ResponseEntity<?> getDirectApplicantsByPost(
@@ -217,7 +216,9 @@ public class PortfolioController {
     public ResponseEntity<?> healthCheck() {
         return ResponseEntity.ok("서버가 정상적으로 실행 중입니다.");
     }
-=======
+
+    // 팀에서 추가한 jobCandidateId 기반 기능들
+    @Operation(summary = "포트폴리오 제출 날짜 조회", description = "jobCandidateId로 포트폴리오 제출 날짜를 조회합니다.")
     @GetMapping("/{jobCandidateId}/submission-date")
     public ResponseEntity<?> getPortfolioSubmissionDate(@PathVariable Long jobCandidateId) {
         return portfolioService.getSubmissionDate(jobCandidateId)
@@ -240,5 +241,4 @@ public class PortfolioController {
                     .body("포트폴리오 조회 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
->>>>>>> origin/test-experiment-zoop
 }

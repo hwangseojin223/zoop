@@ -2,12 +2,6 @@ package com.zoop.backend.controller;
 
 import java.util.List;
 import java.util.Map;
-<<<<<<< HEAD
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-=======
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
@@ -15,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
->>>>>>> origin/test-experiment-zoop
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,8 +42,24 @@ public class JobCandProgressController {
         return list;
     }
 
-<<<<<<< HEAD
-    // 직접 지원자 상태 일괄 업데이트 API
+    @GetMapping("/{postId}")
+    public List<ResponderDto> getCandidatesAtStage3nByPost(@PathVariable Long postId) {
+        log.info("Controller: 요청 들어옴, postId=" + postId);
+        List<ResponderDto> list = jobCandProgressService.getCandidatesAtStage3nByPost(postId);
+        log.info("리스트 크기 : " + list.size());
+        return list;
+    }
+
+    // 이메일 전송 후 job_cand_curr_stage를 2n으로 업데이트
+    @PostMapping("/update-stage-2n")
+    public ResponseEntity<?> updateProgressStage(@RequestBody List<InvitationSendRequest> dtos) {
+        jobCandProgressService.updateProgressStageBulk(dtos);
+        log.info("Controller : 전달받은 데이터: {} ", dtos);
+        log.info("Controller: Service로 전달 완료");
+        return ResponseEntity.ok("진행 단계가 '2n'으로 업데이트되었습니다.");
+    }
+
+    // 내 버전: 직접 지원자 상태 일괄 업데이트 API
     @PutMapping("/update-stage")
     public ResponseEntity<Map<String, Object>> updateCandidateStage(@RequestBody Map<String, Object> request) {
         try {
@@ -74,7 +83,7 @@ public class JobCandProgressController {
         }
     }
 
-    // 여러 공고의 직접 지원자 상태 일괄 업데이트 API
+    // 내 버전: 여러 공고의 직접 지원자 상태 일괄 업데이트 API
     @PutMapping("/update-stage-multiple")
     public ResponseEntity<Map<String, Object>> updateCandidateStageMultiple(@RequestBody Map<String, Object> request) {
         try {
@@ -94,22 +103,7 @@ public class JobCandProgressController {
                 "success", false,
                 "message", "상태 업데이트 중 오류가 발생했습니다: " + e.getMessage()
             ));
-=======
-    @GetMapping("/{postId}")
-    public List<ResponderDto> getCandidatesAtStage3nByPost(@PathVariable Long postId) {
-        log.info("Controller: 요청 들어옴, postId=" + postId);
-        List<ResponderDto> list = jobCandProgressService.getCandidatesAtStage3nByPost(postId);
-        log.info("리스트 크기 : " + list.size());
-        return list;
-    }
-
-    // 이메일 전송 후 job_cand_curr_stage를 2n으로 업데이트
-    @PostMapping("/update-stage-2n")
-    public ResponseEntity<?> updateProgressStage(@RequestBody List<InvitationSendRequest> dtos) {
-        jobCandProgressService.updateProgressStageBulk(dtos);
-        log.info("Controller : 전달받은 데이터: {} ", dtos);
-        log.info("Controller: Service로 전달 완료");
-        return ResponseEntity.ok("진행 단계가 '2n'으로 업데이트되었습니다.");
+        }
     }
 
     // postId와 githubLogin으로 jobCandidateId 조회
@@ -183,7 +177,8 @@ public class JobCandProgressController {
         }
     }
 
-    // 면접 분석 ID 업데이트
+    // 면접 분석 ID 업데이트 (엔티티 필드 확인 후 활성화 예정)
+    /*
     @PutMapping("/responder/{jobCandidateId}/interview-analysis")
     public ResponseEntity<?> updateInterviewAnalysisId(
             @PathVariable Long jobCandidateId,
@@ -196,6 +191,7 @@ public class JobCandProgressController {
             return ResponseEntity.badRequest().body("업데이트 실패: " + e.getMessage());
         }
     }
+    */
 
     // GitHub 로그인으로 JobCandProgress 조회
     @GetMapping("/job-cand-progress/by-github-login/{githubLogin}")
@@ -209,7 +205,6 @@ public class JobCandProgressController {
             }
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
->>>>>>> origin/test-experiment-zoop
         }
     }
 }
