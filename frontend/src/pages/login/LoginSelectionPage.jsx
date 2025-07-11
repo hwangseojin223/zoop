@@ -20,7 +20,6 @@ function LoginSelectionPage() {
 
   // navigate state에서 githubLogin과 메시지 가져오기
   useEffect(() => {
-<<<<<<< HEAD
     console.log('LoginSelectionPage - location.state:', location.state);
     if (location.state?.githubLogin) {
       console.log('LoginSelectionPage - githubLogin 설정:', location.state.githubLogin);
@@ -28,12 +27,6 @@ function LoginSelectionPage() {
     }
     if (location.state?.message) {
       console.log('LoginSelectionPage - message 설정:', location.state.message);
-=======
-    if (location.state?.githubLogin) {
-      setLoginId(location.state.githubLogin);
-    }
-    if (location.state?.message) {
->>>>>>> feat/93/interview-ai
       setError(location.state.message);
     }
   }, [location.state]);
@@ -353,13 +346,8 @@ function LoginSelectionPage() {
                 onClick={() => navigate('/')}
               />
             </div>
-<<<<<<< HEAD
-            <button type="button" className="signup-button" onClick={() => navigate('/auth/applicant/signup')}>
-              개인 통합회원 가입
-=======
             <button type="button" className="signup-button" onClick={handleSignupClick}>
               {getSignupInfo().text}
->>>>>>> feat/93/interview-ai
             </button>
           </div>
 

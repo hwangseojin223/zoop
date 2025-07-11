@@ -341,6 +341,6 @@ public class GithubSearchController {
     @Operation(summary = "job_cand_curr_stage를 조회하기 위함.", description = "")
     @GetMapping("/{postId}/states")
     public List<GithubSearchResultWithStageDto> getSearchResults(@PathVariable Long postId) {
-        return githubSearchResultsService.getSearchResultsWithStage(postId);
+        return githubSearchResultService.getSearchResultsWithStage(postId);
     }
 }

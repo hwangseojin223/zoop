@@ -1,10 +1,5 @@
 package com.zoop.backend.controller;
 
-<<<<<<< HEAD
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-=======
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -15,41 +10,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
->>>>>>> feat/93/interview-ai
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-<<<<<<< HEAD
-import com.zoop.backend.domain.entity.AiInterviewVideo;
-import com.zoop.backend.service.AiInterviewVideoService;
-
-@RestController
-@RequestMapping("/api/interview-videos")
-public class AiInterviewVideoController {
-    private final AiInterviewVideoService aiInterviewVideoService;
-
-    @Autowired
-    public AiInterviewVideoController(AiInterviewVideoService aiInterviewVideoService) {
-        this.aiInterviewVideoService = aiInterviewVideoService;
-    }
-
-    @PostMapping("/upload")
-    public ResponseEntity<?> uploadInterviewVideo(
-            @RequestParam Integer scheduleId,
-            @RequestParam Integer questionNumber,
-            @RequestParam(required = false) String questionContent,
-            @RequestParam("videoFile") MultipartFile videoFile) {
-        try {
-            AiInterviewVideo video = aiInterviewVideoService.uploadInterviewVideo(scheduleId, questionNumber, questionContent, videoFile);
-            return ResponseEntity.ok(video);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("업로드 중 오류: " + e.getMessage());
-=======
 import com.zoop.backend.domain.dto.InterviewScheduleResponseDto;
 import com.zoop.backend.domain.entity.AiAnalysisResult;
 import com.zoop.backend.domain.entity.AiInterviewVideo;
@@ -200,7 +166,7 @@ public class AiInterviewVideoController {
             connection.setRequestProperty("Content-Length", String.valueOf(requestBody.length()));
             connection.setDoOutput(true);
             
-            // 요청 전송
+            // 요청 데이터 전송
             try (java.io.OutputStream os = connection.getOutputStream()) {
                 byte[] input = requestBody.getBytes("UTF-8");
                 os.write(input, 0, input.length);
@@ -212,72 +178,40 @@ public class AiInterviewVideoController {
                 try (java.io.BufferedReader br = new java.io.BufferedReader(
                         new java.io.InputStreamReader(connection.getInputStream(), "UTF-8"))) {
                     StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        response.append(line);
+                    String responseLine;
+                    while ((responseLine = br.readLine()) != null) {
+                        response.append(responseLine.trim());
                     }
-                    
-                    // JSON 응답 파싱
-                    String jsonResponse = response.toString();
-                    return parseQuestionsFromJson(jsonResponse);
+                    return parseQuestionsFromJson(response.toString());
                 }
             } else {
-                System.err.println("Python AI API 호출 실패. 응답 코드: " + responseCode);
-                throw new RuntimeException("AI 질문 생성 서비스 호출 실패");
+                System.err.println("Python AI API 호출 실패: " + responseCode);
+                throw new RuntimeException("AI API 호출 실패");
             }
-            
         } catch (Exception e) {
-            System.err.println("Python AI API 호출 중 오류: " + e.getMessage());
-            throw new RuntimeException("AI 질문 생성 중 오류 발생", e);
+            e.printStackTrace();
+            throw new RuntimeException("AI 질문 생성 중 오류: " + e.getMessage());
         }
     }
     
     private List<String> parseQuestionsFromJson(String jsonResponse) {
         try {
             // 간단한 JSON 파싱 (실제로는 Jackson이나 Gson 사용 권장)
-            if (jsonResponse.contains("\"success\":true") && jsonResponse.contains("\"questions\"")) {
-                // JSON에서 questions 배열 추출
-                int questionsStart = jsonResponse.indexOf("\"questions\":[") + 13;
-                int questionsEnd = jsonResponse.indexOf("]", questionsStart);
-                
-                if (questionsStart > 12 && questionsEnd > questionsStart) {
-                    String questionsArray = jsonResponse.substring(questionsStart, questionsEnd);
-                    // 각 질문을 추출 (쉼표로 구분된 문자열들)
-                    String[] questions = questionsArray.split("\",\"");
-                    
-                    List<String> result = new ArrayList<>();
-                    for (String question : questions) {
-                        // 따옴표 제거
-                        question = question.replaceAll("\"", "").trim();
-                        if (!question.isEmpty()) {
-                            result.add(question);
-                        }
-                    }
-                    
-                    if (!result.isEmpty()) {
-                        return result;
-                    }
+            List<String> questions = new ArrayList<>();
+            String[] lines = jsonResponse.split("\n");
+            for (String line : lines) {
+                line = line.trim();
+                if (line.startsWith("\"") && line.endsWith("\",")) {
+                    String question = line.substring(1, line.length() - 2);
+                    questions.add(question);
                 }
             }
-            
-            // JSON 파싱 실패 시 기본 질문 반환
-            return Arrays.asList(
-                "자기소개를 해주세요.",
-                "이 직무에 지원한 이유는 무엇인가요?",
-                "가장 기억에 남는 프로젝트에 대해 설명해주세요."
-            );
-            
+            return questions.isEmpty() ? Arrays.asList("자기소개를 해주세요.") : questions;
         } catch (Exception e) {
-            System.err.println("JSON 파싱 오류: " + e.getMessage());
-            return Arrays.asList(
-                "자기소개를 해주세요.",
-                "이 직무에 지원한 이유는 무엇인가요?",
-                "가장 기억에 남는 프로젝트에 대해 설명해주세요."
-            );
+            e.printStackTrace();
+            return Arrays.asList("자기소개를 해주세요.");
         }
     }
-    
-
 
     @Operation(summary = "면접 영상 업로드", description = "면접 영상을 업로드합니다.")
     @ApiResponses(value = {
@@ -296,24 +230,12 @@ public class AiInterviewVideoController {
             @Parameter(description = "영상 파일", required = true)
             @RequestParam("videoFile") MultipartFile videoFile) {
         try {
-            AiInterviewVideo savedVideo = aiInterviewVideoService.uploadInterviewVideo(
-                scheduleId, questionNumber, questionContent, videoFile);
-            
-            // 영상 업로드 후 분석 트리거
-            try {
-                interviewAnalysisService.triggerVideoAnalysis(savedVideo.getVideoId().intValue());
-                System.out.println("[InterviewVideo] 영상 분석 트리거 완료: videoId=" + savedVideo.getVideoId());
-            } catch (Exception e) {
-                System.err.println("[InterviewVideo] 영상 분석 트리거 실패: " + e.getMessage());
-                // 분석 트리거 실패는 업로드 성공에 영향을 주지 않음
-            }
-            
-            return ResponseEntity.ok(savedVideo);
+            AiInterviewVideo video = aiInterviewVideoService.uploadInterviewVideo(scheduleId.longValue(), questionNumber, questionContent, videoFile);
+            return ResponseEntity.ok(video);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("업로드 중 오류: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("업로드 중 오류: " + e.getMessage());
         }
     }
 
@@ -328,7 +250,7 @@ public class AiInterviewVideoController {
             @Parameter(description = "면접 일정 ID", required = true)
             @PathVariable Integer scheduleId) {
         try {
-            List<AiInterviewVideo> videos = aiInterviewVideoService.findByScheduleId(scheduleId);
+            List<AiInterviewVideo> videos = aiInterviewVideoService.findByScheduleId(scheduleId.longValue());
             return ResponseEntity.ok(videos);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -348,13 +270,16 @@ public class AiInterviewVideoController {
         try {
             AiInterviewVideo video = aiInterviewVideoService.findById(videoId);
             return ResponseEntity.ok(video);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
+    @Operation(summary = "후보자별 영상 목록 조회", description = "특정 후보자의 모든 면접 영상을 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "영상 목록 조회 성공"),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
     @GetMapping("/by-job-candidate/{jobCandidateId}")
     public ResponseEntity<List<AiInterviewVideo>> getVideosByJobCandidateId(
             @Parameter(description = "후보자 ID", required = true)
@@ -363,8 +288,7 @@ public class AiInterviewVideoController {
             List<AiInterviewVideo> videos = aiInterviewVideoService.getVideosByJobCandidateId(jobCandidateId);
             return ResponseEntity.ok(videos);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
->>>>>>> feat/93/interview-ai
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 } 

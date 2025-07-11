@@ -28,15 +28,8 @@ public class AiAnalysisResultService {
                 .jobCandidateId(dto.getJobCandidateId())
                 .analysisData(dto.getAnalysisData())
                 .analysisScore(dto.getAnalysisScore())
-<<<<<<< HEAD
                 .analysisDate(dto.getAnalysisDate() != null ? dto.getAnalysisDate() : LocalDateTime.now())
                 .analysisCreatedAt(dto.getAnalysisCreatedAt() != null ? dto.getAnalysisCreatedAt() : LocalDateTime.now())
-                .build();
-
-        return aiAnalysisResultRepository.save(entity);
-=======
-                .analysisDate(LocalDateTime.now())
-                .analysisCreatedAt(LocalDateTime.now())
                 .build();
 
         AiAnalysisResult saved = aiAnalysisResultRepository.save(entity);
@@ -51,7 +44,6 @@ public class AiAnalysisResultService {
         }
 
         return saved;
->>>>>>> feat/93/interview-ai
     }
 
     public Optional<AiAnalysisResult> findByGithubSearchResultId(Long githubSearchResultId) {
@@ -73,8 +65,6 @@ public class AiAnalysisResultService {
     public List<AiAnalysisResult> findAll() {
         return aiAnalysisResultRepository.findAll();
     }
-<<<<<<< HEAD
-=======
 
     @Transactional
     public boolean deleteById(Long analysisId) {
@@ -85,5 +75,4 @@ public class AiAnalysisResultService {
         }
         return false;
     }
->>>>>>> feat/93/interview-ai
 } 

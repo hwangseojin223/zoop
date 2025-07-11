@@ -12,12 +12,9 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-<<<<<<< HEAD
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.core.ResponseInputStream;
-=======
->>>>>>> feat/93/interview-ai
 
 @Service
 public class S3Service {
@@ -95,8 +92,6 @@ public class S3Service {
         System.out.println("[S3Service] S3 키: " + key);
         return url;
     }
-<<<<<<< HEAD
-
 
     /**지훈 추가 
      * 파일 다운로드 메서드
@@ -130,6 +125,4 @@ public class S3Service {
             throw e;
         }
     }
-=======
->>>>>>> feat/93/interview-ai
 } 

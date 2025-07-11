@@ -1,6 +1,5 @@
 package com.zoop.backend.domain.dto;
 
-<<<<<<< HEAD
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,13 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor // ✅ Jackson 역직렬화를 위해 꼭 필요
 @AllArgsConstructor // ✅ 필요시 추가
-=======
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-@Setter
->>>>>>> feat/93/interview-ai
 public class InvitationSendRequest {
     private Long postId;            // 공고 ID
     private String githubLogin;     // GitHub 사용자명

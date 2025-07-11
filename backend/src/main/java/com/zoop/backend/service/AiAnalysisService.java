@@ -1,5 +1,6 @@
 package com.zoop.backend.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -19,10 +20,10 @@ public class AiAnalysisService {
 
     // 포트폴리오분석,점수 조회
     public PortfolioAnalysisResponse getPortfolioAnalysis(Long jobCandidateId) {
-        Optional<AiAnalysisResult> result = repository.findByJobCandidateIdAndAnalysisType(jobCandidateId, "portfolio");
+        List<AiAnalysisResult> results = repository.findByJobCandidateIdAndAnalysisType(jobCandidateId, "portfolio");
         
-        if (result.isPresent()) {
-            AiAnalysisResult analysis = result.get();
+        if (!results.isEmpty()) {
+            AiAnalysisResult analysis = results.get(0);
             return new PortfolioAnalysisResponse(
                 analysis.getAnalysisData(),
                 analysis.getAnalysisScore()
@@ -35,10 +36,10 @@ public class AiAnalysisService {
 
     // AI면접 내용, 점수 조회;
     public Optional<InterviewAnalysisResponse> getInterviewAnalysis(Long jobCandidateId) {
-        Optional<AiAnalysisResult> result = repository.findByJobCandidateIdAndAnalysisType(jobCandidateId, "interview");
+        List<AiAnalysisResult> results = repository.findByJobCandidateIdAndAnalysisType(jobCandidateId, "interview");
         
-        if (result.isPresent()) {
-            AiAnalysisResult analysis = result.get();
+        if (!results.isEmpty()) {
+            AiAnalysisResult analysis = results.get(0);
             return Optional.of(new InterviewAnalysisResponse(
                 analysis.getAnalysisData(),
                 analysis.getAnalysisScore()

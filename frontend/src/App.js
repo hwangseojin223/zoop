@@ -33,7 +33,7 @@ import InterviewEvaluation from './pages/company/InterviewEvaluation';
 import Chatbot from './components/Chatbot';
 import './components/Chatbot.css';
 // candidate
-import CandidateDashboard from './pages/candidate/CandidateDashboard';
+import { CandidateDashboard } from './pages/candidate/Dashboard';
 // PortfolioSubmissionPage 컴포넌트를 임포트합니다. 실제 파일 경로에 맞게 수정해주세요.
 import PortfolioSubmissionPage from './pages/candidate/PortfolioSubmissionPage';
 import InterviewPage from './pages/candidate/InterviewPage';
@@ -142,6 +142,15 @@ function AppContent() {
           element={
             <PrivateRoute allowedUserType="company">
               <IdealCandidate />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/company/interview-evaluation/:postId/:candidateId"
+          element={
+            <PrivateRoute allowedUserType="company">
+              <InterviewEvaluation />
             </PrivateRoute>
           }
         />

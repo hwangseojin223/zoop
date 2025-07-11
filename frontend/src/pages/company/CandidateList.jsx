@@ -373,14 +373,11 @@ export default function CandidateList() {
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [modalScore, setModalScore] = useState(0);
 
-<<<<<<< HEAD
   // ============ [CURRENT 버전에서 추가된 기능] ============
   // 개별 이메일 전송을 위한 로딩 상태 관리
   const [loadingId, setLoadingId] = useState(null);
   // ============ [CURRENT 버전에서 추가된 기능 끝] ============
 
-=======
->>>>>>> feat/93/interview-ai
   // 실제 데이터 fetch (네가 쓰던 코드 그대로!)
   useEffect(() => {
     // 공고 정보 조회
@@ -391,7 +388,6 @@ export default function CandidateList() {
       })
       .then(data => setPostInfo(data))
       .catch(() => setPostInfo(null));
-<<<<<<< HEAD
 
     // 후보자 데이터 조회 (DB에서)
     const fetchCandidates = async () => {
@@ -550,120 +546,6 @@ export default function CandidateList() {
   };
   // ============ [CURRENT 버전에서 추가된 기능 끝] ============
 
-=======
-
-    // 후보자 데이터 조회 (DB에서)
-    const fetchCandidates = async () => {
-      try {
-        const response = await fetch(`http://localhost:8081/api/github-search/by-post/${postId}`);
-        if (!response.ok) throw new Error('후보자 데이터 조회 실패');
-        const candidatesData = await response.json();
-
-        // AI 분석 결과도 함께 조회
-        const aiResponse = await fetch(`http://localhost:8081/api/ai-analysis-results/post/${postId}`);
-        let aiAnalysisData = [];
-        if (aiResponse.ok) aiAnalysisData = await aiResponse.json();
-
-        const aiAnalysisMap = {};
-        aiAnalysisData.forEach(ai => {
-          if (ai.githubSearchResultId) aiAnalysisMap[ai.githubSearchResultId] = ai;
-        });
-
-        const mappedCandidates = candidatesData.map(candidate => {
-          const aiAnalysis = aiAnalysisMap[candidate.githubSearchResultId];
-          let portfolioAnalysis = '';
-          let candidateLanguages = '';
-          if (aiAnalysis && aiAnalysis.analysisData) {
-            try {
-              const analysisData = JSON.parse(aiAnalysis.analysisData);
-              portfolioAnalysis = analysisData.analysis || '';
-              candidateLanguages = analysisData.languages || '';
-            } catch {
-              portfolioAnalysis = '분석 데이터 파싱 오류';
-            }
-          } else {
-            portfolioAnalysis = 'AI 분석 결과 없음';
-          }
-          return {
-            githubLogin: candidate.githubLogin,
-            candidateEmail: candidate.candidateEmail,
-            score: candidate.analysisScore || 0,
-            portfolioAnalysis: portfolioAnalysis,
-            candidateLanguages: candidateLanguages,
-            profileUrl: candidate.githubProfileUrl,
-            ...candidate
-          };
-        });
-        setCandidates(mappedCandidates);
-        setLoading(false);
-      } catch (error) {
-        setCandidates([]);
-        setLoading(false);
-      }
-    };
-
-    // 후보자가 이미 state로 넘어온 경우
-    if (location.state?.candidates) {
-      setLoading(false);
-      setCandidates(location.state.candidates);
-      return;
-    }
-    fetchCandidates();
-  }, [postId, location.state]);
-
-  const toggleSelect = (login) => {
-    setSelected(prev =>
-      prev.includes(login) ? prev.filter(l => l !== login) : [...prev, login]
-    );
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric', month: 'long', day: 'numeric'
-    });
-  };
-
-  const extractSummary = (analysisText) => {
-    if (!analysisText) return '';
-    const summaryMatch = analysisText.match(/종합요약:\s*([^\n]+(?:\n[^\n]+)*)/);
-    if (summaryMatch) return summaryMatch[1].trim();
-    return analysisText.length > 85 ? analysisText.substring(0, 85) + '...' : analysisText;
-  };
-  const extractScore = (analysisText) => {
-    if (!analysisText) return 0;
-    const scoreMatch = analysisText.match(/\(점수:\s*(\d+)점\)/);
-    return scoreMatch ? parseInt(scoreMatch[1]) : 0;
-  };
-
-  // 기술스택 가독성 보정
-  function getStackArray(langs) {
-    if (!langs) return [];
-    if (Array.isArray(langs)) return langs;
-    if (typeof langs === 'string') {
-      return langs.split(/[\s,\/]+/).filter(Boolean);
-    }
-    return [];
-  }
-  function formatTechStack(langs) {
-    const arr = getStackArray(langs);
-    if (arr.length <= 5) return arr.join(' · ');
-    return arr.slice(0, 5).join(' · ') + <MoreStack>+외 {arr.length - 5}개</MoreStack>;
-  }
-
-  const openAnalysisModal = (analysis, score) => {
-    setSelectedAnalysis(analysis);
-    setModalScore(score || 0);
-    setShowAnalysisModal(true);
-  };
-  const closeAnalysisModal = () => {
-    setShowAnalysisModal(false);
-    setSelectedAnalysis(null);
-    setModalScore(0);
-  };
-
->>>>>>> feat/93/interview-ai
   const handleSendMail = () => {
     const selectedEmails = candidates.filter(c => selected.includes(c.githubLogin || c.login)).map(c => c.candidateEmail);
     alert(`${selectedEmails.length}명에게 메일을 보냅니다:\n` + selectedEmails.join(', '));
@@ -703,210 +585,6 @@ export default function CandidateList() {
             {selected.length}명에게 메일 보내기
           </MailButton>
         )}
-<<<<<<< HEAD
-
-        {/* 후보자 헤더 */}
-        <CandidatesHeader>
-          <SectionTitle>🎯 추천 후보자 <b style={{ color: "#30c59b" }}>{candidates.length}</b>명</SectionTitle>
-        </CandidatesHeader>
-
-        {/* ============ [CURRENT 버전에서 추가된 기능] ============ */}
-        {/* 이메일 있는 사람들 섹션 */}
-        <section style={{ marginBottom: '2rem' }}>
-          <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#30c59b', fontWeight: '700' }}>
-            📬 이메일 있는 후보자 ({candidates.filter(c => c.candidateEmail !== 'not_found@example.com').length}명)
-          </h3>
-          <PosterScrollWrap>
-            <PostersRow>
-              {candidates
-                .filter(c => c.candidateEmail !== 'not_found@example.com')
-                .map((candidate, idx) => {
-                  const analysisText = candidate.portfolioAnalysis || candidate.analysis || '';
-                  const summary = extractSummary(analysisText);
-                  const score = extractScore(analysisText) || candidate.score || candidate.parsed_score || 0;
-                  const langsArr = getStackArray(candidate.candidateLanguages || candidate.languages);
-                  const email = candidate.candidateEmail || candidate.email;
-                  const login = candidate.githubLogin || candidate.login;
-
-                  return (
-                    <CandidateCard
-                      key={login || idx}
-                      selected={selected.includes(login)}
-                      onClick={() => toggleSelect(login)}
-                    >
-                      {/* 점수 ProgressBar */}
-                      <ScoreBarWrap>
-                        <ScoreLabel>
-                          <FaStar style={{ color: '#fabb3b', marginRight: '2px' }} /> 
-                          <span style={{fontWeight:'800'}}>{score}점</span>
-                        </ScoreLabel>
-                        <ScoreBar>
-                          <ScoreFill score={score} />
-                        </ScoreBar>
-                      </ScoreBarWrap>
-                      {/* 프로필 */}
-                      <Avatar>
-                        <FaGithub style={{ color: 'white', fontSize: '2.5rem' }} />
-                      </Avatar>
-                      <Username>{login}</Username>
-                      <CardMeta>
-                        {email && <MetaTag>이메일 있음</MetaTag>}
-                        {candidate.candidateLocation &&
-                          <MetaTag style={{ background: '#eaf1fd', color: '#4575d5' }}>
-                            {candidate.candidateLocation}
-                          </MetaTag>}
-                        {/* ============ [CURRENT 버전에서 추가된 기능] ============ */}
-                        {/* 검색일 표시 */}
-                        {candidate.githubSearchDate && (
-                          <MetaTag style={{ background: '#fff3cd', color: '#856404', fontSize: '0.85rem' }}>
-                            📅 {candidate.githubSearchDate.substring(0, 10)}
-                          </MetaTag>
-                        )}
-                        {/* ============ [CURRENT 버전에서 추가된 기능 끝] ============ */}
-                      </CardMeta>
-                      {/* 기술스택/언어 */}
-                      {langsArr.length > 0 &&
-                        <TechStack>
-                          <b>기술스택:</b> {formatTechStack(langsArr)}
-                        </TechStack>
-                      }
-                      {/* 분석 요약 */}
-                      <AnalysisPreview>{summary}</AnalysisPreview>
-                      <ShowAnalysisBtn
-                        onClick={e => { e.stopPropagation(); openAnalysisModal(analysisText, score); }}>
-                        <FaExpandAlt /> 전체 분석 보기
-                      </ShowAnalysisBtn>
-                      {/* ============ [CURRENT 버전에서 추가된 기능] ============ */}
-                      {/* 개별 이메일 전송 버튼 */}
-                      {email && email !== 'not_found@example.com' && (
-                        <button
-                          onClick={e => { 
-                            e.stopPropagation(); 
-                            sendInvitation(postId, login, 42, email);
-                          }}
-                          disabled={loadingId === login}
-                          style={{
-                            backgroundColor: loadingId === login ? '#ccc' : '#30c59b',
-                            color: 'white',
-                            padding: '0.5rem 1rem',
-                            borderRadius: '999px',
-                            fontWeight: 500,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: '160px',
-                            height: '42px',
-                            border: 'none',
-                            cursor: loadingId === login ? 'not-allowed' : 'pointer',
-                            position: 'relative',
-                            opacity: loadingId === login ? 0.6 : 1,
-                            filter: loadingId === login ? 'blur(0.5px)' : 'none',
-                            marginTop: '0.5rem'
-                          }}
-                        >
-                          {loadingId === login ? (
-                            <div
-                              style={{
-                                width: '20px',
-                                height: '20px',
-                                border: '3px solid #fff',
-                                borderTop: '3px solid transparent',
-                                borderRadius: '50%',
-                                animation: 'spin 1s linear infinite'
-                              }}
-                            />
-                          ) : (
-                            <>
-                              <FaEnvelope />
-                              <span>이메일 보내기</span>
-                            </>
-                          )}
-                        </button>
-                      )}
-                      {/* ============ [CURRENT 버전에서 추가된 기능 끝] ============ */}
-                    </CandidateCard>
-                  );
-                })}
-            </PostersRow>
-          </PosterScrollWrap>
-        </section>
-
-        {/* 이메일 없는 사람들 섹션 */}
-        <section>
-          <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#dc3545', fontWeight: '700' }}>
-            ❌ 이메일 없는 후보자 ({candidates.filter(c => c.candidateEmail === 'not_found@example.com').length}명)
-          </h3>
-          <PosterScrollWrap>
-            <PostersRow>
-              {candidates
-                .filter(c => c.candidateEmail === 'not_found@example.com')
-                .map((candidate, idx) => {
-                  const analysisText = candidate.portfolioAnalysis || candidate.analysis || '';
-                  const summary = extractSummary(analysisText);
-                  const score = extractScore(analysisText) || candidate.score || candidate.parsed_score || 0;
-                  const langsArr = getStackArray(candidate.candidateLanguages || candidate.languages);
-                  const login = candidate.githubLogin || candidate.login;
-
-                  return (
-                    <CandidateCard
-                      key={login || idx}
-                      selected={selected.includes(login)}
-                      onClick={() => toggleSelect(login)}
-                      style={{ opacity: 0.7 }}
-                    >
-                      {/* 점수 ProgressBar */}
-                      <ScoreBarWrap>
-                        <ScoreLabel>
-                          <FaStar style={{ color: '#fabb3b', marginRight: '2px' }} /> 
-                          <span style={{fontWeight:'800'}}>{score}점</span>
-                        </ScoreLabel>
-                        <ScoreBar>
-                          <ScoreFill score={score} />
-                        </ScoreBar>
-                      </ScoreBarWrap>
-                      {/* 프로필 */}
-                      <Avatar>
-                        <FaGithub style={{ color: 'white', fontSize: '2.5rem' }} />
-                      </Avatar>
-                      <Username>{login}</Username>
-                      <CardMeta>
-                        <MetaTag style={{ background: '#f8d7da', color: '#721c24' }}>이메일 없음</MetaTag>
-                        {candidate.candidateLocation &&
-                          <MetaTag style={{ background: '#eaf1fd', color: '#4575d5' }}>
-                            {candidate.candidateLocation}
-                          </MetaTag>}
-                        {/* ============ [CURRENT 버전에서 추가된 기능] ============ */}
-                        {/* 검색일 표시 */}
-                        {candidate.githubSearchDate && (
-                          <MetaTag style={{ background: '#fff3cd', color: '#856404', fontSize: '0.85rem' }}>
-                            📅 {candidate.githubSearchDate.substring(0, 10)}
-                          </MetaTag>
-                        )}
-                        {/* ============ [CURRENT 버전에서 추가된 기능 끝] ============ */}
-                      </CardMeta>
-                      {/* 기술스택/언어 */}
-                      {langsArr.length > 0 &&
-                        <TechStack>
-                          <b>기술스택:</b> {formatTechStack(langsArr)}
-                        </TechStack>
-                      }
-                      {/* 분석 요약 */}
-                      <AnalysisPreview>{summary}</AnalysisPreview>
-                      <ShowAnalysisBtn
-                        onClick={e => { e.stopPropagation(); openAnalysisModal(analysisText, score); }}>
-                        <FaExpandAlt /> 전체 분석 보기
-                      </ShowAnalysisBtn>
-                    </CandidateCard>
-                  );
-                })}
-            </PostersRow>
-          </PosterScrollWrap>
-        </section>
-        {/* ============ [CURRENT 버전에서 추가된 기능 끝] ============ */}
-
-        {/* 기존 통합 카드 레이아웃 (주석 처리) */}
-        {/*
-=======
 
         {/* 후보자 헤더 */}
         <CandidatesHeader>
@@ -914,7 +592,6 @@ export default function CandidateList() {
         </CandidatesHeader>
 
         {/* 포스터 가로 스크롤 */}
->>>>>>> feat/93/interview-ai
         {candidates.length === 0 ? (
           <PostDesc>아직 추천 후보자가 없습니다.<br />검색이 완료되면 후보자 목록이 표시됩니다.</PostDesc>
         ) : (
@@ -934,10 +611,7 @@ export default function CandidateList() {
                     selected={selected.includes(login)}
                     onClick={() => toggleSelect(login)}
                   >
-<<<<<<< HEAD
-=======
                     {/* 점수 ProgressBar */}
->>>>>>> feat/93/interview-ai
                     <ScoreBarWrap>
                       <ScoreLabel>
                         <FaStar style={{ color: '#fabb3b', marginRight: '2px' }} /> 
@@ -947,10 +621,7 @@ export default function CandidateList() {
                         <ScoreFill score={score} />
                       </ScoreBar>
                     </ScoreBarWrap>
-<<<<<<< HEAD
-=======
                     {/* 프로필 */}
->>>>>>> feat/93/interview-ai
                     <Avatar>
                       <FaGithub style={{ color: 'white', fontSize: '2.5rem' }} />
                     </Avatar>
@@ -962,34 +633,72 @@ export default function CandidateList() {
                           {candidate.candidateLocation}
                         </MetaTag>}
                     </CardMeta>
-<<<<<<< HEAD
-=======
                     {/* 기술스택/언어 */}
->>>>>>> feat/93/interview-ai
                     {langsArr.length > 0 &&
                       <TechStack>
                         <b>기술스택:</b> {formatTechStack(langsArr)}
                       </TechStack>
                     }
-<<<<<<< HEAD
-=======
                     {/* 분석 요약 */}
->>>>>>> feat/93/interview-ai
                     <AnalysisPreview>{summary}</AnalysisPreview>
                     <ShowAnalysisBtn
                       onClick={e => { e.stopPropagation(); openAnalysisModal(analysisText, score); }}>
                       <FaExpandAlt /> 전체 분석 보기
                     </ShowAnalysisBtn>
+                    {/* ============ [CURRENT 버전에서 추가된 기능] ============ */}
+                    {/* 개별 이메일 전송 버튼 */}
+                    {email && email !== 'not_found@example.com' && (
+                      <button
+                        onClick={e => { 
+                          e.stopPropagation(); 
+                          sendInvitation(postId, login, 42, email);
+                        }}
+                        disabled={loadingId === login}
+                        style={{
+                          backgroundColor: loadingId === login ? '#ccc' : '#30c59b',
+                          color: 'white',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '999px',
+                          fontWeight: 500,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '160px',
+                          height: '42px',
+                          border: 'none',
+                          cursor: loadingId === login ? 'not-allowed' : 'pointer',
+                          position: 'relative',
+                          opacity: loadingId === login ? 0.6 : 1,
+                          filter: loadingId === login ? 'blur(0.5px)' : 'none',
+                          marginTop: '0.5rem'
+                        }}
+                      >
+                        {loadingId === login ? (
+                          <div
+                            style={{
+                              width: '20px',
+                              height: '20px',
+                              border: '3px solid #fff',
+                              borderTop: '3px solid transparent',
+                              borderRadius: '50%',
+                              animation: 'spin 1s linear infinite'
+                            }}
+                          />
+                        ) : (
+                          <>
+                            <FaEnvelope />
+                            <span>이메일 보내기</span>
+                          </>
+                        )}
+                      </button>
+                    )}
+                    {/* ============ [CURRENT 버전에서 추가된 기능 끝] ============ */}
                   </CandidateCard>
                 );
               })}
             </PostersRow>
           </PosterScrollWrap>
         )}
-<<<<<<< HEAD
-        */}
-=======
->>>>>>> feat/93/interview-ai
       </Container>
 
       {/* --- AI 분석 모달 --- */}

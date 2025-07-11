@@ -5,89 +5,22 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import './ApplicantSignupProcess.css';
-<<<<<<< HEAD
-=======
-import { useNavigate, useParams } from 'react-router-dom';
->>>>>>> feat/93/interview-ai
 import axios from '../../api/axios';
 
 
 export default function ApplicantSignupProcess() {
   const navigate = useNavigate();
-<<<<<<< HEAD
   const location = useLocation();
   const { token: invitationToken } = useParams(); // URL 파라미터에서 초대 토큰 가져오기
   
   // ============ [초대 링크 관련 상태 변수들 추가] ============
   const [fromInvite, setFromInvite] = useState(false); // 초대 링크로 들어왔는지 여부
   const [isFormValid, setIsFormValid] = useState(false); // 폼 유효성 검사 결과
+  const [isLoading, setIsLoading] = useState(false); // 로딩 상태
   // ============ [초대 링크 관련 상태 변수들 추가 끝] ============
   //==================================================================================================
-=======
-  const { token } = useParams(); // URL 파라미터에서 토큰 가져오기
-  
-  // 초대 정보 상태
-  const [invitationData, setInvitationData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // 초대 토큰으로 정보 조회
-  useEffect(() => {
-    const fetchInvitationData = async () => {
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
-      
-      try {
-        // 1. 초대 토큰으로 정보 조회
-        const invitationResponse = await axios.post(`/api/invitations/clicked/${token}`);
-        const { githubLogin, isSignedUp } = invitationResponse.data;
-        
-        // 2. 이미 가입된 사용자인 경우 로그인 페이지로 이동
-        if (isSignedUp) {
-          navigate('/login', { 
-            state: { 
-              githubLogin: githubLogin,
-              message: '이미 가입된 계정입니다. 로그인해주세요.' 
-            } 
-          });
-          return;
-        }
-        
-        // 3. 이메일 정보 조회
-        try {
-          const emailResponse = await axios.get(`/api/candidates/email/${githubLogin}`);
-          const { email } = emailResponse.data;
-          
-          // 이메일 파싱 (아이디@도메인)
-          const [emailId, domain] = email.split('@');
-          setEmailLocal(emailId);
-          setEmailDomain(domain);
-          
-          // 이메일이 자동으로 입력되었으므로 인증 완료 상태로 설정
-          setIsEmailVerified(true);
-        } catch (emailError) {
-          console.log('이메일 정보를 찾을 수 없습니다:', emailError);
-          // 이메일이 없어도 계속 진행
-        }
-        
-        // 4. githubLogin을 아이디 입력란에 설정
-        setInvitationData({ githubLogin });
-        
-      } catch (error) {
-        console.error('초대 정보 조회 실패:', error);
-        alert('초대 링크가 유효하지 않습니다.');
-        navigate('/');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchInvitationData();
-  }, [token, navigate]);
 
 //==================================================================================================
->>>>>>> feat/93/interview-ai
 // 이메일 인증
 //==================================================================================================
 
@@ -312,7 +245,6 @@ useEffect(() => {
     });
   };
 
-<<<<<<< HEAD
   // 이메일 도메인 변경 핸들러
   const handleDomainChange = (e) => {
     const value = e.target.value;
@@ -322,55 +254,12 @@ useEffect(() => {
     } else {
       setCustomInput(false);
       setEmailDomain(value);
-=======
-  //==================================================================================================
-  // 가입하기 버튼 클릭했을 때
-  //==================================================================================================
-  const handleSubmit = async (event) => {
-    event.preventDefault(); // 기본 form 제출 방지
-
-    //이메일 인증이 안되어있을 때때
-    if (!isEmailVerified) {
-      setErrorMessage('이메일 인증이 필요합니다.');
-      return;
-    }
-
-    //키 값이 JPA ENTITY 객체의 프로퍼티와 일치해야한다.
-    const formData = {
-      githubLogin : document.getElementById('candidate_id').value,
-      candidatePassword : document.getElementById('password').value,
-      candidatePhoneNumber : document.getElementById('phone').value,
-      candidateName : document.getElementById('candidate_name').value,
-      candidateEmail : `${emailLocal}@${emailDomain}`,
-      candidateRegistrationDate: new Date().toISOString(),  // 현재 시각
-      candidateCreatedAt: new Date().toISOString(),        // 현재 시각
-      candidateUpdatedAt: new Date().toISOString(),        // 현재 시각
-    };
-
-    try {
-
-      const response = await fetch('http://localhost:8081/api/candidates/process', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        navigate('/auth/applicant/signup/success');
-        // 원한다면 페이지 이동: window.location.href = '/welcome';
-      } else {
-        alert('회원가입 실패');
-      }
-    } catch (error) {
-      console.error('오류 발생:', error);
-      alert('서버 오류');
->>>>>>> feat/93/interview-ai
     }
   };
 
-
+  //==================================================================================================
+  // 가입하기 버튼 클릭했을 때
+  //==================================================================================================
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!idCheck || !isIdAvailable) {
@@ -468,13 +357,6 @@ useEffect(() => {
   };
 
   return (
-<<<<<<< HEAD
-  <>
-    <Navbar />
-    <div className="max-w-[500px] mx-auto mt-24 mb-16 p-8 border border-gray-200 rounded-2xl shadow-xl bg-white">
-      <h2 className="text-3xl font-bold text-green-700 mb-8 text-center">ZOOP 통합 개인회원 가입</h2>
-      <form onSubmit={handleSubmit} className="space-y-6">
-=======
     <>
       <Navbar />
       <div className="applicant-signup-container">
@@ -485,23 +367,6 @@ useEffect(() => {
           </div>
         ) : (
         <form onSubmit={handleSubmit}>
-          <div className="applicant-signup-form-group">
-            <label htmlFor="candidate_id" className="applicant-signup-label">아이디</label>
-            <input 
-              type="text" 
-              id="candidate_id" 
-              name="candidate_id" 
-              className="applicant-signup-input" 
-              placeholder="4~20자리/영문, 숫자, 특수문자 '_'사용 가능"
-              defaultValue={invitationData?.githubLogin || ''}
-              readOnly={!!invitationData?.githubLogin}
-              style={{
-                backgroundColor: invitationData?.githubLogin ? '#f5f5f5' : 'white',
-                color: '#333'
-              }}
-            />
-          </div>
->>>>>>> feat/93/interview-ai
 
         {/* 아이디 입력 */}
         <div>
@@ -692,17 +557,8 @@ useEffect(() => {
           가입하기
         </button>
       </form>
-    </div>
-  </>
-);
-
-<<<<<<< HEAD
-=======
-          <button type="submit" className="applicant-signup-button">가입하기</button>
-        </form>
         )}
       </div>
     </>
   );
->>>>>>> feat/93/interview-ai
 }

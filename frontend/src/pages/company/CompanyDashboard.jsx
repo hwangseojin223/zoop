@@ -198,6 +198,7 @@ export default function CompanyDashboard() {
       const mapped = data.map(item => ({
         ...item.candidate,
         jobCandCurrStage: item.candidate.jobCandCurrStage,
+        jobCandidateId: item.jobCandidateId,
         aiAnalysis: item.aiAnalysis || null
       }));
       console.log('매핑된 후보자:', mapped);
@@ -884,6 +885,49 @@ export default function CompanyDashboard() {
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                           <path d="M22 2L11 13"/>
                                           <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  )}
+                                  {/* 면접 평가 버튼 (우측 하단) */}
+                                  {candidate.jobCandCurrStage === '3y' && (
+                                    <div style={{
+                                      position: 'absolute',
+                                      bottom: '1rem',
+                                      right: '1rem'
+                                    }}>
+                                      <button
+                                        onClick={() => {
+                                          // 면접 평가 페이지로 이동
+                                          window.location.href = `/company/interview-evaluation/${selectedPostId}/${candidate.jobCandidateId}`;
+                                        }}
+                                        style={{
+                                          background: 'linear-gradient(135deg, #805ad5 0%, #6b46c1 100%)',
+                                          color: 'white',
+                                          border: 'none',
+                                          borderRadius: '50%',
+                                          width: '40px',
+                                          height: '40px',
+                                          cursor: 'pointer',
+                                          transition: 'all 0.2s',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          boxShadow: '0 2px 8px rgba(128, 90, 213, 0.3)'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                          e.currentTarget.style.transform = 'translateY(-2px) scale(1.1)';
+                                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(128, 90, 213, 0.4)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(128, 90, 213, 0.3)';
+                                        }}
+                                        title="면접 평가"
+                                      >
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                          <path d="M9 12l2 2 4-4"/>
+                                          <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"/>
                                         </svg>
                                       </button>
                                     </div>
