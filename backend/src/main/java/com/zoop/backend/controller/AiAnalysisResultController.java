@@ -94,4 +94,22 @@ public class AiAnalysisResultController {
         List<AiAnalysisResult> results = aiAnalysisResultService.findByAnalysisType(analysisType);
         return ResponseEntity.ok(results);
     }
+
+    @Operation(summary = "직접 지원자의 AI 분석 결과 조회", description = "특정 직접 지원자의 포트폴리오 AI 분석 결과를 조회합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "AI 분석 결과 반환",
+            content = @Content(schema = @Schema(implementation = AiAnalysisResult.class))),
+        @ApiResponse(responseCode = "404", description = "AI 분석 결과 없음")
+    })
+    @GetMapping("/portfolio/{jobCandidateId}")
+    public ResponseEntity<AiAnalysisResult> getPortfolioAnalysisByJobCandidateId(
+        @Parameter(description = "직접 지원자의 job_candidate_id", required = true, example = "1")
+        @PathVariable Long jobCandidateId) {
+        
+        List<AiAnalysisResult> results = aiAnalysisResultService.findByJobCandidateIdAndAnalysisType(jobCandidateId, "portfolio");
+        if (results.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(results.get(0)); // 가장 최근 분석 결과 반환
+    }
 } 

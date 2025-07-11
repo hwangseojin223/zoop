@@ -17,5 +17,5 @@ import com.zoop.backend.domain.entity.Portfolio;
 public interface PortfolioRepository extends JpaRepository<Portfolio, Integer> {
     List<Portfolio> findByJobCandidateId(Integer jobCandidateId);
     Optional<Portfolio> findByJobCandidateIdAndPortfolioId(Integer jobCandidateId, Integer portfolioId);
-    
+    List<Portfolio> findByPortfolioAnalysisStatus(String portfolioAnalysisStatus);
 }

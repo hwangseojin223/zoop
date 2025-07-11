@@ -79,6 +79,18 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
 
     Optional<JobCandProgress> findByJobCandidateId(Long jobCandidateId);
 
+    // postId로 JobCandProgress 조회 (모든 지원자)
+    List<JobCandProgress> findByPost_PostId(Long postId);
+
+    // 직접 지원한 후보자들 조회 (githubLogin이 null인 경우)
+    List<JobCandProgress> findByPost_PostIdAndGithubLoginIsNull(Long postId);
+    
+    // postId와 stage로 JobCandProgress 조회 (직접 지원자 - stage "0")
+    List<JobCandProgress> findByPost_PostIdAndJobCandCurrStage(Long postId, String stage);
+
+    // stage로 JobCandProgress 조회 (모든 공고의 특정 stage 지원자)
+    List<JobCandProgress> findByJobCandCurrStage(String stage);
+
     // postId와 candidateId로 JobCandProgress 조회
     Optional<JobCandProgress> findByPost_PostIdAndCandidate_CandidateId(Long postId, Long candidateId);
 }

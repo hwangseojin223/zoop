@@ -14,6 +14,11 @@ function PortfolioSubmissionPage() {
   const [portfolioContent, setPortfolioContent] = useState('');
   const [portfolioUrl, setPortfolioUrl] = useState('');
 
+  // 기존 포트폴리오 관련 상태
+  const [existingPortfolio, setExistingPortfolio] = useState(null);
+  const [useExistingPortfolio, setUseExistingPortfolio] = useState(false);
+  const [loadingExistingPortfolio, setLoadingExistingPortfolio] = useState(true);
+
   // Career experience states
   const [isExperienced, setIsExperienced] = useState(true);
   const [totalYearsOfExperience, setTotalYearsOfExperience] = useState('');
@@ -44,8 +49,18 @@ function PortfolioSubmissionPage() {
   const [veteranProofFile, setVeteranProofFile] = useState(null);
 
   useEffect(() => {
+    // localStorage 및 authState 디버깅
+    console.log('[DEBUG] localStorage 확인:');
+    console.log('- jwtToken:', localStorage.getItem('jwtToken'));
+    console.log('- userType:', localStorage.getItem('userType'));
+    console.log('- userId:', localStorage.getItem('userId'));
+    console.log('- loginId:', localStorage.getItem('loginId'));
+    console.log('[DEBUG] authState:', authState);
+    console.log('[DEBUG] candidateId 계산:', candidateId);
+    
     // 사용자가 로그인하지 않았거나 candidateId가 없으면 대시보드로 리다이렉트
     if (!candidateId) {
+      console.log('[DEBUG] candidateId가 없어서 로그인 페이지로 리다이렉트');
       alert('로그인이 필요합니다.');
       navigate('/login');
       return;
@@ -76,8 +91,46 @@ function PortfolioSubmissionPage() {
       }
     };
 
+    const fetchExistingPortfolio = async () => {
+      try {
+        console.log(`[DEBUG] candidateId 값 확인: ${candidateId} (타입: ${typeof candidateId})`);
+        console.log(`[DEBUG] authState 전체:`, authState);
+        console.log(`[DEBUG] authState.userId:`, authState.userId);
+        console.log(`기존 포트폴리오 조회 시작 - 사용자 ID: ${candidateId}`);
+        
+        const apiUrl = `http://localhost:8081/api/portfolios/recent/${candidateId}`;
+        console.log(`[DEBUG] API 호출 URL: ${apiUrl}`);
+        
+        const response = await fetch(apiUrl);
+        console.log(`[DEBUG] API 응답 상태: ${response.status}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('[DEBUG] 기존 포트폴리오 API 응답 데이터:', data);
+        
+        if (data.hasPortfolio) {
+          console.log('[DEBUG] 기존 포트폴리오가 있음 - setExistingPortfolio 실행');
+          setExistingPortfolio(data);
+          setUseExistingPortfolio(true); // 기본적으로 기존 포트폴리오 사용
+          console.log('[DEBUG] existingPortfolio 상태 설정 완료');
+        } else {
+          console.log('[DEBUG] 기존 포트폴리오가 없음 (hasPortfolio: false)');
+        }
+        
+      } catch (error) {
+        console.error('[DEBUG] 기존 포트폴리오 조회 중 오류 발생:', error);
+        setExistingPortfolio(null);
+      } finally {
+        console.log('[DEBUG] loadingExistingPortfolio를 false로 설정');
+        setLoadingExistingPortfolio(false);
+      }
+    };
+
     fetchJobPosting();
-  }, [postId, candidateId, navigate]);
+    fetchExistingPortfolio();
+  }, [postId, candidateId, navigate, authState]);
 
   // Effect to update individual checkboxes when 'agreeAll' changes
   useEffect(() => {
@@ -144,8 +197,8 @@ function PortfolioSubmissionPage() {
       return;
     }
 
-    // Validate portfolio file is required
-    if (!portfolioFile) {
+    // Validate portfolio file is required (기존 포트폴리오 사용 시 제외)
+    if (!useExistingPortfolio && !portfolioFile) {
       alert('포트폴리오 파일을 선택해주세요.');
       return;
     }
@@ -153,14 +206,24 @@ function PortfolioSubmissionPage() {
     const formData = new FormData();
     formData.append('postId', parseInt(postId, 10));
     formData.append('candidateId', candidateId);
-    formData.append('portfolioContent', portfolioContent);
     formData.append('portfolioUrl', portfolioUrl);
 
-    console.log('제출 전 파일 상태:', { portfolioFile, resumeFile });
+    console.log('제출 전 상태:', { 
+      portfolioFile, 
+      resumeFile, 
+      useExistingPortfolio, 
+      existingPortfolio 
+    });
     
-    if (portfolioFile) {
-      console.log('포트폴리오 파일 추가:', portfolioFile.name, portfolioFile.size);
+    if (useExistingPortfolio && existingPortfolio) {
+      // 기존 포트폴리오 사용 시 파일 경로 정보 전송
+      console.log('기존 포트폴리오 사용:', existingPortfolio.portfolioFilePath);
+      formData.append('existingPortfolioPath', existingPortfolio.portfolioFilePath);
+      formData.append('useExistingPortfolio', 'true');
+    } else if (portfolioFile) {
+      console.log('새 포트폴리오 파일 추가:', portfolioFile.name, portfolioFile.size);
       formData.append('portfolioFile', portfolioFile);
+      formData.append('useExistingPortfolio', 'false');
     } else {
       console.log('포트폴리오 파일이 선택되지 않음');
     }
@@ -307,25 +370,98 @@ function PortfolioSubmissionPage() {
           <h3 className="section-title">첨부파일</h3>
           
           <div className="file-upload-group">
-            <label className="file-upload-label">
-              <div className="file-upload-content">
+            <div className="portfolio-section">
+              <div className="portfolio-header-section">
                 <div className="file-icon">📁</div>
                 <div className="file-info">
                   <span className="file-title">포트폴리오</span>
                   <span className="file-subtitle">* 필수</span>
                 </div>
-                <div className="file-name">
-                  {portfolioFile ? portfolioFile.name : '파일 첨부 (최대 50MB)'}
+              </div>
+
+              {/* 기존 포트폴리오가 있는 경우 표시 */}
+              {console.log('[DEBUG] 렌더링 조건 확인:', {
+                existingPortfolio: !!existingPortfolio,
+                loadingExistingPortfolio,
+                existingPortfolioData: existingPortfolio
+              })}
+              {/* 임시로 강제 표시 - 테스트용 */}
+              {console.log('[DEBUG] 강제 표시 테스트 - 항상 기존 포트폴리오 UI 표시')}
+              <div className="existing-portfolio-section">
+                {console.log('[DEBUG] 기존 포트폴리오 UI 렌더링 중')}
+                <div className="existing-portfolio-card">
+                  <div className="existing-portfolio-info">
+                    <div className="existing-portfolio-icon">📎</div>
+                    <div className="existing-portfolio-details">
+                      <div className="existing-portfolio-name">
+                        {existingPortfolio?.originalFileName || '이전 포트폴리오 (테스트)'}
+                      </div>
+                      <div className="existing-portfolio-date">
+                        업로드: {existingPortfolio?.portfolioCreatedAt ? new Date(existingPortfolio.portfolioCreatedAt).toLocaleDateString('ko-KR') : '날짜 정보 없음'}
+                      </div>
+                      {existingPortfolio?.postTitle && (
+                        <div className="existing-portfolio-post">
+                          사용된 공고: {existingPortfolio.postTitle}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="portfolio-option-selector">
+                    <label className="portfolio-option">
+                      <input
+                        type="radio"
+                        name="portfolioChoice"
+                        checked={useExistingPortfolio}
+                        onChange={() => {
+                          setUseExistingPortfolio(true);
+                          setPortfolioFile(null);
+                        }}
+                      />
+                      <span className="option-label">기존 포트폴리오 사용</span>
+                    </label>
+                    
+                    <label className="portfolio-option">
+                      <input
+                        type="radio"
+                        name="portfolioChoice"
+                        checked={!useExistingPortfolio}
+                        onChange={() => setUseExistingPortfolio(false)}
+                      />
+                      <span className="option-label">새 파일 업로드</span>
+                    </label>
+                  </div>
                 </div>
               </div>
-              <input
-                type="file"
-                onChange={(e) => setPortfolioFile(e.target.files[0])}
-                accept=".pdf,.zip,.rar,.png,.jpg,.jpeg"
-                className="file-input"
-                required
-              />
-            </label>
+
+              {/* 새 파일 업로드 섹션 */}
+              {(!existingPortfolio || !useExistingPortfolio) && (
+                <label className="file-upload-label">
+                  <div className="file-upload-content">
+                    <div className="file-name">
+                      {portfolioFile ? portfolioFile.name : '파일 첨부 (최대 50MB)'}
+                    </div>
+                  </div>
+                  <input
+                    type="file"
+                    onChange={(e) => {
+                      setPortfolioFile(e.target.files[0]);
+                      setUseExistingPortfolio(false);
+                    }}
+                    accept=".pdf,.zip,.rar,.png,.jpg,.jpeg"
+                    className="file-input"
+                    required={!useExistingPortfolio}
+                  />
+                </label>
+              )}
+
+              {/* 로딩 중 표시 */}
+              {loadingExistingPortfolio && (
+                <div className="loading-existing-portfolio">
+                  <span>기존 포트폴리오 확인 중...</span>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="file-upload-group">

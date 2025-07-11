@@ -179,12 +179,25 @@ export default function About() {
     <>
       <Navbar onLangChange={handleLangChange} />
       <section className="hero-banner" style={{
-        backgroundImage: "url('/info/about_banner.jpg')",
-        backgroundAttachment: 'fixed',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
         position: 'relative'
       }}>
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            zIndex: 0
+          }}
+        >
+          <source src="/info/about_video.mp4" type="video/mp4" />
+        </video>
         <div className="overlay">
           <motion.h1
             initial={{ opacity: 0, y: -30 }}

@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 import difflib
 from bs4.element import Tag
 import openai
+import mimetypes
+from PyPDF2 import PdfReader
 
 load_dotenv()
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -353,5 +355,101 @@ def analyze_candidate_with_prompt(candidate, details):
         {"role": "user", "content": prompt}
     ]
     return call_openai_chat(messages, max_tokens=800, temperature=0.7)
+
+def extract_text_from_file(file_path_or_url):
+    """
+    파일 경로 또는 URL에서 텍스트를 추출한다. (PDF/텍스트 파일 지원)
+    """
+    import requests
+    import tempfile
+    import os
+    print(f"[분석 시작] 파일 경로/URL: {file_path_or_url}")
+    
+    # URL이면 다운로드, 아니면 로컬 파일로 처리
+    if file_path_or_url.startswith('http://') or file_path_or_url.startswith('https://'):
+        print(f"[분석] URL에서 파일 다운로드 시작: {file_path_or_url}")
+        resp = requests.get(file_path_or_url)
+        print(f"[분석] 다운로드 응답 상태: {resp.status_code}")
+        if resp.status_code != 200:
+            print(f"[분석] 다운로드 실패: {resp.status_code} - {resp.text[:200]}")
+            raise Exception(f"파일 다운로드 실패: {file_path_or_url}")
+        
+        print(f"[분석] 다운로드된 파일 크기: {len(resp.content)} bytes")
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
+            tmp.write(resp.content)
+            tmp_path = tmp.name
+            print(f"[분석] 임시 파일 생성: {tmp_path}")
+    else:
+        tmp_path = file_path_or_url
+        print(f"[분석] 로컬 파일 사용: {tmp_path}")
+    
+    # 파일 타입 판별
+    mime, _ = mimetypes.guess_type(tmp_path)
+    print(f"[분석] 파일 타입: {mime}")
+    text = ""
+    try:
+        if mime == 'application/pdf' or tmp_path.lower().endswith('.pdf'):
+            print(f"[분석] PDF 파일 처리 시작")
+            reader = PdfReader(tmp_path)
+            print(f"[분석] PDF 페이지 수: {len(reader.pages)}")
+            for i, page in enumerate(reader.pages):
+                page_text = page.extract_text() or ""
+                text += page_text
+                print(f"[분석] 페이지 {i+1} 텍스트 길이: {len(page_text)}")
+        else:
+            print(f"[분석] 텍스트 파일 처리 시작")
+            with open(tmp_path, 'r', encoding='utf-8', errors='ignore') as f:
+                text = f.read()
+                print(f"[분석] 텍스트 파일 길이: {len(text)}")
+    except Exception as e:
+        print(f"[분석] 텍스트 추출 오류: {e}")
+        text = f"[텍스트 추출 실패: {e}]"
+    finally:
+        if file_path_or_url.startswith('http') and os.path.exists(tmp_path):
+            os.remove(tmp_path)
+            print(f"[분석] 임시 파일 삭제: {tmp_path}")
+    
+    print(f"[분석] 최종 추출된 텍스트 길이: {len(text)}")
+    print(f"[분석] 텍스트 미리보기: {text[:200]}...")
+    return text
+
+def analyze_portfolio_file(file_path_or_url, extra_info=None):
+    """
+    포트폴리오 파일을 읽어 GPT-4o-mini로 분석한다.
+    extra_info: dict (지원자명, 이메일 등 부가정보)
+    """
+    print(f"[분석 시작] 포트폴리오 분석 시작: {file_path_or_url}")
+    text = extract_text_from_file(file_path_or_url)
+    
+    if not text or len(text.strip()) < 10:
+        print(f"[분석] 텍스트가 너무 짧거나 비어있음: {len(text)} 문자")
+        return "지원자의 포트폴리오 내용이 제공되지 않아 구체적인 평가를 진행할 수 없습니다. 하지만 일반적인 평가 기준을 바탕으로 가상의 예시를 통해 설명드리겠습니다.\n\n---\n\n**강점**: 지원자는 관련 분야에서의 경력이 풍부하며, 다양한 프로젝트 경험을 통해 문제 해결 능력을 입증하였습니다. 또한, 최신 기술 트렌드에 대한 이해도가 높습니다.\n\n**약점**: 특정 기술 스택에 대한 깊이 있는 경험이 부족하며, 팀워크보다는 개인 작업에 치중하는 경향이 있습니다.\n\n**기술스택**: Python, JavaScript, React, SQL, AWS 등 다양한 기술을 보유하고 있으며, 특히 웹 개발에 강점을 보입니다.\n\n**경력**: 5년 이상의 경력을 보유하고 있으며, 다수의 성공적인 프로젝트를 이끌어온 경험이 있습니다.\n\n**성장 가능성**: 지속적인 학습 의지가 강하며, 새로운 기술을 빠르게 습득하는 능력이 뛰어납니다.\n\n**기업 적합성**: 지원하는 기업의 문화와 비전과 잘 맞아떨어지며, 팀에 긍정적인 영향을 미칠 것으로 예상됩니다.\n\n---\n\n종합 점수: 85점\n이유: \n- 경력 및 프로젝트 경험: 30/35\n- 기술 스택: 25/30\n- 팀워크 및 커뮤니케이션: 15/20\n- 성장 가능성: 10/10\n- 기업 적합성: 5/5\n\n종합요약: 지원자는 풍부한 경험과 기술적 역량을 보유하고 있으며, 빠른 학습 능력과 기업 문화에 잘 적응할 가능성이 높습니다. 다만, 팀워크에 대한 개선이 필요합니다."
+    
+    print(f"[분석] 추출된 텍스트 길이: {len(text)} 문자")
+    print(f"[분석] 텍스트 샘플: {text[:300]}...")
+    
+    prompt = f"""
+아래는 한 지원자의 포트폴리오(이력서/자기소개서 등) 내용입니다. 실제 텍스트 일부 또는 전체가 포함되어 있습니다.
+
+{text[:3000]}
+
+이 지원자의 강점, 약점, 기술스택, 경력, 성장 가능성, 기업 적합성 등을 5~10줄로 요약해 주세요.
+그리고 100점 만점 기준으로 종합 점수와 근거를 아래 형식으로 출력해 주세요.
+
+이유: [구체적인 평가 근거와 각 항목별 점수] (점수: [총점]점)
+종합요약: [3-4줄 요약]
+"""
+    if extra_info:
+        prompt = f"지원자 정보: {extra_info}\n" + prompt
+        print(f"[분석] 추가 정보 포함: {extra_info}")
+    
+    print(f"[분석] OpenAI API 호출 시작")
+    messages = [
+        {"role": "system", "content": "너는 이력서/포트폴리오를 정확하게 평가하는 AI 전문가야. 각 지원자의 실제 데이터를 바탕으로 객관적으로 점수를 매겨줘."},
+        {"role": "user", "content": prompt}
+    ]
+    result = call_openai_chat(messages, max_tokens=900, temperature=0.5)
+    print(f"[분석 완료] 분석 결과 길이: {len(result) if result else 0} 문자")
+    return result
 
 

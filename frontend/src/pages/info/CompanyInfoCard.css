@@ -1,0 +1,125 @@
+.company-info-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  padding: 2rem 2.5rem 2.2rem 2.5rem;
+  max-width: 700px;
+  margin: 2rem auto;
+  font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+}
+.company-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.company-info-header h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0;
+}
+.company-badge {
+  display: inline-block;
+  background: #f5f6fa;
+  color: #30c59b;
+  border-radius: 8px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.95rem;
+  margin-left: 0.7rem;
+}
+.company-logo {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #f5f6fa;
+}
+.company-info-body {
+  margin-top: 1.5rem;
+}
+.company-info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.7rem;
+  font-size: 1.05rem;
+}
+.company-info-row span:first-child,
+.company-info-row span:nth-child(3) {
+  color: #888;
+  min-width: 80px;
+}
+.company-info-footer {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 1rem;
+}
+.company-info-footer button {
+  background: #f5f6fa;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  color: #333;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.company-info-footer button:hover {
+  background: #e0f7ef;
+}
+.company-info-grid {
+  display: grid;
+  grid-template-columns: 120px 1fr 120px 1fr;
+  row-gap: 1.1rem;
+  column-gap: 0.7rem;
+  align-items: center;
+  margin-bottom: 2.2rem;
+}
+.label {
+  color: #888;
+  font-size: 1.05rem;
+  text-align: left;
+  font-weight: 400;
+}
+.value {
+  color: #222;
+  font-size: 1.08rem;
+  text-align: left;
+  font-weight: 400;
+  word-break: break-all;
+}
+.company-info-extra {
+  display: grid;
+  grid-template-columns: 120px 1fr 120px 1fr;
+  row-gap: 1.1rem;
+  column-gap: 0.7rem;
+  align-items: center;
+}
+.extra-label {
+  color: #888;
+  font-size: 1.05rem;
+  text-align: left;
+  font-weight: 400;
+}
+.extra-value {
+  color: #222;
+  font-size: 1.08rem;
+  text-align: left;
+  font-weight: 400;
+  word-break: break-all;
+  display: flex;
+  align-items: center;
+}
+.lang-icon {
+  width: 22px;
+  height: 22px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+@media (max-width: 600px) {
+  .company-info-card {
+    padding: 1.2rem 0.5rem;
+  }
+  .company-info-grid, .company-info-extra {
+    grid-template-columns: 90px 1fr 90px 1fr;
+    font-size: 0.98rem;
+  }
+} 

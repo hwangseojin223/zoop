@@ -36,6 +36,10 @@ public class GithubSearchResult {
     @JsonProperty("candidateEmail")
     private String candidateEmail;
 
+    @Column(name = "github_name", length = 255)
+    @JsonProperty("githubName")
+    private String githubName;
+
     private LocalDateTime githubSearchDate;
 
     private LocalDateTime githubCreatedAt;
