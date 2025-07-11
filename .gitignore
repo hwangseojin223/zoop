@@ -55,3 +55,4 @@ uploads/
 backend/python-api/chatbot/.env
 backend/python-api/github_search/.env
 backend/python-api/chatbot/__pycache__/
+backend/python-api/interview_analysis/.env

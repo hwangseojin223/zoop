@@ -14,12 +14,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.zoop.backend.domain.dto.FilterRequestDto;
 import com.zoop.backend.domain.dto.GithubSearchResultDto;
-import com.zoop.backend.domain.entity.GithubSearchResult;
 import com.zoop.backend.domain.entity.AiAnalysisResult;
+import com.zoop.backend.domain.entity.GithubSearchResult;
 import com.zoop.backend.domain.entity.JobCandProgress;
+import com.zoop.backend.repository.AiAnalysisResultRepository;
 import com.zoop.backend.repository.GithubSearchResultRepository;
 import com.zoop.backend.repository.JobCandProgressRepository;
-import com.zoop.backend.repository.AiAnalysisResultRepository;
 import com.zoop.backend.service.GithubBridgeService;
 import com.zoop.backend.service.GithubSearchResultService;
 
@@ -154,6 +154,7 @@ public class GithubSearchController {
             aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
             progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
                 c.setJobCandCurrStage(p.getJobCandCurrStage());
+                map.put("jobCandidateId", p.getJobCandidateId());
             });
             return map;
         }).collect(Collectors.toList());
@@ -186,6 +187,7 @@ public class GithubSearchController {
             aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
             progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
                 c.setJobCandCurrStage(p.getJobCandCurrStage());
+                map.put("jobCandidateId", p.getJobCandidateId());
             });
             return map;
         }).collect(Collectors.toList());
@@ -218,6 +220,7 @@ public class GithubSearchController {
             aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
             progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
                 c.setJobCandCurrStage(p.getJobCandCurrStage());
+                map.put("jobCandidateId", p.getJobCandidateId());
             });
             return map;
         }).collect(Collectors.toList());
@@ -250,6 +253,7 @@ public class GithubSearchController {
             aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
             progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
                 c.setJobCandCurrStage(p.getJobCandCurrStage());
+                map.put("jobCandidateId", p.getJobCandidateId());
             });
             return map;
         }).collect(Collectors.toList());
@@ -282,6 +286,7 @@ public class GithubSearchController {
             aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
             progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
                 c.setJobCandCurrStage(p.getJobCandCurrStage());
+                map.put("jobCandidateId", p.getJobCandidateId());
             });
             return map;
         }).collect(Collectors.toList());
@@ -314,6 +319,7 @@ public class GithubSearchController {
             aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
             progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
                 c.setJobCandCurrStage(p.getJobCandCurrStage());
+                map.put("jobCandidateId", p.getJobCandidateId());
             });
             return map;
         }).collect(Collectors.toList());

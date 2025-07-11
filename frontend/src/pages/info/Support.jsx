@@ -3,7 +3,7 @@ import React from 'react';
 function Support() {
   return (
     <div style={{ padding: "3rem", maxWidth: "700px", margin: "0 auto" }}>
-      <h1>고객센터</h1>
+      <h1 style={{ color: "#22c55e" }}>고객센터</h1>
       <p style={{ margin: "1.7rem 0 2.2rem 0", fontSize: "1.13rem" }}>
         ZOOP 서비스 이용 중 궁금한 점이나 불편한 사항이 있으신가요?<br />
         아래 연락처로 문의해주시면 빠르게 답변드리겠습니다.
@@ -26,7 +26,7 @@ function Support() {
       <section style={{ marginTop: "2.2rem" }}>
         <h2 style={{ fontSize: "1.13rem", marginBottom: "0.7rem" }}>자주 묻는 질문</h2>
         <p>
-          궁금한 점은 <span style={{ color: "#1baf90", fontWeight: 600, cursor: "pointer" }} onClick={() => window.location.href='/faq'}>FAQ 페이지</span>도 참고해 주세요.
+          궁금한 점은 <a href="/faq" target="_blank" rel="noopener noreferrer" style={{ color: "#1baf90", fontWeight: 600, cursor: "pointer", textDecoration: "none" }}>FAQ 페이지</a>도 참고해 주세요.
         </p>
       </section>
     </div>

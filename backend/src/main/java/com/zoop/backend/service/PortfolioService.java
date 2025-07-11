@@ -84,7 +84,7 @@ public class PortfolioService {
         // --- 핵심 변경 부분 ---
         // 1. postId와 사용자 candidateId를 사용하여 JobCandProgress 레코드를 찾습니다.
         JobCandProgress jobCandProgress = jobCandProgressRepository
-            .findByPost_PostIdAndCandidate_CandidateId(postId, candidateId) // 또는 findByPostIdAndCandidateId
+            .findByPost_PostIdAndCandidate_CandidateId(postId.longValue(), candidateId.longValue())
             .orElseThrow(() -> new RuntimeException("해당 공고에 대한 후보자 진행 상태를 찾을 수 없습니다."));
 
         // 2. 찾은 JobCandProgress 레코드의 기본 키(job_candidate_id)를 가져옵니다.

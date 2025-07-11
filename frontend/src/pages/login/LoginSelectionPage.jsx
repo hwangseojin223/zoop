@@ -247,6 +247,26 @@ function LoginSelectionPage() {
     }
   };
 
+  // 회원가입 버튼 텍스트와 이동 경로를 동적으로 결정하는 함수
+  const getSignupInfo = () => {
+    if (userType === 'candidate') {
+      return {
+        text: '개인 통합회원 가입',
+        path: '/auth/applicant/signup/process'
+      };
+    } else {
+      return {
+        text: '기업 통합회원 가입',
+        path: '/auth/company/signup/process'
+      };
+    }
+  };
+
+  // 회원가입 버튼 클릭 핸들러
+  const handleSignupClick = () => {
+    const signupInfo = getSignupInfo();
+    navigate(signupInfo.path);
+  };
 
   // == 컴포넌트 렌더링 부분 (JSX) ==
 
@@ -266,8 +286,8 @@ function LoginSelectionPage() {
                 onClick={() => navigate('/')}
               />
             </div>
-            <button type="button" className="signup-button" onClick={() => navigate('/auth/individual/signup')}>
-              개인 통합회원 가입
+            <button type="button" className="signup-button" onClick={handleSignupClick}>
+              {getSignupInfo().text}
             </button>
           </div>
 

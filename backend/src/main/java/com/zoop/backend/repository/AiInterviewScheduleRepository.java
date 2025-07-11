@@ -13,7 +13,8 @@ import com.zoop.backend.domain.entity.AiInterviewSchedule;
  * @author hwangseojin
  */
 @Repository
-public interface AiInterviewScheduleRepository extends JpaRepository<AiInterviewSchedule, Integer> {
-    List<AiInterviewSchedule> findByJobCandidateId(Integer jobCandidateId);
-    Optional<AiInterviewSchedule> findByJobCandidateIdAndAiInterviewScheduleId(Integer jobCandidateId, Integer scheduleId);
+public interface AiInterviewScheduleRepository extends JpaRepository<AiInterviewSchedule, Long> {
+    List<AiInterviewSchedule> findByJobCandProgress_JobCandidateId(Long jobCandidateId);
+    Optional<AiInterviewSchedule> findByJobCandProgress_JobCandidateIdAndAiInterviewScheduleId(Long jobCandidateId, Long scheduleId);
+    List<AiInterviewSchedule> findByAiAnalysisStatus(String analysisStatus);
 }

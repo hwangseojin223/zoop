@@ -21,17 +21,16 @@ import RecruitCreate from './pages/company/RecruitCreate';
 import CandidateList from './pages/company/CandidateList';
 import ResponderList from './pages/company/ResponderList';
 import IdealCandidate from './pages/company/IdealCandidate';
+import InterviewEvaluation from './pages/company/InterviewEvaluation';
 // info - lazy loading으로 변경
 
 // 챗봇 import
 import Chatbot from './components/Chatbot';
 import './components/Chatbot.css';
 // candidate
-import CandidateDashboard from './pages/candidate/CandidateDashboard';
-// PortfolioSubmissionPage 컴포넌트를 임포트합니다. 실제 파일 경로에 맞게 수정해주세요.
-import PortfolioSubmissionPage from './pages/candidate/PortfolioSubmissionPage';
-import InterviewPage from './pages/candidate/InterviewPage';
-import InterviewSession from './pages/candidate/InterviewSession';
+import { CandidateDashboard } from './pages/candidate/Dashboard';
+import { PortfolioSubmissionPage } from './pages/candidate/Portfolio';
+import { InterviewPage, InterviewSession } from './pages/candidate/Interview';
 
 // info - lazy loading으로 변경
 const About = lazy(() => import('./pages/info/About'));
@@ -164,6 +163,14 @@ function AppContent() {
           element={
             <PrivateRoute allowedUserType='candidate'>
               <InterviewSession />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/company/interview-evaluation/:jobCandidateId"
+          element={
+            <PrivateRoute allowedUserType="company">
+              <InterviewEvaluation />
             </PrivateRoute>
           }
         />
