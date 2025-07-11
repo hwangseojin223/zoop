@@ -159,6 +159,7 @@ public class RecruitPostingController {
         return ResponseEntity.ok(post);
     }
 
+<<<<<<< HEAD
     @Operation(summary = "만료된 공고 목록 조회", description = "만료일이 지난 공고들을 조회합니다.")
     @GetMapping("/expired")
     public ResponseEntity<List<Post>> getExpiredPosts() {
@@ -181,6 +182,18 @@ public class RecruitPostingController {
             "message", "만료된 공고 상태 업데이트 완료",
             "updatedCount", updatedCount
         ));
+=======
+    @Operation(summary = "공개 공고 목록 조회", description = "공개용으로 사용할 수 있는 모든 공고 목록을 조회합니다.")
+    @ApiResponses(value={
+        @ApiResponse(responseCode = "200", description = "공개 공고 목록 반환",
+            content = @Content(schema = @Schema(implementation = Post.class))),
+        @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    @GetMapping("/public")
+    public ResponseEntity<List<Post>> getPublicPosts() {
+        List<Post> posts = postService.getPublicPosts();
+        return ResponseEntity.ok(posts);
+>>>>>>> origin/test-experiment-zoop
     }
 
     @Operation(summary = "공고 정보 업데이트", description = "기존 공고의 정보를 업데이트합니다.")

@@ -4,25 +4,33 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.zoop.backend.domain.dto.InvitationSendRequest;
+import com.zoop.backend.domain.dto.modal.InvitationSentDateResponse;
 import com.zoop.backend.domain.entity.Invitation;
 import com.zoop.backend.domain.entity.Post;
 import com.zoop.backend.repository.InvitationRepository;
 import com.zoop.backend.repository.PostRepository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class InvitationService {
 
+    @Value("${zoop.frontend.url:http://localhost:3000}")
+    private String frontendUrl;
+
     private final InvitationRepository invitationRepository;
     private final PostRepository postRepository;
     private final EmailService emailService;
+    private final JobCandProgressService jobCandProgressService;
 
     public void sendInvitation(InvitationSendRequest dto) {
         // 1. 고유 토큰 생성
@@ -58,11 +66,24 @@ public class InvitationService {
                 token, 
                 post
             );
+            
+            // 6. job_cand_progress 테이블의 stage를 2n으로 업데이트
+            jobCandProgressService.updateProgressStageBulk(List.of(dto));
+            log.info("✅ job_cand_curr_stage를 2n으로 업데이트 완료: postId={}, githubLogin={}", dto.getPostId(), dto.getGithubLogin());
+            
         } catch (Exception e) {
             log.error("❌ 메일 발송 실패: {}", e.getMessage(), e);
             invitationRepository.updateStatusById(invitation.getInvitationId(), "failed");
         }
 
-        log.info("📨 메일 발송: 초대 링크 → https://zoop.kr/invite/" + token);
+        log.info("📨 메일 발송: 초대 링크 → " + frontendUrl + "/invite/" + token);
+    }
+
+    /**합친 이후 */
+    public List<InvitationSentDateResponse> getAllInvitationSentDates(Long postId, String githubLogin) {
+        List<Invitation> invitations = invitationRepository.findAllByPostIdAndGithubLoginOrderByInvitationSentDateDesc(postId, githubLogin);
+        return invitations.stream()
+                .map(inv -> new InvitationSentDateResponse(inv.getInvitationSentDate()))
+                .collect(Collectors.toList());
     }
 }

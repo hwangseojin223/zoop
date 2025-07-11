@@ -373,6 +373,11 @@ export default function CandidateList() {
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [modalScore, setModalScore] = useState(0);
 
+  // ============ [CURRENT 버전에서 추가된 기능] ============
+  // 개별 이메일 전송을 위한 로딩 상태 관리
+  const [loadingId, setLoadingId] = useState(null);
+  // ============ [CURRENT 버전에서 추가된 기능 끝] ============
+
   // 실제 데이터 fetch (네가 쓰던 코드 그대로!)
   useEffect(() => {
     // 공고 정보 조회
@@ -423,10 +428,20 @@ export default function CandidateList() {
             portfolioAnalysis: portfolioAnalysis,
             candidateLanguages: candidateLanguages,
             profileUrl: candidate.githubProfileUrl,
+            // ============ [CURRENT 버전에서 추가된 기능] ============
+            // 검색일 정보 추가
+            githubSearchDate: candidate.githubSearchDate,
+            // ============ [CURRENT 버전에서 추가된 기능 끝] ============
             ...candidate
           };
         });
-        setCandidates(mappedCandidates);
+
+        // ============ [CURRENT 버전에서 추가된 기능] ============
+        // 이메일 있는 사람을 먼저, 없는 사람을 나중에 정렬
+        const emailFirst = mappedCandidates.filter(c => c.candidateEmail !== 'not_found@example.com');
+        const noEmail = mappedCandidates.filter(c => c.candidateEmail === 'not_found@example.com');
+        setCandidates([...emailFirst, ...noEmail]);
+        // ============ [CURRENT 버전에서 추가된 기능 끝] ============
         setLoading(false);
       } catch (error) {
         setCandidates([]);
@@ -474,7 +489,7 @@ export default function CandidateList() {
     if (!langs) return [];
     if (Array.isArray(langs)) return langs;
     if (typeof langs === 'string') {
-      return langs.split(/[\s,\/]+/).filter(Boolean);
+      return langs.split(/[\s,/]+/).filter(Boolean);
     }
     return [];
   }
@@ -494,6 +509,42 @@ export default function CandidateList() {
     setSelectedAnalysis(null);
     setModalScore(0);
   };
+
+  // ============ [CURRENT 버전에서 추가된 기능] ============
+  // 개별 이메일 전송 기능
+  const sendInvitation = async (postId, githubLogin, companyAdminId, candidateEmail) => {
+    const payload = {
+      postId: parseInt(postId),
+      githubLogin,
+      companyAdminId,
+      candidateEmail,
+    };
+
+    try {
+      setLoadingId(githubLogin); // 👉 로딩 시작
+
+      const res = await fetch("http://localhost:8081/api/invitations/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        alert("📨 초대 메일을 전송했습니다!");
+        console.log("전달한 데이터 : ", payload);
+      } else {
+        alert("❌ 전송 실패");
+      }
+    } catch (err) {
+      console.error("메일 전송 오류:", err);
+      alert("⚠️ 서버 오류로 전송에 실패했습니다.");
+    } finally {
+      setLoadingId(null); // 👉 로딩 종료
+    }
+  };
+  // ============ [CURRENT 버전에서 추가된 기능 끝] ============
 
   const handleSendMail = () => {
     const selectedEmails = candidates.filter(c => selected.includes(c.githubLogin || c.login)).map(c => c.candidateEmail);
@@ -594,6 +645,54 @@ export default function CandidateList() {
                       onClick={e => { e.stopPropagation(); openAnalysisModal(analysisText, score); }}>
                       <FaExpandAlt /> 전체 분석 보기
                     </ShowAnalysisBtn>
+                    {/* ============ [CURRENT 버전에서 추가된 기능] ============ */}
+                    {/* 개별 이메일 전송 버튼 */}
+                    {email && email !== 'not_found@example.com' && (
+                      <button
+                        onClick={e => { 
+                          e.stopPropagation(); 
+                          sendInvitation(postId, login, 42, email);
+                        }}
+                        disabled={loadingId === login}
+                        style={{
+                          backgroundColor: loadingId === login ? '#ccc' : '#30c59b',
+                          color: 'white',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '999px',
+                          fontWeight: 500,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '160px',
+                          height: '42px',
+                          border: 'none',
+                          cursor: loadingId === login ? 'not-allowed' : 'pointer',
+                          position: 'relative',
+                          opacity: loadingId === login ? 0.6 : 1,
+                          filter: loadingId === login ? 'blur(0.5px)' : 'none',
+                          marginTop: '0.5rem'
+                        }}
+                      >
+                        {loadingId === login ? (
+                          <div
+                            style={{
+                              width: '20px',
+                              height: '20px',
+                              border: '3px solid #fff',
+                              borderTop: '3px solid transparent',
+                              borderRadius: '50%',
+                              animation: 'spin 1s linear infinite'
+                            }}
+                          />
+                        ) : (
+                          <>
+                            <FaEnvelope />
+                            <span>이메일 보내기</span>
+                          </>
+                        )}
+                      </button>
+                    )}
+                    {/* ============ [CURRENT 버전에서 추가된 기능 끝] ============ */}
                   </CandidateCard>
                 );
               })}

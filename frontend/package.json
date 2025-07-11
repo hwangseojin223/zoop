@@ -12,9 +12,11 @@
     "date-fns": "^4.1.0",
     "framer-motion": "^12.12.1",
     "frontend": "file:",
+    "pdfjs-dist": "^4.8.69",
     "react": "^19.1.0",
     "react-datepicker": "^8.4.0",
     "react-dom": "^19.1.0",
+    "react-pdf": "^9.2.1",
     "react-router-dom": "^6.30.0",
     "react-scripts": "5.0.1",
     "recharts": "^2.15.3",
@@ -45,5 +47,10 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.4",
+    "tailwindcss": "^3.4.17"
   }
 }

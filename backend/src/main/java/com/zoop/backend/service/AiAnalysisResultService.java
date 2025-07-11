@@ -28,8 +28,8 @@ public class AiAnalysisResultService {
                 .jobCandidateId(dto.getJobCandidateId())
                 .analysisData(dto.getAnalysisData())
                 .analysisScore(dto.getAnalysisScore())
-                .analysisDate(LocalDateTime.now())
-                .analysisCreatedAt(LocalDateTime.now())
+                .analysisDate(dto.getAnalysisDate() != null ? dto.getAnalysisDate() : LocalDateTime.now())
+                .analysisCreatedAt(dto.getAnalysisCreatedAt() != null ? dto.getAnalysisCreatedAt() : LocalDateTime.now())
                 .build();
 
         AiAnalysisResult saved = aiAnalysisResultRepository.save(entity);
@@ -66,7 +66,18 @@ public class AiAnalysisResultService {
         return aiAnalysisResultRepository.findAll();
     }
 
+<<<<<<< HEAD
     public List<AiAnalysisResult> findByJobCandidateIdAndAnalysisType(Long jobCandidateId, String analysisType) {
         return aiAnalysisResultRepository.findByJobCandidateIdAndAnalysisTypeOrderByAnalysisDateDesc(jobCandidateId, analysisType);
+=======
+    @Transactional
+    public boolean deleteById(Long analysisId) {
+        Optional<AiAnalysisResult> result = aiAnalysisResultRepository.findById(analysisId);
+        if (result.isPresent()) {
+            aiAnalysisResultRepository.deleteById(analysisId);
+            return true;
+        }
+        return false;
+>>>>>>> origin/test-experiment-zoop
     }
 } 

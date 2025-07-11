@@ -122,7 +122,13 @@
 		</dependency>
 		
 
-<!-- Maven -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- Maven -->
 		<dependency>
 		<groupId>io.netty</groupId>
 		<artifactId>netty-resolver-dns-native-macos</artifactId>
@@ -136,6 +142,7 @@
 			 <version>2.25.61</version>
 		</dependency>
 
+		<!-- OpenAI Java Client -->
 		<dependency>
 			<groupId>com.theokanning.openai-gpt3-java</groupId>
 			<artifactId>service</artifactId>

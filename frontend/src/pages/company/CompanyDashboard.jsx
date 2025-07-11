@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Navbar from '../../components/Navbar';
 import CompanySidebar from './CompanySidebar';
+import CandidateModal from '../../components/CandidateModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CompanyDashboard() {
@@ -32,6 +33,10 @@ export default function CompanyDashboard() {
   const [showAiAnalysisModal, setShowAiAnalysisModal] = useState(false);
   const [currentAiAnalysis, setCurrentAiAnalysis] = useState(null);
   const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false);
+  
+  // 모달 상태 (팀 버전에서 추가된 기능)
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
 
   // 로딩 스피너 애니메이션을 위한 CSS
   React.useEffect(() => {
@@ -223,6 +228,7 @@ export default function CompanyDashboard() {
       const mapped = data.map(item => ({
         ...item.candidate,
         jobCandCurrStage: item.candidate.jobCandCurrStage,
+        jobCandidateId: item.jobCandidateId,
         aiAnalysis: item.aiAnalysis || null
       }));
       console.log('매핑된 후보자:', mapped);
@@ -1725,6 +1731,49 @@ export default function CompanyDashboard() {
                                       </button>
                                     </div>
                                   )}
+                                  {/* 면접 평가 버튼 (우측 하단) */}
+                                  {candidate.jobCandCurrStage === '3y' && (
+                                    <div style={{
+                                      position: 'absolute',
+                                      bottom: '1rem',
+                                      right: '1rem'
+                                    }}>
+                                      <button
+                                        onClick={() => {
+                                          // 면접 평가 페이지로 이동
+                                          window.location.href = `/company/interview-evaluation/${selectedPostId}/${candidate.jobCandidateId}`;
+                                        }}
+                                        style={{
+                                          background: 'linear-gradient(135deg, #805ad5 0%, #6b46c1 100%)',
+                                          color: 'white',
+                                          border: 'none',
+                                          borderRadius: '50%',
+                                          width: '40px',
+                                          height: '40px',
+                                          cursor: 'pointer',
+                                          transition: 'all 0.2s',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          boxShadow: '0 2px 8px rgba(128, 90, 213, 0.3)'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                          e.currentTarget.style.transform = 'translateY(-2px) scale(1.1)';
+                                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(128, 90, 213, 0.4)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(128, 90, 213, 0.3)';
+                                        }}
+                                        title="면접 평가"
+                                      >
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                          <path d="M9 12l2 2 4-4"/>
+                                          <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"/>
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  )}
                                   {/* 상태 라벨 */}
                                   {candidate.jobCandCurrStage && (
                                     <div style={{
@@ -1817,6 +1866,37 @@ export default function CompanyDashboard() {
                                         >
                                           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#4a5568' }}>
                                             <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.95 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85.004 1.71.115 2.51.337 1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.85-2.34 4.7-4.57 4.95.36.31.68.92.68 1.85 0 1.33-.01 2.4-.01 2.73 0 .27.16.58.67.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            setSelectedCandidate(candidate);
+                                            setModalOpen(true);
+                                          }}
+                                          style={{
+                                            background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                                            color: 'white',
+                                            border: 'none',
+                                            padding: '0.3rem 0.6rem',
+                                            borderRadius: '6px',
+                                            cursor: 'pointer',
+                                            fontSize: '0.8rem',
+                                            fontWeight: '500',
+                                            transition: 'all 0.2s',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                          }}
+                                          onMouseEnter={(e) => {
+                                            e.currentTarget.style.transform = 'translateY(-1px)';
+                                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.3)';
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                            e.currentTarget.style.boxShadow = 'none';
+                                          }}
+                                          title="상세보기"
+                                        >
+                                          상세보기
                                         </button>
                                       </div>
                                       <div style={{ marginBottom: '0.8rem' }}>
@@ -2443,6 +2523,19 @@ export default function CompanyDashboard() {
           <button onClick={handleDelete} disabled={deleteLoading} style={{ background: 'linear-gradient(135deg, #f56565 0%, #e53e3e 100%)', color: 'white', border: 'none', borderRadius: 8, padding: '0.7rem 1.5rem', fontWeight: 600, fontSize: '1rem', cursor: deleteLoading ? 'not-allowed' : 'pointer', opacity: deleteLoading ? 0.7 : 1 }}>삭제</button>
         </div>
       </Modal>
+      
+      {/* CandidateModal */}
+      {isModalOpen && selectedCandidate && (
+        <CandidateModal
+          candidate={selectedCandidate}
+          isOpen={isModalOpen}
+          onClose={() => {
+            setModalOpen(false);
+            setSelectedCandidate(null);
+          }}
+          postId={selectedPostId}
+        />
+      )}
     </div>
   );
 }

@@ -160,6 +160,7 @@ public class PortfolioController {
         }
     }
 
+<<<<<<< HEAD
     @Operation(summary = "공고별 직접 지원자 조회", description = "특정 공고에 포트폴리오를 제출한 직접 지원자 목록을 조회합니다.")
     @GetMapping("/by-post/{postId}")
     public ResponseEntity<?> getDirectApplicantsByPost(
@@ -216,4 +217,28 @@ public class PortfolioController {
     public ResponseEntity<?> healthCheck() {
         return ResponseEntity.ok("서버가 정상적으로 실행 중입니다.");
     }
+=======
+    @GetMapping("/{jobCandidateId}/submission-date")
+    public ResponseEntity<?> getPortfolioSubmissionDate(@PathVariable Long jobCandidateId) {
+        return portfolioService.getSubmissionDate(jobCandidateId)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(404).body("해당 후보자의 포트폴리오가 존재하지 않습니다."));
+    }
+
+    @Operation(summary = "jobCandidateId로 포트폴리오 조회", description = "jobCandidateId를 사용하여 포트폴리오 정보를 조회합니다.")
+    @GetMapping("/job-candidate/{jobCandidateId}")
+    public ResponseEntity<?> getPortfolioByJobCandidateId(
+            @Parameter(description = "jobCandidateId", required = true)
+            @PathVariable Long jobCandidateId
+    ) {
+        try {
+            return portfolioService.getPortfolioByJobCandidateId(jobCandidateId)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("포트폴리오 조회 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+>>>>>>> origin/test-experiment-zoop
 }

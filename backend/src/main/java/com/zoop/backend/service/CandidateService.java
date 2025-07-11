@@ -14,6 +14,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 import com.zoop.backend.domain.dto.CandidatePreferencesDto;
+import com.zoop.backend.domain.dto.finding.FindGithubLoginRequest;
+import com.zoop.backend.domain.dto.finding.FindGithubLoginResponse;
 import com.zoop.backend.domain.entity.Candidate;
 import com.zoop.backend.repository.CandidateRepository;
 import com.zoop.backend.repository.InvitationRepository;
@@ -38,6 +40,10 @@ public class CandidateService {
 
     public List<Candidate> findAll() {
         return candidateRepository.findAll();
+    }
+
+    public Optional<Candidate> findById(Long candidateId) {
+        return candidateRepository.findById(candidateId);
     }
 
     @Transactional 
@@ -156,5 +162,19 @@ public class CandidateService {
             logger.error("사용자 설정 조회 중 오류 발생: {}", e.getMessage(), e);
             throw e;
         }
+    }
+
+    // 회원가입시 아이디 중복확인을 위한 메서드
+    public boolean isDuplicateGithubLogin(String githubLogin) {
+        return candidateRepository.existsByGithubLogin(githubLogin);
+    }
+
+    /** 합친 이후 */
+    public FindGithubLoginResponse findGithubLogin(FindGithubLoginRequest request) {
+        Candidate candidate = candidateRepository
+                .findByCandidateNameAndCandidateEmail(request.getName(), request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("일치하는 회원이 없습니다."));
+
+        return new FindGithubLoginResponse(candidate.getGithubLogin());
     }
 }

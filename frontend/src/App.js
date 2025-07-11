@@ -12,6 +12,10 @@ import SignupSuccess from './pages/signup/SignupSuccess';
 import ApplicantSignupSuccess from './pages/signup/ApplicantSignupSuccess';
 import ApplicantSignupProcess from './pages/signup/ApplicantSignupProcess';
 import LoginSelectionPage from './pages/login/LoginSelectionPage';
+import FindIdPage from './pages/login/FindIdPage';
+import InvitationHandler from './components/InvitationHandler';
+import FindPasswordPage from './pages/login/FindPasswordPage';
+import ResetPasswordPage from './pages/login/ResetPasswordPage';
 import GoogleAuthCallback from './pages/auth/GoogleAuthCallback';
 import PrivateRoute from './routes/PrivateRoute';
 import PublicOnlyRoute from './routes/PublicOnlyRoute';
@@ -20,14 +24,16 @@ import CompanyDashboard from './pages/company/CompanyDashboard';
 import RecruitCreate from './pages/company/RecruitCreate';
 import CandidateList from './pages/company/CandidateList';
 import ResponderList from './pages/company/ResponderList';
+import StatePage from './pages/company/StatePage';
 import IdealCandidate from './pages/company/IdealCandidate';
+import InterviewEvaluation from './pages/company/InterviewEvaluation';
 // info - lazy loading으로 변경
 
 // 챗봇 import
 import Chatbot from './components/Chatbot';
 import './components/Chatbot.css';
 // candidate
-import CandidateDashboard from './pages/candidate/CandidateDashboard';
+import { CandidateDashboard } from './pages/candidate/Dashboard';
 // PortfolioSubmissionPage 컴포넌트를 임포트합니다. 실제 파일 경로에 맞게 수정해주세요.
 import PortfolioSubmissionPage from './pages/candidate/PortfolioSubmissionPage';
 import InterviewPage from './pages/candidate/InterviewPage';
@@ -75,8 +81,15 @@ function AppContent() {
         <Route path="/auth/applicant/signup/success" element={<ApplicantSignupSuccess />} />
         <Route path="/auth/applicant/signup/process" element={<ApplicantSignupProcess />} />
         <Route path="/auth/applicant/signup/process/:token" element={<ApplicantSignupProcess />} />
+        
+        {/* 메일 링크 처리 라우트 */}
+        <Route path="/invite/:token" element={<InvitationHandler />} />
+        
         <Route path="/auth/login" element={<LoginSelectionPage />} />
         <Route path="/login" element={<LoginSelectionPage />} />
+        <Route path="/find-id" element={<FindIdPage />} />
+        <Route path="/find-password" element={<FindPasswordPage />} />
+        <Route path="/auth/applicant/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/google-auth" element={<GoogleAuthCallback />} />
         <Route path="/about" element={<About />} />
         <Route path="/notice" element={<Notice />} />
@@ -92,6 +105,7 @@ function AppContent() {
             </PrivateRoute>
           }
         />
+        <Route path="/company/state/:postId" element={<StatePage />} />
 
         {/*개인회원 대시보드*/}
         <Route
@@ -129,6 +143,15 @@ function AppContent() {
           element={
             <PrivateRoute allowedUserType="company">
               <IdealCandidate />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/company/interview-evaluation/:postId/:candidateId"
+          element={
+            <PrivateRoute allowedUserType="company">
+              <InterviewEvaluation />
             </PrivateRoute>
           }
         />
