@@ -2,7 +2,11 @@ import React from 'react';
 import './CustomerServicePage.css';
 
 const navLinks = [
+<<<<<<< HEAD
   { label: '고객센터', href: '/customer', active: true },
+=======
+  { label: '고객센터', href: '/support', active: true },
+>>>>>>> feat/93/interview-ai
   { label: '자주 묻는 질문', href: '/faq' },
   { label: '채용 공고', href: '/recruit' },
 ];

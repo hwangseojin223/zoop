@@ -65,7 +65,14 @@ const Navbar = ({ onLangChange }) => {
 
   const handleMenuItemClick = (path) => {
     setMenuOpen(false);
-    if (path) navigate(path);
+    if (path) {
+      // 고객센터와 자주 묻는 질문은 새탭에서 열기
+      if (path === '/support') {
+        window.open(path, '_blank');
+      } else {
+        navigate(path);
+      }
+    }
   };
 
   return (

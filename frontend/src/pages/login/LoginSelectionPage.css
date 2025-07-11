@@ -168,6 +168,8 @@ html {
     box-shadow: 0 4px 10px rgba(40, 167, 69, 0.15); 
     z-index: 1; 
     will-change: transform, box-shadow;
+    min-width: 200px; /* 버튼 너비 고정으로 텍스트 변경 시 레이아웃 안정화 */
+    text-align: center;
 }
 
 /* ✅ 회원가입 버튼 호버 스타일 */
@@ -284,6 +286,7 @@ html {
     border-color: #30C59B;
     box-shadow: 0 0 0 3px rgba(48, 197, 155, 0.2); /* ✨ Refined: Larger, softer focus glow */
     background-color: #fff;
+<<<<<<< HEAD
 }
 
 /* ✅ 블록 처리된 입력 필드 스타일 */
@@ -304,6 +307,8 @@ html {
 .input-note {
     margin-top: 4px;
     padding-left: 2px;
+=======
+>>>>>>> feat/93/interview-ai
 }
 /* Placeholder styling for a softer look */
 .input-group input::placeholder {

@@ -64,9 +64,10 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
             ON jcp.job_candidate_id = ar.job_candidate_id 
             AND ar.analysis_type = 'portfolio'
         WHERE 
-            jcp.job_cand_curr_stage = '3n'
+            jcp.job_cand_curr_stage = '2y'
             AND jcp.post_id = :postId
     """, nativeQuery = true)
+<<<<<<< HEAD
     List<ResponderDto> findCandidatesAtStage3nByPost(@Param("postId") Long postId);
 
     //  @Query(value = """
@@ -96,6 +97,9 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
     //         AND jcp.post_id = :postId
     // """, nativeQuery = true)
     // List<ResponderDto> findCandidatesAtStage2yByPost(@Param("postId") Long postId);
+=======
+    List<ResponderDto> findCandidatesAtStage2yByPost(@Param("postId") Long postId);
+>>>>>>> feat/93/interview-ai
 
     // post와 githubLogin으로 JobCandProgress 조회
     Optional<JobCandProgress> findByPost_PostIdAndGithubLogin(Long postId, String githubLogin);
@@ -132,12 +136,18 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
 
     @Query(value = "SELECT * FROM job_cand_progress WHERE post_id = :postId AND candidate_id = :candidateId", nativeQuery = true)
     Optional<JobCandProgress> findByPost_PostIdAndCandidate_CandidateId(
+<<<<<<< HEAD
         @Param("postId") Integer postId, 
         @Param("candidateId") Integer candidateId
+=======
+        @Param("postId") Long postId, 
+        @Param("candidateId") Long candidateId
+>>>>>>> feat/93/interview-ai
     );
 
     Optional<JobCandProgress> findByJobCandidateId(Long jobCandidateId);
 
+<<<<<<< HEAD
     // postId와 candidateId로 JobCandProgress 조회
     Optional<JobCandProgress> findByPost_PostIdAndCandidate_CandidateId(Long postId, Long candidateId);
 
@@ -155,3 +165,17 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
     int updateCandidateIdByPostIdAndGithubLogin(@Param("postId") Long postId, @Param("githubLogin") String githubLogin, @Param("candidateId") Long candidateId);
 
 }
+=======
+    // 추가된 메서드
+    List<JobCandProgress> findByPost_PostIdAndJobCandCurrStage(Long postId, String stage);
+    
+    // 모든 postId로 조회하는 메서드 추가
+    List<JobCandProgress> findByPost_PostId(Long postId);
+
+    // aiIntrvwScheduleId로 JobCandProgress 조회
+    Optional<JobCandProgress> findByAiIntrvwScheduleId(Long aiIntrvwScheduleId);
+
+    // githubLogin으로 JobCandProgress 조회
+    Optional<JobCandProgress> findByGithubLogin(String githubLogin);
+} 
+>>>>>>> feat/93/interview-ai

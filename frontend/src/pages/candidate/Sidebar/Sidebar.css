@@ -30,6 +30,7 @@
   padding: 0 24px;
   margin-bottom: 32px;
   transition: transform 0.2s ease;
+  cursor: pointer;
 }
 
 .logo-link:hover {
