@@ -12,8 +12,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.zoop.backend.domain.dto.FilterRequestDto;
 import com.zoop.backend.domain.dto.GithubSearchResultDto;
+import com.zoop.backend.domain.dto.GithubSearchResultWithStageDto;
 import com.zoop.backend.domain.entity.GithubSearchResult;
 import com.zoop.backend.domain.entity.AiAnalysisResult;
 import com.zoop.backend.domain.entity.JobCandProgress;
@@ -157,6 +168,7 @@ public class GithubSearchController {
             aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
             progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
                 c.setJobCandCurrStage(p.getJobCandCurrStage());
+                map.put("jobCandidateId", p.getJobCandidateId());
             });
             return map;
         }).collect(Collectors.toList());
@@ -200,6 +212,7 @@ public class GithubSearchController {
             aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
             progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
                 c.setJobCandCurrStage(p.getJobCandCurrStage());
+                map.put("jobCandidateId", p.getJobCandidateId());
             });
             return map;
         }).collect(Collectors.toList());
@@ -232,6 +245,7 @@ public class GithubSearchController {
             aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
             progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
                 c.setJobCandCurrStage(p.getJobCandCurrStage());
+                map.put("jobCandidateId", p.getJobCandidateId());
             });
             return map;
         }).collect(Collectors.toList());
@@ -264,6 +278,7 @@ public class GithubSearchController {
             aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
             progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
                 c.setJobCandCurrStage(p.getJobCandCurrStage());
+                map.put("jobCandidateId", p.getJobCandidateId());
             });
             return map;
         }).collect(Collectors.toList());
@@ -296,6 +311,7 @@ public class GithubSearchController {
             aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
             progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
                 c.setJobCandCurrStage(p.getJobCandCurrStage());
+                map.put("jobCandidateId", p.getJobCandidateId());
             });
             return map;
         }).collect(Collectors.toList());
@@ -328,12 +344,14 @@ public class GithubSearchController {
             aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
             progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
                 c.setJobCandCurrStage(p.getJobCandCurrStage());
+                map.put("jobCandidateId", p.getJobCandidateId());
             });
             return map;
         }).collect(Collectors.toList());
         return ResponseEntity.ok(result);
     }
 
+<<<<<<< HEAD
     @Operation(summary = "게시글 ID로 추가 지원자 조회", description = "특정 채용 공고에 직접 지원한 추가 지원자 목록을 조회합니다.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "추가 지원자 목록 반환",
@@ -402,5 +420,12 @@ public class GithubSearchController {
         }).collect(Collectors.toList());
         
         return ResponseEntity.ok(result);
+=======
+        // 20250626
+    @Operation(summary = "job_cand_curr_stage를 조회하기 위함.", description = "")
+    @GetMapping("/{postId}/states")
+    public List<GithubSearchResultWithStageDto> getSearchResults(@PathVariable Long postId) {
+        return githubSearchResultService.getSearchResultsWithStage(postId);
+>>>>>>> origin/test-experiment-zoop
     }
 }

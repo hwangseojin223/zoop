@@ -23,6 +23,7 @@ import com.zoop.backend.service.AiAnalysisResultService;
 
 import com.zoop.backend.domain.dto.CareerDataDto;
 import com.zoop.backend.domain.dto.PortfolioSubmissionResponseDto;
+import com.zoop.backend.domain.dto.modal.PortfolioSubmissionDateResponse;
 import com.zoop.backend.domain.entity.Candidate;
 import com.zoop.backend.domain.entity.CandidateJobExperience;
 import com.zoop.backend.domain.entity.JobCandProgress;
@@ -113,6 +114,7 @@ public class PortfolioService {
         // --- 핵심 변경 부분 ---
         // 1. postId와 사용자 candidateId를 사용하여 JobCandProgress 레코드를 찾거나 생성합니다.
         JobCandProgress jobCandProgress = jobCandProgressRepository
+<<<<<<< HEAD
             .findByPost_PostIdAndCandidate_CandidateId(postId, candidateId)
             .orElseGet(() -> {
                 // 레코드가 없으면 새로 생성
@@ -135,6 +137,10 @@ public class PortfolioService {
                 
                 return jobCandProgressRepository.save(newProgress);
             });
+=======
+            .findByPost_PostIdAndCandidate_CandidateId(postId.longValue(), candidateId.longValue())
+            .orElseThrow(() -> new RuntimeException("해당 공고에 대한 후보자 진행 상태를 찾을 수 없습니다."));
+>>>>>>> origin/test-experiment-zoop
 
         // 2. 찾은 JobCandProgress 레코드의 기본 키(job_candidate_id)를 가져옵니다.
         //    이것이 portfolios 테이블의 job_candidate_id에 들어가야 할 실제 값입니다.
@@ -287,6 +293,7 @@ public class PortfolioService {
         return portfolioRepository.findById(portfolioId);
     }
 
+<<<<<<< HEAD
     public Map<String, Object> getRecentPortfolioByCandidate(Integer candidateId) {
         System.out.println("[PortfolioService] getRecentPortfolioByCandidate 호출 - candidateId: " + candidateId);
         
@@ -446,4 +453,22 @@ public class PortfolioService {
         } catch (Exception ignore) {}
         return null;
     }
+=======
+    public String getFilePathByJobCandId(Long jobCandidateId) {
+        // PortfolioRepository에 해당 메서드가 없으므로 임시로 null 반환
+        return null;
+    }
+
+    /**합친 이후 */
+    public Optional<PortfolioSubmissionDateResponse> getSubmissionDate(Long jobCandidateId) {
+        return portfolioRepository.findByJobCandidateId(jobCandidateId.intValue()).stream()
+                .findFirst()
+                .map(p -> new PortfolioSubmissionDateResponse(p.getPortfolioSubmissionDate().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()));
+    }
+
+    public Optional<Portfolio> getPortfolioByJobCandidateId(Long jobCandidateId) {
+        return portfolioRepository.findByJobCandidateId(jobCandidateId.intValue()).stream()
+                .findFirst();
+    }
+>>>>>>> origin/test-experiment-zoop
 }

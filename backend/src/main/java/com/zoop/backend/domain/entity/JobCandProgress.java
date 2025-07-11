@@ -36,18 +36,12 @@ public class JobCandProgress {
     @Column(name = "job_candidate_id")
     private Long jobCandidateId;
 
-    // @Column(name = "post_id")
-    // private Long postId;
-    // Post 엔티티와의 ManyToOne 관계 매핑 추가
-    @ManyToOne // JobCandProgress는 하나의 Post에 속합니다.
-    @JoinColumn(name = "post_id", nullable = false) // JobCandProgress 테이블의 post_id 컬럼과 매핑
+    @ManyToOne
+    @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 
-    // @Column(name = "candidate_id")
-    // private Long candidateId;
-    // Candidate 엔티티와의 ManyToOne 관계 매핑 추가
-    @ManyToOne // JobCandProgress는 하나의 Candidate에 속합니다.
-    @JoinColumn(name = "candidate_id", nullable = false) // JobCandProgress 테이블의 candidate_id 컬럼과 매핑
+    @ManyToOne
+    @JoinColumn(name = "candidate_id", nullable = false)
     private Candidate candidate; 
 
     @Column(name = "invitation_id")
@@ -88,5 +82,4 @@ public class JobCandProgress {
 
     @Column(name = "github_login", length = 255)
     private String githubLogin;
-
 }

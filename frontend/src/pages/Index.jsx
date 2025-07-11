@@ -17,7 +17,7 @@ const WAVE_STROKE = 2.1;
 
 export default function Index() {
   const navigate = useNavigate();
-  const { authState, setAuthState } = useAuth();
+  // const { authState, setAuthState } = useAuth(); // 사용하지 않는 변수 주석 처리
   const [mountTime] = useState(() => performance.now());
 
   // 메인페이지 로드 시 Navbar 스타일 강제 재적용

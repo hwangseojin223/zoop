@@ -20,10 +20,13 @@ function LoginSelectionPage() {
 
   // navigate state에서 githubLogin과 메시지 가져오기
   useEffect(() => {
+    console.log('LoginSelectionPage - location.state:', location.state);
     if (location.state?.githubLogin) {
+      console.log('LoginSelectionPage - githubLogin 설정:', location.state.githubLogin);
       setLoginId(location.state.githubLogin);
     }
     if (location.state?.message) {
+      console.log('LoginSelectionPage - message 설정:', location.state.message);
       setError(location.state.message);
     }
   }, [location.state]);
@@ -41,6 +44,20 @@ function LoginSelectionPage() {
        // prompt: 'consent', // 동의 화면 항상 표시 (개발 또는 테스트 시 유용)
     }
   };
+
+  //-------------------------------------------------------------------------
+  // 초대 링크 누르고 들어온 사람이 회원가입이 되어있는 경우 -> 지훈추가
+  //-------------------------------------------------------------------------
+  const fromInvite = location.state?.fromInvite || false;  // location.state가 존재하고 그 안에 fromInvite가 있으면 그 값을 쓰고, 없으면 false
+  const presetGithubLogin = location.state?.githubLogin || ''; // 마찬가지로 state에서 넘어온 githubLogin이 있으면 쓰고, 없으면 빈 문자열로 초기화
+
+  useEffect(() => {
+    if (fromInvite && presetGithubLogin) {
+      setLoginId(presetGithubLogin); // 👈 아이디 자동 기입
+    }
+  }, [fromInvite, presetGithubLogin]);
+
+  //-------------------------------------------------------------------------
 
   useEffect(() => {
     const savedId = localStorage.getItem('savedLoginId');
@@ -125,6 +142,49 @@ function LoginSelectionPage() {
         } else {
           localStorage.removeItem('savedLoginId');
           localStorage.removeItem('savedUserType');
+        }
+
+        // 초대 링크를 통한 로그인인 경우 candidate_id 업데이트
+        if (location.state?.fromInvite && location.state?.token && receivedUserType === 'candidate') {
+          try {
+            // invitation 테이블 업데이트
+            const invitationResponse = await fetch('http://localhost:8081/api/invitations/update-candidate-id', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                token: location.state.token,
+                githubLogin: location.state.githubLogin
+              })
+            });
+            
+            if (invitationResponse.ok) {
+              console.log('✅ Invitation candidate_id 업데이트 성공');
+            } else {
+              console.warn('⚠️ Invitation candidate_id 업데이트 실패:', await invitationResponse.text());
+            }
+
+            // job_cand_progress 테이블 업데이트
+            const progressResponse = await fetch('http://localhost:8081/api/progress/update-candidate-id', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                invitationToken: location.state.token,
+                candidateId: receivedUserId
+              })
+            });
+            
+            if (progressResponse.ok) {
+              console.log('✅ JobCandProgress candidate_id 업데이트 성공');
+            } else {
+              console.warn('⚠️ JobCandProgress candidate_id 업데이트 실패:', await progressResponse.text());
+            }
+          } catch (error) {
+            console.error('❌ candidate_id 업데이트 중 오류:', error);
+          }
         }
 
         alert('로그인 성공!');
@@ -247,6 +307,26 @@ function LoginSelectionPage() {
     }
   };
 
+  // 회원가입 버튼 텍스트와 이동 경로를 동적으로 결정하는 함수
+  const getSignupInfo = () => {
+    if (userType === 'candidate') {
+      return {
+        text: '개인 통합회원 가입',
+        path: '/auth/applicant/signup/process'
+      };
+    } else {
+      return {
+        text: '기업 통합회원 가입',
+        path: '/auth/company/signup/process'
+      };
+    }
+  };
+
+  // 회원가입 버튼 클릭 핸들러
+  const handleSignupClick = () => {
+    const signupInfo = getSignupInfo();
+    navigate(signupInfo.path);
+  };
 
   // == 컴포넌트 렌더링 부분 (JSX) ==
 
@@ -266,8 +346,8 @@ function LoginSelectionPage() {
                 onClick={() => navigate('/')}
               />
             </div>
-            <button type="button" className="signup-button" onClick={() => navigate('/auth/individual/signup')}>
-              개인 통합회원 가입
+            <button type="button" className="signup-button" onClick={handleSignupClick}>
+              {getSignupInfo().text}
             </button>
           </div>
 
@@ -297,8 +377,17 @@ function LoginSelectionPage() {
                   placeholder="아이디"
                   value={loginId}
                   onChange={(e) => setLoginId(e.target.value)}
+                  disabled={location.state?.fromInvite}
+                  className={location.state?.fromInvite ? 'disabled-input' : ''}
                   required
                 />
+                {location.state?.fromInvite && (
+                  <div className="input-note">
+                    <small style={{ color: '#059669', fontSize: '12px' }}>
+                      초대 링크를 통해 자동 설정된 아이디입니다.
+                    </small>
+                  </div>
+                )}
               </div>
               <div className="input-group">
                 <input

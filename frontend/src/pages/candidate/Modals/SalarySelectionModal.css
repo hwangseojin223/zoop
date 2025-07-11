@@ -1,0 +1,106 @@
+/* SalarySelectionModal.css */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.salary-modal-content { /* 연봉 모달 전용 콘텐츠 스타일 */
+  background-color: white; /* JobSelectionModal과 동일하게 흰색 배경 */
+  padding: 0;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* 그림자도 JobSelectionModal과 유사하게 */
+  width: 90%;
+  max-width: 320px; /* JobSelectionModal과 유사한 너비 */
+  max-height: 80vh; /* 높이 조절 */
+  overflow-y: auto; /* 내용이 많으면 스크롤 */
+  display: flex;
+  flex-direction: column;
+}
+
+.salary-modal-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #f0f0f0; /* JobSelectionModal과 동일한 테두리 */
+}
+
+.salary-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333; /* JobSelectionModal과 동일한 텍스트 색상 */
+  text-align: center;
+}
+
+.salary-modal-body {
+  flex-grow: 1;
+  padding: 10px 0;
+}
+
+.salary-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.salary-list li {
+  padding: 12px 20px;
+  font-size: 16px;
+  color: #333; /* JobSelectionModal과 동일한 텍스트 색상 */
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.salary-list li:hover {
+  background-color: #f5f5f5; /* JobSelectionModal과 동일한 호버 색상 */
+}
+
+.salary-list li.selected {
+  background-color: #e6f7ff; /* JobSelectionModal과 동일한 선택 배경색 */
+  color: #30C59B; /* JobSelectionModal과 동일한 선택 텍스트 색상 */
+  font-weight: 600;
+}
+
+.salary-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 15px 20px;
+  border-top: 1px solid #f0f0f0; /* JobSelectionModal과 동일한 테두리 */
+}
+
+.salary-modal-footer .cancel-button,
+.salary-modal-footer .confirm-button {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.salary-modal-footer .cancel-button {
+  background-color: #f0f0f0; /* JobSelectionModal과 동일한 배경색 */
+  color: #555; /* JobSelectionModal과 동일한 텍스트 색상 */
+}
+
+.salary-modal-footer .cancel-button:hover {
+  background-color: #e2e2e2; /* JobSelectionModal과 동일한 호버 색상 */
+}
+
+.salary-modal-footer .confirm-button {
+  background-color: #30C59B; /* JobSelectionModal과 동일한 파란색 배경 */
+  color: white;
+}
+
+.salary-modal-footer .confirm-button:hover {
+  background-color: #30C59B; /* JobSelectionModal과 동일한 호버 색상 */
+}

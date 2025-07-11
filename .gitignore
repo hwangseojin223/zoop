@@ -31,9 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
 # application.yml 무시 (서로 다른 DB 설정용)
 backend/src/main/resources/application.yaml
 backend/src/main/resources/application.yml
+
 # 빌드 디렉토리 무시
 backend/target/
 
@@ -46,12 +48,98 @@ backend/target/
 *.env
 **/.env
 **/.env.*
-backend/target/backend/target/
-backend\python-api\github_search\__pycache__
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
 
 # Upload directories
 backend/uploads/
 uploads/
+
+# Python API specific ignores
 backend/python-api/chatbot/.env
 backend/python-api/github_search/.env
+backend/python-api/interview_analysis/.env
+backend/python-api/interview_questions/.env
 backend/python-api/chatbot/__pycache__/
+backend/python-api/github_search/__pycache__/
+backend/python-api/interview_analysis/__pycache__/
+backend/python-api/interview_questions/__pycache__/
+
+# Node modules and package files
+node_modules/
+package-lock.json
+yarn.lock
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+
+backend/python-api/github_search/.env
+backend/python-api/chatbot/.env
+backend/python-api/interview_questions/.env
+backend/python-api/interview_analysis/.env
+
+backend/python-api/chatbot/__pycache__
+frontend/.env
