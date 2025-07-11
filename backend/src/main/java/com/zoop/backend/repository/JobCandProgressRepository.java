@@ -73,9 +73,21 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
 
     @Query(value = "SELECT * FROM job_cand_progress WHERE post_id = :postId AND candidate_id = :candidateId", nativeQuery = true)
     Optional<JobCandProgress> findByPost_PostIdAndCandidate_CandidateId(
-        @Param("postId") Integer postId, 
-        @Param("candidateId") Integer candidateId
+        @Param("postId") Long postId, 
+        @Param("candidateId") Long candidateId
     );
 
     Optional<JobCandProgress> findByJobCandidateId(Long jobCandidateId);
-}
+
+    // 추가된 메서드
+    List<JobCandProgress> findByPost_PostIdAndJobCandCurrStage(Long postId, String stage);
+    
+    // 모든 postId로 조회하는 메서드 추가
+    List<JobCandProgress> findByPost_PostId(Long postId);
+
+    // aiIntrvwScheduleId로 JobCandProgress 조회
+    Optional<JobCandProgress> findByAiIntrvwScheduleId(Long aiIntrvwScheduleId);
+
+    // githubLogin으로 JobCandProgress 조회
+    Optional<JobCandProgress> findByGithubLogin(String githubLogin);
+} 

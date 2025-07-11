@@ -65,4 +65,14 @@ public class AiAnalysisResultService {
     public List<AiAnalysisResult> findAll() {
         return aiAnalysisResultRepository.findAll();
     }
+
+    @Transactional
+    public boolean deleteById(Long analysisId) {
+        Optional<AiAnalysisResult> result = aiAnalysisResultRepository.findById(analysisId);
+        if (result.isPresent()) {
+            aiAnalysisResultRepository.deleteById(analysisId);
+            return true;
+        }
+        return false;
+    }
 } 

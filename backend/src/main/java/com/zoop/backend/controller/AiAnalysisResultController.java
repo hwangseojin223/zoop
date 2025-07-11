@@ -94,4 +94,22 @@ public class AiAnalysisResultController {
         List<AiAnalysisResult> results = aiAnalysisResultService.findByAnalysisType(analysisType);
         return ResponseEntity.ok(results);
     }
+
+    @Operation(summary = "AI 분석 결과 삭제", description = "특정 AI 분석 결과를 삭제합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "AI 분석 결과 삭제 성공"),
+        @ApiResponse(responseCode = "404", description = "AI 분석 결과 없음")
+    })
+    @DeleteMapping("/{analysisId}")
+    public ResponseEntity<Void> deleteAiAnalysisResult(
+        @Parameter(description = "AI 분석 결과 ID", required = true, example = "1")
+        @PathVariable Long analysisId) {
+        
+        boolean deleted = aiAnalysisResultService.deleteById(analysisId);
+        if (deleted) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
 } 

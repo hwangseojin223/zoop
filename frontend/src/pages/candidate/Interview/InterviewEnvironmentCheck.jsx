@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './InterviewEnvironmentCheck.css';
 import { useNavigate, useParams } from 'react-router-dom';
+import CameraDebug from '../../../components/CameraDebug';
 
 const SENTENCES = [
   '나는 무엇이든 할 수 있는 사람이다.',
@@ -127,8 +128,10 @@ function InterviewEnvironmentCheck({ onComplete }) {
   const [selectedSentence, setSelectedSentence] = useState('');
   const [micLevel, setMicLevel] = useState(0);
   const [voiceSuccess, setVoiceSuccess] = useState(false);
-  const [faceSuccess] = useState(true); // Always true for now
+  const [faceSuccess, setFaceSuccess] = useState(false); // 카메라 성공 여부
   const [stream, setStream] = useState(null);
+  const [cameraError, setCameraError] = useState(null);
+  const [cameraLoading, setCameraLoading] = useState(true);
   const videoRef = useRef(null);
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
@@ -137,6 +140,7 @@ function InterviewEnvironmentCheck({ onComplete }) {
   const [testActive, setTestActive] = useState(false);
   const [voiceDetected, setVoiceDetected] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
 
   useEffect(() => {
     setSelectedSentence(SENTENCES[Math.floor(Math.random() * SENTENCES.length)]);
@@ -144,16 +148,57 @@ function InterviewEnvironmentCheck({ onComplete }) {
 
   useEffect(() => {
     async function startMedia() {
-      const userStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      setStream(userStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = userStream;
+      try {
+        setCameraLoading(true);
+        setCameraError(null);
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('이 브라우저는 카메라 접근을 지원하지 않습니다.');
+        }
+        const userStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+          audio: true
+        });
+        setStream(userStream);
+        setFaceSuccess(true);
+        if (videoRef.current) {
+          videoRef.current.srcObject = userStream;
+          videoRef.current.onloadedmetadata = () => {
+            setCameraLoading(false);
+          };
+          console.log('videoRef.current:', videoRef.current);
+          console.log('userStream:', userStream);
+        } else {
+          setTimeout(() => {
+            if (videoRef.current) {
+              videoRef.current.srcObject = userStream;
+              videoRef.current.onloadedmetadata = () => {
+                setCameraLoading(false);
+              };
+              console.log('videoRef.current (retry):', videoRef.current);
+              console.log('userStream (retry):', userStream);
+            }
+          }, 100);
+        }
+        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioContextRef.current.createMediaStreamSource(userStream);
+        analyserRef.current = audioContextRef.current.createAnalyser();
+        analyserRef.current.fftSize = 256;
+        source.connect(analyserRef.current);
+      } catch (err) {
+        console.error('카메라 접근 오류:', err);
+        setCameraLoading(false);
+        setFaceSuccess(false);
+        
+        if (err.name === 'NotAllowedError') {
+          setCameraError('카메라 접근이 거부되었습니다. 브라우저에서 카메라 권한을 허용해주세요.');
+        } else if (err.name === 'NotFoundError') {
+          setCameraError('카메라를 찾을 수 없습니다. 카메라가 연결되어 있는지 확인해주세요.');
+        } else if (err.name === 'NotReadableError') {
+          setCameraError('카메라가 다른 프로그램에서 사용 중입니다. 다른 프로그램을 종료하고 다시 시도해주세요.');
+        } else {
+          setCameraError(`카메라 접근 중 오류가 발생했습니다: ${err.message}`);
+        }
       }
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      const source = audioContextRef.current.createMediaStreamSource(userStream);
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      analyserRef.current.fftSize = 256;
-      source.connect(analyserRef.current);
     }
     startMedia();
     return () => {
@@ -202,6 +247,50 @@ function InterviewEnvironmentCheck({ onComplete }) {
     setVoiceDetected(false);
     setMicLevel(0);
   };
+
+  const retryCamera = async () => {
+    setCameraError(null);
+    setCameraLoading(true);
+    
+    // 기존 스트림 정리
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    
+    // 새 스트림 시작
+    try {
+      const userStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: 'user'
+        }, 
+        audio: true 
+      });
+      
+      setStream(userStream);
+      setFaceSuccess(true);
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = userStream;
+        videoRef.current.onloadedmetadata = () => {
+          setCameraLoading(false);
+        };
+      }
+      
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioContextRef.current.createMediaStreamSource(userStream);
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      analyserRef.current.fftSize = 256;
+      source.connect(analyserRef.current);
+    } catch (err) {
+      console.error('카메라 재시도 오류:', err);
+      setCameraLoading(false);
+      setFaceSuccess(false);
+      setCameraError('카메라 재시도에 실패했습니다. 브라우저를 새로고침하거나 다른 브라우저를 사용해주세요.');
+    }
+  };
   const handleComplete = () => {
     setShowGuide(true);
     setStep('guide');
@@ -228,6 +317,99 @@ function InterviewEnvironmentCheck({ onComplete }) {
     return <InterviewGuideSlides onStart={handleGuideStart} />;
   }
 
+  // 디버그 모달 표시
+  if (showDebug) {
+    return <CameraDebug onClose={() => setShowDebug(false)} />;
+  }
+
+  // 카메라 에러가 있을 때
+  if (cameraError) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafbfc' }}>
+        <div style={{ 
+          background: 'white', 
+          borderRadius: 24, 
+          boxShadow: '0 12px 48px rgba(0,0,0,0.12)', 
+          padding: 48, 
+          width: 500, 
+          textAlign: 'center' 
+        }}>
+          <div style={{ fontSize: 48, marginBottom: 24 }}>📹</div>
+          <h2 style={{ color: '#ff6b6b', marginBottom: 16, fontSize: 24, fontWeight: 700 }}>
+            카메라 접근 오류
+          </h2>
+          <p style={{ color: '#666', marginBottom: 32, lineHeight: 1.6, fontSize: 16 }}>
+            {cameraError}
+          </p>
+          <div style={{ 
+            background: '#f8f9fa', 
+            padding: 20, 
+            borderRadius: 12, 
+            marginBottom: 32,
+            textAlign: 'left',
+            fontSize: 14,
+            color: '#555'
+          }}>
+            <h4 style={{ marginBottom: 12, color: '#333' }}>해결 방법:</h4>
+            <ul style={{ margin: 0, paddingLeft: 20 }}>
+              <li>브라우저 주소창 옆의 카메라 아이콘을 클릭하여 권한 허용</li>
+              <li>다른 프로그램에서 카메라를 사용 중이라면 종료</li>
+              <li>브라우저를 새로고침하거나 재시작</li>
+              <li>Chrome, Firefox, Safari 등 최신 브라우저 사용</li>
+            </ul>
+          </div>
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
+            <button
+              onClick={retryCamera}
+              style={{
+                padding: '12px 24px',
+                borderRadius: 8,
+                border: 'none',
+                background: '#30C59B',
+                color: 'white',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: 16
+              }}
+            >
+              다시 시도
+            </button>
+            <button
+              onClick={() => setShowDebug(true)}
+              style={{
+                padding: '12px 24px',
+                borderRadius: 8,
+                border: '1px solid #007bff',
+                background: 'white',
+                color: '#007bff',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: 16
+              }}
+            >
+              디버그 정보
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              style={{
+                padding: '12px 24px',
+                borderRadius: 8,
+                border: '1px solid #ddd',
+                background: 'white',
+                color: '#666',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: 16
+              }}
+            >
+              페이지 새로고침
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafbfc' }}>
       <div style={{ background: 'white', borderRadius: 32, boxShadow: '0 12px 48px rgba(0,0,0,0.12)', padding: 56, width: 600, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -239,7 +421,19 @@ function InterviewEnvironmentCheck({ onComplete }) {
           </div>
         )}
         <div style={{ position: 'relative', width: 480, height: 300, marginBottom: 24 }}>
-          <video ref={videoRef} autoPlay playsInline style={{ width: 480, height: 300, background: '#000', borderRadius: 20, objectFit: 'cover' }} />
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            style={{
+              width: 480,
+              height: 300,
+              background: '#000',
+              borderRadius: 20,
+              objectFit: 'cover'
+            }}
+          />
         </div>
         {step === 'result' && (
           <div style={{ width: '100%', marginBottom: 32, background: '#fff', borderRadius: 16, border: '1px solid #f0f0f0', padding: 0, boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}>

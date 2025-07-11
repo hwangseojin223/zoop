@@ -1,6 +1,7 @@
 package com.zoop.backend.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,7 @@ public class AiInterviewVideoService {
 
     @Transactional
     public AiInterviewVideo uploadInterviewVideo(Integer scheduleId, Integer questionNumber, String questionContent, MultipartFile videoFile) throws Exception {
-        AiInterviewSchedule schedule = aiInterviewScheduleRepository.findById(scheduleId)
+        AiInterviewSchedule schedule = aiInterviewScheduleRepository.findById(scheduleId.longValue())
                 .orElseThrow(() -> new RuntimeException("해당 면접 일정을 찾을 수 없습니다."));
         // S3 업로드
         String videoUrl = s3Service.uploadInterviewVideoFile(videoFile);
@@ -47,8 +48,21 @@ public class AiInterviewVideoService {
         AiInterviewVideo saved = aiInterviewVideoRepository.save(video);
         // 마지막 질문(3번) 업로드 시 면접 완료 처리
         if (questionNumber == 3) {
-            aiInterviewScheduleService.completeInterview(scheduleId);
+            aiInterviewScheduleService.completeInterview(scheduleId.longValue());
         }
         return saved;
+    }
+
+    public List<AiInterviewVideo> findByScheduleId(Integer scheduleId) {
+        return aiInterviewVideoRepository.findByAiInterviewSchedule_AiInterviewScheduleId(scheduleId);
+    }
+
+    public AiInterviewVideo findById(Long videoId) {
+        return aiInterviewVideoRepository.findById(videoId)
+                .orElseThrow(() -> new RuntimeException("해당 영상을 찾을 수 없습니다."));
+    }
+
+    public List<AiInterviewVideo> getVideosByJobCandidateId(Long jobCandidateId) {
+        return aiInterviewVideoRepository.findByAiInterviewSchedule_JobCandProgress_JobCandidateId(jobCandidateId);
     }
 } 

@@ -37,7 +37,7 @@ public class AiInterviewVideo {
     @Column(name = "video_id")
     private Long videoId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ai_intrvw_schedule_id", nullable = false)
     private AiInterviewSchedule aiInterviewSchedule;
 

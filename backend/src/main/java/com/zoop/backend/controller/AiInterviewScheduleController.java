@@ -17,9 +17,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.zoop.backend.domain.dto.InterviewScheduleRequestDto;
 import com.zoop.backend.domain.dto.InterviewScheduleResponseDto;
+import com.zoop.backend.domain.entity.AiInterviewSchedule;
 import com.zoop.backend.service.AiInterviewScheduleService;
+import com.zoop.backend.service.InterviewAnalysisService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -36,10 +39,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class AiInterviewScheduleController {
 
     private final AiInterviewScheduleService aiInterviewScheduleService;
+    private final InterviewAnalysisService interviewAnalysisService;
 
     @Autowired
-    public AiInterviewScheduleController(AiInterviewScheduleService aiInterviewScheduleService) {
+    public AiInterviewScheduleController(AiInterviewScheduleService aiInterviewScheduleService,
+                                       InterviewAnalysisService interviewAnalysisService) {
         this.aiInterviewScheduleService = aiInterviewScheduleService;
+        this.interviewAnalysisService = interviewAnalysisService;
     }
 
     @Operation(summary = "AI 면접 일정 등록", description = "후보자가 AI 면접 일정을 등록합니다.")
@@ -81,7 +87,7 @@ public class AiInterviewScheduleController {
             @Parameter(description = "후보자 ID", required = true)
             @PathVariable Integer candidateId) {
         try {
-            List<InterviewScheduleResponseDto> schedules = aiInterviewScheduleService.getInterviewSchedulesByCandidate(candidateId);
+            List<InterviewScheduleResponseDto> schedules = aiInterviewScheduleService.getInterviewSchedulesByCandidate(candidateId.longValue());
             return ResponseEntity.ok(schedules);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -100,7 +106,7 @@ public class AiInterviewScheduleController {
             @Parameter(description = "면접 일정 ID", required = true)
             @PathVariable Integer scheduleId) {
         try {
-            InterviewScheduleResponseDto schedule = aiInterviewScheduleService.getInterviewSchedule(scheduleId);
+            InterviewScheduleResponseDto schedule = aiInterviewScheduleService.getInterviewSchedule(scheduleId.longValue());
             return ResponseEntity.ok(schedule);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -124,7 +130,7 @@ public class AiInterviewScheduleController {
             @Parameter(description = "업데이트할 상태 (예: 'completed', 'cancelled')", required = true)
             @RequestParam String status) {
         try {
-            InterviewScheduleResponseDto response = aiInterviewScheduleService.updateInterviewStatus(scheduleId, status);
+            InterviewScheduleResponseDto response = aiInterviewScheduleService.updateInterviewStatus(scheduleId.longValue(), status);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -147,7 +153,17 @@ public class AiInterviewScheduleController {
             @Parameter(description = "면접 일정 ID", required = true)
             @PathVariable Integer scheduleId) {
         try {
-            InterviewScheduleResponseDto response = aiInterviewScheduleService.completeInterview(scheduleId);
+            InterviewScheduleResponseDto response = aiInterviewScheduleService.completeInterview(scheduleId.longValue());
+            
+            // 면접 완료 후 전체 분석 트리거
+            try {
+                interviewAnalysisService.startInterviewAnalysis(scheduleId, response.getJobCandidateId().longValue());
+                System.out.println("[InterviewSchedule] 면접 완료 후 분석 트리거 완료: scheduleId=" + scheduleId);
+            } catch (Exception e) {
+                System.err.println("[InterviewSchedule] 면접 완료 후 분석 트리거 실패: " + e.getMessage());
+                // 분석 트리거 실패는 면접 완료에 영향을 주지 않음
+            }
+            
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -178,4 +194,20 @@ public class AiInterviewScheduleController {
     //     }
     // }
     // TODO: Use the new ai_interview_videos upload endpoint instead.
+
+    // 분석 대기 스케줄 목록 조회
+    @GetMapping("/pending")
+    public ResponseEntity<List<AiInterviewSchedule>> getPendingAnalysisSchedules() {
+        List<AiInterviewSchedule> pendingSchedules = aiInterviewScheduleService.getPendingAnalysisSchedules();
+        return ResponseEntity.ok(pendingSchedules);
+    }
+
+    // 분석 상태 변경
+    @PutMapping("/{scheduleId}/analysis-status")
+    public ResponseEntity<Void> updateAnalysisStatus(
+            @PathVariable Integer scheduleId,
+            @RequestParam String status) {
+        aiInterviewScheduleService.updateAnalysisStatus(scheduleId.longValue(), status);
+        return ResponseEntity.ok().build();
+    }
 }
