@@ -202,10 +202,12 @@ export default function CompanySidebar({
           e.currentTarget.style.boxShadow = '0 4px 15px rgba(104, 211, 145, 0.3)';
         }}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: '0.5rem' }}>
-          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-        </svg>
-        새 공고 추가
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+          <span style={{ fontSize: '1rem', fontWeight: '600' }}>새 공고 추가</span>
+        </div>
       </button>
 
       <div

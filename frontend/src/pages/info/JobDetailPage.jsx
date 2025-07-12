@@ -1198,12 +1198,12 @@ function JobDetailPage() {
                         선택된 파일: {selectedFile.name}
                       </div>
                     ) : (
-                      <div style={{ color: '#888', fontWeight: 500, fontSize: '1.01rem' }}>
-                        <div style={{ marginBottom: '0.7rem' }}>
+                      <div style={{ color: '#888', fontWeight: 500, fontSize: '1.01rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div style={{ marginBottom: '0.7rem', display: 'flex', justifyContent: 'center' }}>
                           <svg width="48" height="48" viewBox="0 0 24 24" fill="none"><path d="M10 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V8C22 6.9 21.1 6 20 6H12L10 4Z" stroke="#30c59b" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                         </div>
-                        <div style={{ fontWeight: 700, color: '#30c59b', fontSize: '1.08rem', marginBottom: 2 }}>여기에 파일을 드래그하거나 클릭해서 업로드</div>
-                        <div style={{ fontSize: '0.93rem', color: '#aaa', marginTop: '0.5rem' }}>
+                        <div style={{ fontWeight: 700, color: '#30c59b', fontSize: '1.08rem', marginBottom: 2, textAlign: 'center' }}>여기에 파일을 드래그하거나 클릭해서 업로드</div>
+                        <div style={{ fontSize: '0.93rem', color: '#aaa', marginTop: '0.5rem', textAlign: 'center' }}>
                           지원 형식: PDF, DOC, DOCX, TXT, ZIP, RAR (최대 5MB)
                         </div>
                       </div>

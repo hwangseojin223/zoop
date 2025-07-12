@@ -199,16 +199,15 @@ public class GithubSearchController {
             Map<String, Object> map = new java.util.HashMap<>();
             map.put("candidate", c);
             // githubName이 없고 candidateEmail이 있으면 candidate 테이블에서 이름을 찾아서 추가
-            if (c.getGithubName() == null || c.getGithubName().isEmpty()) {
-                // 후보자 실명 보완: candidate 테이블에서 githubLogin으로 이름 조회
-                try {
-                    var candidateOpt = jobCandProgressRepository
-                        .findByPost_PostIdAndGithubLogin(postId, c.getGithubLogin());
-                    if (candidateOpt.isPresent() && candidateOpt.get().getCandidate() != null) {
-                        c.setGithubName(candidateOpt.get().getCandidate().getCandidateName());
-                    }
-                } catch (Exception ignore) {}
-            }
+            // if (c.getGithubName() == null || c.getGithubName().isEmpty()) {
+            //     try {
+            //         var candidateOpt = jobCandProgressRepository
+            //             .findByPost_PostIdAndGithubLogin(postId, c.getGithubLogin());
+            //         if (candidateOpt.isPresent() && candidateOpt.get().getCandidate() != null) {
+            //             c.setGithubName(candidateOpt.get().getCandidate().getCandidateName());
+            //         }
+            //     } catch (Exception ignore) {}
+            // }
             aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
             progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
                 c.setJobCandCurrStage(p.getJobCandCurrStage());
@@ -360,8 +359,8 @@ public class GithubSearchController {
     })
     @GetMapping("/by-post/{postId}/additional-applicants")
     public ResponseEntity<?> getAdditionalApplicantsByPost(@PathVariable Long postId) {
-        // 1. 모든 공고에서 직접 지원한 후보자들 조회 (stage "0"인 경우 - 직접 지원자)
-        List<JobCandProgress> directApplicants = jobCandProgressRepository.findByJobCandCurrStage("0");
+        // 1. 해당 공고에서 직접 지원한 후보자들 조회 (stage "0"인 경우 - 직접 지원자)
+        List<JobCandProgress> directApplicants = jobCandProgressRepository.findByPost_PostIdAndJobCandCurrStage(postId, "0");
         if (directApplicants.isEmpty()) return ResponseEntity.ok(List.of());
         
         // 2. 직접 지원자들의 정보를 다른 필터와 동일한 구조로 매핑하여 반환
