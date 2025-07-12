@@ -197,8 +197,8 @@ export default function CompanyDashboard() {
       let endpoint = '';
       switch (filter) {
         case '추가 지원자':
-          // 추가 지원자는 모든 공고의 stage가 0인 지원자들을 조회
-          endpoint = `http://localhost:8081/api/github-search/by-post/0/additional-applicants`;
+          // 추가 지원자는 해당 공고의 stage가 0인 지원자들을 조회
+          endpoint = `http://localhost:8081/api/github-search/by-post/${postId}/additional-applicants`;
           break;
         case '전체':
           endpoint = `http://localhost:8081/api/github-search/by-post/${postId}/all`;
@@ -555,7 +555,7 @@ export default function CompanyDashboard() {
         postId: currentApplicants[index].postId
       }));
       
-      const response = await fetch('http://localhost:8081/api/responder/update-stage-multiple', {
+      const response = await fetch('http://localhost:8081/api/progress/update-stage-multiple', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -604,7 +604,7 @@ export default function CompanyDashboard() {
         postId: currentApplicants[index].postId
       }));
       
-      const response = await fetch('http://localhost:8081/api/responder/update-stage-multiple', {
+      const response = await fetch('http://localhost:8081/api/progress/update-stage-multiple', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -882,18 +882,25 @@ export default function CompanyDashboard() {
                 </div>
               ) : directApplicants.length === 0 ? (
                 <div style={{ 
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   textAlign: 'center', 
                   padding: '4rem', 
                   color: '#666',
                   background: '#f8fafc',
                   borderRadius: '16px',
-                  border: '1px solid #e2e8f0'
+                  border: '1px solid #e2e8f0',
+                  minHeight: '260px',
                 }}>
-                  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#cbd5e0" strokeWidth="1" style={{ marginBottom: '1rem' }}>
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
+                  <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="#cbd5e0" strokeWidth="1.5" style={{ marginBottom: '2rem' }}>
+                    <circle cx="12" cy="8.5" r="4.5" stroke="#b5c6d6" strokeWidth="1.5"/>
+                    <rect x="3.5" y="15" width="17" height="6" rx="3" stroke="#b5c6d6" strokeWidth="1.5"/>
                   </svg>
-                  <p>아직 직접 지원한 지원자가 없습니다.</p>
+                  <div style={{ fontSize: '1.08rem', color: '#7b8794', fontWeight: 500 }}>
+                    아직 직접 지원한 지원자가 없습니다.
+                  </div>
                 </div>
               ) : (
                 <div style={{ display: 'grid', gap: '1.5rem' }}>
@@ -1942,6 +1949,7 @@ export default function CompanyDashboard() {
             </div>
           ) : (
             <>
+              <div style={{ marginTop: '1.2rem' }}></div>
               <h2 style={{ fontSize: '1.6rem', fontWeight: '700', marginBottom: '1.2rem', color: '#2d3748' }}>기업 정보</h2>
               <section
                 style={{ ...hoverBoxStyle, background: '#ffffff' }}

@@ -136,7 +136,6 @@ public class GithubBridgeService {
                     .githubLogin((String) user.get("login"))
                     .githubProfileUrl((String) user.get("profile_url"))
                     .candidateEmail((String) user.get("email"))
-                    .githubName((String) user.get("name"))
                     .analysisScore(score)
                     .githubSearchDate(LocalDateTime.now())
                     .githubCreatedAt(LocalDateTime.now())
