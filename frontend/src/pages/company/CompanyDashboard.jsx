@@ -1905,6 +1905,39 @@ export default function CompanyDashboard() {
                                         >
                                           상세보기
                                         </button>
+                                        {candidate.aiAnalysis && (
+                                          <button
+                                            onClick={() => {
+                                              setCurrentAiAnalysis(candidate.aiAnalysis);
+                                              setShowAiAnalysisModal(true);
+                                            }}
+                                            style={{
+                                              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                              color: 'white',
+                                              border: 'none',
+                                              padding: '0.3rem 0.6rem',
+                                              borderRadius: '6px',
+                                              cursor: 'pointer',
+                                              fontSize: '0.8rem',
+                                              fontWeight: '500',
+                                              transition: 'all 0.2s',
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              justifyContent: 'center'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.transform = 'translateY(-1px)';
+                                              e.currentTarget.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.3)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.transform = 'translateY(0)';
+                                              e.currentTarget.style.boxShadow = 'none';
+                                            }}
+                                            title="AI 분석 결과"
+                                          >
+                                            AI 분석
+                                          </button>
+                                        )}
                                       </div>
                                       <div style={{ marginBottom: '0.8rem' }}>
                                         <span style={{
