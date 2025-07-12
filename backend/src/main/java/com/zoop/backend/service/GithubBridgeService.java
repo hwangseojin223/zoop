@@ -145,6 +145,35 @@ public class GithubBridgeService {
                 GithubSearchResult savedResult = resultRepo.save(result);
                 System.out.println("[DEBUG] GitHub 결과 저장 완료: ID = " + savedResult.getGithubSearchResultId());
                 
+                // === AI 분석 결과 저장 ===
+                if (user.get("analysis") != null) {
+                    try {
+                        String analysisData = (String) user.get("analysis");
+                        Double analysisScore = score; // llm_score를 분석 점수로 사용
+                        
+                        AiAnalysisResult aiAnalysis = AiAnalysisResult.builder()
+                            .analysisType("github")
+                            .githubSearchResultId(savedResult.getGithubSearchResultId())
+                            .jobCandidateId(null) // GitHub 검색 결과는 jobCandidateId가 없을 수 있음
+                            .analysisData(analysisData)
+                            .analysisScore(analysisScore)
+                            .analysisDate(LocalDateTime.now())
+                            .analysisCreatedAt(LocalDateTime.now())
+                            .build();
+                        
+                        AiAnalysisResult savedAiAnalysis = aiAnalysisResultRepository.save(aiAnalysis);
+                        System.out.println("[DEBUG] AI 분석 결과 저장 완료: ID = " + savedAiAnalysis.getAnalysisId());
+                        
+                        // GitHub 검색 결과에 AI 분석 ID 연결
+                        savedResult.setAiGithubAnalysisId(savedAiAnalysis.getAnalysisId());
+                        resultRepo.save(savedResult);
+                        
+                    } catch (Exception e) {
+                        System.err.println("[ERROR] AI 분석 결과 저장 실패: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                }
+                
                 // === JobCandProgress 저장 ===
                 String githubLogin = (String) user.get("login");
                 Optional<Candidate> candidateOpt = candidateRepository.findByGithubLogin(githubLogin);
