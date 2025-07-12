@@ -364,6 +364,26 @@ const ModalFooter = styled.div`
   padding: 0 32px 32px 32px;
 `;
 
+// 모달 액션 버튼 (Toss 스타일)
+const ModalActionBtn = styled.button`
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 32px;
+  font-size: 1.08rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.18);
+  transition: all 0.18s;
+  min-width: 120px;
+  &:hover {
+    background: linear-gradient(135deg, #5a67d8 0%, #6b21a8 100%);
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.22);
+  }
+`;
+
 // ==========================================
 
 export default function CandidateList() {
@@ -844,30 +864,7 @@ export default function CandidateList() {
 
             {/* 푸터 */}
             <ModalFooter>
-              <ModalActionBtn 
-                onClick={closeAnalysisModal}
-                style={{
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
-                  minWidth: '120px'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.4)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)';
-                }}
-              >
+              <ModalActionBtn onClick={closeAnalysisModal}>
                 확인
               </ModalActionBtn>
             </ModalFooter>
