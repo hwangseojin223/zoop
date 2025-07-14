@@ -33,6 +33,7 @@ export default function CompanyDashboard() {
   const [showAiAnalysisModal, setShowAiAnalysisModal] = useState(false);
   const [currentAiAnalysis, setCurrentAiAnalysis] = useState(null);
   const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false);
+  const [portfolioMatchesMap, setPortfolioMatchesMap] = useState({});
   
   // 모달 상태 (팀 버전에서 추가된 기능)
   const [isModalOpen, setModalOpen] = useState(false);
@@ -200,6 +201,11 @@ export default function CompanyDashboard() {
           // 추가 지원자는 해당 공고의 stage가 0인 지원자들을 조회
           endpoint = `http://localhost:8081/api/github-search/by-post/${postId}/additional-applicants`;
           break;
+        case '매칭':
+          // 매칭된 지원자는 cand_portfolio_id가 있고 2y 단계인 지원자들을 조회
+          endpoint = `http://localhost:8081/api/github-search/by-post/${postId}/matched-candidates`;
+          console.log('매칭 API 호출:', endpoint);
+          break;
         case '전체':
           endpoint = `http://localhost:8081/api/github-search/by-post/${postId}/all`;
           break;
@@ -220,16 +226,20 @@ export default function CompanyDashboard() {
       }
 
       const response = await fetch(endpoint);
+      console.log('매칭 API 응답 상태:', response.status);
       if (!response.ok) throw new Error('후보자 데이터 조회 실패');
       const data = await response.json();
-      console.log('API 응답:', data);
+      console.log('매칭 API 응답 데이터:', data);
+      console.log('매칭된 후보자 수:', data.length);
       
       // API 응답 구조에 맞게 매핑 (모든 필터 동일한 구조)
       const mapped = data.map(item => ({
         ...item.candidate,
-        jobCandCurrStage: item.candidate.jobCandCurrStage,
+        jobCandCurrStage: item.jobCandCurrStage || item.candidate.jobCandCurrStage,
         jobCandidateId: item.jobCandidateId,
-        aiAnalysis: item.aiAnalysis || null
+        aiAnalysis: item.aiAnalysis || null,
+        isMatched: item.jobCandCurrStage === '2y' && (item.candPortfolioId || item.candidate.candPortfolioId),
+        candPortfolioId: item.candPortfolioId || item.candidate.candPortfolioId // <-- 추가
       }));
       console.log('매핑된 후보자:', mapped);
       setGithubCandidates(mapped);
@@ -380,7 +390,8 @@ export default function CompanyDashboard() {
   };
 
   // 후보자 상태 라벨 변환 함수 (StatePage 참고)
-  const getStageLabel = (code) => {
+  const getStageLabel = (code, isMatched) => {
+    if (isMatched && code === '2y') return '매칭';
     switch (code) {
       case '1n': return '필터링';
       case '2n': return '메일발송';
@@ -729,7 +740,7 @@ export default function CompanyDashboard() {
   const closedPostings = postings?.filter(post => post.postStatus === 'CLOSED') || [];
 
   // 후보자 목록 필터 버튼 부분
-  const filterLabels = ['추가 지원자', '전체', '미회신자', '회신자', '면접 예정자', '면접 완료자'];
+  const filterLabels = ['추가 지원자', '매칭', '전체', '미회신자', '회신자', '면접 예정자', '면접 완료자'];
   const [indicatorProps, setIndicatorProps] = useState({ left: 0, width: 0 });
   const btnRefs = useRef([]);
   const groupRef = useRef(null);
@@ -771,6 +782,26 @@ export default function CompanyDashboard() {
       setAiAnalysisLoading(false);
     }
   };
+
+  // 후보자 목록이 바뀔 때 candPortfolioId별 매칭 정보 불러오기
+  useEffect(() => {
+    const fetchAllMatches = async () => {
+      const map = {};
+      for (const candidate of githubCandidates) {
+        if (candidate.candPortfolioId) {
+          try {
+            const res = await fetch(`http://localhost:8081/api/portfolio-job-matches/portfolio/${candidate.candPortfolioId}`);
+            const data = await res.json();
+            map[candidate.candPortfolioId] = data;
+          } catch (e) {
+            map[candidate.candPortfolioId] = [];
+          }
+        }
+      }
+      setPortfolioMatchesMap(map);
+    };
+    if (githubCandidates.length > 0) fetchAllMatches();
+  }, [githubCandidates]);
 
   return (
     <div className="company-dashboard" style={{ fontFamily: 'SUIT, Apple SD Gothic Neo, sans-serif', backgroundColor: '#ffffff', minHeight: '100vh' }}>
@@ -1347,6 +1378,8 @@ export default function CompanyDashboard() {
                         {filterLabels.map((label, i) => {
                           // 추가 지원자 버튼 특별 스타일
                           const isAdditionalApplicant = label === '추가 지원자';
+                          // 매칭 버튼 특별 스타일
+                          const isMatched = label === '매칭';
                           const isActiveFilter = label === candidateFilter;
                           
                           return (
@@ -1367,6 +1400,8 @@ export default function CompanyDashboard() {
                                 cursor: isActiveFilter ? 'default' : 'pointer',
                                 boxShadow: isAdditionalApplicant 
                                   ? '0 0 15px rgba(59, 130, 246, 0.3), 0 0 30px rgba(59, 130, 246, 0.1)' 
+                                  : isMatched
+                                  ? '0 0 15px rgba(72, 187, 120, 0.3), 0 0 30px rgba(72, 187, 120, 0.1)'
                                   : 'none',
                               outline: 'none',
                                 color: isActiveFilter ? '#30c59b' : '#30c59b',
@@ -1553,14 +1588,43 @@ export default function CompanyDashboard() {
                                   position: 'absolute',
                                   top: '1rem',
                                   right: '1rem',
-                                  background: 'linear-gradient(135deg, #4299e1, #3182ce)',
-                                  color: 'white',
-                                  padding: '0.3rem 0.8rem',
-                                  borderRadius: '12px',
-                                  fontSize: '0.8rem',
-                                  fontWeight: '600'
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: '0.3rem',
+                                  alignItems: 'flex-end'
                                 }}>
-                                  직접 지원
+                                  <div style={{
+                                    background: 'linear-gradient(135deg, #4299e1, #3182ce)',
+                                    color: 'white',
+                                    padding: '0.3rem 0.8rem',
+                                    borderRadius: '12px',
+                                    fontSize: '0.8rem',
+                                    fontWeight: '600'
+                                  }}>
+                                    직접 지원
+                                  </div>
+                                  {candidateFilter === '매칭' && (
+                                    <div style={{
+                                      background: 'linear-gradient(135deg, #48bb78, #38a169)',
+                                      color: 'white',
+                                      padding: '0.3rem 0.8rem',
+                                      borderRadius: '12px',
+                                      fontSize: '0.8rem',
+                                      fontWeight: '600',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '0.3rem'
+                                    }}>
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M9 12l2 2 4-4"/>
+                                        <path d="M21 12c-1 0-2-1-2-2s1-2 2-2 2 1 2 2-1 2-2 2z"/>
+                                        <path d="M3 12c1 0 2-1 2-2s-1-2-2-2-2 1-2 2 1 2 2 2z"/>
+                                        <path d="M12 3c0 1-1 2-2 2s-2-1-2-2 1-2 2-2 2 1 2 2z"/>
+                                        <path d="M12 21c0-1 1-2 2-2s2 1 2 2-1 2-2 2-2-1-2-2z"/>
+                                      </svg>
+                                      매칭
+                                    </div>
+                                  )}
                                 </div>
                                 
                                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
@@ -1796,7 +1860,7 @@ export default function CompanyDashboard() {
                                       border: `1px solid ${getStageColor(candidate.jobCandCurrStage).border}`,
                                       letterSpacing: '0.01em'
                                     }}>
-                                      {getStageLabel(candidate.jobCandCurrStage)}
+                                      {getStageLabel(candidate.jobCandCurrStage, candidate.isMatched)}
                                     </div>
                                   )}
                                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
@@ -1842,14 +1906,38 @@ export default function CompanyDashboard() {
                                     </div>
                                     <div style={{ flex: 1 }}>
                                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.8rem' }}>
-                                        <h4 style={{
-                                          fontSize: '1.1rem',
-                                          fontWeight: '600',
-                                          color: '#2d3748',
-                                          margin: 0
-                                        }}>
-                                          {candidate.githubLogin}
-                                        </h4>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                          <h4 style={{
+                                            fontSize: '1.1rem',
+                                            fontWeight: '600',
+                                            color: '#2d3748',
+                                            margin: 0
+                                          }}>
+                                            {candidate.githubLogin}
+                                          </h4>
+                                          {candidateFilter === '회신자' && (
+                                            <span style={{
+                                              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                                              color: 'white',
+                                              padding: '0.2rem 0.6rem',
+                                              borderRadius: '8px',
+                                              fontSize: '0.7rem',
+                                              fontWeight: '600',
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              gap: '0.2rem'
+                                            }}>
+                                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <path d="M9 12l2 2 4-4"/>
+                                                <path d="M21 12c-1 0-2-1-2-2s1-2 2-2 2 1 2 2-1 2-2 2z"/>
+                                                <path d="M3 12c1 0 2-1 2-2s-1-2-2-2-2 1-2 2 1 2 2 2z"/>
+                                                <path d="M12 3c0 1-1 2-2 2s-2-1-2-2 1-2 2-2 2 1 2 2z"/>
+                                                <path d="M12 21c0-1 1-2 2-2s2 1 2 2-1 2-2 2-2-1-2-2z"/>
+                                              </svg>
+                                              매칭
+                                            </span>
+                                          )}
+                                        </div>
                                         <button
                                           onClick={() => window.open(candidate.githubProfileUrl, '_blank')}
                                           style={{
@@ -1949,7 +2037,11 @@ export default function CompanyDashboard() {
                                           fontSize: '0.8rem',
                                           fontWeight: '600'
                                         }}>
-                                          분석 점수: {candidate.analysisScore ? candidate.analysisScore.toFixed(1) : 'N/A'}
+                                          분석 점수: {
+                                            candidate.candPortfolioId && portfolioMatchesMap[candidate.candPortfolioId] && portfolioMatchesMap[candidate.candPortfolioId].length > 0
+                                              ? portfolioMatchesMap[candidate.candPortfolioId][0].matchingScore
+                                              : 'N/A'
+                                          }
                                         </span>
                                       </div>
                                       <div style={{

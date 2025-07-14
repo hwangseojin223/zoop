@@ -35,6 +35,7 @@ import com.zoop.backend.repository.AiAnalysisResultRepository;
 import com.zoop.backend.repository.PortfolioRepository;
 import com.zoop.backend.service.GithubBridgeService;
 import com.zoop.backend.service.GithubSearchResultService;
+import com.zoop.backend.domain.entity.Candidate;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -347,6 +348,47 @@ public class GithubSearchController {
             });
             return map;
         }).collect(Collectors.toList());
+        return ResponseEntity.ok(result);
+    }
+
+    @Operation(summary = "게시글 ID로 매칭된 후보자 조회", description = "특정 채용 공고에 대해 cand_portfolio_id가 있고 2y 단계인 매칭된 후보자 목록을 조회합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "매칭된 후보자 목록 반환",
+            content = @Content(schema = @Schema(implementation = Map.class))),
+        @ApiResponse(responseCode = "404", description = "해당 게시글 ID에 대한 매칭된 후보자 없음"),
+        @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    @GetMapping("/by-post/{postId}/matched-candidates")
+    public ResponseEntity<?> getMatchedCandidatesByPost(@PathVariable Long postId) {
+        // 1. 조건에 맞는 모든 진행상황 row 조회
+        List<JobCandProgress> progresses = jobCandProgressRepository.findByPost_PostIdAndJobCandCurrStageAndCandPortfolioIdIsNotNull(postId, "2y");
+
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        for (JobCandProgress progress : progresses) {
+            Map<String, Object> map = new java.util.HashMap<>();
+            // github_search_results에 있으면 정보 붙이기
+            GithubSearchResult gsr = null;
+            if (progress.getGithubLogin() != null) {
+                gsr = resultRepo.findByPostIdAndGithubLogin(postId, progress.getGithubLogin()).orElse(null);
+            }
+            if (gsr != null) {
+                map.put("candidate", gsr);
+            } else {
+                // 직접 지원자 정보 붙이기
+                Candidate c = progress.getCandidate();
+                Map<String, Object> candidateInfo = new java.util.HashMap<>();
+                candidateInfo.put("candidateId", c.getCandidateId());
+                candidateInfo.put("candidateName", c.getCandidateName());
+                candidateInfo.put("candidateEmail", c.getCandidateEmail());
+                candidateInfo.put("candidatePhoneNumber", c.getCandidatePhoneNumber());
+                candidateInfo.put("githubLogin", progress.getGithubLogin());
+                map.put("candidate", candidateInfo);
+            }
+            map.put("jobCandidateId", progress.getJobCandidateId());
+            map.put("jobCandCurrStage", progress.getJobCandCurrStage());
+            map.put("candPortfolioId", progress.getCandPortfolioId());
+            result.add(map);
+        }
         return ResponseEntity.ok(result);
     }
 

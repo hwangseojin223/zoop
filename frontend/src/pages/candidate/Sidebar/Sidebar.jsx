@@ -209,7 +209,13 @@ function Sidebar() {
           </span>
           {expandedMenuId === 'resumeCoverLetter' && (
             <ul className="sub-menu" role="menu">
-              <li className="sub-menu-item" role="menuitem">이력서 등록</li>
+              <li
+                className="sub-menu-item"
+                role="menuitem"
+                onClick={() => navigate('/candidate/resume/ResumeSubmissionPage')}
+              >
+                이력서 등록
+              </li>
               <li className="sub-menu-item" role="menuitem">이력서 관리</li>
               <li className="sub-menu-item" role="menuitem">자소서 관리</li>
             </ul>

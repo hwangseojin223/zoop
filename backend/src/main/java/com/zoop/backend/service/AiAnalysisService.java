@@ -20,7 +20,13 @@ public class AiAnalysisService {
 
     // 포트폴리오분석,점수 조회
     public PortfolioAnalysisResponse getPortfolioAnalysis(Long jobCandidateId) {
+        // portfolio 타입 먼저 찾기
         List<AiAnalysisResult> results = repository.findByJobCandidateIdAndAnalysisType(jobCandidateId, "portfolio");
+        
+        // portfolio 타입이 없으면 standalone_portfolio 타입 찾기
+        if (results.isEmpty()) {
+            results = repository.findByJobCandidateIdAndAnalysisType(jobCandidateId, "standalone_portfolio");
+        }
         
         if (!results.isEmpty()) {
             AiAnalysisResult analysis = results.get(0);

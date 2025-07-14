@@ -11,9 +11,13 @@ import org.springframework.transaction.annotation.Transactional;
 import com.zoop.backend.domain.dto.InvitationSendRequest;
 import com.zoop.backend.domain.dto.JobCandProgressWithCandidateDto;
 import com.zoop.backend.domain.dto.ResponderDto;
+import com.zoop.backend.domain.entity.Candidate;
 import com.zoop.backend.domain.entity.JobCandProgress;
-import com.zoop.backend.repository.JobCandProgressRepository;
+import com.zoop.backend.domain.entity.Post;
+import com.zoop.backend.repository.CandidateRepository;
 import com.zoop.backend.repository.InvitationRepository;
+import com.zoop.backend.repository.JobCandProgressRepository;
+import com.zoop.backend.repository.PostRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +30,8 @@ public class JobCandProgressService {
 
     private final JobCandProgressRepository jobCandProgressRepository;
     private final InvitationRepository invitationRepository;
+    private final CandidateRepository candidateRepository;
+    private final PostRepository postRepository;
 
     public List<JobCandProgress> getAllJobCandProgress() {
         return jobCandProgressRepository.findAll();
@@ -53,6 +59,28 @@ public class JobCandProgressService {
 
     public JobCandProgress updateJobCandProgress(JobCandProgress jobCandProgress) {
         return jobCandProgressRepository.save(jobCandProgress);
+    }
+
+    // 새로운 job_cand_progress 생성 (candidate_portfolios 매칭용)
+    public JobCandProgress createJobCandProgress(Long postId, Long candidateId, String stage) {
+        // Post와 Candidate 엔티티 조회
+        Post post = postRepository.findById(postId)
+            .orElseThrow(() -> new RuntimeException("Post not found: " + postId));
+        
+        Candidate candidate = candidateRepository.findById(candidateId)
+            .orElseThrow(() -> new RuntimeException("Candidate not found: " + candidateId));
+        
+        // 새로운 JobCandProgress 생성
+        JobCandProgress newProgress = JobCandProgress.builder()
+            .post(post)
+            .candidate(candidate)
+            .jobCandCurrStage(stage)
+            .jobCandCreatedAt(LocalDateTime.now())
+            .jobCandUpdatedAt(LocalDateTime.now())
+            .githubLogin(candidate.getGithubLogin())
+            .build();
+        
+        return jobCandProgressRepository.save(newProgress);
     }
 
     @Transactional(readOnly = true)

@@ -22,15 +22,18 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
   const [portfolioAnalysis, setPortfolioAnalysis] = useState(null);
   const [interviewVideoUrl, setInterviewVideoUrl] = useState(null);
   const [interviewAnalysis, setInterviewAnalysis] = useState(null);
+  const [matchingInfo, setMatchingInfo] = useState(null);
 
   // 아코디언 open을 위한 상태
   const [portfolioPreviewOpen, setPortfolioPreviewOpen] = useState(false); // 포트폴리오 미리보기
   const [portfolioAnalysisOpen, setPortfolioAnalysisOpen] = useState(false); // 포트폴리오 분석
   const [interviewVideoOpen, setInterviewVideoOpen] = useState(false); // 면접 영상
   const [interviewAnalysisOpen, setInterviewAnalysisOpen] = useState(false); // 면접 분석
+  const [matchingInfoOpen, setMatchingInfoOpen] = useState(false); // 매칭 정보
 
   const [videoBlobUrl, setVideoBlobUrl] = useState(null);
   const [localStage, setLocalStage] = useState(candidate?.jobCandCurrStage);
+  const [portfolioMatches, setPortfolioMatches] = useState([]);
 
   // candidate가 변경될 때 localStage 동기화
   useEffect(() => {
@@ -88,12 +91,18 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
 
   // 모달이 열릴 때 stage에 따라 API 호출
   useEffect(() => {
-    if (!isOpen || !candidate || !jobCandidateId) {
+    if (!isOpen || !candidate) {
       console.log("--------------------------------");
       console.log("isOpen: ", isOpen);
       console.log("candidate: ", candidate);
       console.log("jobCandidateId: ", jobCandidateId);
       console.log("--------------------------------");
+      return;
+    }
+
+    // jobCandidateId가 아직 로딩 중이면 대기
+    if (!jobCandidateId) {
+      console.log("jobCandidateId가 아직 로딩 중입니다...");
       return;
     }
 
@@ -172,8 +181,11 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
 
     // 포트폴리오 분석
     if (["2y", "2p", "3n", "3y", "4n", "4y"].includes(stage)) {
+      console.log("포트폴리오 분석 조회 시작 - jobCandidateId:", jobCandidateId);
+      
       fetch(`http://localhost:8081/api/analysis/${jobCandidateId}/portfolio`)
         .then(res => {
+          console.log("포트폴리오 분석 조회 응답:", res.status);
           if (!res.ok) throw new Error('portfolioAnalysis 조회 실패');
           return res.json();
         })
@@ -234,8 +246,59 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
           setInterviewAnalysis(null);
         });
     }
+
+    // 매칭 정보 조회 (2y 단계인 경우)
+    if (["2y", "3n", "3y", "4n", "4y"].includes(stage)) {
+      console.log("매칭 정보 조회 시작 - stage:", stage, "githubLogin:", githubLogin);
+      
+      // candidate_id 조회
+      fetch(`http://localhost:8081/api/candidates/github/${githubLogin}`)
+        .then(res => {
+          console.log("candidate_id 조회 응답:", res.status);
+          if (!res.ok) throw new Error('candidate_id 조회 실패');
+          return res.json();
+        })
+        .then(candidateData => {
+          const candidateId = candidateData.candidateId;
+          console.log("candidateId 조회 성공:", candidateId);
+          
+          // 매칭 정보 조회
+          console.log("매칭 정보 조회 API 호출:", `http://localhost:8081/api/portfolio-job-matches/candidate/${candidateId}/post/${postId}`);
+          return fetch(`http://localhost:8081/api/portfolio-job-matches/candidate/${candidateId}/post/${postId}`);
+        })
+        .then(res => {
+          console.log("매칭 정보 조회 응답:", res.status);
+          if (!res.ok) throw new Error('matchingInfo 조회 실패');
+          return res.json();
+        })
+        .then(data => {
+          console.log("matchingInfo 조회 성공:", data);
+          setMatchingInfo(data);
+        })
+        .catch(err => {
+          console.error('matchingInfo 조회 오류:', err);
+          setMatchingInfo(null);
+        });
+    }
     
   }, [isOpen, candidate, jobCandidateId]);
+
+  // cand_portfolio_id로 매칭 정보 조회
+  useEffect(() => {
+    if (!candidate?.candPortfolioId) {
+      setPortfolioMatches([]);
+      return;
+    }
+    fetch(`http://localhost:8081/api/portfolio-job-matches/portfolio/${candidate.candPortfolioId}`)
+      .then(res => res.json())
+      .then(data => setPortfolioMatches(Array.isArray(data) ? data : []))
+      .catch(() => setPortfolioMatches([]));
+  }, [candidate?.candPortfolioId]);
+
+  // jobCandidateId 상태 변경 추적
+  useEffect(() => {
+    console.log("🔍 jobCandidateId 상태 변경:", jobCandidateId);
+  }, [jobCandidateId]);
 
   // useEffect(() => {
   //   console.log("📩 invitationTimes 상태 업데이트:", invitationTimes);
@@ -255,18 +318,15 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
 
   /**포트폴리오를 불러오기 위한 useState */
   useEffect(() => {
-    if (!jobCandidateId) return;
-
-    // jobCandidateId로 포트폴리오 조회
-    fetch(`http://localhost:8081/api/portfolios/job-candidate/${jobCandidateId}`)
+    // candPortfolioId로만 조회
+    const candPortfolioId = matchingInfo && matchingInfo.candPortfolioId;
+    if (!candPortfolioId) {
+      setPdfBlobUrl(null);
+      return;
+    }
+    fetch(`http://localhost:8081/api/portfolios/${candPortfolioId}`)
       .then(res => {
-        if (!res.ok) {
-          if (res.status === 404) {
-            console.log("포트폴리오가 존재하지 않습니다.");
-            return null;
-          }
-          throw new Error('포트폴리오 조회 실패');
-        }
+        if (!res.ok) throw new Error('포트폴리오 조회 실패');
         return res.json();
       })
       .then(portfolio => {
@@ -274,27 +334,19 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
           setPdfBlobUrl(null);
           return;
         }
-
         const filePath = portfolio.portfolioFilePath;
         if (!filePath) {
-          console.log("포트폴리오 파일 경로가 없습니다.");
           setPdfBlobUrl(null);
           return;
         }
-
-        // S3 URL인지 로컬 파일 경로인지 확인
         const isS3Url = filePath.startsWith('https://') && filePath.includes('s3');
-        
         let url;
         if (isS3Url) {
-          // S3 URL인 경우 백엔드 프록시를 통해 다운로드
           url = `http://localhost:8081/api/files/s3/download?s3Url=${encodeURIComponent(filePath)}`;
         } else {
-          // 로컬 파일인 경우 기존 방식 사용
           const filename = filePath.split('/').pop();
           url = `http://localhost:8081/api/files/download/${filename}`;
         }
-
         return fetch(url);
       })
       .then(res => {
@@ -308,15 +360,12 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
         setPdfBlobUrl(blobUrl);
       })
       .catch(err => {
-        console.error("포트폴리오 fetch 오류:", err);
         setPdfBlobUrl(null);
       });
-
-    // cleanup
     return () => {
       if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
     };
-  }, [jobCandidateId]);
+  }, [matchingInfo]);
 
   
   /** 면접영상을 불러오기 위한 useState */
@@ -549,6 +598,11 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
               open={portfolioPreviewOpen}
               setOpen={setPortfolioPreviewOpen}
             >
+              {portfolioAnalysis && (
+                <div className="mb-2 text-center text-lg font-bold text-purple-700">
+                  포트폴리오 분석 점수: {portfolioAnalysis.analysisScore} / 100
+                </div>
+              )}
               <div className="relative w-full h-[500px] bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl shadow-inner border border-gray-200">
                 {/* 상단 컨트롤 바 */}
                 <div className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm rounded-xl px-4 py-2 shadow-lg border border-gray-200 flex items-center space-x-3">
@@ -660,6 +714,45 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
                 </div>
               )}
             </Accordion>
+
+            {/* 🎯 매칭 정보 */}
+            <Accordion
+              title="🎯 매칭 정보"
+              open={matchingInfoOpen}
+              setOpen={setMatchingInfoOpen}
+            >
+              {candidate?.candPortfolioId ? (
+                portfolioMatches && portfolioMatches.length > 0 ? (
+                  <div className="space-y-6">
+                    {portfolioMatches.map(match => (
+                      <div key={match.matchId} className="p-5 rounded-2xl border bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 shadow">
+                        <div className="flex items-center mb-2">
+                          <span className="font-bold text-lg text-blue-700 mr-2">매칭 점수</span>
+                          <span className="text-2xl font-black text-blue-800">{match.matchingScore}</span>
+                          <span className="text-sm text-gray-500 ml-1">/ 100</span>
+                        </div>
+                        <div className="text-gray-700 whitespace-pre-wrap mb-2">
+                          {match.matchingReason}
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          매칭일: {match.matchCreatedAt ? new Date(match.matchCreatedAt).toLocaleString('ko-KR') : '-'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                      <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <p className="text-lg font-medium">매칭 정보가 없습니다.</p>
+                    <p className="text-sm text-gray-400 mt-1">AI 매칭이 진행되지 않았습니다.</p>
+                  </div>
+                )
+              ) : null}
+            </Accordion>
           </>
         )}
 
@@ -744,15 +837,20 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId }) {
               
 
         <div className="mt-8 flex justify-end gap-3">
-          {/* 면접초대 버튼 - 2y 단계에서만 표시 */}
+          {/* 면접 요청 버튼 - 2y 단계에서만 표시 */}
           {["2y"].includes(localStage) && (
             <button
               onClick={handleInterviewInvitation}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+              className={`px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 ${
+                matchingInfo && matchingInfo.hasMatch 
+                  ? "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+                  : "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+              }`}
             >
-              면접초대
+              {matchingInfo && matchingInfo.hasMatch ? "매칭 후보 면접 요청" : "면접초대"}
             </button>
           )}
+          
           <button
             onClick={handleClose}
             className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-8 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
