@@ -407,7 +407,17 @@ export default function IncidentReportPage() {
         {renderRoleTabs()}
         
         {/* notice-section과 폼을 양옆으로 배치 */}
-        <div style={{ display: 'flex', gap: '2rem', alignItems: 'stretch', marginBottom: '2rem' }}>
+        <div style={{
+          display: 'flex',
+          gap: '2rem',
+          alignItems: 'stretch',
+          marginBottom: '2rem',
+          width: '100%',
+          maxWidth: '1000px',
+          justifyContent: 'center',
+          marginLeft: 'auto',
+          marginRight: 'auto'
+        }}>
           <div className="notice-section">
             {renderLoginStatus()}
             {/* 로그인 상태 표시 내부에 로그인 링크가 있으므로 여기서는 제거 */}
