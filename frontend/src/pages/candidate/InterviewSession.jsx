@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import SEO from '../../components/SEO';
 
 // InterviewSession.jsx: 2-column layout (left: question/timer, right: video), auto think/answer phase with timer and recording
 
@@ -139,6 +140,11 @@ function InterviewSession() {
 
   return (
     <div className="interview-session-layout" style={{ display: 'flex', gap: 32, alignItems: 'stretch', justifyContent: 'center', minHeight: '100vh' }}>
+      <SEO
+        title="AI 면접 진행"
+        description="AI 면접을 진행하는 페이지입니다. 질문에 답변하고 녹화를 진행합니다."
+        keywords="AI 면접, 면접 진행, 면접 녹화, 면접 질문"
+      />
       <div
         className="question-area"
         style={{

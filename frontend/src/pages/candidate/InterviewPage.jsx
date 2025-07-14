@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import InterviewEnvironmentCheck from './InterviewEnvironmentCheck';
+import SEO from '../../components/SEO';
 import './InterviewPage.css';
 
 function InterviewPage() {
@@ -128,6 +129,11 @@ function InterviewPage() {
 
   return (
     <div className="interview-page-container">
+      <SEO
+        title="AI 면접 환경 체크"
+        description="AI 면접을 시작하기 전 필요한 환경을 확인하는 페이지입니다."
+        keywords="AI 면접, 면접 환경 체크, 면접 준비"
+      />
       <div className="interview-check-header">
         <h1>AI 면접 시작 전 확인</h1>
         <p className="interview-check-guide">

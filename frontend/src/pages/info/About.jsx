@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, useInView, animate } from 'framer-motion';
 import Navbar from '../../components/Navbar';
+import SEO from '../../components/SEO';
 import { useNavigate } from 'react-router-dom';
 import './About.css';
 
@@ -177,6 +178,40 @@ export default function About() {
 
   return (
     <>
+      {/* SEO 컴포넌트 */}
+      <SEO
+        title="회사 소개 - ZOOP | AI 기반 채용 플랫폼"
+        description="ZOOP는 AI 기술을 활용하여 개발자와 기업을 연결하는 혁신적인 채용 플랫폼입니다. GitHub 기반 포트폴리오 분석과 AI 면접으로 정확한 매칭을 제공합니다."
+        keywords="ZOOP, 회사소개, AI채용, 개발자채용, GitHub분석, AI면접, 채용플랫폼, IT채용"
+        image="/about_banner.jpg"
+        url="https://zoop.com/about"
+        type="website"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "ZOOP",
+          "url": "https://zoop.com",
+          "logo": "https://zoop.com/logo_zoop.png",
+          "description": "AI 기반 채용 플랫폼",
+          "foundingDate": "2024",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "서울",
+            "addressRegion": "강남구",
+            "addressCountry": "KR"
+          },
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "customer service",
+            "email": "support@zoop.com"
+          },
+          "sameAs": [
+            "https://github.com/zoop",
+            "https://linkedin.com/company/zoop"
+          ]
+        }}
+      />
+
       <Navbar onLangChange={handleLangChange} />
       <section className="hero-banner" style={{
         position: 'relative'

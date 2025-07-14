@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ko } from "date-fns/locale";
+import SEO from "../../components/SEO";
 
 const chipStyle = (selected) => ({
   border: selected ? "none" : "1.5px solid #e0e3e7",
@@ -199,6 +200,11 @@ export default function RecruitCreate() {
         minWidth: "100vw",
       }}
     >
+      <SEO
+        title="채용 공고 생성 - ZOOP"
+        description="ZOOP에서 채용 공고를 생성하고, 맞춤형 인재를 추천받으세요."
+        keywords="채용, 채용 공고, 채용 공고 생성, 채용 필터, 채용 인재 추천, ZOOP"
+      />
       <Navbar />
       {/* --- 달력/전체 스타일 글로벌 적용 --- */}
       <style>

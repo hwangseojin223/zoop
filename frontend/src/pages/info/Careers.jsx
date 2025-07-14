@@ -4,6 +4,7 @@ import Navbar from '../../components/Navbar';
 import CompactJobCard from '../../components/CompactJobCard';
 import { FaSearch } from 'react-icons/fa';
 import ApplyForm from '../../components/ApplyForm';
+import SEO from '../../components/SEO';
 import './Careers.css';
 import '../../components/ApplyForm.css';
 import '../../components/CompactJobCard.css';
@@ -157,238 +158,278 @@ function Careers() {
   }, [languageFilter, locationFilter, search]);
 
   return (
-    <div className="careers-page">
-      <Navbar />
+    <>
+      {/* SEO 컴포넌트 */}
+      <SEO
+        title="채용 공고 - ZOOP | 최고의 개발자 채용 기회"
+        description="ZOOP에서 제공하는 최고의 개발자 채용 기회를 확인하세요. AI 기반 매칭으로 최적의 기업과 연결됩니다. React, Java, Python 등 다양한 기술 스택의 채용 공고를 제공합니다."
+        keywords="채용공고, 개발자채용, IT채용, React개발자, Java개발자, Python개발자, AI엔지니어, 프론트엔드개발자, 백엔드개발자"
+        image="/careers1.png"
+        url="https://zoop.com/careers"
+        type="website"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          "name": "ZOOP 채용 공고",
+          "description": "AI 기반 채용 플랫폼 ZOOP의 개발자 채용 공고",
+          "numberOfItems": postings.length,
+          "itemListElement": postings.slice(0, 10).map((post, index) => ({
+            "@type": "ListItem",
+            "position": index + 1,
+            "item": {
+              "@type": "JobPosting",
+              "title": post.postTitle,
+              "hiringOrganization": {
+                "@type": "Organization",
+                "name": post.companyName || "ZOOP"
+              },
+              "jobLocation": {
+                "@type": "Place",
+                "address": {
+                  "@type": "PostalAddress",
+                  "addressLocality": post.postLocation
+                }
+              },
+              "employmentType": "FULL_TIME",
+              "description": post.postContent
+            }
+          }))
+        }}
+      />
 
-      {/* Slider Section */}
-      <section className="careers-video-section">
-        <video
-          key="video"
-          className={`careers-media ${videoPhase === 0 ? 'active' : 'inactive'} ${isTransitioning ? 'transitioning' : ''}`}
-          ref={videoRef}
-          autoPlay 
-          muted 
-          loop={true}
-          src="/careers_video.mp4"
-          onError={(e) => {
-            console.warn('Video loading error:', e);
-          }}
-        />
-        
-        <img
-          key="image"
-          className={`careers-media ${videoPhase === 1 ? 'active' : 'inactive'} ${isTransitioning ? 'transitioning' : ''}`}
-          src="/careers1.png"
-          alt="채용 이미지"
-          onError={(e) => {
-            console.warn('Image loading error:', e);
-          }}
-        />
+      <div className="careers-page">
+        <Navbar />
 
-        <div className="video-overlay">
-          {showText && (
-            <h1 className="video-title">
-              {videoPhase === 0
-                ? '최고의 기업들이 당신을 기다리고 있습니다'
-                : '지금 바로 지원해보세요!'}
-            </h1>
-          )}
-        </div>
-      </section>
+        {/* Slider Section */}
+        <section className="careers-video-section">
+          <video
+            key="video"
+            className={`careers-media ${videoPhase === 0 ? 'active' : 'inactive'} ${isTransitioning ? 'transitioning' : ''}`}
+            ref={videoRef}
+            autoPlay 
+            muted 
+            loop={true}
+            src="/careers_video.mp4"
+            onError={(e) => {
+              console.warn('Video loading error:', e);
+            }}
+          />
+          
+          <img
+            key="image"
+            className={`careers-media ${videoPhase === 1 ? 'active' : 'inactive'} ${isTransitioning ? 'transitioning' : ''}`}
+            src="/careers1.png"
+            alt="채용 이미지"
+            onError={(e) => {
+              console.warn('Image loading error:', e);
+            }}
+          />
 
-      {/* Filter Bar */}
-      <section className="careers-filter-bar">
-        <div className="filter-group">
-          <select value={languageFilter} onChange={e=>setLanguageFilter(e.target.value)} className="filter-select">
-            <option value="">언어 선택</option>
-            {LANGUAGES.map(lang=> <option key={lang} value={lang}>{lang}</option>)}
-          </select>
-          <select value={locationFilter} onChange={e=>setLocationFilter(e.target.value)} className="filter-select">
-            <option value="">지역 선택</option>
-            {LOCATIONS.map(loc=> <option key={loc} value={loc}>{loc}</option>)}
-          </select>
-          <div className="search-box">
-            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="검색어 입력" />
-            <FaSearch className="search-icon" />
+          <div className="video-overlay">
+            {showText && (
+              <h1 className="video-title">
+                {videoPhase === 0
+                  ? '최고의 기업들이 당신을 기다리고 있습니다'
+                  : '지금 바로 지원해보세요!'}
+              </h1>
+            )}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Job Listings */}
-      <section className="careers-job-listings-grid">
-        <div className="careers-job-grid">
-          {loading ? (
-            <div className="loading-container">
-              <div className="loading-spinner" />
-              <p>채용 공고를 불러오는 중...</p>
+        {/* Filter Bar */}
+        <section className="careers-filter-bar">
+          <div className="filter-group">
+            <select value={languageFilter} onChange={e=>setLanguageFilter(e.target.value)} className="filter-select">
+              <option value="">언어 선택</option>
+              {LANGUAGES.map(lang=> <option key={lang} value={lang}>{lang}</option>)}
+            </select>
+            <select value={locationFilter} onChange={e=>setLocationFilter(e.target.value)} className="filter-select">
+              <option value="">지역 선택</option>
+              {LOCATIONS.map(loc=> <option key={loc} value={loc}>{loc}</option>)}
+            </select>
+            <div className="search-box">
+              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="검색어 입력" />
+              <FaSearch className="search-icon" />
             </div>
-          ) : currentPosts.length === 0 ? (
-            <div className="no-jobs">조건에 맞는 채용 공고가 없습니다.</div>
-          ) : currentPosts.map(post => (
-            <CompactJobCard key={post.postId} post={post} onClick={() => handleJobClick(post)} />
-          ))}
-        </div>
-        
-        {/* 페이지네이션 */}
-        {!loading && totalPages > 1 && (
-          <div className="pagination-container" style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: '0.5rem',
-            marginTop: '3rem',
-            marginBottom: '2rem'
-          }}>
-            {/* 이전 페이지 버튼 */}
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              style={{
-                padding: '0.75rem',
-                border: 'none',
-                borderRadius: '12px',
-                background: currentPage === 1 ? '#f8f9fa' : '#fff',
-                color: currentPage === 1 ? '#adb5bd' : '#495057',
-                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                fontSize: '0.9rem',
-                boxShadow: currentPage === 1 ? 'none' : '0 2px 8px rgba(0,0,0,0.1)',
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '40px',
-                height: '40px'
-              }}
-              onMouseEnter={(e) => {
-                if (currentPage !== 1) {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (currentPage !== 1) {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                }
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="m15 18-6-6 6-6"/>
-              </svg>
-            </button>
+          </div>
+        </section>
 
-            {/* 페이지 번호 버튼들 */}
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+        {/* Job Listings */}
+        <section className="careers-job-listings-grid">
+          <div className="careers-job-grid">
+            {loading ? (
+              <div className="loading-container">
+                <div className="loading-spinner" />
+                <p>채용 공고를 불러오는 중...</p>
+              </div>
+            ) : currentPosts.length === 0 ? (
+              <div className="no-jobs">조건에 맞는 채용 공고가 없습니다.</div>
+            ) : currentPosts.map(post => (
+              <CompactJobCard key={post.postId} post={post} onClick={() => handleJobClick(post)} />
+            ))}
+          </div>
+          
+          {/* 페이지네이션 */}
+          {!loading && totalPages > 1 && (
+            <div className="pagination-container" style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '0.5rem',
+              marginTop: '3rem',
+              marginBottom: '2rem'
+            }}>
+              {/* 이전 페이지 버튼 */}
               <button
-                key={page}
-                onClick={() => handlePageChange(page)}
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
                 style={{
                   padding: '0.75rem',
                   border: 'none',
                   borderRadius: '12px',
-                  background: currentPage === page ? 'linear-gradient(135deg, #30c59b 0%, #28a085 100%)' : '#fff',
-                  color: currentPage === page ? '#fff' : '#495057',
-                  cursor: 'pointer',
+                  background: currentPage === 1 ? '#f8f9fa' : '#fff',
+                  color: currentPage === 1 ? '#adb5bd' : '#495057',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
                   fontSize: '0.9rem',
-                  minWidth: '40px',
-                  height: '40px',
-                  fontWeight: currentPage === page ? '600' : '500',
-                  boxShadow: currentPage === page ? '0 4px 12px rgba(48,197,155,0.3)' : '0 2px 8px rgba(0,0,0,0.1)',
+                  boxShadow: currentPage === 1 ? 'none' : '0 2px 8px rgba(0,0,0,0.1)',
                   transition: 'all 0.2s ease',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  width: '40px',
+                  height: '40px'
                 }}
                 onMouseEnter={(e) => {
-                  if (currentPage !== page) {
+                  if (currentPage !== 1) {
                     e.target.style.transform = 'translateY(-2px)';
                     e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-                    e.target.style.background = '#f8f9fa';
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (currentPage !== page) {
+                  if (currentPage !== 1) {
                     e.target.style.transform = 'translateY(0)';
                     e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                    e.target.style.background = '#fff';
                   }
                 }}
               >
-                {page}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="m15 18-6-6 6-6"/>
+                </svg>
               </button>
-            ))}
 
-            {/* 다음 페이지 버튼 */}
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage >= totalPages}
-              style={{
-                padding: '0.75rem',
-                border: 'none',
-                borderRadius: '12px',
-                background: currentPage >= totalPages ? '#f8f9fa' : '#fff',
-                color: currentPage >= totalPages ? '#adb5bd' : '#495057',
-                cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
-                fontSize: '0.9rem',
-                boxShadow: currentPage >= totalPages ? 'none' : '0 2px 8px rgba(0,0,0,0.1)',
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '40px',
-                height: '40px'
-              }}
-              onMouseEnter={(e) => {
-                if (currentPage < totalPages) {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (currentPage < totalPages) {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                }
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="m9 18 6-6-6-6"/>
-              </svg>
-            </button>
+              {/* 페이지 번호 버튼들 */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  style={{
+                    padding: '0.75rem',
+                    border: 'none',
+                    borderRadius: '12px',
+                    background: currentPage === page ? 'linear-gradient(135deg, #30c59b 0%, #28a085 100%)' : '#fff',
+                    color: currentPage === page ? '#fff' : '#495057',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    minWidth: '40px',
+                    height: '40px',
+                    fontWeight: currentPage === page ? '600' : '500',
+                    boxShadow: currentPage === page ? '0 4px 12px rgba(48,197,155,0.3)' : '0 2px 8px rgba(0,0,0,0.1)',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (currentPage !== page) {
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                      e.target.style.background = '#f8f9fa';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (currentPage !== page) {
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                      e.target.style.background = '#fff';
+                    }
+                  }}
+                >
+                  {page}
+                </button>
+              ))}
+
+              {/* 다음 페이지 버튼 */}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage >= totalPages}
+                style={{
+                  padding: '0.75rem',
+                  border: 'none',
+                  borderRadius: '12px',
+                  background: currentPage >= totalPages ? '#f8f9fa' : '#fff',
+                  color: currentPage >= totalPages ? '#adb5bd' : '#495057',
+                  cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
+                  fontSize: '0.9rem',
+                  boxShadow: currentPage >= totalPages ? 'none' : '0 2px 8px rgba(0,0,0,0.1)',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '40px',
+                  height: '40px'
+                }}
+                onMouseEnter={(e) => {
+                  if (currentPage < totalPages) {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (currentPage < totalPages) {
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                  }
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="m9 18 6-6-6-6"/>
+                </svg>
+              </button>
+            </div>
+          )}
+        </section>
+
+        {/* Modals */}
+        {showApplyModal && (
+          <div className="modal-overlay modal-enter" onClick={()=>setShowApplyModal(false)}>
+            <div className="apply-modal modal-enter" onClick={e=>e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>{selectedPost?.postTitle} 지원하기</h2>
+                <button className="close-button" onClick={()=>setShowApplyModal(false)}>×</button>
+              </div>
+              <div className="modal-body">
+                <ApplyForm post={selectedPost} onSubmit={handleSubmitApplication} onCancel={handleCancelApplication} />
+              </div>
+            </div>
           </div>
         )}
-      </section>
-
-      {/* Modals */}
-      {showApplyModal && (
-        <div className="modal-overlay modal-enter" onClick={()=>setShowApplyModal(false)}>
-          <div className="apply-modal modal-enter" onClick={e=>e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{selectedPost?.postTitle} 지원하기</h2>
-              <button className="close-button" onClick={()=>setShowApplyModal(false)}>×</button>
-            </div>
-            <div className="modal-body">
-              <ApplyForm post={selectedPost} onSubmit={handleSubmitApplication} onCancel={handleCancelApplication} />
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {showSuccessModal && (
-        <div className="modal-overlay modal-enter" onClick={()=>setShowSuccessModal(false)}>
-          <div className="success-modal modal-enter" onClick={e=>e.stopPropagation()}>
-            <div className="success-content">
-              <div className="success-icon">✓</div>
-              <h2>지원이 완료되었습니다!</h2>
-              <p>입력해주신 정보가 담당자에게 전달되었습니다.</p>
-              <button className="success-button" onClick={()=>setShowSuccessModal(false)}>
-                확인
-              </button>
+        
+        {showSuccessModal && (
+          <div className="modal-overlay modal-enter" onClick={()=>setShowSuccessModal(false)}>
+            <div className="success-modal modal-enter" onClick={e=>e.stopPropagation()}>
+              <div className="success-content">
+                <div className="success-icon">✓</div>
+                <h2>지원이 완료되었습니다!</h2>
+                <p>입력해주신 정보가 담당자에게 전달되었습니다.</p>
+                <button className="success-button" onClick={()=>setShowSuccessModal(false)}>
+                  확인
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 }
 
