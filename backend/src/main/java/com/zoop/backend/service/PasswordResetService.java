@@ -59,22 +59,22 @@ public class PasswordResetService {
     // 비밀번호 리셋
     @Transactional
     public void resetPassword(String token, String newPassword) {
-    PasswordResetToken resetToken = tokenRepository.findByToken(token)
-            .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 토큰입니다."));
+        PasswordResetToken resetToken = tokenRepository.findByToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 토큰입니다."));
 
-    if (resetToken.getExpirationDate().isBefore(LocalDateTime.now())) {
-        throw new IllegalArgumentException("토큰이 만료되었습니다.");
+        if (resetToken.getExpirationDate().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("토큰이 만료되었습니다.");
+        }
+
+        Candidate candidate = resetToken.getCandidate();
+        candidate.setCandidatePassword(passwordEncoder.encode(newPassword));
+        candidateRepository.save(candidate);
+
+        // ✅ candidate_updated_at 업데이트
+        LocalDateTime now = LocalDateTime.now();
+        candidateRepository.updateCandidateUpdatedAt(candidate.getCandidateId(), now);
+
+        tokenRepository.deleteByToken(token); // 재사용 방지
     }
-
-    Candidate candidate = resetToken.getCandidate();
-    candidate.setCandidatePassword(passwordEncoder.encode(newPassword));
-    candidateRepository.save(candidate);
-
-    // ✅ candidate_updated_at 업데이트
-    LocalDateTime now = LocalDateTime.now();
-    candidateRepository.updateCandidateUpdatedAt(candidate.getCandidateId(), now);
-
-    tokenRepository.deleteByToken(token); // 재사용 방지
-}
 
 }

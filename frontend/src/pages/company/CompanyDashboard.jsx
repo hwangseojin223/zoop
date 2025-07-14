@@ -2577,6 +2577,7 @@ export default function CompanyDashboard() {
             setSelectedCandidate(null);
           }}
           postId={selectedPostId}
+          avatarUrl={getGithubAvatarUrl(selectedCandidate.githubLogin)}
         />
       )}
     </div>
