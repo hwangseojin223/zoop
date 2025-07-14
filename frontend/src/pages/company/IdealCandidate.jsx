@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import IdealCandidateChatbot from "../../components/IdealCandidateChatbot";
 import IdealCandidateCard from "../../components/IdealCandidateCard";
 import Navbar from "../../components/Navbar";
+import SEO from "../../components/SEO";
 
 export default function IdealCandidate() {
   const location = useLocation();
@@ -310,6 +311,11 @@ export default function IdealCandidate() {
   return (
     <div style={{ minHeight: "100vh", background: "#fff" }}>
       <Navbar />
+      <SEO
+        title={`${filters.postId ? `회사 공고 ${filters.postId}번 인재상 작성` : '인재상 작성'}`}
+        description={`${filters.postId ? `회사 공고 ${filters.postId}번 인재상을 작성하고, 해당 공고에 맞는 개발자를 찾습니다.` : '인재상을 작성하고, 해당 공고에 맞는 개발자를 찾습니다.'}`}
+        keywords={`${filters.postId ? `회사 공고 ${filters.postId}번 인재상, 개발자 채용, 후보자 찾기` : '인재상 작성, 개발자 채용, 후보자 찾기'}`}
+      />
       <div style={{
         display: "flex",
         justifyContent: "center",

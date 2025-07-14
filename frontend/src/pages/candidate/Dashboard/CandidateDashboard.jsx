@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 // useAuth 훅을 임포트합니다. 실제 AuthContext 파일 경로에 맞게 수정해주세요.
 import { useAuth } from '../../../context/AuthContext.jsx';
+import SEO from '../../../components/SEO';
 
 import { Sidebar } from '../Sidebar';
 import { PortfolioNavbar } from '../Portfolio';
@@ -531,6 +532,7 @@ function CandidateDashboard() {
 
   return (
     <div className="candidate-dashboard-wrapper">
+      <SEO title="개인 대시보드" description="개인 대시보드에서 나의 포지션 제안, 면접 일정, 결과를 확인할 수 있습니다." />
       <Sidebar />
 
       <div className="main-content-area">

@@ -4,7 +4,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
-import './ApplicantSignupProcess.css';
 import axios from '../../api/axios';
 
 
@@ -202,13 +201,13 @@ useEffect(() => {
   const handlePasswordChange = (e) => {
     const value = e.target.value;
     setPassword(value);
-    // 영문자+숫자 조합, 최소 8자리
-    const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    // 영문자+숫자 조합, 최소 8자리 (특수문자 선택적 포함 가능)
+    const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+\-=[\]{}\\|;:'"<>,.?/~]{8,}$/;
     if (regex.test(value)) {
       setPasswordMessage('사용 가능한 비밀번호입니다.');
       setIsPasswordValid(true);
     } else {
-      setPasswordMessage('영문자+숫자 조합, 최소 8자리여야 합니다.');
+      setPasswordMessage('영문자+숫자 조합, 최소 8자리여야 합니다. (특수문자 !@#$%^&_-~ 선택적 사용 가능)');
       setIsPasswordValid(false);
     }
     // 비밀번호가 바뀌면 비밀번호 확인도 다시 체크
@@ -419,14 +418,15 @@ useEffect(() => {
   return (
     <>
       <Navbar />
-      <div className="applicant-signup-container">
-        <h2>ZOOP 통합 개인회원 가입</h2>
-        {isLoading ? (
-          <div style={{ textAlign: 'center', padding: '2rem' }}>
-            <p>초대 정보를 불러오는 중...</p>
-          </div>
-        ) : (
-        <form onSubmit={handleSubmit}>
+      <div className="min-h-screen bg-gray-50 pt-20 pb-8 px-4">
+        <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-lg p-8">
+          <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">ZOOP 통합 개인회원 가입</h2>
+          {isLoading ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600">초대 정보를 불러오는 중...</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
 
         {/* 아이디 입력 */}
         <div>
@@ -472,7 +472,7 @@ useEffect(() => {
             type="password"
             value={password}
             onChange={handlePasswordChange}
-            placeholder="영문자+숫자 조합, 최소 8자리"
+            placeholder="영문자+숫자 조합, 최소 8자리 (특수문자 사용 가능)"
             className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:border-sky-400 focus:ring-sky-200 transition-colors"
           />
           {passwordMessage && (
@@ -595,7 +595,7 @@ useEffect(() => {
         )}
 
         {/* 약관 동의 */}
-        <div className="border border-gray-200 p-4 rounded-xl bg-gray-50">
+        <div className="border border-gray-200 p-4 rounded-xl bg-gray-50 mt-8">
           <label className="block font-semibold">
             <input type="checkbox" checked={allAgree} onChange={handleAllAgreeChange} className="mr-2" />
             전체 동의
@@ -633,6 +633,7 @@ useEffect(() => {
         </button>
       </form>
         )}
+        </div>
       </div>
     </>
   );
