@@ -76,7 +76,7 @@ public class InvitationService {
             invitationRepository.updateStatusById(invitation.getInvitationId(), "failed");
         }
 
-        log.info("📨 메일 발송: 초대 링크 → " + frontendUrl + "/invite/" + token);
+        // log.info("📨 메일 발송: 초대 링크 → " + frontendUrl + "/invite/" + token);
     }
 
     /**합친 이후 */

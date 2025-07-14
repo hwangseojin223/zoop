@@ -166,11 +166,22 @@ public class CandidateService {
 
     /** 합친 이후 */
     public FindGithubLoginResponse findGithubLogin(FindGithubLoginRequest request) {
-        Candidate candidate = candidateRepository
-                .findByCandidateNameAndCandidateEmail(request.getName(), request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("일치하는 회원이 없습니다."));
+        try {
+            logger.info("GitHub 로그인 찾기 요청: name={}, email={}", request.getName(), request.getEmail());
+            
+            Candidate candidate = candidateRepository
+                    .findByCandidateNameAndCandidateEmail(request.getName(), request.getEmail())
+                    .orElseThrow(() -> new IllegalArgumentException("일치하는 회원이 없습니다."));
 
-        return new FindGithubLoginResponse(candidate.getGithubLogin());
+            logger.info("GitHub 로그인 찾기 성공: githubLogin={}", candidate.getGithubLogin());
+            return new FindGithubLoginResponse(candidate.getGithubLogin());
+        } catch (IllegalArgumentException e) {
+            logger.warn("GitHub 로그인 찾기 실패: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("GitHub 로그인 찾기 중 예상치 못한 오류 발생: {}", e.getMessage(), e);
+            throw new RuntimeException("GitHub 로그인 찾기 중 오류가 발생했습니다.", e);
+        }
     }
 
 }

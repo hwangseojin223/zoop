@@ -171,8 +171,23 @@ public class CandidateController {
 
     /** 합친 이후 */
     @PostMapping("/find-id")
-    public FindGithubLoginResponse findGithubLogin(@RequestBody FindGithubLoginRequest request) {
-        return candidateService.findGithubLogin(request);
+    public ResponseEntity<?> findGithubLogin(@RequestBody FindGithubLoginRequest request) {
+        try {
+            log.info("GitHub 로그인 찾기 요청: name={}, email={}", request.getName(), request.getEmail());
+            
+            FindGithubLoginResponse response = candidateService.findGithubLogin(request);
+            
+            log.info("GitHub 로그인 찾기 성공: githubLogin={}", response.getGithubLogin());
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            log.warn("GitHub 로그인 찾기 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("GitHub 로그인 찾기 중 예상치 못한 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "GitHub 로그인 찾기 중 오류가 발생했습니다."));
+        }
     }
 
     @GetMapping("/email/{githubLogin}")

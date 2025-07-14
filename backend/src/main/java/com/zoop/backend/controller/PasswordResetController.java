@@ -20,14 +20,23 @@ public class PasswordResetController {
     private final PasswordResetService passwordResetService;
 
     @PostMapping("/request-password-reset")
-    public ResponseEntity<String> requestPasswordReset(@RequestBody PasswordResetRequest request) {
-        passwordResetService.requestPasswordReset(request);
-        log.info("✅ 요청 정보: " + request.getGithubLogin() + ", " +
-                            request.getEmail() + ", " +
-                            request.getCandidateName() + ", " +
-                            request.getCandidatePhoneNumber());
-
-        return ResponseEntity.ok("비밀번호 재설정 이메일을 전송했습니다.");
+    public ResponseEntity<?> requestPasswordReset(@RequestBody PasswordResetRequest request) {
+        try {
+            log.info("비밀번호 재설정 요청: githubLogin={}, email={}, name={}, phone={}", 
+                    request.getGithubLogin(), request.getEmail(), 
+                    request.getCandidateName(), request.getCandidatePhoneNumber());
+            
+            passwordResetService.requestPasswordReset(request);
+            
+            log.info("✅ 비밀번호 재설정 이메일 전송 성공");
+            return ResponseEntity.ok("비밀번호 재설정 이메일을 전송했습니다.");
+        } catch (IllegalArgumentException e) {
+            log.warn("비밀번호 재설정 요청 실패: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            log.error("비밀번호 재설정 요청 중 예상치 못한 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body("비밀번호 재설정 요청 처리 중 오류가 발생했습니다.");
+        }
     }
 
     @PostMapping("/reset-password")

@@ -1,6 +1,7 @@
 package com.zoop.backend.service;
 
 import java.util.Random;
+import java.net.URLEncoder;
 
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -13,8 +14,9 @@ import com.zoop.backend.repository.EmailVerificationRepository;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import lombok.extern.slf4j.Slf4j;
 
-
+@Slf4j
 @Service
 public class EmailService {
 
@@ -65,7 +67,14 @@ public class EmailService {
     public void sendInvitationEmail(String toEmail, String githubLogin, String token, Post post) throws MessagingException {
         
         String subject = "[ZOOP] " + post.getPostTitle() + " - 인터뷰 초대";
-        String link = frontendUrl + "/invite/" + token;
+        String link;
+        try {
+            link = frontendUrl + "/invite/" + token + "?email=" + URLEncoder.encode(toEmail, "UTF-8");
+            log.info("📨 메일 발송: 초대 링크 → {}", link);
+        } catch (java.io.UnsupportedEncodingException e) {
+            // UTF-8은 항상 지원되므로 이 예외는 발생하지 않아야 하지만, 안전을 위해 처리
+            link = frontendUrl + "/invite/" + token + "?email=" + toEmail;
+        }
 
         String body = String.format("""
         <div style="font-family:Arial, sans-serif; background-color:#f9f9f9; padding:20px;">

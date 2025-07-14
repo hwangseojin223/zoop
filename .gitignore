@@ -46,8 +46,9 @@ backend/target/
 *.env
 **/.env
 **/.env.*
+backend/python-api/github_search.env
 backend/target/backend/target/
-backend\python-api\github_search\__pycache__
+backend/python-api/github_search/__pycache__
 
 # Upload directories
 backend/uploads/
@@ -56,3 +57,6 @@ backend/python-api/chatbot/.env
 backend/python-api/github_search/.env
 backend/python-api/chatbot/__pycache__/
 backend/uploads/
+
+# BFG 유틸 jar 파일 무시
+bfg-*.jar
