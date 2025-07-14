@@ -48,7 +48,7 @@ const Support = lazy(() => import('./pages/info/Support'));
 const CustomerServicePage = lazy(() => import('./pages/info/CustomerServicePage'));
 const FaqPage = lazy(() => import('./pages/info/FaqPage'));
 const Careers = lazy(() => import('./pages/info/Careers'));
-// const JobDetailPage = lazy(() => import('./pages/info/JobDetailPage'));
+const JobDetailPage = lazy(() => import('./pages/info/JobDetailPage'));
 
 // 로딩 스켈레톤 컴포넌트
 const LoadingSkeleton = () => (
@@ -145,6 +145,7 @@ function AppContent() {
         <Route path="/support" element={<CustomerServicePage />} />
         <Route path="/faq" element={<FaqPage />} />
         <Route path="/careers" element={<Careers />} />
+        <Route path="/job/:postId" element={<JobDetailPage />} />
         <Route path="/report" element={<IncidentReportPage />} />
         <Route path="/company/candidates/:postId" element={<CandidateList />} />
         <Route
