@@ -162,7 +162,7 @@ export default function IdealCandidateChatbot({ recruitFilters, onIdealCandidate
             ? msg.content
             : ""
         }));
-      const response = await fetch("http://localhost:8001/ideal-candidate-chat", {
+      const response = await fetch("http://localhost:8000/ideal-candidate-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

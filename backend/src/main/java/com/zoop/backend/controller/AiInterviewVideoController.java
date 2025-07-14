@@ -131,7 +131,7 @@ public class AiInterviewVideoController {
     private List<String> callPythonAIForQuestions(Post post, String portfolioAnalysis) {
         try {
             // Python AI API URL
-            String pythonApiUrl = "http://localhost:8003/generate-questions";
+            String pythonApiUrl = "http://localhost:8004/generate-questions";
             
             // 공고 정보 준비
             String postTitle = post.getPostTitle() != null ? post.getPostTitle() : "";

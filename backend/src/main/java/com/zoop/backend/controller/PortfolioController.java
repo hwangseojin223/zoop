@@ -1,5 +1,9 @@
 package com.zoop.backend.controller;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +19,12 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zoop.backend.domain.dto.CareerDataDto;
 import com.zoop.backend.domain.dto.PortfolioSubmissionResponseDto;
+import com.zoop.backend.domain.entity.CandidatePortfolio;
+import com.zoop.backend.repository.CandidatePortfolioRepository;
+import com.zoop.backend.repository.PortfolioRepository;
+import com.zoop.backend.service.PortfolioMatchingService;
 import com.zoop.backend.service.PortfolioService;
+import com.zoop.backend.service.S3Service;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -33,11 +42,19 @@ public class PortfolioController {
 
     private final PortfolioService portfolioService;
     private final ObjectMapper objectMapper;
+    private final PortfolioRepository portfolioRepository;
+    private final S3Service s3Service;
+    private final CandidatePortfolioRepository candidatePortfolioRepository;
+    private final PortfolioMatchingService portfolioMatchingService;
     
     @Autowired
-    public PortfolioController(PortfolioService portfolioService, ObjectMapper objectMapper) {
+    public PortfolioController(PortfolioService portfolioService, ObjectMapper objectMapper, PortfolioRepository portfolioRepository, S3Service s3Service, CandidatePortfolioRepository candidatePortfolioRepository, PortfolioMatchingService portfolioMatchingService) {
         this.portfolioService = portfolioService;
         this.objectMapper = objectMapper;
+        this.portfolioRepository = portfolioRepository;
+        this.s3Service = s3Service;
+        this.candidatePortfolioRepository = candidatePortfolioRepository;
+        this.portfolioMatchingService = portfolioMatchingService;
     }
     
     @Operation(summary = "포트폴리오 제출", description = "지원자가 포트폴리오와 관련 정보를 제출합니다.")
@@ -127,6 +144,124 @@ public class PortfolioController {
                     .body("포트폴리오 제출 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
+
+    @PostMapping("/standalone")
+    public ResponseEntity<?> submitStandalonePortfolio(
+            @RequestParam("candidateId") Long candidateId,
+            @RequestParam(value = "portfolioFile", required = false) MultipartFile portfolioFile,
+            @RequestParam(value = "portfolioUrl", required = false) String portfolioUrl,
+            @RequestParam(value = "portfolioDescription", required = false) String portfolioDescription
+    ) {
+        try {
+            System.out.println("=== [DEBUG] PortfolioController.submitStandalonePortfolio() 진입 ===");
+            System.out.println("[PortfolioController] candidateId: " + candidateId);
+            System.out.println("[PortfolioController] portfolioFile: " + (portfolioFile != null ? portfolioFile.getOriginalFilename() + " (크기: " + portfolioFile.getSize() + " bytes)" : "null"));
+            System.out.println("[PortfolioController] portfolioUrl: " + portfolioUrl);
+            System.out.println("[PortfolioController] portfolioDescription: " + portfolioDescription);
+            System.out.println("[PortfolioController] 파일 업로드 시작...");
+
+            // 1. candidate_portfolios 테이블에 저장
+            String portfolioFilePath = null;
+            if (portfolioFile != null && !portfolioFile.isEmpty()) {
+                try {
+                    String fileName = "standalone_portfolio_" + candidateId + "_" + System.currentTimeMillis() + "_" + portfolioFile.getOriginalFilename();
+                    portfolioFilePath = s3Service.uploadPortfolioFile(portfolioFile);
+                    System.out.println("[PortfolioController] S3 업로드 성공: " + portfolioFilePath);
+                } catch (Exception s3Error) {
+                    System.err.println("[PortfolioController] S3 업로드 실패: " + s3Error.getMessage());
+                    s3Error.printStackTrace();
+                    // S3 업로드 실패 시 로컬 경로로 대체
+                    String fileName = "standalone_portfolio_" + candidateId + "_" + System.currentTimeMillis() + "_" + portfolioFile.getOriginalFilename();
+                    portfolioFilePath = "local://" + fileName;
+                    System.out.println("[PortfolioController] 로컬 파일 경로로 대체: " + portfolioFilePath);
+                }
+            }
+
+            // CandidatePortfolio 엔티티 생성 및 저장
+            CandidatePortfolio portfolio = CandidatePortfolio.builder()
+                    .candidateId(candidateId)
+                    .portfolioFilePath(portfolioFilePath)
+                    .portfolioAnalysisStatus("PENDING")
+                    .portfolioCreatedAt(new Date())
+                    .portfolioUpdatedAt(new Date())
+                    .build();
+
+            CandidatePortfolio savedPortfolio = candidatePortfolioRepository.save(portfolio);
+            System.out.println("[PortfolioController] 저장된 포트폴리오 ID: " + savedPortfolio.getCandPortfolioId());
+
+            // 2. AI 분석 및 매칭 실행 (비동기)
+            portfolioMatchingService.processPortfolioMatching(savedPortfolio.getCandPortfolioId());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("portfolioId", savedPortfolio.getCandPortfolioId());
+            response.put("message", "포트폴리오가 성공적으로 제출되었습니다. AI 분석이 진행 중입니다.");
+            response.put("success", true);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            System.err.println("[PortfolioController] 포트폴리오 제출 오류: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "포트폴리오 제출 중 오류가 발생했습니다."));
+        }
+    }
+
+    // 이력서 등록용 포트폴리오 업로드 API (새로 추가)
+    @PostMapping("/resume-upload")
+    public ResponseEntity<?> uploadResumePortfolio(
+            @RequestParam("candidateId") Long candidateId,
+            @RequestParam(value = "portfolioFile", required = false) MultipartFile portfolioFile
+    ) {
+        try {
+            System.out.println("=== [DEBUG] PortfolioController.uploadResumePortfolio() 진입 ===");
+            System.out.println("[PortfolioController] candidateId: " + candidateId);
+            System.out.println("[PortfolioController] portfolioFile: " + (portfolioFile != null ? portfolioFile.getOriginalFilename() + " (크기: " + portfolioFile.getSize() + " bytes)" : "null"));
+
+            // 1. candidate_portfolios 테이블에 저장
+            String portfolioFilePath = null;
+            if (portfolioFile != null && !portfolioFile.isEmpty()) {
+                try {
+                    String fileName = "resume_portfolio_" + candidateId + "_" + System.currentTimeMillis() + "_" + portfolioFile.getOriginalFilename();
+                    portfolioFilePath = s3Service.uploadPortfolioFile(portfolioFile);
+                    System.out.println("[PortfolioController] S3 업로드 성공: " + portfolioFilePath);
+                } catch (Exception s3Error) {
+                    System.err.println("[PortfolioController] S3 업로드 실패: " + s3Error.getMessage());
+                    s3Error.printStackTrace();
+                    // S3 업로드 실패 시 로컬 경로로 대체
+                    String fileName = "resume_portfolio_" + candidateId + "_" + System.currentTimeMillis() + "_" + portfolioFile.getOriginalFilename();
+                    portfolioFilePath = "local://" + fileName;
+                    System.out.println("[PortfolioController] 로컬 파일 경로로 대체: " + portfolioFilePath);
+                }
+            }
+
+            // CandidatePortfolio 엔티티 생성 및 저장
+            CandidatePortfolio portfolio = CandidatePortfolio.builder()
+                    .candidateId(candidateId)
+                    .portfolioFilePath(portfolioFilePath)
+                    .portfolioAnalysisStatus("PENDING")
+                    .portfolioCreatedAt(new Date())
+                    .portfolioUpdatedAt(new Date())
+                    .build();
+
+            CandidatePortfolio savedPortfolio = candidatePortfolioRepository.save(portfolio);
+            System.out.println("[PortfolioController] 저장된 포트폴리오 ID: " + savedPortfolio.getCandPortfolioId());
+
+            // 2. AI 분석 및 매칭 실행 (비동기)
+            portfolioMatchingService.processPortfolioMatching(savedPortfolio.getCandPortfolioId());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("portfolioId", savedPortfolio.getCandPortfolioId());
+            response.put("message", "이력서 포트폴리오가 성공적으로 업로드되었습니다.");
+            response.put("success", true);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            System.err.println("[PortfolioController] 이력서 포트폴리오 업로드 오류: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "이력서 포트폴리오 업로드 중 오류가 발생했습니다."));
+        }
+    }
     
     @Operation(summary = "지원자별 포트폴리오 조회", description = "특정 지원자가 특정 공고에 제출한 포트폴리오를 조회합니다.")
     @GetMapping("/candidate/{candidateId}")
@@ -208,6 +343,18 @@ public class PortfolioController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("PENDING 포트폴리오 분석 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    @Operation(summary = "PENDING candidate_portfolios 일괄 분석", description = "분석 대기 중인 candidate_portfolios를 모두 분석하고 결과를 ai_analysis_result에 저장합니다.")
+    @PostMapping("/analyze-pending-candidate-portfolios")
+    public ResponseEntity<?> analyzePendingCandidatePortfolios() {
+        try {
+            portfolioMatchingService.analyzePendingCandidatePortfolios();
+            return ResponseEntity.ok("candidate_portfolios 분석이 완료되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("PENDING candidate_portfolios 분석 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 

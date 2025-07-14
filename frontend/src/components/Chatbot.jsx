@@ -209,7 +209,7 @@ export default function Chatbot({ open, onClose, anchorRef, onIdealCandidateUpda
     isSending.current = true;
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8001/chat", {
+      const res = await fetch("http://localhost:8000/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

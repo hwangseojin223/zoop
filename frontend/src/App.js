@@ -35,9 +35,10 @@ import './components/Chatbot.css';
 // candidate
 import { CandidateDashboard } from './pages/candidate/Dashboard';
 // PortfolioSubmissionPage 컴포넌트를 임포트합니다. 실제 파일 경로에 맞게 수정해주세요.
-import PortfolioSubmissionPage from './pages/candidate/PortfolioSubmissionPage';
-import InterviewPage from './pages/candidate/InterviewPage';
-import InterviewSession from './pages/candidate/InterviewSession';
+import PortfolioSubmissionPage from './pages/candidate/Portfolio/PortfolioSubmissionPage';
+import InterviewPage from './pages/candidate/Interview/InterviewPage';
+import InterviewSession from './pages/candidate/Interview/InterviewSession';
+import ResumeSubmissionPage from './pages/candidate/resume/ResumeSubmissionPage';
 
 // info - lazy loading으로 변경
 const About = lazy(() => import('./pages/info/About'));
@@ -125,6 +126,33 @@ function AppContent() {
           element={
             <PrivateRoute allowedUserType='candidate'> {/* 개인회원만 접근 허용 */}
               <PortfolioSubmissionPage />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/candidate/portfolio/submit"
+          element={
+            <PrivateRoute allowedUserType='candidate'>
+              <PortfolioSubmissionPage />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/candidate/resume/submit"
+          element={
+            <PrivateRoute allowedUserType='candidate'>
+              <ResumeSubmissionPage />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/candidate/resume/ResumeSubmissionPage"
+          element={
+            <PrivateRoute allowedUserType='candidate'>
+              <ResumeSubmissionPage />
             </PrivateRoute>
           }
         />
