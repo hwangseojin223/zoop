@@ -7,6 +7,8 @@ import ApplyForm from '../../components/ApplyForm';
 import './Careers.css';
 import '../../components/ApplyForm.css';
 import '../../components/CompactJobCard.css';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const LANGUAGES = [
   'Python', 'JavaScript', 'Java', 'C++', 'Go', 'Ruby', 'Kotlin', 'TypeScript', '기타'
@@ -27,7 +29,12 @@ function Careers() {
   const [videoPhase, setVideoPhase] = useState(0); // 0=video, 1=image
   const [showText, setShowText] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1); // 페이지네이션 추가
   const videoRef = useRef(null);
+  const { authState, isInitialized } = useAuth();
+  const navigate = useNavigate();
+
+  const POSTS_PER_PAGE = 12; // 페이지당 공고 수
 
   // Fetch postings once
   useEffect(() => { fetchPublicPostings(); }, []);
@@ -61,6 +68,9 @@ function Careers() {
       const res = await fetch('http://localhost:8081/api/postings/public');
       if (res.ok) {
         const data = await res.json();
+        console.log('=== 채용 페이지 API 응답 ===');
+        console.log('API에서 받은 공고 수:', data.length);
+        console.log('공고 데이터 샘플:', data.slice(0, 3));
         setPostings(data.map(p => ({ ...p, companyName: p.companyName || 'ZOOP' })));
       } else setPostings([]);
     } catch {
@@ -97,14 +107,54 @@ function Careers() {
     }
   };
 
+  const handleJobClick = post => {
+    navigate(`/job/${post.postId}`);
+  };
+
   // Filter logic
   const filtered = postings.filter(post => {
-    if (post.postExpiryDate && new Date(post.postExpiryDate) < new Date()) return false;
+    // 백엔드에서 이미 상태(ACTIVE)와 마감일 필터링을 했으므로 제거
+    // if (post.postStatus && post.postStatus !== 'ACTIVE') {
+    //   console.log('상태 필터로 제외된 공고:', post.postTitle, post.postStatus);
+    //   return false;
+    // }
+    // if (post.postExpiryDate && new Date(post.postExpiryDate) < new Date()) {
+    //   console.log('마감일 필터로 제외된 공고:', post.postTitle, post.postExpiryDate);
+    //   return false;
+    // }
+    
+    // 사용자가 선택한 필터만 적용
     if (languageFilter && !post.postProgrammingLanguage?.includes(languageFilter)) return false;
     if (locationFilter && !post.postLocation?.includes(locationFilter)) return false;
     if (search && !(post.postTitle?.includes(search) || post.companyName?.includes(search))) return false;
     return true;
   });
+  
+  console.log('=== 필터링 결과 ===');
+  console.log('필터링 전 공고 수:', postings.length);
+  console.log('필터링 후 공고 수:', filtered.length);
+  console.log('현재 필터 상태 - 언어:', languageFilter, '지역:', locationFilter, '검색:', search);
+
+  // 페이지네이션 계산
+  const totalPages = Math.max(1, Math.ceil(filtered.length / POSTS_PER_PAGE));
+  const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
+  const endIndex = startIndex + POSTS_PER_PAGE;
+  const currentPosts = filtered.slice(startIndex, endIndex);
+
+  // 페이지 변경 함수
+  const handlePageChange = (page) => {
+    // 페이지 범위 검증
+    if (page < 1 || page > totalPages) {
+      return;
+    }
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' }); // 페이지 변경 시 맨 위로 스크롤
+  };
+
+  // 필터가 변경될 때 첫 페이지로 이동
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [languageFilter, locationFilter, search]);
 
   return (
     <div className="careers-page">
@@ -172,12 +222,141 @@ function Careers() {
               <div className="loading-spinner" />
               <p>채용 공고를 불러오는 중...</p>
             </div>
-          ) : filtered.length===0 ? (
+          ) : currentPosts.length === 0 ? (
             <div className="no-jobs">조건에 맞는 채용 공고가 없습니다.</div>
-          ) : filtered.map(post=> (
-            <CompactJobCard key={post.postId} post={post} onClick={()=>handleApply(post)} />
+          ) : currentPosts.map(post => (
+            <CompactJobCard key={post.postId} post={post} onClick={() => handleJobClick(post)} />
           ))}
         </div>
+        
+        {/* 페이지네이션 */}
+        {!loading && totalPages > 1 && (
+          <div className="pagination-container" style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '0.5rem',
+            marginTop: '3rem',
+            marginBottom: '2rem'
+          }}>
+            {/* 이전 페이지 버튼 */}
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              style={{
+                padding: '0.75rem',
+                border: 'none',
+                borderRadius: '12px',
+                background: currentPage === 1 ? '#f8f9fa' : '#fff',
+                color: currentPage === 1 ? '#adb5bd' : '#495057',
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                fontSize: '0.9rem',
+                boxShadow: currentPage === 1 ? 'none' : '0 2px 8px rgba(0,0,0,0.1)',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '40px',
+                height: '40px'
+              }}
+              onMouseEnter={(e) => {
+                if (currentPage !== 1) {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (currentPage !== 1) {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                }
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="m15 18-6-6 6-6"/>
+              </svg>
+            </button>
+
+            {/* 페이지 번호 버튼들 */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                style={{
+                  padding: '0.75rem',
+                  border: 'none',
+                  borderRadius: '12px',
+                  background: currentPage === page ? 'linear-gradient(135deg, #30c59b 0%, #28a085 100%)' : '#fff',
+                  color: currentPage === page ? '#fff' : '#495057',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  minWidth: '40px',
+                  height: '40px',
+                  fontWeight: currentPage === page ? '600' : '500',
+                  boxShadow: currentPage === page ? '0 4px 12px rgba(48,197,155,0.3)' : '0 2px 8px rgba(0,0,0,0.1)',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                onMouseEnter={(e) => {
+                  if (currentPage !== page) {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                    e.target.style.background = '#f8f9fa';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (currentPage !== page) {
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    e.target.style.background = '#fff';
+                  }
+                }}
+              >
+                {page}
+              </button>
+            ))}
+
+            {/* 다음 페이지 버튼 */}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages}
+              style={{
+                padding: '0.75rem',
+                border: 'none',
+                borderRadius: '12px',
+                background: currentPage >= totalPages ? '#f8f9fa' : '#fff',
+                color: currentPage >= totalPages ? '#adb5bd' : '#495057',
+                cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
+                fontSize: '0.9rem',
+                boxShadow: currentPage >= totalPages ? 'none' : '0 2px 8px rgba(0,0,0,0.1)',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '40px',
+                height: '40px'
+              }}
+              onMouseEnter={(e) => {
+                if (currentPage < totalPages) {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (currentPage < totalPages) {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                }
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="m9 18 6-6-6-6"/>
+              </svg>
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Modals */}

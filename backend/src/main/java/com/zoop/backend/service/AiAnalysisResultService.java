@@ -32,7 +32,18 @@ public class AiAnalysisResultService {
                 .analysisCreatedAt(dto.getAnalysisCreatedAt() != null ? dto.getAnalysisCreatedAt() : LocalDateTime.now())
                 .build();
 
-        return aiAnalysisResultRepository.save(entity);
+        AiAnalysisResult saved = aiAnalysisResultRepository.save(entity);
+
+        // GitHub 검색 결과의 ai_github_analysis_id 업데이트
+        if (dto.getGithubSearchResultId() != null) {
+            Optional<GithubSearchResult> githubResult = githubSearchResultRepository.findById(dto.getGithubSearchResultId());
+            githubResult.ifPresent(result -> {
+                result.setAiGithubAnalysisId(saved.getAnalysisId());
+                githubSearchResultRepository.save(result);
+            });
+        }
+
+        return saved;
     }
 
     public Optional<AiAnalysisResult> findByGithubSearchResultId(Long githubSearchResultId) {
@@ -53,5 +64,21 @@ public class AiAnalysisResultService {
 
     public List<AiAnalysisResult> findAll() {
         return aiAnalysisResultRepository.findAll();
+    }
+
+    // 내 버전: jobCandidateId와 analysisType으로 최신순 정렬 조회
+    public List<AiAnalysisResult> findByJobCandidateIdAndAnalysisType(Long jobCandidateId, String analysisType) {
+        return aiAnalysisResultRepository.findByJobCandidateIdAndAnalysisTypeOrderByAnalysisDateDesc(jobCandidateId, analysisType);
+    }
+
+    // 팀 버전: 분석 결과 삭제 기능
+    @Transactional
+    public boolean deleteById(Long analysisId) {
+        Optional<AiAnalysisResult> result = aiAnalysisResultRepository.findById(analysisId);
+        if (result.isPresent()) {
+            aiAnalysisResultRepository.deleteById(analysisId);
+            return true;
+        }
+        return false;
     }
 } 

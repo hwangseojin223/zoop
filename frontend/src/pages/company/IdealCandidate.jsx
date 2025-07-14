@@ -45,7 +45,7 @@ export default function IdealCandidate() {
   // 더 연하고 은은한 네온 호버 효과 스타일
   const neonBoxShadow = '0 0 0 2px #19e3a355, 0 2px 12px #19e3a333';
 
-  // 로딩 메시지 배열
+  // 로딩 메시지 배열 (더 상세하고 다양하게)
   const loadingMessages = [
     "완벽한 후보자를 찾고 있습니다...",
     "AI가 필터링 중입니다...",
@@ -70,7 +70,26 @@ export default function IdealCandidate() {
     "이메일이 있는 후보자를 찾는 중입니다...",
     "GitHub 프로필을 스캔 중입니다...",
     "연락 가능한 후보자를 선별 중입니다...",
-    "최종 후보자 목록을 완성 중입니다..."
+    "최종 후보자 목록을 완성 중입니다...",
+    "GitHub API에서 데이터를 수집 중입니다...",
+    "개발자 프로필을 상세 분석 중입니다...",
+    "기술적 역량을 종합 평가 중입니다...",
+    "활동 이력을 검토 중입니다...",
+    "커밋 패턴을 분석 중입니다...",
+    "프로젝트 품질을 평가 중입니다...",
+    "협업 능력을 측정 중입니다...",
+    "문제 해결 능력을 분석 중입니다...",
+    "코딩 스타일을 검토 중입니다...",
+    "기술 문서화 능력을 평가 중입니다...",
+    "오픈소스 기여도를 확인 중입니다...",
+    "최신 기술 트렌드를 반영 중입니다...",
+    "기업 문화와의 적합성을 분석 중입니다...",
+    "성장 가능성을 종합 평가 중입니다...",
+    "최종 후보자 순위를 결정 중입니다...",
+    "결과 데이터를 정리 중입니다...",
+    "이메일 주소를 검증 중입니다...",
+    "연락 가능성을 최종 확인 중입니다...",
+    "후보자 목록을 완성 중입니다..."
   ];
 
   // 동적 메시지 생성
@@ -99,9 +118,9 @@ export default function IdealCandidate() {
   // 로딩 진행률 시뮬레이션
   const simulateLoading = (headcount) => {
     // 이메일이 있는 후보자를 찾는 시간을 고려한 더 긴 로딩 시간
-    const baseTime = 8000; // 기본 8초 (이메일 확인 시간 포함)
-    const perPersonTime = Math.pow(headcount, 1.6) * 2000; // 인원당 시간 (더 기하급수적)
-    const emailSearchTime = headcount * 1500; // 이메일이 있는 후보자 찾는 시간
+    const baseTime = 15000; // 기본 15초로 증가 (이메일 확인 시간 포함)
+    const perPersonTime = Math.pow(headcount, 1.8) * 3000; // 인원당 시간 증가 (더 기하급수적)
+    const emailSearchTime = headcount * 2500; // 이메일이 있는 후보자 찾는 시간 증가
     const totalTime = baseTime + perPersonTime + emailSearchTime;
     
     console.log(`총 로딩 시간: ${Math.round(totalTime/1000)}초 (인원수: ${headcount}명)`);
@@ -117,11 +136,11 @@ export default function IdealCandidate() {
       // 75-95% 구간에서 매우 느리게 진행 (이메일 검색 시간)
       let adjustedProgress = progress;
       if (progress > 90) {
-        adjustedProgress = 90 + (progress - 90) * 0.1; // 90% 이후 10% 속도로 진행
+        adjustedProgress = 90 + (progress - 90) * 0.05; // 90% 이후 5% 속도로 진행 (더 느리게)
       } else if (progress > 80) {
-        adjustedProgress = 80 + (progress - 80) * 0.2; // 80% 이후 20% 속도로 진행
+        adjustedProgress = 80 + (progress - 80) * 0.1; // 80% 이후 10% 속도로 진행 (더 느리게)
       } else if (progress > 60) {
-        adjustedProgress = 60 + (progress - 60) * 0.5; // 60% 이후 50% 속도로 진행
+        adjustedProgress = 60 + (progress - 60) * 0.3; // 60% 이후 30% 속도로 진행 (더 느리게)
       }
       
       setLoadingProgress(Math.min(adjustedProgress, 99)); // 99%에서 멈춤
@@ -152,12 +171,12 @@ export default function IdealCandidate() {
     setLoadingProgress(100);
     setLoadingMessage("완료! 후보자 목록으로 이동합니다...");
     
-    // 잠시 후 페이지 이동 (2배로 증가)
+    // 잠시 후 페이지 이동 (더 길게 대기)
     setTimeout(() => {
       navigate(`/company/candidates/${filters.postId}`, {
         state: { ...filters, idealCandidate: summary },
       });
-    }, 2000); // 2초로 증가
+    }, 3000); // 3초로 증가
   };
 
   useEffect(() => {

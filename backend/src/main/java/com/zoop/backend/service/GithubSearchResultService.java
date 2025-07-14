@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import com.zoop.backend.domain.dto.GithubSearchResultWithStageDto;
-import com.zoop.backend.repository.GithubSearchResultRepository;
 
 @Service
 @RequiredArgsConstructor

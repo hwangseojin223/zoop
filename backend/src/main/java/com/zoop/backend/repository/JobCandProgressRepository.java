@@ -19,7 +19,6 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
 
     // postId와 githubLogin으로 중복 확인
     boolean existsByPostPostIdAndGithubLogin(Long postId, String githubLogin);
-    
 
     @Query(value = """
         SELECT 
@@ -69,34 +68,6 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
     """, nativeQuery = true)
     List<ResponderDto> findCandidatesAtStage3nByPost(@Param("postId") Long postId);
 
-    //  @Query(value = """
-    //     SELECT 
-    //         c.candidate_email AS email,
-    //         c.candidate_name AS name,
-    //         p.post_location AS location,
-    //         p.post_programming_language AS languages,
-    //         ar.analysis_score AS score,
-    //         TO_CHAR(ar.analysis_data) AS portfolioAnalysis,
-    //         f.portfolio_file_path AS filePath
-    //     FROM 
-    //         job_cand_progress jcp
-    //     JOIN 
-    //         candidates c ON jcp.candidate_id = c.candidate_id
-    //     JOIN 
-    //         post p ON jcp.post_id = p.post_id
-    //     LEFT JOIN 
-    //         ai_analysis_results ar 
-    //         ON jcp.job_candidate_id = ar.job_candidate_id 
-    //         AND ar.analysis_type = 'portfolio'
-    //     LEFT JOIN 
-    //         portfolios f 
-    //         ON jcp.job_candidate_id = f.job_candidate_id
-    //     WHERE 
-    //         jcp.job_cand_curr_stage = '2y'
-    //         AND jcp.post_id = :postId
-    // """, nativeQuery = true)
-    // List<ResponderDto> findCandidatesAtStage2yByPost(@Param("postId") Long postId);
-
     // post와 githubLogin으로 JobCandProgress 조회
     Optional<JobCandProgress> findByPost_PostIdAndGithubLogin(Long postId, String githubLogin);
 
@@ -130,28 +101,38 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
 
     List<JobCandProgress> findByCandidate_CandidateId(Integer candidateId);
 
-    @Query(value = "SELECT * FROM job_cand_progress WHERE post_id = :postId AND candidate_id = :candidateId", nativeQuery = true)
-    Optional<JobCandProgress> findByPost_PostIdAndCandidate_CandidateId(
-        @Param("postId") Integer postId, 
-        @Param("candidateId") Integer candidateId
-    );
-
     Optional<JobCandProgress> findByJobCandidateId(Long jobCandidateId);
+
+    // postId로 JobCandProgress 조회 (모든 지원자)
+    List<JobCandProgress> findByPost_PostId(Long postId);
+
+    // 직접 지원한 후보자들 조회 (githubLogin이 null인 경우) - 내 버전 기능
+    List<JobCandProgress> findByPost_PostIdAndGithubLoginIsNull(Long postId);
+    
+    // postId와 stage로 JobCandProgress 조회 (직접 지원자 - stage "0")
+    List<JobCandProgress> findByPost_PostIdAndJobCandCurrStage(Long postId, String stage);
+
+    // stage로 JobCandProgress 조회 (모든 공고의 특정 stage 지원자) - 내 버전 기능
+    List<JobCandProgress> findByJobCandCurrStage(String stage);
 
     // postId와 candidateId로 JobCandProgress 조회
     Optional<JobCandProgress> findByPost_PostIdAndCandidate_CandidateId(Long postId, Long candidateId);
 
-
-    // 이메일 전송시 jobCandCurrStage를 2n으로 업데이트
+    // 이메일 전송시 jobCandCurrStage를 2n으로 업데이트 - 팀 버전 기능
     @Transactional
     @Modifying
     @Query("UPDATE JobCandProgress j SET j.jobCandCurrStage = :stage WHERE j.post.postId = :postId AND j.githubLogin = :githubLogin")
     int updateStageByPostIdAndGithubLogin(@Param("postId") Long postId, @Param("githubLogin") String githubLogin, @Param("stage") String stage);
 
-    // invitation token으로 job_cand_progress의 candidate_id 업데이트
+    // invitation token으로 job_cand_progress의 candidate_id 업데이트 - 팀 버전 기능
     @Transactional
     @Modifying
     @Query("UPDATE JobCandProgress j SET j.candidate.candidateId = :candidateId WHERE j.post.postId = :postId AND j.githubLogin = :githubLogin")
     int updateCandidateIdByPostIdAndGithubLogin(@Param("postId") Long postId, @Param("githubLogin") String githubLogin, @Param("candidateId") Long candidateId);
 
+    // AI 면접 관련 조회 - 팀 버전 기능
+    Optional<JobCandProgress> findByAiIntrvwScheduleId(Long aiIntrvwScheduleId);
+    
+    // githubLogin으로 조회 - 팀 버전 기능
+    Optional<JobCandProgress> findByGithubLogin(String githubLogin);
 }

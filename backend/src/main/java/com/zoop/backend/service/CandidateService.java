@@ -42,6 +42,10 @@ public class CandidateService {
         return candidateRepository.findAll();
     }
 
+    public Optional<Candidate> findById(Long candidateId) {
+        return candidateRepository.findById(candidateId);
+    }
+
     @Transactional 
     public Candidate save(Candidate candidate) {
         try {
@@ -159,6 +163,7 @@ public class CandidateService {
             throw e;
         }
     }
+
     // 회원가입시 아이디 중복확인을 위한 메서드
     public boolean isDuplicateGithubLogin(String githubLogin) {
         return candidateRepository.existsByGithubLogin(githubLogin);
@@ -183,5 +188,4 @@ public class CandidateService {
             throw new RuntimeException("GitHub 로그인 찾기 중 오류가 발생했습니다.", e);
         }
     }
-
 }

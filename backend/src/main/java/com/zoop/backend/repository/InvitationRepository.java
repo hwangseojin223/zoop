@@ -1,6 +1,5 @@
 package com.zoop.backend.repository;
 
-
 import java.util.List;
 import java.util.Optional;
 
@@ -23,7 +22,6 @@ public interface InvitationRepository extends JpaRepository<Invitation, Long> {
     // 여러 초대 건을 가져올 수 있도록 추가
     List<Invitation> findAllByGithubLogin(String githubLogin);
 
-
     // 초대 링크를 클릭한 시각을 기록 / 사용자가 이메일 링크를 클릭할 때 → 백엔드에서 이 쿼리 호출
     @Modifying
     @Query("UPDATE Invitation i SET i.invitationClickedDate = CURRENT_TIMESTAMP WHERE i.invitationUniqueToken = :token")
@@ -36,22 +34,8 @@ public interface InvitationRepository extends JpaRepository<Invitation, Long> {
     @Modifying
     @Query("UPDATE Invitation i SET i.invitationStatus = :status WHERE i.invitationId = :id")
     void updateStatusById(Long id, String status);
-    
-    // // 링크를 클릭하고 들어온 회원이 이미 가입 되어있는가?
-    // @Query("""
-    //     SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END
-    //     FROM Candidate c
-    //     WHERE c.githubLogin = (
-    //         SELECT i.githubLogin FROM Invitation i WHERE i.invitationUniqueToken = :token
-    //     )
-    // """)
-    // boolean isGithubLoginAlreadySignedUp(@Param("token") String token);
 
-
-    /**합친 이후 */
+    // 합친 이후: postId와 githubLogin으로 초대 내역을 최신순으로 조회
     List<Invitation> findAllByPostIdAndGithubLoginOrderByInvitationSentDateDesc(Long postId, String githubLogin);
-
-    
-
 }
 
