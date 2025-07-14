@@ -14,7 +14,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class InterviewScheduleRequestDto {
-    private Integer postId;
-    private Integer candidateId;
+    private Long postId;
+    private Long candidateId;
     private String scheduledTime;
 }

@@ -3,6 +3,7 @@ package com.zoop.backend.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +28,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "PortfolioController", description = "포트폴리오 제출 관련 API")
 @RestController
 @RequestMapping("/api/portfolios")
+@CrossOrigin(origins = "http://localhost:3000")
 public class PortfolioController {
 
     private final PortfolioService portfolioService;
@@ -53,11 +55,14 @@ public class PortfolioController {
             @Parameter(description = "지원자 ID", required = true)
             @RequestParam("candidateId") Integer candidateId,
             
-            @Parameter(description = "포트폴리오 파일 (필수)")
-            @RequestParam(value = "portfolioFile", required = true) MultipartFile portfolioFile,
+            @Parameter(description = "포트폴리오 파일 (새 파일 업로드 시)")
+            @RequestParam(value = "portfolioFile", required = false) MultipartFile portfolioFile,
             
-            @Parameter(description = "포트폴리오 내용 설명")
-            @RequestParam("portfolioContent") String portfolioContent,
+            @Parameter(description = "기존 포트폴리오 사용 여부")
+            @RequestParam(value = "useExistingPortfolio", required = false, defaultValue = "false") String useExistingPortfolio,
+            
+            @Parameter(description = "기존 포트폴리오 파일 경로")
+            @RequestParam(value = "existingPortfolioPath", required = false) String existingPortfolioPath,
             
             @Parameter(description = "포트폴리오 URL (선택사항)")
             @RequestParam("portfolioUrl") String portfolioUrl,
@@ -100,7 +105,8 @@ public class PortfolioController {
                 postId, 
                 candidateId, 
                 portfolioFile, 
-                portfolioContent, 
+                Boolean.parseBoolean(useExistingPortfolio),
+                existingPortfolioPath,
                 portfolioUrl, 
                 careerData, 
                 goalStatement, 
@@ -122,14 +128,16 @@ public class PortfolioController {
         }
     }
     
-    @Operation(summary = "지원자별 포트폴리오 조회", description = "특정 지원자가 제출한 모든 포트폴리오를 조회합니다.")
+    @Operation(summary = "지원자별 포트폴리오 조회", description = "특정 지원자가 특정 공고에 제출한 포트폴리오를 조회합니다.")
     @GetMapping("/candidate/{candidateId}")
     public ResponseEntity<?> getPortfoliosByCandidate(
             @Parameter(description = "지원자 ID", required = true)
-            @PathVariable Integer candidateId
+            @PathVariable Integer candidateId,
+            @Parameter(description = "공고 ID (선택사항)")
+            @RequestParam(required = false) Integer postId
     ) {
         try {
-            return ResponseEntity.ok(portfolioService.getPortfoliosByCandidate(candidateId));
+            return ResponseEntity.ok(portfolioService.getPortfoliosByCandidate(candidateId, postId));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("포트폴리오 조회 중 오류가 발생했습니다: " + e.getMessage());
@@ -152,7 +160,65 @@ public class PortfolioController {
         }
     }
 
-    /** 합친 이후 */
+    @Operation(summary = "공고별 직접 지원자 조회", description = "특정 공고에 포트폴리오를 제출한 직접 지원자 목록을 조회합니다.")
+    @GetMapping("/by-post/{postId}")
+    public ResponseEntity<?> getDirectApplicantsByPost(
+            @Parameter(description = "공고 ID", required = true)
+            @PathVariable Integer postId
+    ) {
+        try {
+            return ResponseEntity.ok(portfolioService.getDirectApplicantsByPost(postId));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("직접 지원자 조회 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    @Operation(summary = "지원자의 최근 포트폴리오 조회", description = "지원자의 가장 최근에 업로드한 포트폴리오 정보를 조회합니다.")
+    @GetMapping("/recent/{candidateId}")
+    public ResponseEntity<?> getRecentPortfolioByCandidate(
+            @Parameter(description = "지원자 ID", required = true)
+            @PathVariable Integer candidateId
+    ) {
+        try {
+            return ResponseEntity.ok(portfolioService.getRecentPortfolioByCandidate(candidateId));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("최근 포트폴리오 조회 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    @Operation(summary = "PENDING 상태 포트폴리오 목록 조회", description = "분석 대기 중인 포트폴리오 전체를 반환합니다.")
+    @GetMapping("/pending")
+    public ResponseEntity<?> getPendingPortfolios() {
+        try {
+            return ResponseEntity.ok(portfolioService.getPendingPortfolios());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("PENDING 포트폴리오 조회 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    @Operation(summary = "PENDING 포트폴리오 일괄 분석", description = "분석 대기 중인 포트폴리오를 모두 분석하고 결과를 저장합니다.")
+    @PostMapping("/analyze-pending")
+    public ResponseEntity<?> analyzePendingPortfolios() {
+        try {
+            portfolioService.analyzePendingPortfolios();
+            return ResponseEntity.ok("분석이 완료되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("PENDING 포트폴리오 분석 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    @Operation(summary = "서버 상태 확인", description = "서버가 정상적으로 실행 중인지 확인합니다.")
+    @GetMapping("/health")
+    public ResponseEntity<?> healthCheck() {
+        return ResponseEntity.ok("서버가 정상적으로 실행 중입니다.");
+    }
+
+    // 팀에서 추가한 jobCandidateId 기반 기능들
+    @Operation(summary = "포트폴리오 제출 날짜 조회", description = "jobCandidateId로 포트폴리오 제출 날짜를 조회합니다.")
     @GetMapping("/{jobCandidateId}/submission-date")
     public ResponseEntity<?> getPortfolioSubmissionDate(@PathVariable Long jobCandidateId) {
         return portfolioService.getSubmissionDate(jobCandidateId)

@@ -1,24 +1,30 @@
 package com.zoop.backend.controller;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.zoop.backend.domain.dto.InvitationSendRequest;
 import com.zoop.backend.domain.dto.JobCandidateIdResponse;
+import com.zoop.backend.domain.dto.JobCandProgressWithCandidateDto;
 import com.zoop.backend.domain.dto.ResponderDto;
 import com.zoop.backend.domain.dto.UpdateJobCandProgressRequest;
+import com.zoop.backend.domain.entity.JobCandProgress;
 import com.zoop.backend.service.JobCandProgressService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/progress")
@@ -27,12 +33,7 @@ public class JobCandProgressController {
 
     private final JobCandProgressService jobCandProgressService;
 
-    // @GetMapping
-    // public ResponseEntity<List<JobCandProgress>> getAllProgresses() {
-    //     return ResponseEntity.ok(jobCandProgressService.getAllProgresses());
-    // }
-
-    // URL 예시: /api/post/1
+    // URL 예시: /api/progress/stage2y/1
     @GetMapping("/stage2y/{postId}")
     public List<ResponderDto> getCandidatesAtStage2yByPost(@PathVariable Long postId) {
         log.info("2y 스테이지 후보자 조회 API 호출: " + postId);
@@ -41,12 +42,11 @@ public class JobCandProgressController {
         return list;
     }
 
-    @GetMapping("{postId}")
+    @GetMapping("/{postId}")
     public List<ResponderDto> getCandidatesAtStage3nByPost(@PathVariable Long postId) {
         log.info("Controller: 요청 들어옴, postId=" + postId);
         List<ResponderDto> list = jobCandProgressService.getCandidatesAtStage3nByPost(postId);
         log.info("리스트 크기 : " + list.size());
-
         return list;
     }
 
@@ -57,6 +57,53 @@ public class JobCandProgressController {
         log.info("Controller : 전달받은 데이터: {} ", dtos);
         log.info("Controller: Service로 전달 완료");
         return ResponseEntity.ok("진행 단계가 '2n'으로 업데이트되었습니다.");
+    }
+
+    // 내 버전: 직접 지원자 상태 일괄 업데이트 API
+    @PutMapping("/update-stage")
+    public ResponseEntity<Map<String, Object>> updateCandidateStage(@RequestBody Map<String, Object> request) {
+        try {
+            @SuppressWarnings("unchecked")
+            List<Integer> candidateIds = (List<Integer>) request.get("candidateIds");
+            String newStage = (String) request.get("newStage");
+            Long postId = Long.valueOf(request.get("postId").toString());
+            
+            int updatedCount = jobCandProgressService.updateCandidateStage(candidateIds, newStage, postId);
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "상태가 성공적으로 업데이트되었습니다.",
+                "updatedCount", updatedCount
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of(
+                "success", false,
+                "message", "상태 업데이트 중 오류가 발생했습니다: " + e.getMessage()
+            ));
+        }
+    }
+
+    // 내 버전: 여러 공고의 직접 지원자 상태 일괄 업데이트 API
+    @PutMapping("/update-stage-multiple")
+    public ResponseEntity<Map<String, Object>> updateCandidateStageMultiple(@RequestBody Map<String, Object> request) {
+        try {
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> candidateData = (List<Map<String, Object>>) request.get("candidateData");
+            String newStage = (String) request.get("newStage");
+            
+            int updatedCount = jobCandProgressService.updateCandidateStageMultiplePosts(candidateData, newStage);
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "상태가 성공적으로 업데이트되었습니다.",
+                "updatedCount", updatedCount
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of(
+                "success", false,
+                "message", "상태 업데이트 중 오류가 발생했습니다: " + e.getMessage()
+            ));
+        }
     }
 
     // postId와 githubLogin으로 jobCandidateId 조회
@@ -97,6 +144,67 @@ public class JobCandProgressController {
             log.error("stage 2p 업데이트 실패: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("업데이트 실패: " + e.getMessage());
+        }
+    }
+
+    // jobCandidateId로 JobCandProgress 조회
+    @GetMapping("/job-cand-progress/{jobCandidateId}")
+    public ResponseEntity<JobCandProgress> getJobCandProgress(@PathVariable Long jobCandidateId) {
+        try {
+            Optional<JobCandProgress> progressOpt = jobCandProgressService.getJobCandProgressById(jobCandidateId);
+            if (progressOpt.isPresent()) {
+                return ResponseEntity.ok(progressOpt.get());
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // jobCandidateId로 JobCandProgress와 Candidate 정보 함께 조회
+    @GetMapping("/job-cand-progress/{jobCandidateId}/with-candidate")
+    public ResponseEntity<JobCandProgressWithCandidateDto> getJobCandProgressWithCandidate(@PathVariable Long jobCandidateId) {
+        try {
+            Optional<JobCandProgressWithCandidateDto> progressOpt = jobCandProgressService.getJobCandProgressWithCandidateById(jobCandidateId);
+            if (progressOpt.isPresent()) {
+                return ResponseEntity.ok(progressOpt.get());
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // 면접 분석 ID 업데이트 (엔티티 필드 확인 후 활성화 예정)
+    /*
+    @PutMapping("/responder/{jobCandidateId}/interview-analysis")
+    public ResponseEntity<?> updateInterviewAnalysisId(
+            @PathVariable Long jobCandidateId,
+            @RequestBody Map<String, Object> request) {
+        try {
+            Long analysisId = Long.valueOf(request.get("aiInterviewAnalysisId").toString());
+            JobCandProgress updated = jobCandProgressService.updateInterviewAnalysisId(jobCandidateId, analysisId);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("업데이트 실패: " + e.getMessage());
+        }
+    }
+    */
+
+    // GitHub 로그인으로 JobCandProgress 조회
+    @GetMapping("/job-cand-progress/by-github-login/{githubLogin}")
+    public ResponseEntity<JobCandProgress> getJobCandProgressByGithubLogin(@PathVariable String githubLogin) {
+        try {
+            Optional<JobCandProgress> progressOpt = jobCandProgressService.getJobCandProgressByGithubLogin(githubLogin);
+            if (progressOpt.isPresent()) {
+                return ResponseEntity.ok(progressOpt.get());
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
         }
     }
 }

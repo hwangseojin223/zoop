@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import com.zoop.backend.domain.dto.CompanyDto;
 import com.zoop.backend.domain.entity.Company;
@@ -79,5 +81,18 @@ public class CompanyController {
         @RequestBody Map<String, Object> raw) {
         System.out.println("🐛 수신된 RAW JSON = " + raw);
         return ResponseEntity.ok().build();
+    }
+
+    // 디버깅용: companyId로 회사 정보 조회 GET 엔드포인트 추가
+    @GetMapping("/{companyId}")
+    public ResponseEntity<?> debugGetCompanyById(@PathVariable Long companyId) {
+        System.out.println("[디버그] GET /api/companies/" + companyId + " 호출됨");
+        Company company = service.getCompanyById(companyId);
+        if (company == null) {
+            System.out.println("[디버그] companyId=" + companyId + " 에 해당하는 회사 없음");
+            return ResponseEntity.notFound().build();
+        }
+        System.out.println("[디버그] companyId=" + companyId + " 회사 정보: " + company);
+        return ResponseEntity.ok(company);
     }
 }

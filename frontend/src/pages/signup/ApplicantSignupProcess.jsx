@@ -16,8 +16,11 @@ export default function ApplicantSignupProcess() {
   // ============ [초대 링크 관련 상태 변수들 추가] ============
   const [fromInvite, setFromInvite] = useState(false); // 초대 링크로 들어왔는지 여부
   const [isFormValid, setIsFormValid] = useState(false); // 폼 유효성 검사 결과
+  const [isLoading, setIsLoading] = useState(false); // 로딩 상태
   // ============ [초대 링크 관련 상태 변수들 추가 끝] ============
   //==================================================================================================
+
+//==================================================================================================
 // 이메일 인증
 //==================================================================================================
 
@@ -308,7 +311,9 @@ useEffect(() => {
     }
   };
 
-
+  //==================================================================================================
+  // 가입하기 버튼 클릭했을 때
+  //==================================================================================================
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!idCheck || !isIdAvailable) {
@@ -412,11 +417,16 @@ useEffect(() => {
   };
 
   return (
-  <>
-    <Navbar />
-    <div className="max-w-[500px] mx-auto mt-24 mb-16 p-8 border border-gray-200 rounded-2xl shadow-xl bg-white">
-      <h2 className="text-3xl font-bold text-green-700 mb-8 text-center">ZOOP 통합 개인회원 가입</h2>
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <>
+      <Navbar />
+      <div className="applicant-signup-container">
+        <h2>ZOOP 통합 개인회원 가입</h2>
+        {isLoading ? (
+          <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <p>초대 정보를 불러오는 중...</p>
+          </div>
+        ) : (
+        <form onSubmit={handleSubmit}>
 
         {/* 아이디 입력 */}
         <div>
@@ -622,8 +632,8 @@ useEffect(() => {
           가입하기
         </button>
       </form>
-    </div>
-  </>
-);
-
+        )}
+      </div>
+    </>
+  );
 }

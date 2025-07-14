@@ -8,14 +8,9 @@ import org.springframework.stereotype.Repository;
 
 import com.zoop.backend.domain.entity.AiInterviewSchedule;
 
-/**
- *
- * @author hwangseojin
- */
 @Repository
-public interface AiInterviewScheduleRepository extends JpaRepository<AiInterviewSchedule, Integer> {
-    List<AiInterviewSchedule> findByJobCandidateId(Integer jobCandidateId);
-    Optional<AiInterviewSchedule> findByJobCandidateIdAndAiInterviewScheduleId(Integer jobCandidateId, Integer scheduleId);
-
-    Optional<AiInterviewSchedule> findByJobCandidateId(Long jobCandidateId);
+public interface AiInterviewScheduleRepository extends JpaRepository<AiInterviewSchedule, Long> {
+    List<AiInterviewSchedule> findByJobCandProgress_JobCandidateId(Long jobCandidateId);
+    Optional<AiInterviewSchedule> findByJobCandProgress_JobCandidateIdAndAiInterviewScheduleId(Long jobCandidateId, Long scheduleId);
+    List<AiInterviewSchedule> findByAiAnalysisStatus(String analysisStatus);
 }

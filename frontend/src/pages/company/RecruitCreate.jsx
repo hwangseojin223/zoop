@@ -140,7 +140,23 @@ export default function RecruitCreate() {
     }
 
     try {
+      // 사용자 정보 가져오기
+      const userId = localStorage.getItem('userId');
+      const userInfoResponse = await fetch(`http://localhost:8081/api/companyadmins/info/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
+        },
+      });
+      
+      if (!userInfoResponse.ok) {
+        throw new Error("사용자 정보를 가져올 수 없습니다.");
+      }
+      
+      const userInfo = await userInfoResponse.json();
+
       const postData = {
+        companyId: userInfo.companyId,
+        companyAdminId: userInfo.companyAdminId,
         postTitle: `채용 공고 - ${filters.languages.join(", ")} 개발자`,
         postDescription: description,
         postProgrammingLanguage: filters.languages.join(","),

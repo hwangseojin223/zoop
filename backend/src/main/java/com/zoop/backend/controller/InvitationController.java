@@ -84,7 +84,6 @@ public class InvitationController {
         return ResponseEntity.ok("📨 여러 명에게 초대 메일을 전송했습니다.");
     }
 
-    /**합친 이후 */
     @GetMapping("/{postId}/{githubLogin}/sent-times")
     public ResponseEntity<List<InvitationSentDateResponse>> getAllInvitationSentTimes(
             @PathVariable Long postId,
@@ -153,6 +152,4 @@ public class InvitationController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("업데이트 중 오류가 발생했습니다.");
         }
     }
-
 }
-

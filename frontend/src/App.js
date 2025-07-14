@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, UNSAFE_future, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 // index
@@ -26,30 +26,35 @@ import CandidateList from './pages/company/CandidateList';
 import ResponderList from './pages/company/ResponderList';
 import StatePage from './pages/company/StatePage';
 import IdealCandidate from './pages/company/IdealCandidate';
+import InterviewEvaluation from './pages/company/InterviewEvaluation';
 // info - lazy loading으로 변경
 
 // 챗봇 import
 import Chatbot from './components/Chatbot';
 import './components/Chatbot.css';
 // candidate
-import CandidateDashboard from './pages/candidate/CandidateDashboard';
+import { CandidateDashboard } from './pages/candidate/Dashboard';
 // PortfolioSubmissionPage 컴포넌트를 임포트합니다. 실제 파일 경로에 맞게 수정해주세요.
 import PortfolioSubmissionPage from './pages/candidate/PortfolioSubmissionPage';
 import InterviewPage from './pages/candidate/InterviewPage';
 import InterviewSession from './pages/candidate/InterviewSession';
+// incident report
+import IncidentReportPage from './pages/IncidentReportPage';
 
 // info - lazy loading으로 변경
 const About = lazy(() => import('./pages/info/About'));
 const Notice = lazy(() => import('./pages/info/Notice'));
-// const Support = lazy(() => import('./pages/info/Support')); // 사용하지 않는 import 주석 처리
+const Support = lazy(() => import('./pages/info/Support'));
 const CustomerServicePage = lazy(() => import('./pages/info/CustomerServicePage'));
 const FaqPage = lazy(() => import('./pages/info/FaqPage'));
 const Careers = lazy(() => import('./pages/info/Careers'));
+// const JobDetailPage = lazy(() => import('./pages/info/JobDetailPage'));
 
 function AppContent() {
   const { setAuthState } = useAuth();
   const [chatbotOpen, setChatbotOpen] = useState(false);
   const btnRef = useRef(null);
+  const location = useLocation();
 
   useEffect(() => {
     const token = localStorage.getItem('jwtToken');
@@ -61,9 +66,8 @@ function AppContent() {
   }, [setAuthState]);
 
   return (
-    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Routes>
+    <Suspense fallback={<div>Loading...</div>}>
+      <Routes>
         <Route
           path="/"
           element={
@@ -84,6 +88,7 @@ function AppContent() {
         <Route path="/invite/:token" element={<InvitationHandler />} />
         
         <Route path="/auth/login" element={<LoginSelectionPage />} />
+        <Route path="/login" element={<LoginSelectionPage />} />
         <Route path="/find-id" element={<FindIdPage />} />
         <Route path="/find-password" element={<FindPasswordPage />} />
         <Route path="/auth/applicant/reset-password/:token" element={<ResetPasswordPage />} />
@@ -93,6 +98,7 @@ function AppContent() {
         <Route path="/support" element={<CustomerServicePage />} />
         <Route path="/faq" element={<FaqPage />} />
         <Route path="/careers" element={<Careers />} />
+        <Route path="/report" element={<IncidentReportPage />} />
         <Route path="/company/candidates/:postId" element={<CandidateList />} />
         <Route
           path="/company/dashboard"
@@ -145,6 +151,15 @@ function AppContent() {
         />
 
         <Route
+          path="/company/interview-evaluation/:postId/:candidateId"
+          element={
+            <PrivateRoute allowedUserType="company">
+              <InterviewEvaluation />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
           path="/company/candidates"
           element={
             <PrivateRoute allowedUserType="company">
@@ -179,52 +194,45 @@ function AppContent() {
             </PrivateRoute>
           }
         />
+        {/* <Route path="/job/:postId" element={<JobDetailPage />} /> */}
       </Routes>
-      </Suspense>
 
-      {/* 챗봇 버튼 */}
-      <button
-        ref={btnRef}
-        className={`chatbot-mint-btn${chatbotOpen ? ' open' : ''}`}
-        onClick={() => setChatbotOpen(open => !open)}
-        aria-label={chatbotOpen ? "챗봇 닫기" : "챗봇 열기"}
-      >
-        {chatbotOpen ? (
-          // 챗봇이 열렸으면 X SVG 아이콘
-          <span className="chatbot-x-rect">
-            <svg
-              width={34}
-              height={34}
-              viewBox="0 0 32 32"
-              fill="none"
-              stroke="#757575"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ display: "block" }}
-              aria-hidden="true"
-              focusable="false"
-            >
-              <line x1="8" y1="8" x2="24" y2="24" />
-              <line x1="24" y1="8" x2="8" y2="24" />
-            </svg>
-          </span>
-        ) : (
-          // 챗봇 닫혔으면 채팅 아이콘
-          <img
-            src="/chat.png"
-            alt="챗봇 아이콘"
-            style={{
-              width: 34,
-              height: 34,
-              objectFit: "contain",
-              display: "block",
-              background: "transparent",
-              border: "none",
-            }}
-          />
-        )}
-      </button>
+      {/* 챗봇 버튼: /job/ 페이지에서는 숨김 */}
+      {(!location.pathname.startsWith('/job/')) && (
+        <button
+          ref={btnRef}
+          className={`chatbot-mint-btn${chatbotOpen ? ' open' : ''}`}
+          onClick={() => setChatbotOpen(open => !open)}
+          aria-label={chatbotOpen ? "챗봇 닫기" : "챗봇 열기"}
+        >
+          {chatbotOpen ? (
+            // 챗봇이 열렸으면 X SVG 아이콘
+            <span className="chatbot-x-rect">
+              <svg
+                width={34}
+                height={34}
+                viewBox="0 0 32 32"
+                fill="none"
+                stroke="#757575"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ display: "block" }}
+                aria-hidden="true"
+                focusable="false"
+              >
+                <line x1="8" y1="8" x2="24" y2="24" />
+                <line x1="24" y1="8" x2="8" y2="24" />
+              </svg>
+            </span>
+          ) : (
+            // 챗봇이 닫혔으면 챗봇 아이콘
+            <span className="chatbot-bubble">
+              <img src="/chat.png" alt="챗봇" style={{ width: 34, height: 34, display: 'block' }} />
+            </span>
+          )}
+        </button>
+      )}
 
       {/* 챗봇 창 */}
       <Chatbot
@@ -232,15 +240,17 @@ function AppContent() {
         onClose={() => setChatbotOpen(false)}
         anchorRef={btnRef}
       />
-    </Router>
+    </Suspense>
   );
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </Router>
   );
 }
 

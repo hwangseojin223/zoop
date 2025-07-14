@@ -25,7 +25,6 @@ public interface GithubSearchResultRepository extends JpaRepository<GithubSearch
     @Query("SELECT g FROM GithubSearchResult g WHERE g.githubLogin = :githubLogin ORDER BY g.githubSearchDate DESC")
     List<GithubSearchResult> findByGithubLogin(@Param("githubLogin") String githubLogin);
 
-
     // 공고 후보자, 지원자 상태조회 20250626
     @Query("""
         SELECT new com.zoop.backend.domain.dto.GithubSearchResultWithStageDto(
@@ -47,5 +46,4 @@ public interface GithubSearchResultRepository extends JpaRepository<GithubSearch
         AND g.candidateEmail != 'not_found@example.com'
     """)
     List<GithubSearchResultWithStageDto> findSearchResultsWithStageByPostId(@Param("postId") Long postId);
-
 }

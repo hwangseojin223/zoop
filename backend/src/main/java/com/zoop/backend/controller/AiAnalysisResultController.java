@@ -1,8 +1,20 @@
 package com.zoop.backend.controller;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.zoop.backend.domain.dto.AiAnalysisResultDto;
 import com.zoop.backend.domain.entity.AiAnalysisResult;
 import com.zoop.backend.service.AiAnalysisResultService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -11,10 +23,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Tag(name = "AiAnalysisResultController", description = "AI 분석 결과 관련 API")
 @RestController
@@ -41,7 +49,7 @@ public class AiAnalysisResultController {
     @PostMapping
     public ResponseEntity<AiAnalysisResult> saveAiAnalysisResult(
         @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "AI 분석 결과 저장을 위한 데이터ㅋㅋㅋ",
+            description = "AI 분석 결과 저장을 위한 데이터",
             required = true,
             content = @Content(schema = @Schema(implementation = AiAnalysisResultDto.class))
         )
@@ -93,5 +101,43 @@ public class AiAnalysisResultController {
         
         List<AiAnalysisResult> results = aiAnalysisResultService.findByAnalysisType(analysisType);
         return ResponseEntity.ok(results);
+    }
+
+    // 내 버전: 직접 지원자의 포트폴리오 AI 분석 결과 조회
+    @Operation(summary = "직접 지원자의 AI 분석 결과 조회", description = "특정 직접 지원자의 포트폴리오 AI 분석 결과를 조회합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "AI 분석 결과 반환",
+            content = @Content(schema = @Schema(implementation = AiAnalysisResult.class))),
+        @ApiResponse(responseCode = "404", description = "AI 분석 결과 없음")
+    })
+    @GetMapping("/portfolio/{jobCandidateId}")
+    public ResponseEntity<AiAnalysisResult> getPortfolioAnalysisByJobCandidateId(
+        @Parameter(description = "직접 지원자의 job_candidate_id", required = true, example = "1")
+        @PathVariable Long jobCandidateId) {
+        
+        List<AiAnalysisResult> results = aiAnalysisResultService.findByJobCandidateIdAndAnalysisType(jobCandidateId, "portfolio");
+        if (results.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(results.get(0)); // 가장 최근 분석 결과 반환
+    }
+
+    // 팀 버전: AI 분석 결과 삭제 기능
+    @Operation(summary = "AI 분석 결과 삭제", description = "특정 AI 분석 결과를 삭제합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "AI 분석 결과 삭제 성공"),
+        @ApiResponse(responseCode = "404", description = "AI 분석 결과 없음")
+    })
+    @DeleteMapping("/{analysisId}")
+    public ResponseEntity<Void> deleteAiAnalysisResult(
+        @Parameter(description = "AI 분석 결과 ID", required = true, example = "1")
+        @PathVariable Long analysisId) {
+        
+        boolean deleted = aiAnalysisResultService.deleteById(analysisId);
+        if (deleted) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 } 

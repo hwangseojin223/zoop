@@ -1,26 +1,11 @@
 package com.zoop.backend.controller;
 
-/**
- *
- * @author hwangseojin
- */
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 import com.zoop.backend.domain.dto.InterviewScheduleRequestDto;
 import com.zoop.backend.domain.dto.InterviewScheduleResponseDto;
 import com.zoop.backend.domain.dto.modal.InterviewVideoResponse;
+import com.zoop.backend.domain.entity.AiInterviewSchedule;
 import com.zoop.backend.service.AiInterviewScheduleService;
+import com.zoop.backend.service.InterviewAnalysisService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,19 +14,22 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 
 @Tag(name = "AiInterviewScheduleController", description = "AI 면접 일정 관련 API")
 @RestController
 @RequestMapping("/api/interview-schedules")
+@RequiredArgsConstructor
 public class AiInterviewScheduleController {
 
     private final AiInterviewScheduleService aiInterviewScheduleService;
-
-    @Autowired
-    public AiInterviewScheduleController(AiInterviewScheduleService aiInterviewScheduleService) {
-        this.aiInterviewScheduleService = aiInterviewScheduleService;
-    }
+    private final InterviewAnalysisService interviewAnalysisService;
 
     @Operation(summary = "AI 면접 일정 등록", description = "후보자가 AI 면접 일정을 등록합니다.")
     @ApiResponses(value = {
@@ -82,7 +70,7 @@ public class AiInterviewScheduleController {
             @Parameter(description = "후보자 ID", required = true)
             @PathVariable Integer candidateId) {
         try {
-            List<InterviewScheduleResponseDto> schedules = aiInterviewScheduleService.getInterviewSchedulesByCandidate(candidateId);
+            List<InterviewScheduleResponseDto> schedules = aiInterviewScheduleService.getInterviewSchedulesByCandidate(candidateId.longValue());
             return ResponseEntity.ok(schedules);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -101,7 +89,7 @@ public class AiInterviewScheduleController {
             @Parameter(description = "면접 일정 ID", required = true)
             @PathVariable Integer scheduleId) {
         try {
-            InterviewScheduleResponseDto schedule = aiInterviewScheduleService.getInterviewSchedule(scheduleId);
+            InterviewScheduleResponseDto schedule = aiInterviewScheduleService.getInterviewSchedule(scheduleId.longValue());
             return ResponseEntity.ok(schedule);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -125,7 +113,7 @@ public class AiInterviewScheduleController {
             @Parameter(description = "업데이트할 상태 (예: 'completed', 'cancelled')", required = true)
             @RequestParam String status) {
         try {
-            InterviewScheduleResponseDto response = aiInterviewScheduleService.updateInterviewStatus(scheduleId, status);
+            InterviewScheduleResponseDto response = aiInterviewScheduleService.updateInterviewStatus(scheduleId.longValue(), status);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -148,7 +136,17 @@ public class AiInterviewScheduleController {
             @Parameter(description = "면접 일정 ID", required = true)
             @PathVariable Integer scheduleId) {
         try {
-            InterviewScheduleResponseDto response = aiInterviewScheduleService.completeInterview(scheduleId);
+            InterviewScheduleResponseDto response = aiInterviewScheduleService.completeInterview(scheduleId.longValue());
+            
+            // 면접 완료 후 전체 분석 트리거
+            try {
+                interviewAnalysisService.startInterviewAnalysis(scheduleId, response.getJobCandidateId().longValue());
+                System.out.println("[InterviewSchedule] 면접 완료 후 분석 트리거 완료: scheduleId=" + scheduleId);
+            } catch (Exception e) {
+                System.err.println("[InterviewSchedule] 면접 완료 후 분석 트리거 실패: " + e.getMessage());
+                // 분석 트리거 실패는 면접 완료에 영향을 주지 않음
+            }
+            
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -159,39 +157,35 @@ public class AiInterviewScheduleController {
         }
     }
 
-    // @Operation(summary = "AI 면접 영상 업로드", description = "면접 녹화 영상을 S3에 업로드하고 DB에 URL을 저장합니다.")
-    // @ApiResponses(value = {
-    //     @ApiResponse(responseCode = "200", description = "업로드 성공 및 URL 반환"),
-    //     @ApiResponse(responseCode = "400", description = "잘못된 요청"),
-    //     @ApiResponse(responseCode = "500", description = "서버 오류")
-    // })
-    // @PostMapping("/upload-video")
-    // public ResponseEntity<?> uploadInterviewVideo(
-    //     @RequestParam Integer scheduleId,
-    //     @RequestParam("videoFile") MultipartFile videoFile) {
-    //     try {
-    //         String videoUrl = aiInterviewScheduleService.uploadInterviewVideo(scheduleId, videoFile);
-    //         return ResponseEntity.ok().body(videoUrl);
-    //     } catch (RuntimeException e) {
-    //         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-    //     } catch (Exception e) {
-    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("업로드 중 오류: " + e.getMessage());
-    //     }
-    // }
-    // TODO: Use the new ai_interview_videos upload endpoint instead.
-
-    /**합친 후 */
+    @Operation(summary = "JobCandidate ID로 면접 일정 조회", description = "특정 JobCandidate의 면접 일정을 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "면접 일정 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "면접 일정을 찾을 수 없음")
+    })
     @GetMapping("/{jobCandidateId}/schedule")
     public ResponseEntity<?> getScheduledInterview(@PathVariable Long jobCandidateId) {
-        return aiInterviewScheduleService.getScheduleInfo(jobCandidateId)
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.status(404).body("면접 일정이 존재하지 않습니다."));
+        try {
+            return aiInterviewScheduleService.getScheduleInfo(jobCandidateId)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
+    @Operation(summary = "JobCandidate ID로 면접 영상 조회", description = "특정 JobCandidate의 면접 영상을 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "면접 영상 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "면접 영상을 찾을 수 없음")
+    })
     @GetMapping("/{jobCandidateId}/video")
     public ResponseEntity<InterviewVideoResponse> getInterviewVideo(@PathVariable Long jobCandidateId) {
-        return aiInterviewScheduleService.getInterviewVideo(jobCandidateId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        try {
+            return aiInterviewScheduleService.getInterviewVideo(jobCandidateId)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
