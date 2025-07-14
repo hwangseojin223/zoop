@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
 import { AccessibleButton, AccessibleLink, ScreenReaderOnly } from './Accessibility';
 
-const Navbar = ({ onLangChange }) => {
+const Navbar = ({ onLangChange, hideAuth }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { authState, setAuthState } = useAuth();
@@ -302,38 +302,78 @@ const Navbar = ({ onLangChange }) => {
         </nav>
       )}
 
-      {/* 데스크톱 사용자 프로필 드롭다운 */}
-      <div className="auth-buttons desktop-only">
-        {authState.token ? (
-          <div className="user-profile" onClick={toggleDropdown} ref={dropdownRef}>
-            <img src="/person.png" alt="User Avatar" className="user-avatar" />
-            <span className="user-name">{displayedUserName}</span>
-            
-            {/* 드롭다운 메뉴 */}
-            {isDropdownOpen && (
-              <div className="dropdown-menu">
-                <div className="dropdown-item" onClick={() => handleMenuItemClick('/mypage')}>
-                  마이페이지
-                </div>
-                <div className="dropdown-item" onClick={() => handleMenuItemClick('/settings')}>
-                  설정
-                </div>
-                <div className="dropdown-item logout-dropdown-item" onClick={handleLogout}>
-                  로그아웃
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <AccessibleLink
-            onClick={() => handleMenuItemClick('/auth/login')}
-            ariaLabel="로그인"
-            className="auth-button login"
+      {/* 언어 변경 버튼 - hideAuth가 true여도 표시 */}
+      {onLangChange && (
+        <div className="lang-toggle desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', position: 'absolute', right: '12rem', top: '50%', transform: 'translateY(-50%)' }}>
+          <button
+            className="lang-btn"
+            style={{
+              fontWeight: (window.location.pathname === '/about' && (window.localStorage.getItem('aboutLang') || 'ko') === 'ko') ? 'bold' : 'normal',
+              color: (window.location.pathname === '/about' && (window.localStorage.getItem('aboutLang') || 'ko') === 'ko') ? '#19b47a' : '#888',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              padding: 0
+            }}
+            onClick={() => { onLangChange('ko'); window.localStorage.setItem('aboutLang', 'ko'); }}
+            aria-label="한국어로 보기"
           >
-            로그인
-          </AccessibleLink>
-        )}
-      </div>
+            KOR
+          </button>
+          <span style={{ color: '#bbb', fontWeight: 400 }}>|</span>
+          <button
+            className="lang-btn"
+            style={{
+              fontWeight: (window.location.pathname === '/about' && (window.localStorage.getItem('aboutLang') || 'ko') === 'en') ? 'bold' : 'normal',
+              color: (window.location.pathname === '/about' && (window.localStorage.getItem('aboutLang') || 'ko') === 'en') ? '#19b47a' : '#888',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              padding: 0
+            }}
+            onClick={() => { onLangChange('en'); window.localStorage.setItem('aboutLang', 'en'); }}
+            aria-label="View in English"
+          >
+            ENG
+          </button>
+        </div>
+      )}
+
+      {/* 데스크톱 사용자 프로필 드롭다운 */}
+      {!hideAuth && (
+        <div className="auth-buttons desktop-only">
+          {authState.token ? (
+            <div className="user-profile" onClick={toggleDropdown} ref={dropdownRef}>
+              <img src="/person.png" alt="User Avatar" className="user-avatar" />
+              <span className="user-name">{displayedUserName}</span>
+              {/* 드롭다운 메뉴 */}
+              {isDropdownOpen && (
+                <div className="dropdown-menu">
+                  <div className="dropdown-item" onClick={() => handleMenuItemClick('/mypage')}>
+                    마이페이지
+                  </div>
+                  <div className="dropdown-item" onClick={() => handleMenuItemClick('/settings')}>
+                    설정
+                  </div>
+                  <div className="dropdown-item logout-dropdown-item" onClick={handleLogout}>
+                    로그아웃
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <AccessibleLink
+              onClick={() => handleMenuItemClick('/auth/login')}
+              ariaLabel="로그인"
+              className="auth-button login"
+            >
+              로그인
+            </AccessibleLink>
+          )}
+        </div>
+      )}
     </header>
   );
 };
