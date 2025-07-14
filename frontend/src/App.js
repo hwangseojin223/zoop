@@ -9,6 +9,9 @@ import './components/Chatbot.css';
 // index
 import Index from './pages/Index';
 
+// incident report
+import IncidentReportPage from './pages/IncidentReportPage';
+
 // signup - lazy loading으로 변경
 const Signup = lazy(() => import('./pages/signup/Signup'));
 const CompanySignupProcess = lazy(() => import('./pages/signup/CompanySignupProcess'));
@@ -45,7 +48,7 @@ const Support = lazy(() => import('./pages/info/Support'));
 const CustomerServicePage = lazy(() => import('./pages/info/CustomerServicePage'));
 const FaqPage = lazy(() => import('./pages/info/FaqPage'));
 const Careers = lazy(() => import('./pages/info/Careers'));
-const JobDetailPage = lazy(() => import('./pages/info/JobDetailPage'));
+// const JobDetailPage = lazy(() => import('./pages/info/JobDetailPage'));
 
 // 로딩 스켈레톤 컴포넌트
 const LoadingSkeleton = () => (
@@ -142,6 +145,7 @@ function AppContent() {
         <Route path="/support" element={<CustomerServicePage />} />
         <Route path="/faq" element={<FaqPage />} />
         <Route path="/careers" element={<Careers />} />
+        <Route path="/report" element={<IncidentReportPage />} />
         <Route path="/company/candidates/:postId" element={<CandidateList />} />
         <Route
           path="/company/dashboard"
@@ -237,7 +241,7 @@ function AppContent() {
             </PrivateRoute>
           }
         />
-        <Route path="/job/:postId" element={<JobDetailPage />} />
+        {/* <Route path="/job/:postId" element={<JobDetailPage />} /> */}
       </Routes>
 
       {/* 챗봇 버튼: /job/ 페이지에서는 숨김 */}

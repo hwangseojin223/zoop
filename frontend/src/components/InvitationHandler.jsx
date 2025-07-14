@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 
 export default function InvitationHandler() {
   const { token } = useParams();
   const navigate = useNavigate();
+  const location = useLocation(); // 추가
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -43,7 +44,7 @@ export default function InvitationHandler() {
           });
         } else {
           // 회원가입되지 않은 경우 -> 회원가입 페이지로 이동
-          navigate(`/auth/applicant/signup/process/${token}`, {
+          navigate(`/auth/applicant/signup/process/${token}${location.search}`, {
             replace: true,
             state: {
               fromInvite: true,
@@ -64,7 +65,7 @@ export default function InvitationHandler() {
       setError('유효하지 않은 초대 링크입니다.');
       setLoading(false);
     }
-  }, [token, navigate]);
+  }, [token, navigate, location.search]);
 
   if (loading) {
     return (
