@@ -117,7 +117,11 @@ export default function About() {
   const navigate = useNavigate();
 
   // 언어 상태: 'ko' 또는 'en'
-  const [lang, setLang] = useState('ko');
+  const [lang, setLang] = useState(() => window.localStorage.getItem('aboutLang') || 'ko');
+
+  useEffect(() => {
+    window.localStorage.setItem('aboutLang', lang);
+  }, [lang]);
 
   const slideRef1 = useRef(null);
   const slideRef2 = useRef(null);
@@ -174,7 +178,7 @@ export default function About() {
   }, [statsInView]);
 
   // Navbar에서 언어 변경 (KOR/ENG) 버튼 클릭 시 호출
-  const handleLangChange = (selected) => setLang(selected);
+  // const handleLangChange = (selected) => setLang(selected); // This line is removed as per the edit hint
 
   return (
     <>
@@ -212,7 +216,7 @@ export default function About() {
         }}
       />
 
-      <Navbar onLangChange={handleLangChange} />
+      <Navbar onLangChange={setLang} hideAuth={true} />
       <section className="hero-banner" style={{
         position: 'relative'
       }}>

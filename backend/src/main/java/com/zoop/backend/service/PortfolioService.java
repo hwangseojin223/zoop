@@ -170,7 +170,11 @@ public class PortfolioService {
         System.out.println("[PortfolioService] DB 저장 완료 - 저장된 Portfolio의 portfolioFilePath: " + savedPortfolio.getPortfolioFilePath());
         System.out.println("[PortfolioService] 저장된 Portfolio 전체 정보: " + savedPortfolio.toString());
 
-        jobCandProgress.setJobCandCurrStage("0"); // 포트폴리오 제출 완료 상태로 변경 (초기 단계)
+        // 개인대시보드에서 포트폴리오 제출 시 stage를 2y로 업데이트
+        // 채용페이지에서 지원했을 때는 0으로 유지, 개인대시보드에서 포트폴리오 제출 시 2y로 변경
+        if ("0".equals(jobCandProgress.getJobCandCurrStage())) {
+            jobCandProgress.setJobCandCurrStage("2y"); // 포트폴리오 제출 완료 상태로 변경
+        }
         jobCandProgress.setJobCandPortfolioSubDate(LocalDateTime.now()); // 포트폴리오 제출 시각 기록
         jobCandProgressRepository.save(jobCandProgress); // 업데이트된 JobCandProgress 저장
         
