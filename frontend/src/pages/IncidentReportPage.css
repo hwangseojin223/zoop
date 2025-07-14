@@ -1,10 +1,29 @@
 /* IncidentReportPage.css - Modern Design */
 
+.customer-main-bg {
+  min-height: 100vh;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.faq-main-content {
+  display: flex;
+  justify-content: center;
+  width: 100vw;
+  min-height: 100vh;
+}
+
 .incident-report-page {
-  max-width: 95%;
+  max-width: 1000px;
+  width: 100%;
   margin: 0 auto;
   padding: 2rem;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .incident-report-page h1 {
@@ -39,6 +58,8 @@ h1 > svg {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  max-width: 600px;
 }
 
 .login-badge {
@@ -114,6 +135,8 @@ a.login-link:hover > svg {
   gap: 1rem;
   margin-bottom: 2rem;
   justify-content: center;
+  width: 100%;
+  max-width: 600px;
 }
 
 .role-tabs button {
@@ -183,7 +206,7 @@ a.login-link:hover > svg {
   margin-bottom: 0;
   box-shadow: 0 10px 30px rgba(48, 197, 155, 0.2);
   flex: 1;
-  min-width: 0;
+  min-width: 400px;
   min-height: 500px;
   display: flex;
   flex-direction: column;
@@ -256,7 +279,7 @@ a.login-link:hover > svg {
   width: 100%;
   box-sizing: border-box;
   flex: 1;
-  min-width: 0;
+  min-width: 400px;
   min-height: 500px;
   display: flex;
   flex-direction: column;
@@ -384,13 +407,14 @@ label > svg {
 /* 큰 화면에서 더 넓은 레이아웃 */
 @media (min-width: 1400px) {
   .incident-report-page {
-    max-width: 98%;
+    max-width: 1400px;
   }
   
   .notice-section,
   .report-form {
     padding: 4rem;
     min-height: 650px;
+    min-width: 500px;
   }
   
   .incident-report-page > div[style*="display: flex"] {
