@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
+import SEO from '../../components/SEO';
 
 export default function InterviewEvaluation() {
   const { postId, candidateId } = useParams();
@@ -238,6 +239,11 @@ export default function InterviewEvaluation() {
   return (
     <div style={{ fontFamily: 'SUIT, Apple SD Gothic Neo, sans-serif', backgroundColor: '#ffffff', minHeight: '100vh' }}>
       <Navbar />
+      <SEO
+        title="면접 평가"
+        description="후보자의 면접 평가를 작성하고 분석 결과를 확인할 수 있는 페이지입니다."
+        keywords="면접 평가, AI 분석, 후보자 평가, 면접 결과, 면접 분석"
+      />
       <div style={{ padding: '7rem 3rem' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '2rem', color: '#2d3748' }}>

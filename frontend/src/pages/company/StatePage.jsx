@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import CompanySidebar from '../../components/CompanySidebar';
 import CandidateModal from '../../components/CandidateModal';
+import SEO from '../../components/SEO';
 
 import { pdfjs } from "react-pdf";
 pdfjs.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.mjs`;
@@ -173,6 +174,11 @@ export default function StatePage() {
   return (
     <div className="min-h-screen bg-emerald-50 pt-20">
       <Navbar />
+      <SEO
+        title={`${postId} 후보자 상태`}
+        description={`${postId} 후보자의 상태를 확인하고 이메일을 보낼 수 있습니다.`}
+        keywords={`${postId}, 후보자 상태, 이메일 보내기, 채용 관리`}
+      />
       <div className="flex">
         <CompanySidebar />
         <div className="flex-1 p-10 font-sans">

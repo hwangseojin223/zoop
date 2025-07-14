@@ -3,6 +3,7 @@ import { useParams, useLocation } from 'react-router-dom';
 import styled, { css, keyframes } from 'styled-components';
 import Navbar from '../../components/Navbar';
 import { FaGithub, FaExpandAlt, FaTimes, FaStar, FaCode, FaEnvelope, FaEdit } from 'react-icons/fa';
+import SEO from '../../components/SEO';
 
 // =========== Styled Components ===========
 
@@ -582,6 +583,11 @@ export default function CandidateList() {
 
   return (
     <Wrapper>
+      <SEO 
+        title={`${postInfo?.postTitle ? `${postInfo.postTitle} - 후보자 목록` : '후보자 목록'}`}
+        description={`${postInfo?.postTitle ? `${postInfo.postTitle} 공고에 대한 AI 추천 후보자 ${candidates.length}명을 확인하세요.` : 'AI가 추천한 개발자 후보자들을 확인하세요.'}`}
+        keywords={`${postInfo?.postTitle ? `${postInfo.postTitle}, 개발자 채용, AI 추천 후보자, GitHub 개발자` : '개발자 채용, AI 추천 후보자, GitHub 개발자'}`}
+      />
       <Navbar />
       <Container>
         {/* 공고 정보 */}

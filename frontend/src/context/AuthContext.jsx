@@ -17,6 +17,48 @@ export function AuthProvider({ children }) {
 
     const [isInitialized, setIsInitialized] = useState(false);
 
+    // JWT 토큰 만료 확인 함수
+    const isTokenExpired = (token) => {
+      if (!token) return true;
+      
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Date.now() / 1000;
+        return payload.exp < currentTime;
+      } catch (error) {
+        console.error('토큰 파싱 오류:', error);
+        return true;
+      }
+    };
+
+    // 자동 로그아웃 함수
+    const autoLogout = (showAlert = true) => {
+      console.log('토큰이 만료되어 자동 로그아웃을 실행합니다.');
+      
+      if (showAlert) {
+        alert('로그인 세션이 만료되었습니다. 다시 로그인해주세요.');
+      }
+      
+      // 로컬 스토리지에서 인증 관련 정보 제거
+      localStorage.removeItem('jwtToken');
+      localStorage.removeItem('userType');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('loginId');
+      // 필요한 경우 userName 등 추가 정보 제거
+
+      // authState 상태 초기화
+      setAuthState({
+        token: null,
+        userType: null,
+        userId: null,
+        loginId: null,
+        // 필요한 경우 추가 정보 필드도 null로 초기화
+      });
+
+      // 로그인 페이지로 리다이렉트
+      window.location.href = '/auth/login';
+    };
+
     useEffect(() => {
       const token = localStorage.getItem('jwtToken');
       const userType = localStorage.getItem('userType');
@@ -25,10 +67,36 @@ export function AuthProvider({ children }) {
       // 필요한 경우 userName 등 추가 정보 로드
 
       if (token && userType && userId && loginId) {
+        // 토큰 만료 확인
+        if (isTokenExpired(token)) {
+          console.log('저장된 토큰이 만료되었습니다.');
+          autoLogout(false); // 초기 로드 시에는 알림 표시하지 않음
+          return;
+        }
+        
         setAuthState({ token, userType, userId, loginId }); // 필요한 정보 포함
       }
       setIsInitialized(true); // ✅ 상태 복원 완료 표시
     }, []);
+
+    // 토큰 만료 감지를 위한 주기적 체크 (5분마다)
+    useEffect(() => {
+      if (!authState.token) return;
+
+      const checkTokenExpiry = () => {
+        if (isTokenExpired(authState.token)) {
+          autoLogout(true); // 주기적 체크 시에는 알림 표시
+        }
+      };
+
+      // 초기 체크
+      checkTokenExpiry();
+
+      // 5분마다 토큰 만료 확인
+      const interval = setInterval(checkTokenExpiry, 5 * 60 * 1000);
+
+      return () => clearInterval(interval);
+    }, [authState.token]);
 
     // ✅ 로그아웃 함수 정의
     const logout = () => {

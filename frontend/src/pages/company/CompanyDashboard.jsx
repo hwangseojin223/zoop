@@ -3,6 +3,7 @@ import Navbar from '../../components/Navbar';
 import CompanySidebar from './CompanySidebar';
 import CandidateModal from '../../components/CandidateModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import SEO from '../../components/SEO';
 
 export default function CompanyDashboard() {
   const [companyInfo, setCompanyInfo] = useState(null);
@@ -774,6 +775,7 @@ export default function CompanyDashboard() {
 
   return (
     <div className="company-dashboard" style={{ fontFamily: 'SUIT, Apple SD Gothic Neo, sans-serif', backgroundColor: '#ffffff', minHeight: '100vh' }}>
+      <SEO title="기업 대시보드" description="기업 대시보드에서는 기업이 채용 공고와 후보자를 관리할 수 있습니다." />
       <Navbar />
       <div className="dashboard-container" style={{ display: 'flex', marginTop: '6rem', alignItems: 'flex-start' }}>
         <CompanySidebar

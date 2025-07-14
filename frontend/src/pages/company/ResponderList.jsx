@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import Navbar from '../../components/Navbar';
 import { useParams } from 'react-router-dom';
 import { Document, Page, pdfjs } from 'react-pdf';
+import SEO from '../../components/SEO';
 
 // PDF.js 워커 경로 설정 (필수)
 pdfjs.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.mjs`;
@@ -71,6 +72,11 @@ export default function ResponderList() {
   return (
     <div>
       <Navbar />
+      <SEO
+        title={`${postId}번 공고 회신자 목록`}
+        description={`${postId}번 공고에 대한 회신자 목록을 확인할 수 있습니다.`}
+        keywords={`${postId}번 공고, 회신자 목록, 채용 공고`}
+      />
       <div className="px-12 pt-28 pb-12 bg-gradient-to-b from-emerald-50 to-white min-h-screen">
         <h2 className="text-3xl font-bold text-emerald-800 mb-10 border-b pb-2">
           🔍 {postId}번 공고 회신자 목록

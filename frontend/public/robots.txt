@@ -1,3 +1,25 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Allow: /
+
+# Sitemap
+Sitemap: https://zoop.com/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /auth/
+Disallow: /candidate/dashboard/
+Disallow: /company/dashboard/
+Disallow: /interview/
+
+# Allow important pages
+Allow: /
+Allow: /about
+Allow: /careers
+Allow: /notice
+Allow: /support
+Allow: /faq
