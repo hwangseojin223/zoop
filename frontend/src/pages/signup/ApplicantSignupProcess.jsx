@@ -36,6 +36,10 @@ const [errorMessage, setErrorMessage] = useState(''); // 에러메시지지
 const [password, setPassword] = useState('');
 const [passwordMessage, setPasswordMessage] = useState('');
 const [isPasswordValid, setIsPasswordValid] = useState(false);
+// [추가] 비밀번호 확인 관련 상태
+const [passwordConfirm, setPasswordConfirm] = useState('');
+const [passwordConfirmMessage, setPasswordConfirmMessage] = useState('');
+const [isPasswordConfirmValid, setIsPasswordConfirmValid] = useState(false);
 const [idCheck, setIdCheck] = useState('');
 const [idMessage, setIdMessage] = useState('');
 const [isIdAvailable, setIsIdAvailable] = useState(false);
@@ -90,32 +94,59 @@ const [individualAgree, setIndividualAgree] = useState({
     }
   }, [invitationToken, location.state]);
 
-  // 폼 유효성 검사
+  // ============ [초대 링크로 들어온 경우 쿼리파라미터 email 처리] ============
   useEffect(() => {
-    const isValid = 
-      idCheck && 
-      isIdAvailable && 
-      emailLocal && 
-      emailDomain && 
-      isEmailVerified && 
-      isPasswordValid && 
-      individualAgree.terms && 
-      individualAgree.privacy &&
-      document.getElementById('phone')?.value &&
-      document.getElementById('candidate_name')?.value;
+    console.log('=== Email 파라미터 디버깅 ===');
+    console.log('fromInvite:', fromInvite);
+    console.log('location.search:', location.search);
+    console.log('location.pathname:', location.pathname);
+    console.log('전체 URL:', window.location.href);
     
-    setIsFormValid(isValid);
-  }, [
-    idCheck, 
-    isIdAvailable, 
-    emailLocal, 
-    emailDomain, 
-    isEmailVerified, 
-    isPasswordValid, 
-    individualAgree.terms, 
-    individualAgree.privacy
-  ]);
+    if (fromInvite) {
+      const params = new URLSearchParams(location.search);
+      const email = params.get('email');
+      console.log('email:', email);
+      if (email) {
+        const [local, domain] = email.split('@');
+        setEmailLocal(local);
+        setEmailDomain(domain);
+        console.log('설정할 emailLocal:', local);
+        console.log('설정할 emailDomain:', domain);
+      } else {
+        console.log('❌ email 파라미터가 없습니다!');
+      }
+    } else {
+      console.log('❌ fromInvite가 false입니다!');
+    }
+  }, [fromInvite, location.search]);
   // ============ [폼 유효성 검사 useEffect 추가 끝] ============
+
+  // ============ [폼 유효성 검사 로직 추가] ============
+  useEffect(() => {
+    const validateForm = () => {
+      // 기본 조건들
+      const hasValidId = idCheck && isIdAvailable;
+      const hasValidPassword = isPasswordValid;
+      const hasValidPasswordConfirm = isPasswordConfirmValid;
+      const hasRequiredAgreements = individualAgree.terms && individualAgree.privacy;
+      const hasRequiredFields = document.getElementById('phone')?.value && document.getElementById('candidate_name')?.value;
+      
+      // 이메일 인증 조건 (초대 링크가 아닐 때만)
+      const hasValidEmail = fromInvite || (emailLocal && emailDomain && isEmailVerified);
+      
+      const isValid = hasValidId && hasValidPassword && hasValidPasswordConfirm && 
+                     hasRequiredAgreements && hasRequiredFields && hasValidEmail;
+      
+      setIsFormValid(isValid);
+    };
+
+    validateForm();
+  }, [
+    idCheck, isIdAvailable, isPasswordValid, isPasswordConfirmValid, 
+    individualAgree.terms, individualAgree.privacy, fromInvite, 
+    emailLocal, emailDomain, isEmailVerified
+  ]);
+  // ============ [폼 유효성 검사 로직 추가 끝] ============
 
 /**
  * async : 비동기 함수를 명시할떄 사용, Promise를 반환한다. 
@@ -164,6 +195,7 @@ useEffect(() => {
 }, [codeSent, resendTimer, isEmailVerified]);
 
   // 비밀번호 입력 시 유효성 검사
+  // [수정] 비밀번호 입력 시 비밀번호 확인도 다시 체크
   const handlePasswordChange = (e) => {
     const value = e.target.value;
     setPassword(value);
@@ -176,8 +208,30 @@ useEffect(() => {
       setPasswordMessage('영문자+숫자 조합, 최소 8자리여야 합니다.');
       setIsPasswordValid(false);
     }
+    // 비밀번호가 바뀌면 비밀번호 확인도 다시 체크
+    if (passwordConfirm.length > 0) {
+      if (passwordConfirm === value) {
+        setPasswordConfirmMessage('비밀번호가 일치합니다.');
+        setIsPasswordConfirmValid(true);
+      } else {
+        setPasswordConfirmMessage('비밀번호가 일치하지 않습니다.');
+        setIsPasswordConfirmValid(false);
+      }
+    }
   };
 
+  // [추가] 비밀번호 확인 입력값 변경 핸들러
+  const handlePasswordConfirmChange = (e) => {
+    const value = e.target.value;
+    setPasswordConfirm(value);
+    if (value === password && value.length > 0) {
+      setPasswordConfirmMessage('비밀번호가 일치합니다.');
+      setIsPasswordConfirmValid(true);
+    } else {
+      setPasswordConfirmMessage('비밀번호가 일치하지 않습니다.');
+      setIsPasswordConfirmValid(false);
+    }
+  };
 
   // 이메일 인증 확인
   const handleVerifyCode = async () => {
@@ -262,13 +316,19 @@ useEffect(() => {
       return;
     }
 
-    if (!emailLocal || !emailDomain || !isEmailVerified) {
+    // [수정] 초대 링크가 아닐 때만 이메일 인증 검사
+    if (!fromInvite && (!emailLocal || !emailDomain || !isEmailVerified)) {
       setErrorMessage('이메일 인증을 완료해주세요.');
       return;
     }
 
     if (!isPasswordValid) {
       setErrorMessage('비밀번호 형식을 확인해주세요.');
+      return;
+    }
+
+    if (!isPasswordConfirmValid) {
+      setErrorMessage('비밀번호가 일치하지 않습니다.');
       return;
     }
 
@@ -372,7 +432,7 @@ useEffect(() => {
                   setIdMessage('');
                 }
               }}
-              className={`flex-1 border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-colors ${
+              className={`flex-1 border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:border-sky-400 focus:ring-sky-200 transition-colors ${
                 fromInvite ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
               }`}
               placeholder="4~20자 영문, 숫자, _ 사용"
@@ -391,13 +451,7 @@ useEffect(() => {
           {idMessage && (
             <p className={`mt-1 text-sm ${isIdAvailable ? 'text-green-600' : 'text-red-500'}`}>{idMessage}</p>
           )}
-          {fromInvite && (
-            <div className="mt-1">
-              <small style={{ color: '#059669', fontSize: '12px' }}>
-                초대 링크를 통해 자동 설정된 아이디입니다.
-              </small>
-            </div>
-          )}
+
         </div>
 
         {/* 비밀번호 */}
@@ -409,11 +463,28 @@ useEffect(() => {
             value={password}
             onChange={handlePasswordChange}
             placeholder="영문자+숫자 조합, 최소 8자리"
-            className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-colors"
+            className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:border-sky-400 focus:ring-sky-200 transition-colors"
           />
           {passwordMessage && (
             <p className={`mt-1 text-sm ${isPasswordValid ? 'text-green-600' : 'text-red-500'}`}>
               {passwordMessage}
+            </p>
+          )}
+        </div>
+        {/* [추가] 비밀번호 확인 */}
+        <div>
+          <label htmlFor="passwordConfirm" className="block mb-2 font-semibold">비밀번호 확인</label>
+          <input
+            id="passwordConfirm"
+            type="password"
+            value={passwordConfirm}
+            onChange={handlePasswordConfirmChange}
+            placeholder="비밀번호를 한 번 더 입력해주세요"
+            className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:border-sky-400 focus:ring-sky-200 transition-colors"
+          />
+          {passwordConfirmMessage && (
+            <p className={`mt-1 text-sm ${isPasswordConfirmValid ? 'text-green-600' : 'text-red-500'}`}>
+              {passwordConfirmMessage}
             </p>
           )}
         </div>
@@ -425,7 +496,7 @@ useEffect(() => {
             id="candidate_name"
             type="text"
             placeholder="이름을 입력해주세요"
-            className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-colors"
+            className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:border-sky-400 focus:ring-sky-200 transition-colors"
           />
         </div>
 
@@ -436,78 +507,82 @@ useEffect(() => {
             id="phone"
             type="text"
             placeholder="하이픈(-) 제외"
-            className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-colors"
+            className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:border-sky-400 focus:ring-sky-200 transition-colors"
           />
         </div>
 
         {/* 이메일 입력 */}
-        <div>
-          <label className="block mb-2 font-semibold">이메일</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={emailLocal}
-              onChange={e => setEmailLocal(e.target.value)}
-              disabled={isEmailVerified}
-              className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white text-base focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-colors"
-            />
-            <span className="text-lg font-semibold text-gray-600">@</span>
-            {customInput ? (
+        {!fromInvite && (
+          <div>
+            <label className="block mb-2 font-semibold">이메일</label>
+            <div className="flex items-center gap-2">
               <input
                 type="text"
-                value={emailDomain}
-                onChange={e => setEmailDomain(e.target.value)}
+                value={emailLocal}
+                onChange={e => setEmailLocal(e.target.value)}
                 disabled={isEmailVerified}
-                className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white text-base focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-colors"
+                className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white text-base focus:outline-none focus:border-sky-400 focus:ring-sky-200 transition-colors"
               />
-            ) : (
-              <select
-                value={emailDomain}
-                onChange={handleDomainChange}
-                disabled={isEmailVerified}
-                className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white text-base focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-colors"
-              >
-                <option value="">선택</option>
-                <option value="naver.com">naver.com</option>
-                <option value="gmail.com">gmail.com</option>
-                <option value="daum.net">daum.net</option>
-                <option value="custom">직접 입력</option>
-              </select>
-            )}
-          </div>
-
-        </div>
-
-        {/* 인증코드 */}
-        <div>
-          <label className="block mb-2 font-semibold">인증코드 입력</label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={verificationCode}
-              onChange={e => setVerificationCode(e.target.value)}
-              placeholder="6자리 인증코드"
-              disabled={!codeSent || isEmailVerified}
-              className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-colors"
-            />
-            <button
-              type="button"
-              onClick={codeSent ? handleVerifyCode : handleSendCode}
-              disabled={isSendingCode}
-              className="bg-emerald-500 text-white w-32 py-2 rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSendingCode ? '전송 중...' : codeSent ? '확인' : '인증코드 받기'}
-            </button>
-          </div>
-          {codeSent && !isEmailVerified && (
-            <div className="text-sm text-gray-600 mt-2">
-              남은 시간: {Math.floor(resendTimer / 60)}:{String(resendTimer % 60).padStart(2, '0')}
-              {resendTimer === 0 && (
-                <button type="button" onClick={handleResend} className="ml-2 text-green-600 underline">다시 보내기</button>
+              <span className="text-lg font-semibold text-gray-600">@</span>
+              {customInput ? (
+                <input
+                  type="text"
+                  value={emailDomain}
+                  onChange={e => setEmailDomain(e.target.value)}
+                  disabled={isEmailVerified}
+                  className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white text-base focus:outline-none focus:border-sky-400 focus:ring-sky-200 transition-colors"
+                />
+              ) : (
+                <select
+                  value={emailDomain}
+                  onChange={handleDomainChange}
+                  disabled={isEmailVerified}
+                  className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white text-base focus:outline-none focus:border-sky-400 focus:ring-sky-200 transition-colors"
+                >
+                  <option value="">선택</option>
+                  <option value="naver.com">naver.com</option>
+                  <option value="gmail.com">gmail.com</option>
+                  <option value="daum.net">daum.net</option>
+                  <option value="custom">직접 입력</option>
+                </select>
               )}
             </div>
-          )}
-        </div>
+
+          </div>
+        )}
+
+        {/* 인증코드 */}
+        {!fromInvite && (
+          <div>
+            <label className="block mb-2 font-semibold">인증코드 입력</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={verificationCode}
+                onChange={e => setVerificationCode(e.target.value)}
+                placeholder="6자리 인증코드"
+                disabled={!codeSent || isEmailVerified}
+                className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white focus:outline-none focus:border-sky-400 focus:ring-sky-200 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={codeSent ? handleVerifyCode : handleSendCode}
+                disabled={isSendingCode}
+                className="bg-emerald-500 text-white w-32 py-2 rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSendingCode ? '전송 중...' : codeSent ? '확인' : '인증코드 받기'}
+              </button>
+            </div>
+            {codeSent && !isEmailVerified && (
+              <div className="text-sm text-gray-600 mt-2">
+                남은 시간: {Math.floor(resendTimer / 60)}:{String(resendTimer % 60).padStart(2, '0')}
+                {resendTimer === 0 && (
+                  <button type="button" onClick={handleResend} className="ml-2 text-green-600 underline">다시 보내기</button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 약관 동의 */}
         <div className="border border-gray-200 p-4 rounded-xl bg-gray-50">

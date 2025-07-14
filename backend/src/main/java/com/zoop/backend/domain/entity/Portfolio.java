@@ -40,7 +40,7 @@ public class Portfolio {
     @Column(name = "portfolio_submission_date", nullable = false)
     private Date portfolioSubmissionDate;
     
-    @Column(name = "portfolio_file_path")
+    @Column(name = "portfolio_file_path", length = 1000)
     private String portfolioFilePath;
     
     @Column(name = "portfolio_content")
