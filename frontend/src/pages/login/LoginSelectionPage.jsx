@@ -4,6 +4,7 @@ import axios from 'axios';
 import './LoginSelectionPage.css';
 import Navbar from '../../components/Navbar';
 import { useAuth } from '../../context/AuthContext';
+import SEO from '../../components/SEO';
 
 function LoginSelectionPage() {
   const [userType, setUserType] = useState('candidate'); // 기본값 개인회원
@@ -332,6 +333,23 @@ function LoginSelectionPage() {
 
   return (
     <>
+      {/* SEO 컴포넌트 */}
+      <SEO
+        title="로그인 - ZOOP | AI 기반 채용 플랫폼"
+        description="ZOOP에 로그인하여 AI 기반 채용 서비스를 이용하세요. 개발자와 기업 모두를 위한 맞춤형 채용 솔루션을 제공합니다."
+        keywords="ZOOP 로그인, AI채용로그인, 개발자로그인, 기업로그인, 채용플랫폼로그인"
+        image="/login-banner.jpg"
+        url="https://zoop.com/auth/login"
+        type="website"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": "ZOOP 로그인",
+          "description": "AI 기반 채용 플랫폼 ZOOP 로그인 페이지",
+          "url": "https://zoop.com/auth/login"
+        }}
+      />
+
       <Navbar />
       <div className="login-page-wrapper">
         <div className="login-container">

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import Navbar from '../../components/Navbar';
+import SEO from '../../components/SEO';
 import './FaqPage.css';
 
 const navLinks = [
@@ -40,65 +42,89 @@ function FaqPage() {
   const filteredFaqData = faqData.filter(faq => faq.category === selectedCategory);
 
   return (
-    <div className="customer-main-bg">
-      <nav className="customer-nav">
-        <div className="customer-nav-logo">고객센터</div>
-        <ul className="customer-nav-links">
-          {navLinks.map(link => (
-            <li key={link.label} className={link.active ? 'active' : ''}>
-              <a href={link.href}>{link.label}</a>
-            </li>
-          ))}
-        </ul>
-      </nav>
-      <div className="faq-container">
-        {/* 사이드바 */}
-        <aside className="faq-sidebar">
-          <h3 className="sidebar-title">카테고리</h3>
-          <ul className="category-list">
-            {categories.map(category => (
-              <li key={category}>
-                <button 
-                  className={`category-item ${selectedCategory === category ? 'active' : ''}`}
-                  onClick={() => setSelectedCategory(category)}
-                >
-                  {category}
-                </button>
+    <>
+      {/* SEO 컴포넌트 */}
+      <SEO
+        title="자주 묻는 질문 - ZOOP | FAQ"
+        description="ZOOP 서비스 이용에 대한 자주 묻는 질문과 답변을 확인하세요. AI 채용, GitHub 분석, 면접 프로세스 등에 대한 상세한 정보를 제공합니다."
+        keywords="ZOOP FAQ, 자주묻는질문, AI채용질문, GitHub분석질문, AI면접질문, 채용플랫폼질문, IT채용질문"
+        image="/faq-banner.jpg"
+        url="https://zoop.com/faq"
+        type="website"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": faqData.map((faq, index) => ({
+            "@type": "Question",
+            "name": faq.question,
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": faq.answer
+            }
+          }))
+        }}
+      />
+
+      <div className="customer-main-bg">
+        <nav className="customer-nav">
+          <div className="customer-nav-logo">고객센터</div>
+          <ul className="customer-nav-links">
+            {navLinks.map(link => (
+              <li key={link.label} className={link.active ? 'active' : ''}>
+                <a href={link.href}>{link.label}</a>
               </li>
             ))}
           </ul>
-        </aside>
-
-        {/* 메인 콘텐츠 */}
-        <main className="faq-main-content">
-          <h1 className="faq-title">{selectedCategory}</h1>
-          {filteredFaqData.length > 0 ? (
-            <ul className="faq-list">
-              {filteredFaqData.map((item, idx) => (
-                <li key={`${item.category}-${idx}`} className={`faq-item${openIdx === idx ? ' open' : ''}`}> 
-                  <button className="faq-question" onClick={() => setOpenIdx(openIdx === idx ? null : idx)} aria-expanded={openIdx === idx}>
-                    <span>{item.question}</span>
-                    <span className={`faq-arrow${openIdx === idx ? ' open' : ''}`}
-                      aria-hidden="true"
-                      style={{display: 'flex', alignItems: 'center'}}>
-                      <svg width="22" height="22" viewBox="0 0 24 24" style={{transform: openIdx === idx ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.35s'}}>
-                        <path d="M7 10l5 5 5-5" stroke={openIdx === idx ? '#22c55e' : '#888'} strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </span>
+        </nav>
+        <div className="faq-container">
+          {/* 사이드바 */}
+          <aside className="faq-sidebar">
+            <h3 className="sidebar-title">카테고리</h3>
+            <ul className="category-list">
+              {categories.map(category => (
+                <li key={category}>
+                  <button 
+                    className={`category-item ${selectedCategory === category ? 'active' : ''}`}
+                    onClick={() => setSelectedCategory(category)}
+                  >
+                    {category}
                   </button>
-                  <div className={`faq-answer${openIdx === idx ? ' open' : ''}`}>{item.answer}</div>
                 </li>
               ))}
             </ul>
-          ) : (
-            <div className="no-faq-message">
-              <p>해당 카테고리의 FAQ가 없습니다.</p>
-              <p>다른 카테고리를 선택해 주세요.</p>
-            </div>
-          )}
-        </main>
+          </aside>
+
+          {/* 메인 콘텐츠 */}
+          <main className="faq-main-content">
+            <h1 className="faq-title">{selectedCategory}</h1>
+            {filteredFaqData.length > 0 ? (
+              <ul className="faq-list">
+                {filteredFaqData.map((item, idx) => (
+                  <li key={`${item.category}-${idx}`} className={`faq-item${openIdx === idx ? ' open' : ''}`}> 
+                    <button className="faq-question" onClick={() => setOpenIdx(openIdx === idx ? null : idx)} aria-expanded={openIdx === idx}>
+                      <span>{item.question}</span>
+                      <span className={`faq-arrow${openIdx === idx ? ' open' : ''}`}
+                        aria-hidden="true"
+                        style={{display: 'flex', alignItems: 'center'}}>
+                        <svg width="22" height="22" viewBox="0 0 24 24" style={{transform: openIdx === idx ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.35s'}}>
+                          <path d="M7 10l5 5 5-5" stroke={openIdx === idx ? '#22c55e' : '#888'} strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </span>
+                    </button>
+                    <div className={`faq-answer${openIdx === idx ? ' open' : ''}`}>{item.answer}</div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="no-faq-message">
+                <p>해당 카테고리의 FAQ가 없습니다.</p>
+                <p>다른 카테고리를 선택해 주세요.</p>
+              </div>
+            )}
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './Notice.css';
 import Navbar from '../../components/Navbar';
+import SEO from '../../components/SEO';
 
 const noticeList = [
   {
@@ -67,6 +68,33 @@ function Notice() {
 
   return (
     <>
+      {/* SEO 컴포넌트 */}
+      <SEO
+        title="공지사항 - ZOOP | 최신 소식 및 업데이트"
+        description="ZOOP의 최신 공지사항과 업데이트 소식을 확인하세요. 서비스 개선, 새로운 기능, 이벤트 등 다양한 소식을 제공합니다."
+        keywords="ZOOP 공지사항, 업데이트, 서비스소식, 새로운기능, 이벤트, AI채용소식"
+        image="/notice-banner.jpg"
+        url="https://zoop.com/notice"
+        type="website"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          "name": "ZOOP 공지사항",
+          "description": "ZOOP의 최신 공지사항과 업데이트",
+          "numberOfItems": noticeList.length,
+          "itemListElement": noticeList.map((notice, index) => ({
+            "@type": "ListItem",
+            "position": index + 1,
+            "item": {
+              "@type": "Article",
+              "headline": notice.title,
+              "datePublished": notice.date,
+              "description": notice.summary
+            }
+          }))
+        }}
+      />
+
       <Navbar />
       <div className="notice-page">
         <div className="notice-container">

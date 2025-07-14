@@ -382,11 +382,21 @@ export default function CompanySidebar({
                         padding: '0.2rem 0.6rem',
                         borderRadius: '12px',
                         fontSize: '0.7rem',
-                        fontWeight: '600'
+                        fontWeight: '600',
+                        zIndex: 10
                       }}>
                         {post.postStatus === 'ACTIVE' ? '진행중' : '마감'}
                       </div>
-                      <div style={{ fontWeight: '600', marginBottom: '0.8rem', color: '#2d3748', fontSize: '1.1rem' }}>{post.postTitle}</div>
+                      <div style={{ 
+                        fontWeight: '600', 
+                        marginBottom: '0.8rem', 
+                        color: '#2d3748', 
+                        fontSize: '1.1rem',
+                        paddingRight: '4rem',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>{post.postTitle}</div>
                       <div style={{ fontSize: '0.9rem', color: '#4a5568', display: 'flex', gap: '1rem', flexWrap: 'wrap', flexDirection: 'column' }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           {/* 위치 SVG */}
@@ -488,11 +498,21 @@ export default function CompanySidebar({
                       padding: '0.2rem 0.6rem',
                       borderRadius: '12px',
                       fontSize: '0.7rem',
-                      fontWeight: '600'
+                      fontWeight: '600',
+                      zIndex: 10
                     }}>
                       {post.postStatus === 'ACTIVE' ? '진행중' : '마감'}
                     </div>
-                    <div style={{ fontWeight: '600', marginBottom: '0.8rem', color: '#2d3748', fontSize: '1.1rem' }}>{post.postTitle}</div>
+                    <div style={{ 
+                      fontWeight: '600', 
+                      marginBottom: '0.8rem', 
+                      color: '#2d3748', 
+                      fontSize: '1.1rem',
+                      paddingRight: '4rem',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>{post.postTitle}</div>
                     <div style={{ fontSize: '0.9rem', color: '#4a5568', display: 'flex', gap: '1rem', flexWrap: 'wrap', flexDirection: 'column' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         {/* 위치 SVG */}

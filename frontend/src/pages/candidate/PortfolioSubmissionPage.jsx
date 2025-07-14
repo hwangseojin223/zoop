@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import PortfolioNavbar from './PortfolioNavbar';
+import SEO from '../../components/SEO';
 import './PortfolioSubmissionPage.css';
 
 function PortfolioSubmissionPage() {
@@ -291,6 +292,11 @@ function PortfolioSubmissionPage() {
 
   return (
     <div className="portfolio-submission-container">
+      <SEO
+        title={`${jobPosting?.postTitle ? `${jobPosting.postTitle} - 포트폴리오 제출` : '포트폴리오 제출'}`}
+        description={`${jobPosting?.postTitle ? `${jobPosting.postTitle} 공고에 대한 포트폴리오를 제출하세요.` : '채용 공고에 대한 포트폴리오를 제출하세요.'}`}
+        keywords={`${jobPosting?.postTitle ? `${jobPosting.postTitle}, 포트폴리오 제출, 채용 지원` : '포트폴리오 제출, 채용 지원, 개발자 지원'}`}
+      />
       <PortfolioNavbar />
       
       <div className="portfolio-header">

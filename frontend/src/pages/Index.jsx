@@ -17,7 +17,7 @@ const WAVE_STROKE = 2.1;
 
 export default function Index() {
   const navigate = useNavigate();
-  // const { authState, setAuthState } = useAuth(); // 사용하지 않는 변수 주석 처리
+  const { authState, setAuthState } = useAuth();
   const [mountTime] = useState(() => performance.now());
 
   // 메인페이지 로드 시 Navbar 스타일 강제 재적용
@@ -85,7 +85,6 @@ export default function Index() {
     if (r < MIN_R) r += waveCycle;
     waves.push({ r, idx: i });
   }
-
 
   // 사선 회전 angle
   const [angle, setAngle] = useState(0);

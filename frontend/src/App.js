@@ -1,43 +1,42 @@
 import React, { useEffect, useState, useRef, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, UNSAFE_future, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import PrivateRoute from './routes/PrivateRoute';
+import PublicOnlyRoute from './routes/PublicOnlyRoute';
+import Chatbot from './components/Chatbot';
+import './components/Chatbot.css';
 
 // index
 import Index from './pages/Index';
-// signup
-import Signup from './pages/signup/Signup';
-import CompanySignupProcess from './pages/signup/CompanySignupProcess';
-import CompanyAdminSignup from './pages/signup/CompanyAdminSignup';
-import SignupSuccess from './pages/signup/SignupSuccess';
-import ApplicantSignupSuccess from './pages/signup/ApplicantSignupSuccess';
-import ApplicantSignupProcess from './pages/signup/ApplicantSignupProcess';
-import LoginSelectionPage from './pages/login/LoginSelectionPage';
-import FindIdPage from './pages/login/FindIdPage';
-import InvitationHandler from './components/InvitationHandler';
-import FindPasswordPage from './pages/login/FindPasswordPage';
-import ResetPasswordPage from './pages/login/ResetPasswordPage';
-import GoogleAuthCallback from './pages/auth/GoogleAuthCallback';
-import PrivateRoute from './routes/PrivateRoute';
-import PublicOnlyRoute from './routes/PublicOnlyRoute';
-// company
-import CompanyDashboard from './pages/company/CompanyDashboard';
-import RecruitCreate from './pages/company/RecruitCreate';
-import CandidateList from './pages/company/CandidateList';
-import ResponderList from './pages/company/ResponderList';
-import StatePage from './pages/company/StatePage';
-import IdealCandidate from './pages/company/IdealCandidate';
-import InterviewEvaluation from './pages/company/InterviewEvaluation';
-// info - lazy loading으로 변경
 
-// 챗봇 import
-import Chatbot from './components/Chatbot';
-import './components/Chatbot.css';
-// candidate
-import { CandidateDashboard } from './pages/candidate/Dashboard';
-// PortfolioSubmissionPage 컴포넌트를 임포트합니다. 실제 파일 경로에 맞게 수정해주세요.
-import PortfolioSubmissionPage from './pages/candidate/PortfolioSubmissionPage';
-import InterviewPage from './pages/candidate/InterviewPage';
-import InterviewSession from './pages/candidate/InterviewSession';
+// signup - lazy loading으로 변경
+const Signup = lazy(() => import('./pages/signup/Signup'));
+const CompanySignupProcess = lazy(() => import('./pages/signup/CompanySignupProcess'));
+const CompanyAdminSignup = lazy(() => import('./pages/signup/CompanyAdminSignup'));
+const SignupSuccess = lazy(() => import('./pages/signup/SignupSuccess'));
+const ApplicantSignupSuccess = lazy(() => import('./pages/signup/ApplicantSignupSuccess'));
+const ApplicantSignupProcess = lazy(() => import('./pages/signup/ApplicantSignupProcess'));
+const LoginSelectionPage = lazy(() => import('./pages/login/LoginSelectionPage'));
+const FindIdPage = lazy(() => import('./pages/login/FindIdPage'));
+const InvitationHandler = lazy(() => import('./components/InvitationHandler'));
+const FindPasswordPage = lazy(() => import('./pages/login/FindPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/login/ResetPasswordPage'));
+const GoogleAuthCallback = lazy(() => import('./pages/auth/GoogleAuthCallback'));
+
+// company - lazy loading으로 변경
+const CompanyDashboard = lazy(() => import('./pages/company/CompanyDashboard'));
+const RecruitCreate = lazy(() => import('./pages/company/RecruitCreate'));
+const CandidateList = lazy(() => import('./pages/company/CandidateList'));
+const ResponderList = lazy(() => import('./pages/company/ResponderList'));
+const StatePage = lazy(() => import('./pages/company/StatePage'));
+const IdealCandidate = lazy(() => import('./pages/company/IdealCandidate'));
+const InterviewEvaluation = lazy(() => import('./pages/company/InterviewEvaluation'));
+
+// candidate - lazy loading으로 변경
+const CandidateDashboard = lazy(() => import('./pages/candidate/Dashboard').then(module => ({ default: module.CandidateDashboard })));
+const PortfolioSubmissionPage = lazy(() => import('./pages/candidate/PortfolioSubmissionPage'));
+const InterviewPage = lazy(() => import('./pages/candidate/InterviewPage'));
+const InterviewSession = lazy(() => import('./pages/candidate/InterviewSession'));
 
 // info - lazy loading으로 변경
 const About = lazy(() => import('./pages/info/About'));
@@ -47,6 +46,53 @@ const CustomerServicePage = lazy(() => import('./pages/info/CustomerServicePage'
 const FaqPage = lazy(() => import('./pages/info/FaqPage'));
 const Careers = lazy(() => import('./pages/info/Careers'));
 const JobDetailPage = lazy(() => import('./pages/info/JobDetailPage'));
+
+// 로딩 스켈레톤 컴포넌트
+const LoadingSkeleton = () => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #eafff7 0%, #b2f5ea 60%, #30c59b 100%)',
+    color: '#185f44',
+    fontSize: '1.18rem',
+    fontWeight: 500,
+    fontFamily: 'SUIT, Pretendard, Montserrat, sans-serif',
+    letterSpacing: '-0.5px',
+    transition: 'background 0.3s',
+  }}>
+    <div style={{ textAlign: 'center' }}>
+      <div style={{
+        width: '56px',
+        height: '56px',
+        border: '5px solid #b2f5ea',
+        borderTop: '5px solid #30c59b',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite',
+        margin: '0 auto 24px',
+        boxShadow: '0 4px 24px 0 #30c59b22',
+        background: 'rgba(255,255,255,0.2)'
+      }}></div>
+      <div style={{
+        fontWeight: 700,
+        fontSize: '1.25rem',
+        color: '#19b47a',
+        marginBottom: 8
+      }}>
+        ZOOP
+      </div>
+      <div style={{
+        color: '#185f44',
+        fontWeight: 500,
+        fontSize: '1.08rem',
+        opacity: 0.85
+      }}>
+        페이지를 불러오는 중입니다...
+      </div>
+    </div>
+  </div>
+);
 
 function AppContent() {
   const { setAuthState } = useAuth();
@@ -64,7 +110,7 @@ function AppContent() {
   }, [setAuthState]);
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<LoadingSkeleton />}>
       <Routes>
         <Route
           path="/"
