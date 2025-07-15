@@ -4,4 +4,5 @@ requests
 pydantic
 openai
 python-dotenv
-whisper 
+whisper
+yt-dlp 

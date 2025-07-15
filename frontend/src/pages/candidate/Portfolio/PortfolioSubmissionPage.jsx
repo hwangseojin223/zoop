@@ -35,6 +35,7 @@ function PortfolioSubmissionPage() {
 
   // Job posting information
   const [jobPosting, setJobPosting] = useState(null);
+  const [companyName, setCompanyName] = useState('');
   const [loading, setLoading] = useState(true);
 
   // 실제 로그인한 사용자의 ID 사용
@@ -56,7 +57,7 @@ function PortfolioSubmissionPage() {
         console.log(`포트폴리오 제출 페이지 로드 - 공고 ID: ${postId}, 사용자 ID: ${candidateId}`);
         
         // 공고 정보 가져오기
-        const response = await fetch(`http://localhost:8081/api/posts/${postId}`);
+        const response = await fetch(`http://localhost:8081/api/postings/info/${postId}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -64,13 +65,29 @@ function PortfolioSubmissionPage() {
         setJobPosting(data);
         console.log('공고 정보:', data);
         
+        // 회사 정보 가져오기
+        if (data.companyId) {
+          try {
+            const companyResponse = await fetch(`http://localhost:8081/api/companies/${data.companyId}`);
+            if (companyResponse.ok) {
+              const companyData = await companyResponse.json();
+              setCompanyName(companyData.companyName || '회사명을 불러올 수 없습니다');
+            } else {
+              setCompanyName('회사명을 불러올 수 없습니다');
+            }
+          } catch (companyError) {
+            console.error('회사 정보를 가져오는 중 오류 발생:', companyError);
+            setCompanyName('회사명을 불러올 수 없습니다');
+          }
+        }
+        
       } catch (error) {
         console.error('공고 정보를 가져오는 중 오류 발생:', error);
         // 오류 발생 시 기본값 설정
         setJobPosting({
-          postTitle: '공고 정보를 불러올 수 없습니다',
-          companyName: '정보 없음'
+          postTitle: '공고 정보를 불러올 수 없습니다'
         });
+        setCompanyName('정보 없음');
       } finally {
         setLoading(false);
       }
@@ -235,7 +252,7 @@ function PortfolioSubmissionPage() {
           <h1 className="main-title">지원서 작성하기</h1>
           <div className="job-info">
             <div className="company-job-container">
-              <span className="company-name">{jobPosting?.companyName || '회사명을 불러올 수 없습니다'}</span>
+              <span className="company-name">{companyName || '회사명을 불러올 수 없습니다'}</span>
               <span className="separator">|</span>
               <span className="job-title">{jobPosting?.postTitle || '공고 제목을 불러올 수 없습니다'}</span>
             </div>

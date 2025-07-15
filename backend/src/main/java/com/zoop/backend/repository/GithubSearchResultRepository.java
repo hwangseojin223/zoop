@@ -25,6 +25,10 @@ public interface GithubSearchResultRepository extends JpaRepository<GithubSearch
     @Query("SELECT g FROM GithubSearchResult g WHERE g.githubLogin = :githubLogin ORDER BY g.githubSearchDate DESC")
     List<GithubSearchResult> findByGithubLogin(@Param("githubLogin") String githubLogin);
 
+    // postId와 githubLogin으로 단일 후보자 조회
+    @Query("SELECT g FROM GithubSearchResult g WHERE g.postId = :postId AND g.githubLogin = :githubLogin")
+    java.util.Optional<GithubSearchResult> findByPostIdAndGithubLogin(@Param("postId") Long postId, @Param("githubLogin") String githubLogin);
+
     // 공고 후보자, 지원자 상태조회 20250626
     @Query("""
         SELECT new com.zoop.backend.domain.dto.GithubSearchResultWithStageDto(

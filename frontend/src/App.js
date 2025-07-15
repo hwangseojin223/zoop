@@ -37,9 +37,10 @@ const InterviewEvaluation = lazy(() => import('./pages/company/InterviewEvaluati
 
 // candidate - lazy loading으로 변경
 const CandidateDashboard = lazy(() => import('./pages/candidate/Dashboard').then(module => ({ default: module.CandidateDashboard })));
-const PortfolioSubmissionPage = lazy(() => import('./pages/candidate/PortfolioSubmissionPage'));
-const InterviewPage = lazy(() => import('./pages/candidate/InterviewPage'));
-const InterviewSession = lazy(() => import('./pages/candidate/InterviewSession'));
+const PortfolioSubmissionPage = lazy(() => import('./pages/candidate/Portfolio/PortfolioSubmissionPage'));
+const InterviewPage = lazy(() => import('./pages/candidate/Interview/InterviewPage'));
+const InterviewSession = lazy(() => import('./pages/candidate/Interview/InterviewSession'));
+const ResumeSubmissionPage = lazy(() => import('./pages/candidate/resume/ResumeSubmissionPage'));
 
 // info - lazy loading으로 변경
 const About = lazy(() => import('./pages/info/About'));
@@ -176,6 +177,33 @@ function AppContent() {
           element={
             <PrivateRoute allowedUserType='candidate'> {/* 개인회원만 접근 허용 */}
               <PortfolioSubmissionPage />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/candidate/portfolio/submit"
+          element={
+            <PrivateRoute allowedUserType='candidate'>
+              <PortfolioSubmissionPage />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/candidate/resume/submit"
+          element={
+            <PrivateRoute allowedUserType='candidate'>
+              <ResumeSubmissionPage />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/candidate/resume/ResumeSubmissionPage"
+          element={
+            <PrivateRoute allowedUserType='candidate'>
+              <ResumeSubmissionPage />
             </PrivateRoute>
           }
         />

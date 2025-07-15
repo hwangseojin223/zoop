@@ -6,23 +6,23 @@ import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.zoop.backend.domain.dto.CandidateSignupRequest;
 import com.zoop.backend.domain.dto.finding.FindGithubLoginRequest;
 import com.zoop.backend.domain.dto.finding.FindGithubLoginResponse;
 import com.zoop.backend.domain.entity.Candidate;
-import com.zoop.backend.domain.entity.Invitation;
 import com.zoop.backend.domain.entity.GithubSearchResult;
+import com.zoop.backend.domain.entity.Invitation;
 import com.zoop.backend.repository.CandidateRepository;
-import com.zoop.backend.repository.InvitationRepository;
 import com.zoop.backend.repository.GithubSearchResultRepository;
+import com.zoop.backend.repository.InvitationRepository;
 import com.zoop.backend.service.CandidateService;
 import com.zoop.backend.service.JobCandProgressService;
 
@@ -154,7 +154,7 @@ public class CandidateController {
         }
     }
 
-    // 4. 후보자 ID로 조회
+    // 4. 후보자 ID로 조회 (상세 버전)
     @GetMapping("/{candidateId}")
     public ResponseEntity<?> getCandidateById(@PathVariable Long candidateId) {
         log.info("후보자 ID로 조회: candidateId={}", candidateId);
@@ -195,32 +195,55 @@ public class CandidateController {
         }
     }
 
-    // 6. 이메일로 GitHub 로그인 조회 (내 버전에서 가져온 기능)
+    // 6. 이메일로 GitHub 로그인 조회 (간단 버전)
     @GetMapping("/email/{githubLogin}")
-    public ResponseEntity<?> getEmailByGithubLogin(@PathVariable String githubLogin) {
-        log.info("🔍 githubLogin={}으로 이메일 조회 요청", githubLogin);
-        
+    public ResponseEntity<?> getCandidate(@PathVariable String githubLogin) {
         try {
-            // 1. candidates 테이블에서 조회
             Optional<Candidate> candidate = candidateRepository.findByGithubLogin(githubLogin);
             if (candidate.isPresent()) {
-                log.info("✅ candidates 테이블에서 이메일 조회 성공: {}", candidate.get().getCandidateEmail());
-                return ResponseEntity.ok(Map.of("email", candidate.get().getCandidateEmail()));
+                CandidateInfoDto info = new CandidateInfoDto(candidate.get());
+                return ResponseEntity.ok(info);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "해당 GitHub 로그인의 후보자를 찾을 수 없습니다."));
             }
-            
-            // 2. 없으면 github_search_results에서 조회
-            List<GithubSearchResult> gsrList = githubSearchResultRepository.findByGithubLogin(githubLogin);
-            if (!gsrList.isEmpty() && gsrList.get(0).getCandidateEmail() != null) {
-                log.info("✅ github_search_results 테이블에서 이메일 조회 성공: {}", gsrList.get(0).getCandidateEmail());
-                return ResponseEntity.ok(Map.of("email", gsrList.get(0).getCandidateEmail()));
-            }
-            
-            log.warn("❌ githubLogin={}에 해당하는 이메일을 찾을 수 없습니다.", githubLogin);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "이메일을 찾을 수 없습니다."));
         } catch (Exception e) {
-            log.error("이메일 조회 중 오류 발생: {}", e.getMessage());
+            log.error("후보자 조회 중 오류 발생: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "이메일 조회 중 오류가 발생했습니다."));
+                .body(Map.of("error", "후보자 조회 중 오류가 발생했습니다."));
         }
+    }
+
+    // 7. GitHub 검색 결과 조회
+    @GetMapping("/github-search/{githubLogin}")
+    public ResponseEntity<?> getGithubSearchResults(@PathVariable String githubLogin) {
+        log.info("GitHub 검색 결과 조회: githubLogin={}", githubLogin);
+        
+        try {
+            List<GithubSearchResult> results = githubSearchResultRepository.findByGithubLogin(githubLogin);
+            return ResponseEntity.ok(results);
+        } catch (Exception e) {
+            log.error("GitHub 검색 결과 조회 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "GitHub 검색 결과 조회 중 오류가 발생했습니다."));
+        }
+    }
+
+    // DTO 클래스
+    public static class CandidateInfoDto {
+        private final String name;
+        private final String email;
+        private final String phone;
+        
+        public CandidateInfoDto(Candidate c) {
+            this.name = c.getCandidateName();
+            this.email = c.getCandidateEmail();
+            this.phone = c.getCandidatePhoneNumber();
+        }
+        
+        // Getters
+        public String getName() { return name; }
+        public String getEmail() { return email; }
+        public String getPhone() { return phone; }
     }
 }
