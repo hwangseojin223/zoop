@@ -1,81 +1,227 @@
-# ZOOP Backend API Services
+# ZOOP Python API Services
 
-이 프로젝트는 ZOOP 채용 플랫폼의 백엔드 API 서비스들입니다.
+ZOOP 백엔드의 Python API 서비스들을 관리하는 디렉토리입니다.
 
-## 서비스 구성
+## 🚀 FastAPI + Uvicorn 서비스
 
-### 1. Chatbot API Service (Port 8000)
-**위치**: `backend/python-api/chatbot/`
-**기능**: 
-- 일반 채팅봇 기능 (`/chat`)
-- 인재상 작성 AI 어시스턴트 (`/ideal-candidate-chat`)
+### Interview Analysis API (포트 8001)
+- **기술**: FastAPI + Uvicorn
+- **기능**: AI 면접 영상 분석 및 평가
+- **실행**: `python -m uvicorn interview_analysis_api:app --host 0.0.0.0 --port 8001 --reload`
+- **API 문서**: http://localhost:8001/docs
 
-**실행 방법**:
+### Portfolio Matching API (포트 8002)
+- **기술**: FastAPI + Uvicorn
+- **기능**: 포트폴리오 분석 및 채용공고 매칭
+- **실행**: `python -m uvicorn portfolio_matching_api:app --host 0.0.0.0 --port 8002 --reload`
+- **API 문서**: http://localhost:8002/docs
+
+## 🔧 Flask 서비스 (기존)
+
+### Chatbot API (포트 5000)
+- **기술**: Flask
+- **기능**: AI 챗봇 서비스
+- **실행**: `python chatbot_api.py`
+
+### GitHub Search API (포트 5001)
+- **기술**: Flask
+- **기능**: GitHub 프로필 검색 및 분석
+- **실행**: `python main.py`
+
+### Interview Questions API (포트 5002)
+- **기술**: Flask
+- **기능**: AI 면접 질문 생성
+- **실행**: `python interview_questions_api.py`
+
+### OCR API (포트 5003)
+- **기술**: Flask
+- **기능**: 문서 OCR 처리
+- **실행**: `python ocr_api.py`
+
+## 📦 설치 및 실행
+
+### 1. 의존성 설치
+
+각 서비스 디렉토리에서 requirements.txt 설치:
+
 ```bash
-cd backend/python-api/chatbot
+# Interview Analysis API
+cd interview_analysis
 pip install -r requirements.txt
-uvicorn chatbot_api:app --host 0.0.0.0 --port 8000 --reload
+
+# Portfolio Matching API
+cd ../portfolio_matching
+pip install -r requirements.txt
+
+# 기타 Flask 서비스들
+cd ../chatbot
+pip install -r requirements.txt
 ```
 
-### 2. GitHub Search API Service (Port 8081)
-**위치**: `backend/python-api/github_search/`
-**기능**: 
-- GitHub 인재 검색 (`/search`)
+### 2. 환경 변수 설정
 
-**실행 방법**:
+각 서비스 디렉토리에 `.env` 파일 생성:
+
 ```bash
-cd backend/python-api/github_search
-pip install -r requirements.txt
-uvicorn main:app --host 0.0.0.0 --port 8081 --reload
-```
-
-## 환경 설정
-
-### 필수 환경 변수
-`.env` 파일을 각 서비스 디렉토리에 생성하고 다음 변수들을 설정하세요:
-
-```env
+# .env 파일 예시
 OPENAI_API_KEY=your_openai_api_key_here
-PDF_PATH=채용_관리자_가이드.pdf  # chatbot 서비스용
-OPENAI_MODEL=gpt-4o-mini
+SPRING_API_URL=http://localhost:8081
 ```
 
-### 의존성 설치
-각 서비스 디렉토리에서 다음 명령어를 실행하세요:
+### 3. 서비스 실행
+
+#### 전체 서비스 한 번에 실행:
+```bash
+./start_services.sh
+```
+
+#### 개별 서비스 실행:
+
+**FastAPI 서비스:**
+```bash
+# Interview Analysis API
+cd interview_analysis
+python -m uvicorn interview_analysis_api:app --host 0.0.0.0 --port 8001 --reload
+
+# Portfolio Matching API
+cd ../portfolio_matching
+python -m uvicorn portfolio_matching_api:app --host 0.0.0.0 --port 8002 --reload
+```
+
+**Flask 서비스:**
+```bash
+# Chatbot API
+cd chatbot
+python chatbot_api.py
+
+# GitHub Search API
+cd ../github_search
+python main.py
+
+# Interview Questions API
+cd ../interview_questions
+python interview_questions_api.py
+
+# OCR API
+cd ../../ocr
+python ocr_api.py
+```
+
+### 4. 서비스 중지
 
 ```bash
-pip install fastapi uvicorn openai python-dotenv PyPDF2
+./stop_services.sh
 ```
 
-## API 엔드포인트
+## 🔍 API 문서
 
-### Chatbot Service (Port 8000)
-- `POST /chat` - 일반 채팅봇
-- `POST /ideal-candidate-chat` - 인재상 작성 AI
+### FastAPI 서비스 (자동 생성)
+- Interview Analysis API: http://localhost:8001/docs
+- Portfolio Matching API: http://localhost:8002/docs
 
-### GitHub Search Service (Port 8081)
-- `POST /search` - GitHub 인재 검색
+### Flask 서비스 (수동 문서)
+각 서비스의 소스 코드에서 엔드포인트 확인
 
-## 개발 가이드
+## 📊 서비스 상태 확인
 
-### 서비스 구조
-- **chatbot_api.py**: 채팅봇 및 인재상 작성 기능 담당
-- **main.py**: GitHub 검색 기능만 담당 (중복 엔드포인트 제거됨)
+```bash
+# 헬스 체크
+curl http://localhost:8001/health  # Interview Analysis API
+curl http://localhost:8002/health  # Portfolio Matching API
+curl http://localhost:5000/health  # Chatbot API
+curl http://localhost:5001/health  # GitHub Search API
+curl http://localhost:5002/health  # Interview Questions API
+curl http://localhost:5003/health  # OCR API
+```
 
-### 프론트엔드 연결
-- 프론트엔드는 `http://localhost:8000/ideal-candidate-chat`로 인재상 작성 요청
-- GitHub 검색은 `http://localhost:8081/api/github-search`로 요청
+## 🆕 FastAPI + Uvicorn 장점
 
-## 문제 해결
+### 성능 향상
+- **비동기 처리**: asyncio 기반으로 동시 요청 처리 성능 향상
+- **더 빠른 응답**: Flask 대비 더 빠른 요청 처리 속도
+- **메모리 효율성**: 더 적은 메모리 사용량
+
+### 개발 편의성
+- **자동 API 문서**: Swagger UI 자동 생성 (/docs)
+- **타입 검증**: Pydantic 모델로 자동 타입 검증
+- **OpenAPI 표준**: 표준 API 문서 자동 생성
+
+### 확장성
+- **비동기 엔드포인트**: async/await 지원
+- **미들웨어**: CORS, 인증 등 미들웨어 쉽게 추가
+- **의존성 주입**: FastAPI의 의존성 주입 시스템 활용
+
+## 🔄 마이그레이션 가이드
+
+기존 Flask 서비스를 FastAPI로 마이그레이션하려면:
+
+1. **의존성 변경**:
+   ```bash
+   # requirements.txt
+   fastapi==0.104.1
+   uvicorn==0.24.0
+   pydantic==2.5.0
+   ```
+
+2. **코드 변경**:
+   ```python
+   # Flask → FastAPI
+   from flask import Flask, request, jsonify
+   app = Flask(__name__)
+   
+   @app.route('/api/endpoint', methods=['POST'])
+   def endpoint():
+       data = request.get_json()
+       return jsonify({'result': data})
+   ```
+
+   ```python
+   # FastAPI
+   from fastapi import FastAPI, HTTPException
+   from pydantic import BaseModel
+   
+   app = FastAPI()
+   
+   class RequestModel(BaseModel):
+       field: str
+   
+   @app.post('/api/endpoint')
+   async def endpoint(data: RequestModel):
+       return {'result': data.field}
+   ```
+
+3. **실행 변경**:
+   ```bash
+   # Flask
+   python app.py
+   
+   # FastAPI
+   python -m uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+   ```
+
+## 🐛 문제 해결
 
 ### 포트 충돌
-- 각 서비스가 다른 포트에서 실행되는지 확인
-- `lsof -i :8000` 또는 `lsof -i :8081`로 포트 사용 확인
+```bash
+# 포트 사용 중인 프로세스 확인
+lsof -i :8001
+lsof -i :8002
 
-### API 키 오류
-- `.env` 파일이 올바른 위치에 있는지 확인
-- OpenAI API 키가 유효한지 확인
+# 프로세스 강제 종료
+kill -9 <PID>
+```
 
-### 의존성 오류
-- 각 서비스 디렉토리에서 `pip install -r requirements.txt` 실행
-- Python 버전 호환성 확인 (Python 3.8+ 권장) 
+### 의존성 문제
+```bash
+# 가상환경 재생성
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### 로그 확인
+```bash
+# 서비스별 로그 확인
+tail -f interview_analysis/logs.txt
+tail -f portfolio_matching/logs.txt
+``` 

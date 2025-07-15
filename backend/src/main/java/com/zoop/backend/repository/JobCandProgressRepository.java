@@ -99,6 +99,10 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
     @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.post.postId = :postId AND j.jobCandCurrStage = '3y'")
     List<String> findGithubLoginsByPostIdAndInterviewCompletedStage(@Param("postId") Long postId);
 
+    // 매칭된 후보자 조회 (2y 단계이고 cand_portfolio_id가 있는 경우)
+    @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.post.postId = :postId AND j.jobCandCurrStage = '2y' AND j.candPortfolioId IS NOT NULL")
+    List<String> findGithubLoginsByPostIdAndMatchedStage(@Param("postId") Long postId);
+
     List<JobCandProgress> findByCandidate_CandidateId(Integer candidateId);
 
     Optional<JobCandProgress> findByJobCandidateId(Long jobCandidateId);
@@ -111,6 +115,12 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
     
     // postId와 stage로 JobCandProgress 조회 (직접 지원자 - stage "0")
     List<JobCandProgress> findByPost_PostIdAndJobCandCurrStage(Long postId, String stage);
+    
+    // cand_portfolio_id와 post_id로 JobCandProgress 조회
+    Optional<JobCandProgress> findByCandPortfolioIdAndPost_PostId(Long candPortfolioId, Long postId);
+
+    // cand_portfolio_id로 JobCandProgress 조회
+    List<JobCandProgress> findByCandPortfolioId(Long candPortfolioId);
 
     // stage로 JobCandProgress 조회 (모든 공고의 특정 stage 지원자) - 내 버전 기능
     List<JobCandProgress> findByJobCandCurrStage(String stage);
@@ -135,4 +145,7 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
     
     // githubLogin으로 조회 - 팀 버전 기능
     Optional<JobCandProgress> findByGithubLogin(String githubLogin);
+
+    // postId, stage, candPortfolioId IS NOT NULL로 조회
+    List<JobCandProgress> findByPost_PostIdAndJobCandCurrStageAndCandPortfolioIdIsNotNull(Long postId, String jobCandCurrStage);
 }

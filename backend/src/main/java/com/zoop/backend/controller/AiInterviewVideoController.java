@@ -130,8 +130,10 @@ public class AiInterviewVideoController {
     
     private List<String> callPythonAIForQuestions(Post post, String portfolioAnalysis) {
         try {
+            System.out.println("[AiInterviewVideoController] Python AI API 호출 시작");
+            
             // Python AI API URL
-            String pythonApiUrl = "http://localhost:8003/generate-questions";
+            String pythonApiUrl = "http://localhost:8004/generate-questions";
             
             // 공고 정보 준비
             String postTitle = post.getPostTitle() != null ? post.getPostTitle() : "";
@@ -145,6 +147,12 @@ public class AiInterviewVideoController {
             }
             Integer headcount = post.getPostHeadcount() != null ? post.getPostHeadcount() : 1;
             
+            System.out.println("[AiInterviewVideoController] 공고 정보:");
+            System.out.println("  - 제목: " + postTitle);
+            System.out.println("  - 기술: " + programmingLanguage);
+            System.out.println("  - 인재상: " + idealCandidate);
+            System.out.println("  - 포트폴리오 분석: " + (portfolioAnalysis.isEmpty() ? "없음" : "있음"));
+            
             // HTTP 요청을 위한 데이터 준비 (포트폴리오 분석 결과 포함)
             String requestBody = String.format(
                 "post_title=%s&post_description=%s&programming_language=%s&ideal_candidate=%s&location=%s&salary_range=%s&headcount=%d&portfolio_analysis=%s",
@@ -157,6 +165,8 @@ public class AiInterviewVideoController {
                 headcount,
                 java.net.URLEncoder.encode(portfolioAnalysis, "UTF-8")
             );
+            
+            System.out.println("[AiInterviewVideoController] Python API URL: " + pythonApiUrl);
             
             // HTTP 연결 설정
             java.net.URL url = new java.net.URL(pythonApiUrl);
@@ -174,6 +184,8 @@ public class AiInterviewVideoController {
             
             // 응답 읽기
             int responseCode = connection.getResponseCode();
+            System.out.println("[AiInterviewVideoController] Python API 응답 코드: " + responseCode);
+            
             if (responseCode == 200) {
                 try (java.io.BufferedReader br = new java.io.BufferedReader(
                         new java.io.InputStreamReader(connection.getInputStream(), "UTF-8"))) {
@@ -182,13 +194,27 @@ public class AiInterviewVideoController {
                     while ((responseLine = br.readLine()) != null) {
                         response.append(responseLine.trim());
                     }
+                    System.out.println("[AiInterviewVideoController] Python API 응답 수신 완료");
                     return parseQuestionsFromJson(response.toString());
                 }
             } else {
-                System.err.println("Python AI API 호출 실패: " + responseCode);
+                System.err.println("[AiInterviewVideoController] Python AI API 호출 실패: " + responseCode);
+                // 에러 응답도 읽어보기
+                try (java.io.BufferedReader br = new java.io.BufferedReader(
+                        new java.io.InputStreamReader(connection.getErrorStream(), "UTF-8"))) {
+                    StringBuilder errorResponse = new StringBuilder();
+                    String errorLine;
+                    while ((errorLine = br.readLine()) != null) {
+                        errorResponse.append(errorLine);
+                    }
+                    System.err.println("[AiInterviewVideoController] 에러 응답: " + errorResponse.toString());
+                } catch (Exception e) {
+                    System.err.println("[AiInterviewVideoController] 에러 응답 읽기 실패: " + e.getMessage());
+                }
                 throw new RuntimeException("AI API 호출 실패");
             }
         } catch (Exception e) {
+            System.err.println("[AiInterviewVideoController] Python AI API 호출 중 오류: " + e.getMessage());
             e.printStackTrace();
             throw new RuntimeException("AI 질문 생성 중 오류: " + e.getMessage());
         }
@@ -196,20 +222,45 @@ public class AiInterviewVideoController {
     
     private List<String> parseQuestionsFromJson(String jsonResponse) {
         try {
-            // 간단한 JSON 파싱 (실제로는 Jackson이나 Gson 사용 권장)
+            System.out.println("[AiInterviewVideoController] Python API 응답: " + jsonResponse);
+            
+            // Jackson ObjectMapper 사용
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode rootNode = mapper.readTree(jsonResponse);
+            
             List<String> questions = new ArrayList<>();
-            String[] lines = jsonResponse.split("\n");
-            for (String line : lines) {
-                line = line.trim();
-                if (line.startsWith("\"") && line.endsWith("\",")) {
-                    String question = line.substring(1, line.length() - 2);
-                    questions.add(question);
+            
+            // questions 배열에서 질문들을 추출
+            if (rootNode.has("questions") && rootNode.get("questions").isArray()) {
+                com.fasterxml.jackson.databind.JsonNode questionsNode = rootNode.get("questions");
+                for (com.fasterxml.jackson.databind.JsonNode questionNode : questionsNode) {
+                    if (questionNode.isTextual()) {
+                        questions.add(questionNode.asText());
+                    }
                 }
             }
-            return questions.isEmpty() ? Arrays.asList("자기소개를 해주세요.") : questions;
+            
+            System.out.println("[AiInterviewVideoController] 파싱된 질문: " + questions);
+            
+            // 질문이 없으면 기본 질문 반환
+            if (questions.isEmpty()) {
+                System.out.println("[AiInterviewVideoController] 파싱된 질문이 없어 기본 질문 사용");
+                return Arrays.asList(
+                    "자기소개를 해주세요.",
+                    "이 직무에 지원한 이유는 무엇인가요?",
+                    "가장 기억에 남는 프로젝트에 대해 설명해주세요."
+                );
+            }
+            
+            return questions;
         } catch (Exception e) {
+            System.err.println("[AiInterviewVideoController] JSON 파싱 오류: " + e.getMessage());
             e.printStackTrace();
-            return Arrays.asList("자기소개를 해주세요.");
+            return Arrays.asList(
+                "자기소개를 해주세요.",
+                "이 직무에 지원한 이유는 무엇인가요?",
+                "가장 기억에 남는 프로젝트에 대해 설명해주세요."
+            );
         }
     }
 

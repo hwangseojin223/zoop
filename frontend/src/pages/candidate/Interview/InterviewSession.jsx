@@ -25,7 +25,15 @@ const InterviewSession = () => {
   // 질문 가져오기
   useEffect(() => {
     if (!scheduleId) return;
-    fetch(`/api/interview-videos/questions/${scheduleId}`)
+    
+    // scheduleId가 유효한 숫자인지 확인
+    const scheduleIdNum = parseInt(scheduleId);
+    if (isNaN(scheduleIdNum)) {
+      setError('유효하지 않은 면접 일정 ID입니다.');
+      return;
+    }
+    
+    fetch(`/api/interview-videos/questions/${scheduleIdNum}`)
       .then(res => {
         if (!res.ok) throw new Error('질문을 불러오지 못했습니다');
         return res.json();

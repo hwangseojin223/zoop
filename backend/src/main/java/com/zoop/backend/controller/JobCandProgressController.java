@@ -162,6 +162,25 @@ public class JobCandProgressController {
         }
     }
 
+    // 새로운 job_cand_progress 생성 (candidate_portfolios 매칭용)
+    @PostMapping("/create")
+    public ResponseEntity<?> createJobCandProgress(@RequestBody Map<String, Object> request) {
+        try {
+            Long postId = Long.valueOf(request.get("postId").toString());
+            Long candidateId = Long.valueOf(request.get("candidateId").toString());
+            String stage = (String) request.get("jobCandCurrStage");
+            
+            JobCandProgress newProgress = jobCandProgressService.createJobCandProgress(postId, candidateId, stage);
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(newProgress);
+            
+        } catch (Exception e) {
+            log.error("job_cand_progress 생성 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("생성 실패: " + e.getMessage());
+        }
+    }
+
     // jobCandidateId로 JobCandProgress와 Candidate 정보 함께 조회
     @GetMapping("/job-cand-progress/{jobCandidateId}/with-candidate")
     public ResponseEntity<JobCandProgressWithCandidateDto> getJobCandProgressWithCandidate(@PathVariable Long jobCandidateId) {

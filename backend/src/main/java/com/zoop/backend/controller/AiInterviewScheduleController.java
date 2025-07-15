@@ -188,4 +188,15 @@ public class AiInterviewScheduleController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @Operation(summary = "PENDING 상태 면접 스케줄 조회", description = "분석 대기 중인 면접 스케줄 전체를 반환합니다.")
+    @GetMapping("/pending")
+    public ResponseEntity<?> getPendingInterviewSchedules() {
+        try {
+            return ResponseEntity.ok(aiInterviewScheduleService.getPendingInterviewSchedules());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("PENDING 면접 스케줄 조회 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
 }
