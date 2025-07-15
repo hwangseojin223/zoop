@@ -178,7 +178,53 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    /** 
+        /**
+     * 커스텀 초대 이메일 발송
+     */
+    public void sendCustomInvitationEmail(String toEmail, String githubLogin, String token, Post post, String customSubject, String customContent) throws MessagingException {
+        
+        String link;
+        try {
+            link = frontendUrl + "/invite/" + token + "?email=" + URLEncoder.encode(toEmail, "UTF-8");
+            log.info("📨 커스텀 메일 발송: 초대 링크 → {}", link);
+        } catch (java.io.UnsupportedEncodingException e) {
+            // UTF-8은 항상 지원되므로 이 예외는 발생하지 않아야 하지만, 안전을 위해 처리
+            link = frontendUrl + "/invite/" + token + "?email=" + toEmail;
+        }
+
+        // 커스텀 내용에서 동적 변수 치환
+        String finalSubject = replacePlaceholders(customSubject, githubLogin, post, link);
+        String finalContent = replacePlaceholders(customContent, githubLogin, post, link);
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setTo(toEmail);
+        helper.setSubject(finalSubject);
+        helper.setText(finalContent, true); // ✅ HTML 전송
+
+        mailSender.send(message);
+    }
+
+    /**
+     * 이메일 내용의 플레이스홀더를 실제 값으로 치환
+     */
+    private String replacePlaceholders(String content, String githubLogin, Post post, String link) {
+        return content
+            .replace("{{githubLogin}}", githubLogin != null ? githubLogin : "")
+            .replace("{{postTitle}}", post.getPostTitle() != null ? post.getPostTitle() : "")
+            .replace("{{postDescription}}", post.getPostDescription() != null ? post.getPostDescription() : "")
+            .replace("{{postProgrammingLanguage}}", post.getPostProgrammingLanguage() != null ? post.getPostProgrammingLanguage() : "")
+            .replace("{{postLocation}}", post.getPostLocation() != null ? post.getPostLocation() : "")
+            .replace("{{postHeadcount}}", post.getPostHeadcount() != null ? String.valueOf(post.getPostHeadcount()) : "")
+            .replace("{{postSalaryStart}}", post.getPostSalaryStart() != null ? post.getPostSalaryStart() : "")
+            .replace("{{postSalaryEnd}}", post.getPostSalaryEnd() != null ? post.getPostSalaryEnd() : "")
+            .replace("{{postPostedDate}}", post.getPostPostedDate() != null ? post.getPostPostedDate().toString() : "")
+            .replace("{{postExpiryDate}}", post.getPostExpiryDate() != null ? post.getPostExpiryDate().toString() : "")
+            .replace("{{invitationLink}}", link != null ? link : "");
+    }
+
+    /**
      * 비밀번호 재설정 이메일 (팀에서 추가한 기능)
      */
     public void sendPasswordResetEmail(String toEmail, String githubLogin, String resetLink) throws MessagingException {

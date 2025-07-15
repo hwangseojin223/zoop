@@ -69,6 +69,10 @@ public class Invitation {
     @Column(name = "invitation_status", nullable = false)
     private String invitationStatus;
 
+    @Column(name = "invitation_type", nullable = false, length = 20)
+    @Builder.Default
+    private String invitationType = "template";
+
     // 직접 입력할 필요 없이 save() 메서드가 실행될 때 자동으로 채워짐.
     @CreationTimestamp
     @Column(name = "invitation_created_at", nullable = false, updatable = false)
