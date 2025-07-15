@@ -82,4 +82,7 @@ public class JobCandProgress {
 
     @Column(name = "github_login", length = 255)
     private String githubLogin;
+
+    @Column(name = "cand_portfolio_id")
+    private Long candPortfolioId;
 }

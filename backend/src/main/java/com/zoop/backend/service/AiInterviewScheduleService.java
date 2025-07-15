@@ -247,8 +247,12 @@ public class AiInterviewScheduleService {
 
     @Transactional
     public InterviewScheduleResponseDto completeInterview(Long scheduleId) {
+        System.out.println("[AiInterviewScheduleService] 면접 완료 처리 시작: scheduleId=" + scheduleId);
+        
         AiInterviewSchedule schedule = aiInterviewScheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new RuntimeException("해당 면접 일정을 찾을 수 없습니다."));
+        
+        System.out.println("[AiInterviewScheduleService] 면접 일정 조회 성공: " + schedule.getAiInterviewScheduleId());
         
         // 면접 상태를 완료로 변경
         schedule.setAiInterviewStatus("completed");
@@ -258,13 +262,19 @@ public class AiInterviewScheduleService {
         schedule.setAiAnalysisStatus("pending");
         
         AiInterviewSchedule updatedSchedule = aiInterviewScheduleRepository.save(schedule);
+        System.out.println("[AiInterviewScheduleService] 면접 일정 상태 업데이트 완료: " + updatedSchedule.getAiInterviewStatus());
         
         // JobCandProgress 상태를 3y로 업데이트
         JobCandProgress jobCandProgress = schedule.getJobCandProgress();
+        String oldStage = jobCandProgress.getJobCandCurrStage();
+        
+        System.out.println("[AiInterviewScheduleService] JobCandProgress stage 업데이트: " + oldStage + " → 3y");
         
         jobCandProgress.setJobCandCurrStage("3y"); // 면접 완료 상태로 변경
         jobCandProgress.setJobCandAiIntrvwCompltDate(LocalDateTime.now());
-        jobCandProgressRepository.save(jobCandProgress);
+        JobCandProgress savedProgress = jobCandProgressRepository.save(jobCandProgress);
+        
+        System.out.println("[AiInterviewScheduleService] JobCandProgress stage 업데이트 완료: " + savedProgress.getJobCandCurrStage());
         
         // 응답 시에도 한국 시간으로 변환하여 반환
         LocalDateTime utcScheduledTime = updatedSchedule.getAiInterviewScheduledTime();
@@ -275,6 +285,8 @@ public class AiInterviewScheduleService {
         ZonedDateTime utcZonedDeadlineTime = utcDeadlineTime.atZone(ZoneId.of("UTC"));
         LocalDateTime koreaDeadlineTime = utcZonedDeadlineTime.withZoneSameInstant(ZoneId.of("Asia/Seoul")).toLocalDateTime();
 
+        System.out.println("[AiInterviewScheduleService] 면접 완료 처리 완료");
+        
         return InterviewScheduleResponseDto.builder()
                 .scheduleId(updatedSchedule.getAiInterviewScheduleId())
                 .jobCandidateId(updatedSchedule.getJobCandProgress().getJobCandidateId())
@@ -314,6 +326,11 @@ public class AiInterviewScheduleService {
 
     @Transactional(readOnly = true)
     public List<AiInterviewSchedule> getPendingAnalysisSchedules() {
+        return aiInterviewScheduleRepository.findByAiAnalysisStatus("pending");
+    }
+
+    @Transactional(readOnly = true)
+    public List<AiInterviewSchedule> getPendingInterviewSchedules() {
         return aiInterviewScheduleRepository.findByAiAnalysisStatus("pending");
     }
 }
