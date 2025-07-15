@@ -1,20 +1,24 @@
 import React from 'react';
 import { FaPlus, FaTrash } from 'react-icons/fa';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const ResumeEducationSection = ({ form, setForm }) => {
   const handleChange = (idx, field, value) => {
     const newEducation = [...(form.education || [])];
-    // 날짜 필드 처리: YYYY-MM → 연,월 분리
     if (field === 'admissionDate' && value) {
-      const [year, month] = value.split('-');
+      // value: Date 객체
+      const year = value.getFullYear();
+      const month = (value.getMonth() + 1).toString().padStart(2, '0');
       newEducation[idx]['admissionYear'] = year;
       newEducation[idx]['admissionMonth'] = month;
-      newEducation[idx]['admissionDate'] = value;
+      newEducation[idx]['admissionDate'] = `${year}-${month}`;
     } else if (field === 'graduationDate' && value) {
-      const [year, month] = value.split('-');
+      const year = value.getFullYear();
+      const month = (value.getMonth() + 1).toString().padStart(2, '0');
       newEducation[idx]['graduationYear'] = year;
       newEducation[idx]['graduationMonth'] = month;
-      newEducation[idx]['graduationDate'] = value;
+      newEducation[idx]['graduationDate'] = `${year}-${month}`;
     } else if (field === 'isGraduated') {
       newEducation[idx]['graduationStatus'] = value ? '졸업' : '재학';
       newEducation[idx]['isGraduated'] = value;
@@ -48,6 +52,14 @@ const ResumeEducationSection = ({ form, setForm }) => {
     const newEducation = [...(form.education || [])];
     newEducation.splice(idx, 1);
     setForm((prev) => ({ ...prev, education: newEducation }));
+  };
+
+  // YYYY-MM 문자열을 Date 객체로 변환
+  const parseYearMonth = (str) => {
+    if (!str) return null;
+    const [year, month] = str.split('-');
+    if (!year || !month) return null;
+    return new Date(Number(year), Number(month) - 1);
   };
 
   return (
@@ -91,20 +103,30 @@ const ResumeEducationSection = ({ form, setForm }) => {
             
             <div className="education-field">
               <label>입학년월</label>
-              <input 
-                type="month"
-                value={edu.admissionYear && edu.admissionMonth ? `${edu.admissionYear}-${edu.admissionMonth}` : ''}
-                onChange={e => handleChange(idx, 'admissionDate', e.target.value)}
-                placeholder="입학년월 선택"
+              <DatePicker
+                selected={parseYearMonth(edu.admissionDate)}
+                onChange={date => handleChange(idx, 'admissionDate', date)}
+                dateFormat="yyyy-MM"
+                showMonthYearPicker
+                showFullMonthYearPicker
+                placeholderText="입학년월 선택"
+                className="datepicker-input"
+                maxDate={new Date()}
+                isClearable
               />
             </div>
             <div className="education-field">
               <label>졸업년월</label>
-              <input 
-                type="month"
-                value={edu.graduationYear && edu.graduationMonth ? `${edu.graduationYear}-${edu.graduationMonth}` : ''}
-                onChange={e => handleChange(idx, 'graduationDate', e.target.value)}
-                placeholder="졸업년월 선택"
+              <DatePicker
+                selected={parseYearMonth(edu.graduationDate)}
+                onChange={date => handleChange(idx, 'graduationDate', date)}
+                dateFormat="yyyy-MM"
+                showMonthYearPicker
+                showFullMonthYearPicker
+                placeholderText="졸업년월 선택"
+                className="datepicker-input"
+                maxDate={new Date()}
+                isClearable
               />
             </div>
             <div className="education-field">
@@ -151,7 +173,7 @@ const ResumeEducationSection = ({ form, setForm }) => {
           </div>
         </div>
       ))}
-      <button type="button" className="add-education-btn" onClick={addEducation}>
+      <button type="button" className="add-education-btn" onClick={addEducation} style={{ background: '#30C59B', color: '#fff' }}>
         <FaPlus /> 학력 추가
       </button>
     </section>

@@ -1,7 +1,7 @@
 /* 이력서 제출 페이지 전용 스타일 */
 .resume-submission-page {
+  background: #fff;
   min-height: 100vh;
-  background: #f8fafc;
   padding-bottom: 150px; /* 하단 버튼 공간 */
 }
 
@@ -710,6 +710,10 @@ select:hover {
   box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
 }
 
+.add-career-btn svg {
+  font-size: 1.1rem;
+}
+
 /* 자기소개 섹션 스타일 */
 .selfintro-card {
   background: #f8fafc;
@@ -1159,7 +1163,7 @@ select:hover {
   }
   
   .career-field {
-    margin-bottom: 0.5rem;
+    margin-bottom: 1.1rem;
   }
 
   .company-input-wrapper {

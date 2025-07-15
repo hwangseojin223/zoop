@@ -8,6 +8,7 @@ import ResumeFileUploadSection from './ResumeFileUploadSection';
 import './ResumeSubmissionPage.css';
 import { useNavigate } from 'react-router-dom';
 import { FaTimes, FaSave, FaCheck } from 'react-icons/fa';
+import Header from '../Sidebar/Header';
 
 const ResumeSubmissionPage = () => {
   const { authState } = useAuth();
@@ -24,7 +25,7 @@ const ResumeSubmissionPage = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // 임시저장 값이 있으면 우선 적용, 없으면 사용자 정보 fetch
+  // 임시저장 값이 있으면 우선 적용, 없으면 사용자 정보 fetch + DB 이력서 fetch
   useEffect(() => {
     const draft = localStorage.getItem('resumeDraft');
     if (draft) {
@@ -33,27 +34,60 @@ const ResumeSubmissionPage = () => {
         return;
       } catch {}
     }
-    // 임시저장 없을 때만 사용자 정보 fetch
-    const fetchUserInfo = async () => {
+    // 임시저장 없을 때만 사용자 정보 fetch + DB 이력서 fetch
+    const fetchUserInfoAndResume = async () => {
       if (!authState.userId) return;
+      let userData = {};
+      let resumeData = null;
+      let portfolioFilePath = null;
+      let originalFileName = null;
+      // 1. 사용자 정보는 무조건 세팅
       try {
         const res = await fetch(`http://localhost:8081/api/candidates/${authState.userId}`);
         if (res.ok) {
-          const data = await res.json();
-          console.log('사용자 정보 조회 결과:', data); // 디버깅용 로그
-          setForm(prev => ({
-            ...prev,
-            name: data.candidateName || '',
-            email: data.candidateEmail || '',
-            phone: data.candidatePhoneNumber || '',
-          }));
+          userData = await res.json();
         }
       } catch (e) {
-        console.error('사용자 정보 조회 오류:', e); // 디버깅용 로그
-        // 에러 무시(수동 입력 가능)
+        console.error('사용자 정보 조회 오류:', e);
       }
+      // 2. 이력서 정보는 실패해도 무시
+      try {
+        const resumeRes = await fetch(`/api/resumes/candidate/${authState.userId}`);
+        if (resumeRes.ok) {
+          const resumes = await resumeRes.json();
+          if (Array.isArray(resumes) && resumes.length > 0) {
+            resumeData = resumes[0];
+          }
+        }
+      } catch (e) {
+        console.error('이력서 정보 조회 오류:', e);
+      }
+      // 3. 최근 첨부 이력서 파일 fetch
+      try {
+        const pfRes = await fetch(`/api/portfolios/recent/${authState.userId}`);
+        if (pfRes.ok) {
+          const pf = await pfRes.json();
+          if (pf.hasPortfolio && pf.portfolioFilePath) {
+            portfolioFilePath = pf.portfolioFilePath;
+            originalFileName = pf.originalFileName || null;
+          }
+        }
+      } catch (e) {
+        console.error('포트폴리오 파일 조회 오류:', e);
+      }
+      // 4. 항상 기본 정보는 세팅
+      setForm(prev => ({
+        ...prev,
+        name: userData?.candidateName || '',
+        email: userData?.candidateEmail || '',
+        phone: userData?.candidatePhoneNumber || '',
+        selfIntro: resumeData?.resume?.selfIntro || '',
+        education: resumeData?.educations || [],
+        career: resumeData?.experiences || [],
+        file: portfolioFilePath ? { url: portfolioFilePath, name: originalFileName } : null,
+      }));
     };
-    fetchUserInfo();
+    fetchUserInfoAndResume();
   }, [authState.userId]);
 
   // 이력서, 학력, 경력, 포트폴리오 등록 API 호출
@@ -163,52 +197,57 @@ const ResumeSubmissionPage = () => {
   };
 
   return (
-    <form className="resume-submission-page" onSubmit={handleSubmit} style={{ paddingBottom: '100px' }}>
-      <h1 className="resume-title">이력서 등록</h1>
-      <div className="resume-basic-info-wrapper">
-        <ResumeBasicInfoSection form={form} setForm={setForm} />
-      </div>
-      <div className="resume-section-wrapper">
-        <ResumeEducationSection form={form} setForm={setForm} />
-      </div>
-      <div className="resume-section-wrapper">
-        <ResumeCareerSection form={form} setForm={setForm} />
-      </div>
-      <div className="resume-section-wrapper">
-        <ResumeSelfIntroSection form={form} setForm={setForm} />
-      </div>
-      <div className="resume-section-wrapper">
-        <ResumeFileUploadSection form={form} setForm={setForm} />
-      </div>
-      {/* 하단 고정 버튼 영역 - 세련된 스타일 적용 */}
-      <div className="resume-fixed-action-bar">
-        <button
-          type="button"
-          onClick={handleCancel}
-          className="resume-cancel-btn styled-action-btn"
-          aria-label="이력서 등록 취소"
-        >
-          <FaTimes style={{ marginRight: 8 }} /> 취소
-        </button>
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saving}
-          className="resume-save-btn styled-action-btn"
-          aria-label="임시저장"
-        >
-          <FaSave style={{ marginRight: 8 }} /> {saving ? '저장 중...' : '임시저장'}
-        </button>
-        <button
-          type="submit"
-          disabled={loading}
-          className="resume-submit-btn styled-action-btn"
-          aria-label="이력서 제출"
-        >
-          <FaCheck style={{ marginRight: 8 }} /> {loading ? '등록 중...' : '제출'}
-        </button>
-      </div>
-    </form>
+    <>
+      <Header whiteBg />
+      <form className="resume-submission-page" onSubmit={handleSubmit} style={{ paddingBottom: '100px' }}>
+        <div className="resume-basic-info-wrapper">
+          <ResumeBasicInfoSection form={form} setForm={setForm} />
+        </div>
+        <div className="resume-section-wrapper">
+          <ResumeEducationSection form={form} setForm={setForm} />
+        </div>
+        <div className="resume-section-wrapper">
+          <ResumeCareerSection form={form} setForm={setForm} />
+        </div>
+        <div className="resume-section-wrapper">
+          <ResumeSelfIntroSection form={form} setForm={setForm} />
+        </div>
+        <div className="resume-section-wrapper">
+          <ResumeFileUploadSection form={form} setForm={setForm} />
+        </div>
+        {/* 하단 고정 버튼 영역 - 세련된 스타일 적용 */}
+        <div className="resume-fixed-action-bar">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="resume-cancel-btn styled-action-btn"
+            aria-label="이력서 등록 취소"
+            style={{ background: '#30C59B', color: '#fff' }}
+          >
+            <FaTimes style={{ marginRight: 8 }} /> 취소
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="resume-save-btn styled-action-btn"
+            aria-label="임시저장"
+            style={{ background: '#30C59B', color: '#fff' }}
+          >
+            <FaSave style={{ marginRight: 8 }} /> {saving ? '저장 중...' : '임시저장'}
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="resume-submit-btn styled-action-btn"
+            aria-label="이력서 제출"
+            style={{ background: '#30C59B', color: '#fff' }}
+          >
+            <FaCheck style={{ marginRight: 8 }} /> {loading ? '제출 중...' : '제출'}
+          </button>
+        </div>
+      </form>
+    </>
   );
 };
 
