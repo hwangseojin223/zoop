@@ -18,6 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import com.zoop.backend.domain.dto.AiAnalysisResultDto;
 import com.zoop.backend.service.AiAnalysisResultService;
 
@@ -46,7 +48,7 @@ public class PortfolioService {
     private final PostRepository postRepository;
     private final AiAnalysisResultService aiAnalysisResultService;
     private final RestTemplate restTemplate = new RestTemplate();
-    private final String PYTHON_API_URL = "http://localhost:8000/analyze-portfolio";
+    private final String PYTHON_API_URL = "http://localhost:8003/analyze-portfolio";
 
     @Autowired
     public PortfolioService(PortfolioRepository portfolioRepository, S3Service s3Service,
@@ -172,8 +174,12 @@ public class PortfolioService {
 
         // 개인대시보드에서 포트폴리오 제출 시 stage를 2y로 업데이트
         // 채용페이지에서 지원했을 때는 0으로 유지, 개인대시보드에서 포트폴리오 제출 시 2y로 변경
-        if ("0".equals(jobCandProgress.getJobCandCurrStage())) {
+        String currentStage = jobCandProgress.getJobCandCurrStage();
+        if ("0".equals(currentStage) || "1n".equals(currentStage) || "2n".equals(currentStage)) {
+            System.out.println("[PortfolioService] Stage 업데이트: " + currentStage + " → 2y");
             jobCandProgress.setJobCandCurrStage("2y"); // 포트폴리오 제출 완료 상태로 변경
+        } else {
+            System.out.println("[PortfolioService] Stage 업데이트 스킵: 현재 stage = " + currentStage);
         }
         jobCandProgress.setJobCandPortfolioSubDate(LocalDateTime.now()); // 포트폴리오 제출 시각 기록
         jobCandProgressRepository.save(jobCandProgress); // 업데이트된 JobCandProgress 저장
@@ -234,17 +240,24 @@ public class PortfolioService {
         
         // ====== 포트폴리오 제출 후 자동 분석 및 결과 저장 ======
         try {
+            // FastAPI 엔드포인트로 Form 데이터 전송
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            String fileUrl = savedPortfolio.getPortfolioFilePath();
-            var extraInfo = new java.util.HashMap<String, Object>();
-            extraInfo.put("jobCandidateId", savedPortfolio.getJobCandidateId());
-            var body = new java.util.HashMap<String, Object>();
-            body.put("file_url", fileUrl);
-            body.put("extra_info", extraInfo);
-            HttpEntity<java.util.Map<String, Object>> entity = new HttpEntity<>(body, headers);
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            
+            // 지원자 정보 조회 (희망 직무, 자기소개 등)
+            Candidate candidateInfo = candidateRepository.findById(Long.valueOf(candidateId))
+                .orElseThrow(() -> new RuntimeException("해당 후보자를 찾을 수 없습니다."));
+            
+            MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+            formData.add("portfolio_id", String.valueOf(savedPortfolio.getPortfolioId()));
+            formData.add("candidate_id", String.valueOf(candidateId));
+            formData.add("portfolio_content", goalStatement != null ? goalStatement : "");
+            formData.add("desired_job", candidateInfo.getPreferredJob() != null ? candidateInfo.getPreferredJob() : "");
+            formData.add("self_introduction", ""); // Candidate 엔티티에 selfIntro 필드가 없으므로 빈 문자열로 설정
+            
+            HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(formData, headers);
             ResponseEntity<java.util.Map> resp = restTemplate.postForEntity(PYTHON_API_URL, entity, java.util.Map.class);
-            String result = resp.getBody() != null ? (String) resp.getBody().get("result") : null;
+            String result = resp.getBody() != null ? (String) resp.getBody().get("analysis_data") : null;
             if (result != null && !result.isBlank()) {
                 AiAnalysisResultDto dto = AiAnalysisResultDto.builder()
                     .analysisType("portfolio")
@@ -297,7 +310,7 @@ public class PortfolioService {
         System.out.println("[PortfolioService] getRecentPortfolioByCandidate 호출 - candidateId: " + candidateId);
         
         // 해당 지원자의 모든 JobCandProgress를 조회
-        List<JobCandProgress> progressList = jobCandProgressRepository.findByCandidate_CandidateId(candidateId);
+        List<JobCandProgress> progressList = jobCandProgressRepository.findByCandidate_CandidateId(candidateId.intValue());
         System.out.println("[PortfolioService] progressList.size(): " + progressList.size());
         
         if (progressList.isEmpty()) {
@@ -451,6 +464,16 @@ public class PortfolioService {
             if (m.find()) return Double.valueOf(m.group(1));
         } catch (Exception ignore) {}
         return null;
+    }
+
+    // 포트폴리오 분석 상태 업데이트
+    public void updatePortfolioAnalysisStatus(Integer portfolioId, String status) {
+        Portfolio portfolio = portfolioRepository.findById(portfolioId)
+                .orElseThrow(() -> new RuntimeException("포트폴리오를 찾을 수 없습니다: " + portfolioId));
+        
+        portfolio.setPortfolioAnalysisStatus(status);
+        portfolioRepository.save(portfolio);
+        System.out.println("[PortfolioService] 포트폴리오 분석 상태 업데이트: portfolioId=" + portfolioId + ", status=" + status);
     }
 
     // 팀 버전의 유용한 메서드들

@@ -1,17 +1,19 @@
 package com.zoop.backend.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.zoop.backend.domain.dto.AiAnalysisResultDto;
 import com.zoop.backend.domain.entity.AiAnalysisResult;
 import com.zoop.backend.domain.entity.GithubSearchResult;
 import com.zoop.backend.repository.AiAnalysisResultRepository;
 import com.zoop.backend.repository.GithubSearchResultRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -62,6 +64,10 @@ public class AiAnalysisResultService {
         return aiAnalysisResultRepository.findById(analysisId);
     }
 
+    public AiAnalysisResult save(AiAnalysisResult aiAnalysisResult) {
+        return aiAnalysisResultRepository.save(aiAnalysisResult);
+    }
+
     public List<AiAnalysisResult> findAll() {
         return aiAnalysisResultRepository.findAll();
     }
@@ -80,5 +86,10 @@ public class AiAnalysisResultService {
             return true;
         }
         return false;
+    }
+
+    @Transactional
+    public int updateJobCandidateIdForPortfolio(Long candPortfolioId, Long jobCandidateId) {
+        return aiAnalysisResultRepository.updateJobCandidateIdByCandPortfolioId(jobCandidateId, candPortfolioId);
     }
 } 

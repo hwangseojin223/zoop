@@ -48,7 +48,11 @@ public class AiInterviewVideoService {
         AiInterviewVideo saved = aiInterviewVideoRepository.save(video);
         // 마지막 질문(3번) 업로드 시 면접 완료 처리
         if (questionNumber == 3) {
+            System.out.println("[AiInterviewVideoService] 마지막 질문(3번) 업로드 완료 - 면접 완료 처리 시작: scheduleId=" + scheduleId);
             aiInterviewScheduleService.completeInterview(scheduleId);
+            System.out.println("[AiInterviewVideoService] 면접 완료 처리 완료");
+        } else {
+            System.out.println("[AiInterviewVideoService] 질문 " + questionNumber + " 업로드 완료 (마지막 질문 아님)");
         }
         return saved;
     }

@@ -23,7 +23,7 @@ public class CandidateJobPostingService {
     @Transactional(readOnly = true, noRollbackFor = Exception.class)
     public List<JobPostingResponseDto> getJobPostingsForCandidate(Integer candidateId) {
         try {
-            List<JobCandProgress> progressList = jobCandProgressRepository.findByCandidate_CandidateId(candidateId);
+            List<JobCandProgress> progressList = jobCandProgressRepository.findByCandidate_CandidateId(candidateId.intValue());
             if (progressList.isEmpty()) {
                 return new ArrayList<>();
             }
