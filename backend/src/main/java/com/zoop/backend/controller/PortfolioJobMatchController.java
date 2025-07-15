@@ -51,6 +51,11 @@ public class PortfolioJobMatchController {
             Double matchingScore = Double.valueOf(request.get("matchingScore").toString());
             String matchingReason = (String) request.get("matchingReason");
             
+            // 80점 미만은 저장하지 않음
+            if (matchingScore < 80.0) {
+                log.info("매칭 점수 {}점: 80점 미만이므로 저장하지 않음", matchingScore);
+                return ResponseEntity.noContent().build();
+            }
             // PortfolioJobMatch 엔티티 생성 및 저장
             PortfolioJobMatch match = PortfolioJobMatch.builder()
                     .candPortfolioId(portfolioId)

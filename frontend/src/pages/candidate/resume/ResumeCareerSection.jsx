@@ -1,20 +1,23 @@
 import React from 'react';
 import { FaPlus, FaTrash, FaEye, FaEyeSlash } from 'react-icons/fa';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const ResumeCareerSection = ({ form, setForm }) => {
   const handleChange = (idx, field, value) => {
     const newCareer = [...(form.career || [])];
-    // 날짜 필드 처리: YYYY-MM → 연,월 분리
     if (field === 'startDate' && value) {
-      const [year, month] = value.split('-');
+      const year = value.getFullYear();
+      const month = (value.getMonth() + 1).toString().padStart(2, '0');
       newCareer[idx]['startYear'] = year;
       newCareer[idx]['startMonth'] = month;
-      newCareer[idx]['startDate'] = value;
+      newCareer[idx]['startDate'] = `${year}-${month}`;
     } else if (field === 'endDate' && value) {
-      const [year, month] = value.split('-');
+      const year = value.getFullYear();
+      const month = (value.getMonth() + 1).toString().padStart(2, '0');
       newCareer[idx]['endYear'] = year;
       newCareer[idx]['endMonth'] = month;
-      newCareer[idx]['endDate'] = value;
+      newCareer[idx]['endDate'] = `${year}-${month}`;
     } else if (field === 'job') {
       newCareer[idx]['jobTitle'] = value;
       newCareer[idx]['job'] = value;
@@ -27,7 +30,7 @@ const ResumeCareerSection = ({ form, setForm }) => {
     }
     setForm((prev) => ({ ...prev, career: newCareer }));
   };
-  
+
   const addCareer = () => {
     setForm((prev) => ({ 
       ...prev, 
@@ -49,20 +52,28 @@ const ResumeCareerSection = ({ form, setForm }) => {
       }] 
     }));
   };
-  
+
   const removeCareer = (idx) => {
     const newCareer = [...(form.career || [])];
     newCareer.splice(idx, 1);
     setForm((prev) => ({ ...prev, career: newCareer }));
   };
-  
+
+  // YYYY-MM 문자열을 Date 객체로 변환
+  const parseYearMonth = (str) => {
+    if (!str) return null;
+    const [year, month] = str.split('-');
+    if (!year || !month) return null;
+    return new Date(Number(year), Number(month) - 1);
+  };
+
   return (
     <section className="resume-section">
       <h3>경력</h3>
       {(form.career || []).map((car, idx) => (
         <div className="career-card" key={idx}>
-          <div className="career-form-row">
-            <div className="career-field">
+          <div className="career-form-col">
+            <div className="career-field" style={{ width: '100%' }}>
               <label>회사명</label>
               <div className="company-input-wrapper">
                 <input 
@@ -82,8 +93,7 @@ const ResumeCareerSection = ({ form, setForm }) => {
                 </button>
               </div>
             </div>
-            
-            <div className="career-field">
+            <div className="career-field" style={{ width: '100%' }}>
               <label>직무</label>
               <input 
                 type="text"
@@ -92,7 +102,7 @@ const ResumeCareerSection = ({ form, setForm }) => {
                 placeholder="직무를 입력하세요"
               />
             </div>
-            <div className="career-field">
+            <div className="career-field" style={{ width: '100%' }}>
               <label>부서</label>
               <input 
                 type="text"
@@ -101,7 +111,7 @@ const ResumeCareerSection = ({ form, setForm }) => {
                 placeholder="부서를 입력하세요"
               />
             </div>
-            <div className="career-field">
+            <div className="career-field" style={{ width: '100%' }}>
               <label>직급</label>
               <input 
                 type="text"
@@ -110,30 +120,37 @@ const ResumeCareerSection = ({ form, setForm }) => {
                 placeholder="직급을 입력하세요"
               />
             </div>
-            
-            <div className="career-field">
+            <div className="career-field" style={{ width: '100%' }}>
               <label>시작년월</label>
-              <input 
-                type="month"
-                value={car.startYear && car.startMonth ? `${car.startYear}-${car.startMonth}` : ''}
-                onChange={e => handleChange(idx, 'startDate', e.target.value)}
-                placeholder="시작년월 선택"
+              <DatePicker
+                selected={parseYearMonth(car.startDate)}
+                onChange={date => handleChange(idx, 'startDate', date)}
+                dateFormat="yyyy-MM"
+                showMonthYearPicker
+                showFullMonthYearPicker
+                placeholderText="시작년월 선택"
+                className="datepicker-input"
+                maxDate={new Date()}
+                isClearable
               />
             </div>
-            <div className="career-field">
+            <div className="career-field" style={{ width: '100%' }}>
               <label>종료년월</label>
-              <input 
-                type="month"
-                value={car.endYear && car.endMonth ? `${car.endYear}-${car.endMonth}` : ''}
-                onChange={e => handleChange(idx, 'endDate', e.target.value)}
-                placeholder="종료년월 선택"
+              <DatePicker
+                selected={parseYearMonth(car.endDate)}
+                onChange={date => handleChange(idx, 'endDate', date)}
+                dateFormat="yyyy-MM"
+                showMonthYearPicker
+                showFullMonthYearPicker
+                placeholderText="종료년월 선택"
+                className="datepicker-input"
+                maxDate={new Date()}
+                isClearable
                 disabled={car.current}
-                className={car.current ? 'current-job' : ''}
               />
             </div>
-            
-            <div className="career-field">
-              <label className="career-checkbox-label">
+            <div className="career-field" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <label className="career-checkbox-label" style={{ marginBottom: 0 }}>
                 <input 
                   type="checkbox" 
                   checked={car.current} 
@@ -141,19 +158,19 @@ const ResumeCareerSection = ({ form, setForm }) => {
                 />
                 <span className="career-checkbox-text">재직중</span>
               </label>
+              <button 
+                type="button" 
+                className="remove-career-btn" 
+                onClick={() => removeCareer(idx)}
+                style={{ marginLeft: 'auto' }}
+              >
+                <FaTrash />
+              </button>
             </div>
-            
-            <button 
-              type="button" 
-              className="remove-career-btn" 
-              onClick={() => removeCareer(idx)}
-            >
-              <FaTrash />
-            </button>
           </div>
         </div>
       ))}
-      <button type="button" className="add-career-btn" onClick={addCareer}>
+      <button type="button" className="add-career-btn" onClick={addCareer} style={{ background: '#30C59B', color: '#fff' }}>
         <FaPlus /> 경력 추가
       </button>
     </section>
