@@ -12,7 +12,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -42,8 +42,8 @@ public class EmailContents {
     @Column(name = "email_id")
     private Long emailId;
 
-    @Column(name = "invitation_id", nullable = false, unique = true)
-    private Long invitationId;
+    @Column(name = "post_id", nullable = false)
+    private Long postId;
 
     @Column(name = "email_subject", nullable = false, length = 255)
     private String emailSubject;
@@ -56,8 +56,8 @@ public class EmailContents {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    // Invitation과의 관계 매핑
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "invitation_id", insertable = false, updatable = false)
-    private Invitation invitation;
+    // Post와의 관계 매핑 (다대일)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id", insertable = false, updatable = false)
+    private Post post;
 } 

@@ -13,8 +13,7 @@ public class InvitationSendRequest {
     private Long companyAdminId;    // 초대한 관리자 ID
     private String candidateEmail;  // ✅ 추가
     
-    // 커스텀 이메일 기능 추가
-    private String invitationType = "template";  // "template" 또는 "custom"
+    // 커스텀 이메일 기능 (optional - 있으면 커스텀, 없으면 기본 템플릿)
     private String customEmailSubject;           // 커스텀 이메일 제목 (optional)
     private String customEmailContent;           // 커스텀 이메일 내용 (optional)
 }

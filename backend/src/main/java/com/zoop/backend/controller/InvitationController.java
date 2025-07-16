@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.zoop.backend.domain.dto.InvitationSendRequest;
+import com.zoop.backend.domain.dto.BulkInvitationSendRequest;
 import com.zoop.backend.domain.dto.modal.InvitationSentDateResponse;
 import com.zoop.backend.domain.entity.Invitation;
 import com.zoop.backend.domain.entity.Candidate;
@@ -75,13 +76,31 @@ public class InvitationController {
         return ResponseEntity.ok(response);
     }
 
-    // 메일 일괄전송
-    @PostMapping("/send-multiple")
-    public ResponseEntity<String> sendMultipleInvitations(@RequestBody List<InvitationSendRequest> requests) {
-        for (InvitationSendRequest request : requests) {
-            invitationService.sendInvitation(request);
+    // 일괄 초대 메일 전송 (최적화된 방식)
+    @PostMapping("/send-bulk")
+    public ResponseEntity<Map<String, Object>> sendBulkInvitations(@RequestBody BulkInvitationSendRequest request) {
+        log.info("📨 일괄 초대 메일 전송 요청: postId={}, 후보자 수={}", 
+            request.getPostId(), request.getCandidates().size());
+        
+        try {
+            invitationService.sendBulkInvitations(request);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "일괄 초대 메일이 성공적으로 전송되었습니다.");
+            response.put("totalCandidates", request.getCandidates().size());
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("❌ 일괄 초대 메일 전송 실패: {}", e.getMessage(), e);
+            
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "일괄 초대 메일 전송 중 오류가 발생했습니다: " + e.getMessage());
+            
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
-        return ResponseEntity.ok("📨 여러 명에게 초대 메일을 전송했습니다.");
     }
 
     @GetMapping("/{postId}/{githubLogin}/sent-times")
