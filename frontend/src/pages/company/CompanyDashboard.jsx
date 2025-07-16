@@ -41,24 +41,147 @@ export default function CompanyDashboard() {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
 
   //-----------------------------------------------------------------------------------------------
-  // 커스텀 메일 작성 모달 상태
-  const [showCustomEmailModal, setShowCustomEmailModal] = useState(false);
-  const [customEmailCandidate, setCustomEmailCandidate] = useState(null);
-  const [customEmailSubject, setCustomEmailSubject] = useState('');
-  const [customEmailSending, setCustomEmailSending] = useState(false);
-  // 새로운 템플릿 선택 상태
-  const [selectedTemplate, setSelectedTemplate] = useState('professional');
-  const [customMessage, setCustomMessage] = useState('');
-  const [customGreeting, setCustomGreeting] = useState('');
+
+  // 일괄전송 모달 상태
+  const [showBulkEmailModal, setShowBulkEmailModal] = useState(false);
+  const [bulkEmailSubject, setBulkEmailSubject] = useState('');
+  const [bulkEmailContent, setBulkEmailContent] = useState('');
+  const [bulkEmailSending, setBulkEmailSending] = useState(false);
+  // 일괄전송 템플릿 상태
+  const [bulkSelectedTemplate, setBulkSelectedTemplate] = useState('professional');
+  const [bulkCustomMessage, setBulkCustomMessage] = useState('');
+  const [bulkCustomGreeting, setBulkCustomGreeting] = useState('');
   //-----------------------------------------------------------------------------------------------
 
-  // 로딩 스피너 애니메이션을 위한 CSS
+  // 일괄전송 모달 열기 함수
+  const openBulkEmailModal = () => {
+    const postTitle = selectedPostDetail?.postTitle || '채용 공고';
+    const companyName = companyInfo?.companyName || '저희 회사';
+    
+    // 기본값 설정
+    setBulkSelectedTemplate('professional');
+    setBulkCustomGreeting(emailTemplates.professional.defaultGreeting);
+    setBulkCustomMessage(emailTemplates.professional.defaultMessage);
+    setBulkEmailSubject(`[${companyName}] ${postTitle} - 특별 초대`);
+    setBulkEmailContent(''); // 템플릿 사용하므로 비워둠
+    
+    setShowBulkEmailModal(true);
+  };
+
+  // 일괄전송 템플릿 변경 핸들러
+  const handleBulkTemplateChange = (templateKey) => {
+    setBulkSelectedTemplate(templateKey);
+    const template = emailTemplates[templateKey];
+    setBulkCustomGreeting(template.defaultGreeting);
+    setBulkCustomMessage(template.defaultMessage);
+  };
+
+  // 일괄전송 함수
+  const handleBulkEmailSend = async () => {
+    if (!bulkEmailSubject.trim() || !bulkCustomGreeting.trim() || !bulkCustomMessage.trim()) {
+      alert('제목, 인사말, 메시지를 모두 입력해주세요.');
+      return;
+    }
+
+    if (selectedApplicants.size === 0) {
+      alert('전송할 후보자를 선택해주세요.');
+      return;
+    }
+
+    const templateName = emailTemplates[bulkSelectedTemplate].name;
+    const confirmed = window.confirm(
+      `선택된 ${selectedApplicants.size}명에게 ${templateName} 템플릿으로 일괄전송하시겠습니까?\n\n제목: ${bulkEmailSubject}`
+    );
+
+    if (!confirmed) return;
+
+    setBulkEmailSending(true);
+    
+    try {
+      // 선택된 후보자들의 정보 수집
+      const selectedCandidates = Array.from(selectedApplicants).map(candidateId => {
+        const candidate = githubCandidates.find(c => 
+          (c.candidateId || c.githubLogin) === candidateId
+        );
+        if (!candidate) return null;
+        return {
+          candidateEmail: candidate.candidateEmail || candidate.githubEmail || candidate.email,
+          githubLogin: candidate.githubLogin,
+          candidateId: candidate.candidateId || candidate.githubSearchResultId
+        };
+      }).filter(candidate => candidate && candidate.candidateEmail); // null 제거 및 이메일이 있는 후보자만 필터링
+
+      if (selectedCandidates.length === 0) {
+        alert('선택된 후보자 중 이메일 주소가 있는 후보자가 없습니다.');
+        setBulkEmailSending(false);
+        return;
+      }
+
+      // 플레이스홀더가 포함된 HTML 템플릿 생성
+      const htmlTemplate = generateTemplateHtml(
+        { 
+          githubLogin: "{{githubLogin}}", 
+          candidateEmail: "{{candidateEmail}}" 
+        },
+        bulkSelectedTemplate,
+        bulkCustomGreeting,
+        bulkCustomMessage
+      );
+
+      const response = await fetch('http://localhost:8081/api/invitations/send-bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
+        },
+        body: JSON.stringify({
+          postId: selectedPostId,
+          companyAdminId: companyAdminId,
+          candidates: selectedCandidates.map(c => ({
+            githubLogin: c.githubLogin,
+            candidateEmail: c.candidateEmail
+          })),
+          customEmailSubject: bulkEmailSubject,
+          customEmailContent: htmlTemplate
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        alert(`📨 ${result.totalCandidates}명에게 ${templateName} 템플릿으로 이메일이 성공적으로 전송되었습니다!`);
+        // 모달 닫기 및 상태 초기화
+        setShowBulkEmailModal(false);
+        setBulkEmailSubject('');
+        setBulkEmailContent('');
+        setBulkCustomGreeting('');
+        setBulkCustomMessage('');
+        setBulkSelectedTemplate('professional');
+        setSelectedApplicants(new Set());
+      } else {
+        alert('일괄전송 중 오류가 발생했습니다: ' + result.message);
+      }
+    } catch (error) {
+      console.error('일괄전송 오류:', error);
+      alert('일괄전송 중 오류가 발생했습니다.');
+    } finally {
+      setBulkEmailSending(false);
+    }
+  };
+
+  //-----------------------------------------------------------------------------------------------
+
+  // 로딩 스피너와 shimmer 애니메이션을 위한 CSS
   React.useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
       @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
+      }
+      @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
       }
     `;
     document.head.appendChild(style);
@@ -431,49 +554,7 @@ export default function CompanyDashboard() {
     }
   };
 
-  // 템플릿 메일 발송 함수
-  const sendEmailToCandidate = async (candidate) => {
-    if (!candidate.candidateEmail) {
-      alert('이 후보자의 이메일 정보가 없습니다.');
-      return;
-    }
 
-    const confirmed = window.confirm(
-      `${candidate.githubLogin}님에게 메일을 발송하시겠습니까?\n\n` +
-      `이메일: ${candidate.candidateEmail}`
-    );
-
-    if (!confirmed) return;
-
-    try {
-      const payload = {
-        postId: selectedPostId,
-        githubLogin: candidate.githubLogin,
-        companyAdminId: companyAdminId,
-        candidateEmail: candidate.candidateEmail,
-        invitationType: "template"
-      };
-
-      const response = await fetch("http://localhost:8081/api/invitations/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.ok) {
-        alert("📨 메일이 성공적으로 발송되었습니다!");
-        // 후보자 목록 새로고침
-        fetchCandidates(selectedPostId, candidateFilter);
-      } else {
-        alert("❌ 메일 발송에 실패했습니다.");
-      }
-    } catch (error) {
-      console.error("메일 발송 오류:", error);
-      alert("⚠️ 서버 오류로 메일 발송에 실패했습니다.");
-    }
-  };
 
   // 이메일 템플릿 정의
   const emailTemplates = {
@@ -522,6 +603,11 @@ export default function CompanyDashboard() {
     const postProgrammingLanguage = selectedPostDetail?.postProgrammingLanguage || 'Java';
     const postSalaryStart = selectedPostDetail?.postSalaryStart || '5000';
     const postSalaryEnd = selectedPostDetail?.postSalaryEnd || '6000';
+    
+    // 공고기간 포맷팅
+    const postStartDate = selectedPostDetail?.postPostedDate ? formatDate(selectedPostDetail.postPostedDate) : '';
+    const postEndDate = selectedPostDetail?.postExpiryDate ? formatDate(selectedPostDetail.postExpiryDate) : '';
+    const recruitmentPeriod = postStartDate && postEndDate ? `${postStartDate} ~ ${postEndDate}` : '상시모집';
 
     if (templateKey === 'professional') {
       return '<div style="font-family:Arial, sans-serif; background-color:#f8fafc; padding:20px;">' +
@@ -540,6 +626,7 @@ export default function CompanyDashboard() {
                 '<div><strong>기술스택:</strong> ' + postProgrammingLanguage + '</div>' +
                 '<div><strong>위치:</strong> ' + postLocation + '</div>' +
                 '<div><strong>급여:</strong> ' + postSalaryStart + ' ~ ' + postSalaryEnd + '만원</div>' +
+                '<div><strong>공고기간:</strong> ' + recruitmentPeriod + '</div>' +
               '</div>' +
             '</div>' +
             '<div style="text-align:center; margin:30px 0;">' +
@@ -550,7 +637,7 @@ export default function CompanyDashboard() {
         '</div>' +
       '</div>';
     } else if (templateKey === 'friendly') {
-      return '<div style="font-family:\'Comic Sans MS\', cursive, Arial; background-color:#f0fdf4; padding:20px;">' +
+      return '<div style="font-family:\'Malgun Gothic\', \'맑은 고딕\', sans-serif; background-color:#f0fdf4; padding:20px;">' +
         '<div style="max-width:600px; margin:0 auto; background:#fff; border-radius:16px; overflow:hidden; border:3px solid #22c55e;">' +
           '<div style="background:linear-gradient(135deg, #22c55e 0%, #16a34a 100%); padding:25px; text-align:center;">' +
             '<h1 style="color:white; margin:0; font-size:26px;">🌟 ' + companyName + ' 🌟</h1>' +
@@ -566,6 +653,7 @@ export default function CompanyDashboard() {
                 '<p style="margin:5px 0; color:#059669;"><strong>💻 기술스택:</strong> ' + postProgrammingLanguage + '</p>' +
                 '<p style="margin:5px 0; color:#059669;"><strong>📍 위치:</strong> ' + postLocation + '</p>' +
                 '<p style="margin:5px 0; color:#059669;"><strong>💰 급여:</strong> ' + postSalaryStart + ' ~ ' + postSalaryEnd + '만원</p>' +
+                '<p style="margin:5px 0; color:#059669;"><strong>📅 공고기간:</strong> ' + recruitmentPeriod + '</p>' +
               '</div>' +
             '</div>' +
             '<div style="text-align:center; margin:25px 0;">' +
@@ -589,18 +677,22 @@ export default function CompanyDashboard() {
             '<div style="background:rgba(124, 58, 237, 0.1); border:1px solid #7c3aed; border-radius:12px; padding:20px; margin:25px 0;">' +
               '<h3 style="color:#a855f7; margin:0 0 15px 0; font-size:18px; font-weight:400;">' + postTitle + '</h3>' +
               '<p style="color:#d1d5db; margin:0 0 15px 0; line-height:1.7; font-weight:300;">' + postDescription + '</p>' +
-              '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:15px; margin:15px 0;">' +
+              '<div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:15px; margin:15px 0;">' +
                 '<div style="background:rgba(168, 85, 247, 0.1); border-radius:8px; padding:10px; text-align:center;">' +
                   '<div style="color:#a855f7; font-size:12px; margin-bottom:5px;">STACK</div>' +
-                  '<div style="color:#f3f4f6; font-weight:500;">' + postProgrammingLanguage + '</div>' +
+                  '<div style="color:#f3f4f6; font-weight:500; font-size:14px;">' + postProgrammingLanguage + '</div>' +
                 '</div>' +
                 '<div style="background:rgba(168, 85, 247, 0.1); border-radius:8px; padding:10px; text-align:center;">' +
                   '<div style="color:#a855f7; font-size:12px; margin-bottom:5px;">LOCATION</div>' +
-                  '<div style="color:#f3f4f6; font-weight:500;">' + postLocation + '</div>' +
+                  '<div style="color:#f3f4f6; font-weight:500; font-size:14px;">' + postLocation + '</div>' +
                 '</div>' +
                 '<div style="background:rgba(168, 85, 247, 0.1); border-radius:8px; padding:10px; text-align:center;">' +
                   '<div style="color:#a855f7; font-size:12px; margin-bottom:5px;">SALARY</div>' +
-                  '<div style="color:#f3f4f6; font-weight:500;">' + postSalaryStart + '~' + postSalaryEnd + '</div>' +
+                  '<div style="color:#f3f4f6; font-weight:500; font-size:14px;">' + postSalaryStart + '~' + postSalaryEnd + '</div>' +
+                '</div>' +
+                '<div style="background:rgba(168, 85, 247, 0.1); border-radius:8px; padding:10px; text-align:center;">' +
+                  '<div style="color:#a855f7; font-size:12px; margin-bottom:5px;">PERIOD</div>' +
+                  '<div style="color:#f3f4f6; font-weight:500; font-size:14px;">' + recruitmentPeriod + '</div>' +
                 '</div>' +
               '</div>' +
             '</div>' +
@@ -614,93 +706,7 @@ export default function CompanyDashboard() {
     }
   };
 
-  // 커스텀 메일 모달 열기
-  const openCustomEmailModal = (candidate) => {
-    setCustomEmailCandidate(candidate);
-    
-    const postTitle = selectedPostDetail?.postTitle || '채용 공고';
-    const companyName = companyInfo?.companyName || '저희 회사';
-    
-    // 기본값 설정
-    setSelectedTemplate('professional');
-    setCustomGreeting(emailTemplates.professional.defaultGreeting);
-    setCustomMessage(emailTemplates.professional.defaultMessage);
-    setCustomEmailSubject(`[${companyName}] ${postTitle} - 특별 초대`);
-    
-    setShowCustomEmailModal(true);
-  };
 
-  // 템플릿 변경 핸들러
-  const handleTemplateChange = (templateKey) => {
-    setSelectedTemplate(templateKey);
-    const template = emailTemplates[templateKey];
-    setCustomGreeting(template.defaultGreeting);
-    setCustomMessage(template.defaultMessage);
-  };
-
-  // 커스텀 메일 발송 함수
-  const sendCustomEmail = async () => {
-    if (!customEmailSubject.trim() || !customGreeting.trim() || !customMessage.trim()) {
-      alert('이메일 제목, 인사말, 메시지를 모두 입력해주세요.');
-      return;
-    }
-
-    const templateName = emailTemplates[selectedTemplate].name;
-    const confirmed = window.confirm(
-      `${customEmailCandidate.githubLogin}님에게 ${templateName} 템플릿으로 커스텀 메일을 발송하시겠습니까?\n\n` +
-      `제목: ${customEmailSubject}`
-    );
-
-    if (!confirmed) return;
-
-    setCustomEmailSending(true);
-    try {
-      // 선택된 템플릿으로 HTML 생성
-      const finalHtmlContent = generateTemplateHtml(
-        customEmailCandidate, 
-        selectedTemplate, 
-        customGreeting, 
-        customMessage
-      );
-
-      const payload = {
-        postId: selectedPostId,
-        githubLogin: customEmailCandidate.githubLogin,
-        companyAdminId: companyAdminId,
-        candidateEmail: customEmailCandidate.candidateEmail,
-        invitationType: "custom",
-        customEmailSubject: customEmailSubject,
-        customEmailContent: finalHtmlContent
-      };
-
-      const response = await fetch("http://localhost:8081/api/invitations/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.ok) {
-        alert(`📨 ${templateName} 템플릿으로 커스텀 메일이 성공적으로 발송되었습니다!`);
-        setShowCustomEmailModal(false);
-        setCustomEmailCandidate(null);
-        setCustomEmailSubject('');
-        setCustomGreeting('');
-        setCustomMessage('');
-        setSelectedTemplate('professional');
-        // 후보자 목록 새로고침
-        fetchCandidates(selectedPostId, candidateFilter);
-      } else {
-        alert("❌ 메일 발송에 실패했습니다.");
-      }
-    } catch (error) {
-      console.error("커스텀 메일 발송 오류:", error);
-      alert("⚠️ 서버 오류로 메일 발송에 실패했습니다.");
-    } finally {
-      setCustomEmailSending(false);
-    }
-  };
 
   // 면접 예정자 전체 불러오기 (모든 공고에 대해)
   useEffect(() => {
@@ -802,10 +808,15 @@ export default function CompanyDashboard() {
       const currentApplicants = showDirectApplicants ? directApplicants : githubCandidates;
       
       // 선택된 지원자들의 candidateId와 postId를 모두 수집
-      const candidateData = Array.from(selectedApplicants).map(index => ({
-        candidateId: currentApplicants[index].candidateId,
-        postId: currentApplicants[index].postId
-      }));
+      const candidateData = Array.from(selectedApplicants).map(candidateId => {
+        const candidate = currentApplicants.find(c => 
+          (c.candidateId || c.githubLogin) === candidateId
+        );
+        return candidate ? {
+          candidateId: candidate.candidateId,
+          postId: candidate.postId
+        } : null;
+      }).filter(Boolean);
       
       const response = await fetch('http://localhost:8081/api/progress/update-stage-multiple', {
         method: 'PUT',
@@ -851,10 +862,15 @@ export default function CompanyDashboard() {
       const currentApplicants = showDirectApplicants ? directApplicants : githubCandidates;
       
       // 선택된 지원자들의 candidateId와 postId를 모두 수집
-      const candidateData = Array.from(selectedApplicants).map(index => ({
-        candidateId: currentApplicants[index].candidateId,
-        postId: currentApplicants[index].postId
-      }));
+      const candidateData = Array.from(selectedApplicants).map(candidateId => {
+        const candidate = currentApplicants.find(c => 
+          (c.candidateId || c.githubLogin) === candidateId
+        );
+        return candidate ? {
+          candidateId: candidate.candidateId,
+          postId: candidate.postId
+        } : null;
+      }).filter(Boolean);
       
       const response = await fetch('http://localhost:8081/api/progress/update-stage-multiple', {
         method: 'PUT',
@@ -1178,7 +1194,8 @@ export default function CompanyDashboard() {
               ) : (
                 <div style={{ display: 'grid', gap: '1.5rem' }}>
                   {directApplicants.map((applicant, index) => {
-                    const isSelected = selectedApplicants.has(index);
+                    const candidateId = applicant.candidateId || applicant.githubLogin;
+                    const isSelected = selectedApplicants.has(candidateId);
                     return (
                     <div
                       key={index}
@@ -1194,10 +1211,10 @@ export default function CompanyDashboard() {
                       }}
                       onClick={() => {
                         const newSelected = new Set(selectedApplicants);
-                        if (newSelected.has(index)) {
-                          newSelected.delete(index);
+                        if (newSelected.has(candidateId)) {
+                          newSelected.delete(candidateId);
                         } else {
-                          newSelected.add(index);
+                          newSelected.add(candidateId);
                         }
                         setSelectedApplicants(newSelected);
                       }}
@@ -1785,7 +1802,8 @@ export default function CompanyDashboard() {
                               </div>
                             </div>
                             {githubCandidates.map((candidate, index) => {
-                              const isSelected = selectedApplicants.has(index);
+                              const candidateId = candidate.candidateId || candidate.githubLogin;
+                              const isSelected = selectedApplicants.has(candidateId);
                               return (
                               <motion.div
                                 key={candidate.candidateId || index}
@@ -1805,10 +1823,10 @@ export default function CompanyDashboard() {
                                 }}
                                 onClick={() => {
                                   const newSelected = new Set(selectedApplicants);
-                                  if (newSelected.has(index)) {
-                                    newSelected.delete(index);
+                                  if (newSelected.has(candidateId)) {
+                                    newSelected.delete(candidateId);
                                   } else {
-                                    newSelected.add(index);
+                                    newSelected.add(candidateId);
                                   }
                                   setSelectedApplicants(newSelected);
                                 }}
@@ -1956,6 +1974,182 @@ export default function CompanyDashboard() {
                             transition={{ duration: 0.38, type: 'spring', stiffness: 60 }}
                             style={{ display: 'grid', gap: '1rem' }}
                           >
+                            {/* GitHub 후보자 일괄 처리 버튼 */}
+                            <div style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              padding: '1rem',
+                              background: '#f8fafc',
+                              borderRadius: '12px',
+                              border: '1px solid #e2e8f0',
+                              marginBottom: '1rem'
+                            }}>
+                              <div style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '1rem',
+                                background: selectedApplicants.size > 0 
+                                  ? 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)' 
+                                  : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                                padding: '0.9rem 1.2rem',
+                                borderRadius: '12px',
+                                border: selectedApplicants.size > 0 
+                                  ? '2px solid #0ea5e9' 
+                                  : '2px solid #e2e8f0',
+                                transition: 'all 0.3s ease',
+                                boxShadow: selectedApplicants.size > 0 
+                                  ? '0 4px 15px rgba(14, 165, 233, 0.15)' 
+                                  : '0 2px 6px rgba(0, 0, 0, 0.05)'
+                              }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                  {selectedApplicants.size > 0 ? (
+                                    <div style={{
+                                      background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+                                      color: 'white',
+                                      width: '28px',
+                                      height: '28px',
+                                      borderRadius: '50%',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      fontSize: '0.8rem',
+                                      fontWeight: '700',
+                                      boxShadow: '0 3px 10px rgba(14, 165, 233, 0.3)'
+                                    }}>
+                                      {selectedApplicants.size}
+                                    </div>
+                                  ) : (
+                                    <div style={{
+                                      background: 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%)',
+                                      color: '#64748b',
+                                      width: '28px',
+                                      height: '28px',
+                                      borderRadius: '50%',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      fontSize: '0.9rem'
+                                    }}>
+                                      📋
+                                    </div>
+                                  )}
+                                  <div>
+                                    <div style={{ 
+                                      color: selectedApplicants.size > 0 ? '#0284c7' : '#64748b', 
+                                      fontWeight: '700', 
+                                      fontSize: '0.95rem',
+                                      marginBottom: '0.1rem'
+                                    }}>
+                                      {selectedApplicants.size > 0 ? `${selectedApplicants.size}명 선택됨` : '지원자 선택'}
+                                    </div>
+                                    <div style={{
+                                      color: selectedApplicants.size > 0 ? '#0369a1' : '#94a3b8',
+                                      fontSize: '0.75rem',
+                                      fontWeight: '500'
+                                    }}>
+                                      {selectedApplicants.size > 0 ? '일괄 작업이 가능합니다' : '지원자를 선택하여 일괄 작업을 수행하세요'}
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {selectedApplicants.size > 0 && (
+                                  <button
+                                    onClick={() => setSelectedApplicants(new Set())}
+                                    style={{
+                                      background: 'rgba(239, 68, 68, 0.1)',
+                                      border: '1px solid #f87171',
+                                      color: '#dc2626',
+                                      fontSize: '0.75rem',
+                                      fontWeight: '600',
+                                      cursor: 'pointer',
+                                      padding: '0.35rem 0.7rem',
+                                      borderRadius: '6px',
+                                      transition: 'all 0.2s ease',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '0.3rem'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.target.style.background = '#dc2626';
+                                      e.target.style.color = 'white';
+                                      e.target.style.transform = 'scale(1.05)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.target.style.background = 'rgba(239, 68, 68, 0.1)';
+                                      e.target.style.color = '#dc2626';
+                                      e.target.style.transform = 'scale(1)';
+                                    }}
+                                  >
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                      <path d="M18 6L6 18"/>
+                                      <path d="M6 6l12 12"/>
+                                    </svg>
+                                    해제
+                                  </button>
+                                )}
+                              </div>
+                              
+                              <div style={{ display: 'flex', gap: '0.8rem' }}>
+                                <button
+                                  disabled={selectedApplicants.size === 0}
+                                  style={{
+                                    background: selectedApplicants.size === 0 
+                                      ? 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)' 
+                                      : 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                                    color: selectedApplicants.size === 0 ? '#94a3b8' : 'white',
+                                    padding: '0.75rem 1.5rem',
+                                    border: 'none',
+                                    borderRadius: '12px',
+                                    fontSize: '0.9rem',
+                                    fontWeight: '600',
+                                    cursor: selectedApplicants.size === 0 ? 'not-allowed' : 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    transition: 'all 0.3s ease',
+                                    boxShadow: selectedApplicants.size === 0 
+                                      ? '0 2px 4px rgba(0, 0, 0, 0.05)' 
+                                      : '0 4px 15px rgba(139, 92, 246, 0.3)',
+                                    transform: 'translateY(0)',
+                                    position: 'relative',
+                                    overflow: 'hidden'
+                                  }}
+                                  onClick={openBulkEmailModal}
+                                  onMouseEnter={(e) => {
+                                    if (selectedApplicants.size > 0) {
+                                      e.target.style.transform = 'translateY(-2px)';
+                                      e.target.style.boxShadow = '0 6px 20px rgba(139, 92, 246, 0.4)';
+                                    }
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    if (selectedApplicants.size > 0) {
+                                      e.target.style.transform = 'translateY(0)';
+                                      e.target.style.boxShadow = '0 4px 15px rgba(139, 92, 246, 0.3)';
+                                    }
+                                  }}
+                                >
+                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <path d="M22 2L11 13"/>
+                                    <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
+                                  </svg>
+                                  <span>일괄 이메일 전송</span>
+                                  {selectedApplicants.size > 0 && (
+                                    <div style={{
+                                      position: 'absolute',
+                                      top: 0,
+                                      left: 0,
+                                      right: 0,
+                                      bottom: 0,
+                                      background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+                                      animation: 'shimmer 2.5s infinite',
+                                      borderRadius: '12px'
+                                    }}></div>
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+
                             {githubCandidates
                               .slice()
                               .sort((a, b) => {
@@ -1966,30 +2160,103 @@ export default function CompanyDashboard() {
                                 };
                                 return getScore(b) - getScore(a);
                               })
-                              .map((candidate, index) => (
-                                <motion.div
-                                  key={candidate.githubSearchResultId}
-                                  initial={{ opacity: 0, y: 16 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: -16 }}
-                                  transition={{ duration: 0.28, type: 'spring', stiffness: 70 }}
-                                  style={{
-                                    padding: '1.5rem',
-                                    border: '1px solid #e2e8f0',
-                                    borderRadius: '14px',
-                                    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-                                    transition: 'all 0.3s ease',
-                                    position: 'relative'
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(-2px)';
-                                    e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.1)';
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = 'none';
-                                  }}
-                                >
+                              .map((candidate, index) => {
+                                const candidateId = candidate.candidateId || candidate.githubLogin;
+                                const isSelected = selectedApplicants.has(candidateId);
+                                return (
+                                  <div 
+                                    key={candidate.githubSearchResultId}
+                                    style={{ 
+                                      display: 'flex', 
+                                      alignItems: 'flex-start', 
+                                      gap: '1rem',
+                                      marginBottom: '1rem'
+                                    }}
+                                  >
+                                    {/* 체크박스 */}
+                                    <div style={{
+                                      width: '20px',
+                                      height: '20px',
+                                      borderRadius: '6px',
+                                      border: isSelected ? '2px solid #22c55e' : '2px solid #cbd5e0',
+                                      background: isSelected ? '#22c55e' : '#ffffff',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.2s ease',
+                                      boxShadow: isSelected ? '0 2px 8px rgba(34, 197, 94, 0.25)' : '0 1px 3px rgba(0, 0, 0, 0.1)',
+                                      flexShrink: 0,
+                                      marginTop: '0.75rem' // 카드와 수직 정렬
+                                    }}
+                                    onClick={() => {
+                                      const newSelected = new Set(selectedApplicants);
+                                      if (newSelected.has(candidateId)) {
+                                        newSelected.delete(candidateId);
+                                      } else {
+                                        newSelected.add(candidateId);
+                                      }
+                                      setSelectedApplicants(newSelected);
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      if (!isSelected) {
+                                        e.currentTarget.style.borderColor = '#94a3b8';
+                                        e.currentTarget.style.background = '#f8fafc';
+                                      }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      if (!isSelected) {
+                                        e.currentTarget.style.borderColor = '#cbd5e0';
+                                        e.currentTarget.style.background = '#ffffff';
+                                      }
+                                    }}
+                                    >
+                                      {isSelected && (
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                                          <polyline points="20,6 9,17 4,12"/>
+                                        </svg>
+                                      )}
+                                    </div>
+
+                                    {/* 기존 카드 */}
+                                    <motion.div
+                                      initial={{ opacity: 0, y: 16 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0, y: -16 }}
+                                      transition={{ duration: 0.28, type: 'spring', stiffness: 70 }}
+                                      style={{
+                                        flex: 1,
+                                        padding: '1.5rem',
+                                        border: isSelected ? '2px solid #22c55e' : '1px solid #e2e8f0',
+                                        borderRadius: '14px',
+                                        background: isSelected ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                                        transition: 'all 0.3s ease',
+                                        position: 'relative',
+                                        cursor: 'pointer',
+                                        boxShadow: isSelected ? '0 8px 30px rgba(34,197,94,0.15)' : '0 4px 20px rgba(0,0,0,0.08)'
+                                      }}
+                                      onClick={() => {
+                                        const newSelected = new Set(selectedApplicants);
+                                        if (newSelected.has(index)) {
+                                          newSelected.delete(index);
+                                        } else {
+                                          newSelected.add(index);
+                                        }
+                                        setSelectedApplicants(newSelected);
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        if (!isSelected) {
+                                          e.currentTarget.style.transform = 'translateY(-2px)';
+                                          e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.1)';
+                                        }
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        if (!isSelected) {
+                                          e.currentTarget.style.transform = 'translateY(0)';
+                                          e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)';
+                                        }
+                                      }}
+                                    >
                                   {/* 순위 뱃지 */}
                                   <div style={{
                                     position: 'absolute',
@@ -2004,82 +2271,7 @@ export default function CompanyDashboard() {
                                   }}>
                                     {index + 1}위
                                   </div>
-                                  {/* 메일 발송 버튼들 (우측 하단) */}
-                                  {(candidate.jobCandCurrStage === '1n' || candidate.jobCandCurrStage === '2n') && candidate.candidateEmail && (
-                                    <div style={{
-                                      position: 'absolute',
-                                      bottom: '1rem',
-                                      right: '1rem',
-                                      display: 'flex',
-                                      gap: '0.5rem'
-                                    }}>
-                                      {/* 템플릿 메일 발송 버튼 */}
-                                      <button
-                                        onClick={() => sendEmailToCandidate(candidate)}
-                                        style={{
-                                          background: 'linear-gradient(135deg, #68d391 0%, #48bb78 100%)',
-                                          color: 'white',
-                                          border: 'none',
-                                          borderRadius: '50%',
-                                          width: '40px',
-                                          height: '40px',
-                                          cursor: 'pointer',
-                                          transition: 'all 0.2s',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          boxShadow: '0 2px 8px rgba(104, 211, 145, 0.3)'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                          e.currentTarget.style.transform = 'translateY(-2px) scale(1.1)';
-                                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(104, 211, 145, 0.4)';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                          e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(104, 211, 145, 0.3)';
-                                        }}
-                                        title="템플릿 메일 발송"
-                                      >
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                          <path d="M22 2L11 13"/>
-                                          <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
-                                        </svg>
-                                      </button>
-                                      
-                                      {/* 커스텀 메일 작성 버튼 */}
-                                      <button
-                                        onClick={() => openCustomEmailModal(candidate)}
-                                        style={{
-                                          background: 'linear-gradient(135deg, #4299e1 0%, #3182ce 100%)',
-                                          color: 'white',
-                                          border: 'none',
-                                          borderRadius: '50%',
-                                          width: '40px',
-                                          height: '40px',
-                                          cursor: 'pointer',
-                                          transition: 'all 0.2s',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          boxShadow: '0 2px 8px rgba(66, 153, 225, 0.3)'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                          e.currentTarget.style.transform = 'translateY(-2px) scale(1.1)';
-                                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(66, 153, 225, 0.4)';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                          e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(66, 153, 225, 0.3)';
-                                        }}
-                                        title="커스텀 메일 작성"
-                                      >
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                          <path d="M12 20h9"/>
-                                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19.5 3 21l1.5-4L16.5 3.5z"/>
-                                        </svg>
-                                      </button>
-                                    </div>
-                                  )}
+
                                   {/* 면접 평가 버튼 (우측 하단) */}
                                   {candidate.jobCandCurrStage === '3y' && (
                                     <div style={{
@@ -2307,8 +2499,14 @@ export default function CompanyDashboard() {
                                       </div>
                                       <div style={{ marginBottom: '0.8rem' }}>
                                         <span style={{
-                                          background: candidate.analysisScore >= 80 ? '#48bb78' : 
-                                                     candidate.analysisScore >= 60 ? '#f6ad55' : '#e53e3e',
+                                          background: (() => {
+                                            const score = candidate.analysisScore !== undefined && candidate.analysisScore !== null
+                                              ? candidate.analysisScore
+                                              : candidate.candPortfolioId && portfolioMatchesMap[candidate.candPortfolioId] && portfolioMatchesMap[candidate.candPortfolioId].length > 0
+                                                ? portfolioMatchesMap[candidate.candPortfolioId][0].matchingScore
+                                                : 0;
+                                            return score >= 80 ? '#48bb78' : score >= 60 ? '#f6ad55' : '#e53e3e';
+                                          })(),
                                           color: 'white',
                                           padding: '0.3rem 0.8rem',
                                           borderRadius: '8px',
@@ -2316,9 +2514,11 @@ export default function CompanyDashboard() {
                                           fontWeight: '600'
                                         }}>
                                           분석 점수: {
-                                            candidate.candPortfolioId && portfolioMatchesMap[candidate.candPortfolioId] && portfolioMatchesMap[candidate.candPortfolioId].length > 0
-                                              ? portfolioMatchesMap[candidate.candPortfolioId][0].matchingScore
-                                              : 'N/A'
+                                            candidate.analysisScore !== undefined && candidate.analysisScore !== null
+                                              ? candidate.analysisScore
+                                              : candidate.candPortfolioId && portfolioMatchesMap[candidate.candPortfolioId] && portfolioMatchesMap[candidate.candPortfolioId].length > 0
+                                                ? portfolioMatchesMap[candidate.candPortfolioId][0].matchingScore
+                                                : 'N/A'
                                           }
                                         </span>
                                       </div>
@@ -2340,8 +2540,10 @@ export default function CompanyDashboard() {
                                       </div>
                                     </div>
                                   </div>
-                                </motion.div>
-                              ))}
+                                    </motion.div>
+                                  </div>
+                                );
+                              })}
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -2934,19 +3136,20 @@ export default function CompanyDashboard() {
           <button onClick={handleDelete} disabled={deleteLoading} style={{ background: 'linear-gradient(135deg, #f56565 0%, #e53e3e 100%)', color: 'white', border: 'none', borderRadius: 8, padding: '0.7rem 1.5rem', fontWeight: 600, fontSize: '1rem', cursor: deleteLoading ? 'not-allowed' : 'pointer', opacity: deleteLoading ? 0.7 : 1 }}>삭제</button>
         </div>
       </Modal>
-      
-      {/* 커스텀 메일 작성 모달 */}
+
+
+      {/* 일괄전송 모달 */}
       <Modal 
-        open={showCustomEmailModal} 
+        open={showBulkEmailModal} 
         onClose={() => {
-          setShowCustomEmailModal(false);
-          setCustomEmailCandidate(null);
-          setCustomEmailSubject('');
-          setCustomGreeting('');
-          setCustomMessage('');
-          setSelectedTemplate('professional');
+          setShowBulkEmailModal(false);
+          setBulkEmailSubject('');
+          setBulkEmailContent('');
+          setBulkCustomGreeting('');
+          setBulkCustomMessage('');
+          setBulkSelectedTemplate('professional');
         }}
-        isCustomEmail={true}
+        isBulkEmail={true}
       >
         <div style={{
           background: 'linear-gradient(135deg, #4299e1 0%, #3182ce 100%)',
@@ -2968,13 +3171,13 @@ export default function CompanyDashboard() {
             textShadow: '0 2px 4px rgba(0,0,0,0.1)'
           }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 20h9"/>
-              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19.5 3 21l1.5-4L16.5 3.5z"/>
+              <path d="M22 2L11 13"/>
+              <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
             </svg>
-            {customEmailCandidate?.githubLogin}님에게 커스텀 메일 작성
+            일괄 이메일 전송 ({selectedApplicants.size}명)
           </h2>
         </div>
-        
+
         <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
           {/* 안내 메시지 */}
           <div style={{
@@ -2994,19 +3197,62 @@ export default function CompanyDashboard() {
               gap: '0.5rem'
             }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth="2">
-                <path d="M12 20h9"/>
-                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19.5 3 21l1.5-4L16.5 3.5z"/>
+                <path d="M22 2L11 13"/>
+                <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
               </svg>
-              ✨ 템플릿 기반 커스텀 메일 작성
+              ✨ 템플릿 기반 일괄 메일 전송
             </h4>
             <div style={{ 
               fontSize: '0.85rem', 
               color: '#a16207',
               lineHeight: '1.5'
             }}>
-              • <strong>템플릿 선택</strong>: 3가지 스타일 중 선택하여 전문적인 디자인 적용<br/>
-              • <strong>간편 편집</strong>: 인사말과 메시지만 수정하여 개인화<br/>
-              • <strong>미리보기</strong>: 실제 발송될 메일 모습을 미리 확인
+              • <strong>선택된 후보자</strong>: {selectedApplicants.size}명에게 동시 전송<br/>
+              • <strong>개인화</strong>: 각 후보자의 이름이 자동으로 삽입됩니다<br/>
+              • <strong>전문적 디자인</strong>: 3가지 템플릿 중 선택하여 브랜드에 맞는 디자인 적용
+            </div>
+          </div>
+
+          {/* 선택된 후보자 목록 미리보기 */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ 
+              fontWeight: 600, 
+              color: '#2d3748', 
+              fontSize: '1rem',
+              display: 'block',
+              marginBottom: '0.5rem'
+            }}>
+              📋 전송 대상 ({selectedApplicants.size}명)
+            </label>
+            <div style={{
+              border: '2px solid #e5e7eb',
+              borderRadius: '8px',
+              padding: '1rem',
+              backgroundColor: '#f9fafb',
+              maxHeight: '100px',
+              overflowY: 'auto'
+            }}>
+              {Array.from(selectedApplicants).map(candidateId => {
+                const candidate = githubCandidates.find(c => 
+                  (c.candidateId || c.githubLogin) === candidateId
+                );
+                if (!candidate) return null;
+                return (
+                  <div key={candidateId} style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.5rem',
+                    marginBottom: '0.5rem',
+                    fontSize: '0.85rem'
+                  }}>
+                    <span style={{ color: '#22c55e', fontWeight: 'bold' }}>✓</span>
+                    <span style={{ fontWeight: '600' }}>{candidate.githubLogin}</span>
+                    <span style={{ color: '#6b7280' }}>
+                      ({candidate.candidateEmail || candidate.githubEmail || candidate.email || '이메일 없음'})
+                    </span>
+                  </div>
+                );
+              }).filter(Boolean)}
             </div>
           </div>
 
@@ -3029,28 +3275,28 @@ export default function CompanyDashboard() {
               {Object.entries(emailTemplates).map(([key, template]) => (
                 <div
                   key={key}
-                  onClick={() => handleTemplateChange(key)}
+                  onClick={() => handleBulkTemplateChange(key)}
                   style={{
-                    border: selectedTemplate === key ? `2px solid ${template.color}` : '2px solid #e5e7eb',
+                    border: bulkSelectedTemplate === key ? `2px solid ${template.color}` : '2px solid #e5e7eb',
                     borderRadius: '10px',
                     padding: '0.8rem',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
-                    backgroundColor: selectedTemplate === key ? template.bgColor : '#f9fafb',
+                    backgroundColor: bulkSelectedTemplate === key ? template.bgColor : '#f9fafb',
                     textAlign: 'center'
                   }}
                 >
                   <div style={{
                     fontSize: '0.9rem',
                     fontWeight: 600,
-                    color: selectedTemplate === key ? template.color : '#374151',
+                    color: bulkSelectedTemplate === key ? template.color : '#374151',
                     marginBottom: '0.3rem'
                   }}>
                     {template.name}
                   </div>
                   <div style={{
                     fontSize: '0.75rem',
-                    color: selectedTemplate === key ? template.color : '#6b7280',
+                    color: bulkSelectedTemplate === key ? template.color : '#6b7280',
                     marginBottom: '0.4rem'
                   }}>
                     {template.preview}
@@ -3079,8 +3325,8 @@ export default function CompanyDashboard() {
             </label>
             <input
               type="text"
-              value={customEmailSubject}
-              onChange={(e) => setCustomEmailSubject(e.target.value)}
+              value={bulkEmailSubject}
+              onChange={(e) => setBulkEmailSubject(e.target.value)}
               placeholder="메일 제목을 입력하세요"
               style={{
                 width: '100%',
@@ -3091,7 +3337,7 @@ export default function CompanyDashboard() {
                 transition: 'border-color 0.2s',
                 outline: 'none'
               }}
-              onFocus={(e) => e.target.style.borderColor = emailTemplates[selectedTemplate].color}
+              onFocus={(e) => e.target.style.borderColor = emailTemplates[bulkSelectedTemplate].color}
               onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
             />
           </div>
@@ -3109,8 +3355,8 @@ export default function CompanyDashboard() {
             </label>
             <input
               type="text"
-              value={customGreeting}
-              onChange={(e) => setCustomGreeting(e.target.value)}
+              value={bulkCustomGreeting}
+              onChange={(e) => setBulkCustomGreeting(e.target.value)}
               placeholder="인사말을 입력하세요 (예: 안녕하세요, Hello)"
               style={{
                 width: '100%',
@@ -3121,7 +3367,7 @@ export default function CompanyDashboard() {
                 transition: 'border-color 0.2s',
                 outline: 'none'
               }}
-              onFocus={(e) => e.target.style.borderColor = emailTemplates[selectedTemplate].color}
+              onFocus={(e) => e.target.style.borderColor = emailTemplates[bulkSelectedTemplate].color}
               onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
             />
           </div>
@@ -3138,8 +3384,8 @@ export default function CompanyDashboard() {
               💬 메시지 내용
             </label>
             <textarea
-              value={customMessage}
-              onChange={(e) => setCustomMessage(e.target.value)}
+              value={bulkCustomMessage}
+              onChange={(e) => setBulkCustomMessage(e.target.value)}
               placeholder="개인화된 메시지를 입력하세요"
               rows={4}
               style={{
@@ -3154,55 +3400,66 @@ export default function CompanyDashboard() {
                 fontFamily: 'inherit',
                 lineHeight: '1.5'
               }}
-              onFocus={(e) => e.target.style.borderColor = emailTemplates[selectedTemplate].color}
+              onFocus={(e) => e.target.style.borderColor = emailTemplates[bulkSelectedTemplate].color}
               onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
             />
           </div>
 
           {/* 미리보기 */}
-          {customEmailCandidate && (
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ 
-                fontWeight: 600, 
-                color: '#2d3748', 
-                fontSize: '1rem',
-                display: 'block',
-                marginBottom: '0.5rem'
-              }}>
-                👀 미리보기
-              </label>
-                          <div style={{
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ 
+              fontWeight: 600, 
+              color: '#2d3748', 
+              fontSize: '1rem',
+              display: 'block',
+              marginBottom: '0.5rem'
+            }}>
+              👀 미리보기 (첫 번째 후보자 기준)
+            </label>
+            <div style={{
               border: '2px solid #e5e7eb',
               borderRadius: '8px',
               padding: '1rem',
               backgroundColor: '#f9fafb',
-              minHeight: '300px',
-              maxHeight: '350px',
+              minHeight: '250px',
+              maxHeight: '300px',
               overflowY: 'auto'
             }}>
-                <div 
-                  dangerouslySetInnerHTML={{
-                    __html: generateTemplateHtml(customEmailCandidate, selectedTemplate, customGreeting, customMessage)
-                  }}
-                  style={{
-                    transform: 'scale(0.7)',
-                    transformOrigin: 'top left',
-                    width: '142.86%',
-                    fontSize: '12px'
-                  }}
-                />
-              </div>
-              <div style={{ 
-                fontSize: '0.8rem', 
-                color: '#6b7280', 
-                marginTop: '0.5rem',
-                textAlign: 'center'
-              }}>
-                실제 발송될 메일은 위 미리보기와 동일합니다
-              </div>
+              {selectedApplicants.size > 0 && (() => {
+                const firstSelectedId = Array.from(selectedApplicants)[0];
+                const firstCandidate = githubCandidates.find(c => 
+                  (c.candidateId || c.githubLogin) === firstSelectedId
+                );
+                return firstCandidate && (
+                  <div 
+                    dangerouslySetInnerHTML={{
+                      __html: generateTemplateHtml(
+                        firstCandidate, 
+                        bulkSelectedTemplate, 
+                        bulkCustomGreeting, 
+                        bulkCustomMessage
+                      )
+                    }}
+                  
+                    style={{
+                      transform: 'scale(0.65)',
+                      transformOrigin: 'top left',
+                      width: '153.85%',
+                      fontSize: '11px'
+                    }}
+                  />
+                );
+              })()}
             </div>
-          )}
-
+            <div style={{ 
+              fontSize: '0.8rem', 
+              color: '#6b7280', 
+              marginTop: '0.5rem',
+              textAlign: 'center'
+            }}>
+              각 후보자에게는 개별 이름이 삽입되어 전송됩니다
+            </div>
+          </div>
         </div>
 
         <div style={{
@@ -3219,12 +3476,12 @@ export default function CompanyDashboard() {
         }}>
           <button
             onClick={() => {
-              setShowCustomEmailModal(false);
-              setCustomEmailCandidate(null);
-              setCustomEmailSubject('');
-              setCustomGreeting('');
-              setCustomMessage('');
-              setSelectedTemplate('professional');
+              setShowBulkEmailModal(false);
+              setBulkEmailSubject('');
+              setBulkEmailContent('');
+              setBulkCustomGreeting('');
+              setBulkCustomMessage('');
+              setBulkSelectedTemplate('professional');
             }}
             style={{
               background: '#e2e8f0',
@@ -3242,13 +3499,13 @@ export default function CompanyDashboard() {
           </button>
           
           <button
-            onClick={sendCustomEmail}
-            disabled={customEmailSending || !customEmailSubject.trim() || !customGreeting.trim() || !customMessage.trim()}
+            onClick={handleBulkEmailSend}
+            disabled={bulkEmailSending || !bulkEmailSubject.trim() || !bulkCustomGreeting.trim() || !bulkCustomMessage.trim()}
             style={{
-              background: (customEmailSending || !customEmailSubject.trim() || !customGreeting.trim() || !customMessage.trim()) 
+              background: (bulkEmailSending || !bulkEmailSubject.trim() || !bulkCustomGreeting.trim() || !bulkCustomMessage.trim()) 
                 ? '#cbd5e0' 
-                : `linear-gradient(135deg, ${emailTemplates[selectedTemplate].color} 0%, ${emailTemplates[selectedTemplate].color}dd 100%)`,
-              color: (customEmailSending || !customEmailSubject.trim() || !customGreeting.trim() || !customMessage.trim()) 
+                : `linear-gradient(135deg, ${emailTemplates[bulkSelectedTemplate].color} 0%, ${emailTemplates[bulkSelectedTemplate].color}dd 100%)`,
+              color: (bulkEmailSending || !bulkEmailSubject.trim() || !bulkCustomGreeting.trim() || !bulkCustomMessage.trim()) 
                 ? '#a0aec0' 
                 : 'white',
               padding: '0.8rem 2rem',
@@ -3256,31 +3513,31 @@ export default function CompanyDashboard() {
               borderRadius: '8px',
               fontSize: '1rem',
               fontWeight: '600',
-              cursor: (customEmailSending || !customEmailSubject.trim() || !customGreeting.trim() || !customMessage.trim()) 
+              cursor: (bulkEmailSending || !bulkEmailSubject.trim() || !bulkCustomGreeting.trim() || !bulkCustomMessage.trim()) 
                 ? 'not-allowed' 
                 : 'pointer',
               transition: 'all 0.2s',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
-              boxShadow: (customEmailSending || !customEmailSubject.trim() || !customGreeting.trim() || !customMessage.trim()) 
+              boxShadow: (bulkEmailSending || !bulkEmailSubject.trim() || !bulkCustomGreeting.trim() || !bulkCustomMessage.trim()) 
                 ? 'none' 
-                : `0 4px 12px ${emailTemplates[selectedTemplate].color}40`
+                : `0 4px 12px ${emailTemplates[bulkSelectedTemplate].color}40`
             }}
             onMouseEnter={(e) => {
-              if (!customEmailSending && customEmailSubject.trim() && customGreeting.trim() && customMessage.trim()) {
+              if (!bulkEmailSending && bulkEmailSubject.trim() && bulkCustomGreeting.trim() && bulkCustomMessage.trim()) {
                 e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = `0 6px 20px ${emailTemplates[selectedTemplate].color}60`;
+                e.currentTarget.style.boxShadow = `0 6px 20px ${emailTemplates[bulkSelectedTemplate].color}60`;
               }
             }}
             onMouseLeave={(e) => {
-              if (!customEmailSending && customEmailSubject.trim() && customGreeting.trim() && customMessage.trim()) {
+              if (!bulkEmailSending && bulkEmailSubject.trim() && bulkCustomGreeting.trim() && bulkCustomMessage.trim()) {
                 e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = `0 4px 12px ${emailTemplates[selectedTemplate].color}40`;
+                e.currentTarget.style.boxShadow = `0 4px 12px ${emailTemplates[bulkSelectedTemplate].color}40`;
               }
             }}
           >
-            {customEmailSending ? (
+            {bulkEmailSending ? (
               <>
                 <div style={{
                   width: '16px',
@@ -3295,10 +3552,10 @@ export default function CompanyDashboard() {
             ) : (
               <>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 20h9"/>
-                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19.5 3 21l1.5-4L16.5 3.5z"/>
+                  <path d="M22 2L11 13"/>
+                  <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
                 </svg>
-                {emailTemplates[selectedTemplate].name} 템플릿으로 전송
+                {emailTemplates[bulkSelectedTemplate].name} 템플릿으로 일괄 전송 ({selectedApplicants.size}명)
               </>
             )}
           </button>
@@ -3323,7 +3580,7 @@ export default function CompanyDashboard() {
 }
 
 // 모달 컴포넌트
-function Modal({ open, onClose, children, isPortfolio = false, isAiAnalysis = false, isCustomEmail = false }) {
+function Modal({ open, onClose, children, isPortfolio = false, isAiAnalysis = false, isBulkEmail = false }) {
   if (!open) return null;
   return (
     <div style={{
@@ -3333,13 +3590,13 @@ function Modal({ open, onClose, children, isPortfolio = false, isAiAnalysis = fa
       <div style={{
         background: '#fff', 
         borderRadius: 16, 
-        minWidth: isPortfolio ? '80vw' : isAiAnalysis ? '50vw' : isCustomEmail ? '60vw' : 340, 
-        maxWidth: isPortfolio ? '90vw' : isAiAnalysis ? '65vw' : isCustomEmail ? '75vw' : 420, 
-        maxHeight: isPortfolio ? '90vh' : isAiAnalysis ? '80vh' : isCustomEmail ? '90vh' : 'auto',
+        minWidth: isPortfolio ? '80vw' : isAiAnalysis ? '50vw' : isBulkEmail ? '55vw' : 340, 
+        maxWidth: isPortfolio ? '90vw' : isAiAnalysis ? '65vw' : isBulkEmail ? '70vw' : 420, 
+        maxHeight: isPortfolio ? '90vh' : isAiAnalysis ? '80vh' : isBulkEmail ? '85vh' : 'auto',
         padding: '2.2rem 2rem 1.5rem 2rem',
         boxShadow: '0 8px 32px rgba(0,0,0,0.13)', 
         position: 'relative',
-        overflow: isPortfolio || isCustomEmail ? 'hidden' : 'visible'
+        overflow: isPortfolio || isBulkEmail ? 'hidden' : 'visible'
       }}>
         <button onClick={onClose} style={{ position: 'absolute', top: 18, right: 18, background: 'none', border: 'none', fontSize: 22, color: '#aaa', cursor: 'pointer', zIndex: 10 }}>&times;</button>
         {children}

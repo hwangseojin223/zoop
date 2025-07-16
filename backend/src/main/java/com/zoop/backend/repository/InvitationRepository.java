@@ -37,5 +37,17 @@ public interface InvitationRepository extends JpaRepository<Invitation, Long> {
 
     // 합친 이후: postId와 githubLogin으로 초대 내역을 최신순으로 조회
     List<Invitation> findAllByPostIdAndGithubLoginOrderByInvitationSentDateDesc(Long postId, String githubLogin);
+
+    // 특정 이메일 콘텐츠를 사용한 초대들 조회
+    List<Invitation> findByEmailContentsId(Long emailContentsId);
+
+    // 이메일 콘텐츠별 초대 건수 조회
+    @Query("SELECT COUNT(i) FROM Invitation i WHERE i.emailContentsId = :emailContentsId")
+    Long countByEmailContentsId(Long emailContentsId);
+
+    // 일괄전송 시 사용 - 여러 invitation의 email_contents_id 업데이트
+    @Modifying
+    @Query("UPDATE Invitation i SET i.emailContentsId = :emailContentsId WHERE i.invitationId IN :invitationIds")
+    void updateEmailContentsIdForInvitations(Long emailContentsId, List<Long> invitationIds);
 }
 
