@@ -76,15 +76,15 @@ public class AiInterviewScheduleService {
         // 2. 면접 일정 생성
         LocalDateTime receivedDateTime = LocalDateTime.parse(requestDto.getScheduledTime(), DateTimeFormatter.ISO_DATE_TIME);
         
-        // 한국 시간대(KST)로 ZonedDateTime 생성
-        ZonedDateTime koreaTime = receivedDateTime.atZone(ZoneId.of("Asia/Seoul"));
-        
-        // UTC 시간대로 변환
-        ZonedDateTime utcTime = koreaTime.withZoneSameInstant(ZoneId.of("UTC"));
+        // 받은 시간을 UTC로 가정하고 파싱 (프론트엔드에서 이미 UTC로 전송됨)
+        ZonedDateTime utcTime = receivedDateTime.atZone(ZoneId.of("UTC"));
         
         // 데이터베이스에 저장할 LocalDateTime (UTC 기준)
         LocalDateTime timeToSave = utcTime.toLocalDateTime();
-        LocalDateTime deadlineTime = timeToSave.plusHours(24); // 면접 마감 시간은 예약 시간 + 24시간으로 설정
+        LocalDateTime deadlineTime = timeToSave.plusDays(7); // 면접 마감 시간은 예약 시간 + 7일로 설정
+        
+        // 한국 시간으로 변환 (응답용)
+        ZonedDateTime koreaTime = utcTime.withZoneSameInstant(ZoneId.of("Asia/Seoul"));
         
         // 3. 면접 링크 생성 (실제로는 더 복잡한 로직이 필요할 수 있음)
         String interviewLink = "https://zoop.ai/interview/" + UUID.randomUUID().toString();

@@ -241,6 +241,11 @@ public class PortfolioController {
             System.out.println("[PortfolioController] candidateId: " + candidateId);
             System.out.println("[PortfolioController] portfolioFile: " + (portfolioFile != null ? portfolioFile.getOriginalFilename() + " (크기: " + portfolioFile.getSize() + " bytes)" : "null"));
 
+            // 파일이 없으면 insert 시도하지 않고 400 에러 반환
+            if (portfolioFile == null || portfolioFile.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("이력서 파일을 첨부해 주세요.");
+            }
+
             // 1. candidate_portfolios 테이블에 저장
             String portfolioFilePath = null;
             if (portfolioFile != null && !portfolioFile.isEmpty()) {
@@ -482,5 +487,37 @@ public class PortfolioController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("포트폴리오 조회 중 오류가 발생했습니다: " + e.getMessage());
         }
+    }
+
+    @Operation(summary = "지원자의 최근 candidate_portfolios 파일 조회", description = "지원자의 가장 최근에 업로드한 candidate_portfolios 파일 정보를 조회합니다.")
+    @GetMapping("/candidate-portfolio/recent/{candidateId}")
+    public ResponseEntity<?> getRecentCandidatePortfolioByCandidate(
+            @Parameter(description = "지원자 ID", required = true)
+            @PathVariable Long candidateId
+    ) {
+        List<CandidatePortfolio> portfolios = candidatePortfolioRepository.findByCandidateIdOrderByPortfolioCreatedAtDesc(candidateId);
+        if (portfolios == null || portfolios.isEmpty()) {
+            return ResponseEntity.ok(Map.of("hasPortfolio", false));
+        }
+        CandidatePortfolio recent = portfolios.get(0);
+        Map<String, Object> result = new HashMap<>();
+        result.put("hasPortfolio", true);
+        result.put("candPortfolioId", recent.getCandPortfolioId());
+        result.put("portfolioFilePath", recent.getPortfolioFilePath());
+        result.put("portfolioAnalysisStatus", recent.getPortfolioAnalysisStatus());
+        result.put("portfolioSubmissionDate", recent.getPortfolioSubmissionDate());
+        result.put("portfolioCreatedAt", recent.getPortfolioCreatedAt());
+        // 파일명 추출 (S3 URL에서)
+        if (recent.getPortfolioFilePath() != null) {
+            String fileName = recent.getPortfolioFilePath().substring(
+                recent.getPortfolioFilePath().lastIndexOf("/") + 1
+            );
+            // UUID 부분 제거하여 원본 파일명 복원
+            if (fileName.contains("_")) {
+                fileName = fileName.substring(fileName.indexOf("_") + 1);
+            }
+            result.put("originalFileName", fileName);
+        }
+        return ResponseEntity.ok(result);
     }
 }

@@ -55,8 +55,32 @@ const ResumeFileUploadSection = ({ form, setForm }) => {
             accept=".pdf,.doc,.docx,.txt"
             style={{ display: 'none' }}
           />
-          
-          {!form.file ? (
+          {/* 이미 업로드된 파일(객체)일 때: 다운로드/파일명 표시 */}
+          {form.file && form.file.url ? (
+            <div className="file-upload-preview">
+              <FaFileAlt className="file-icon" />
+              <div className="file-info">
+                <span className="file-name">{form.file.name || '첨부파일'}</span>
+                <a
+                  href={form.file.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="file-download-link"
+                  style={{ marginLeft: 12, color: '#30C59B', textDecoration: 'underline', fontWeight: 500 }}
+                  onClick={e => e.stopPropagation()}
+                >
+                  다운로드
+                </a>
+              </div>
+              <button 
+                type="button" 
+                className="file-remove-btn"
+                onClick={e => { e.stopPropagation(); handleFileRemove(); }}
+              >
+                <FaTimes />
+              </button>
+            </div>
+          ) : !form.file ? (
             <div className="file-upload-placeholder">
               <FaUpload className="upload-icon" />
               <div className="upload-text">
@@ -74,18 +98,15 @@ const ResumeFileUploadSection = ({ form, setForm }) => {
               <button 
                 type="button" 
                 className="file-remove-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleFileRemove();
-                }}
+                onClick={e => { e.stopPropagation(); handleFileRemove(); }}
               >
                 <FaTimes />
               </button>
             </div>
           )}
         </div>
-        
-        {form.file && (
+        {/* 파일 선택된 경우(직접 업로드)만 다른 파일 선택 버튼 노출 */}
+        {form.file && !form.file.url && (
           <div className="file-upload-actions">
             <button 
               type="button" 
