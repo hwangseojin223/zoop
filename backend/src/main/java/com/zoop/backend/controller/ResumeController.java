@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.zoop.backend.domain.entity.CandidateResume;
 import com.zoop.backend.domain.entity.ResumeEducation;
@@ -31,62 +32,49 @@ public class ResumeController {
     private final ResumeExperienceRepository expRepo;
 
     @PostMapping
-    public ResponseEntity<?> createResume(@RequestBody ResumeCreateRequest req) {
-        System.out.println("=== [DEBUG] ResumeController.createResume() 진입 ===");
-        System.out.println("[ResumeController] candidateId: " + req.getCandidateId());
-        System.out.println("[ResumeController] selfIntro: " + req.getSelfIntro());
-        System.out.println("[ResumeController] isPublic: " + req.getIsPublic());
-        System.out.println("[ResumeController] status: " + req.getStatus());
-        System.out.println("[ResumeController] educations size: " + (req.getEducations() != null ? req.getEducations().size() : "null"));
-        System.out.println("[ResumeController] experiences size: " + (req.getExperiences() != null ? req.getExperiences().size() : "null"));
-        
-        if (req.getEducations() != null) {
-            for (int i = 0; i < req.getEducations().size(); i++) {
-                ResumeEducation edu = req.getEducations().get(i);
-                System.out.println("[ResumeController] education[" + i + "]: " + edu.toString());
-            }
+    @Transactional
+    public ResponseEntity<?> createOrUpdateResume(@RequestBody ResumeCreateRequest req) {
+        // 1. candidate_id로 기존 이력서 조회
+        List<CandidateResume> existingResumes = resumeRepo.findByCandidateIdOrderByCreatedAtDesc(req.getCandidateId());
+        CandidateResume resume;
+        if (!existingResumes.isEmpty()) {
+            // 기존 이력서가 있으면 update
+            resume = existingResumes.get(0);
+            resume.setSelfIntro(req.getSelfIntro());
+            resume.setIsPublic(req.getIsPublic());
+            resume.setStatus(req.getStatus());
+            resume.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+        } else {
+            // 없으면 새로 생성
+            resume = new CandidateResume();
+            resume.setCandidateId(req.getCandidateId());
+            resume.setSelfIntro(req.getSelfIntro());
+            resume.setIsPublic(req.getIsPublic());
+            resume.setStatus(req.getStatus());
+            resume.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+            resume.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
         }
-        
-        if (req.getExperiences() != null) {
-            for (int i = 0; i < req.getExperiences().size(); i++) {
-                ResumeExperience exp = req.getExperiences().get(i);
-                System.out.println("[ResumeController] experience[" + i + "]: " + exp.toString());
-            }
-        }
-        
-        CandidateResume resume = new CandidateResume();
-        resume.setCandidateId(req.getCandidateId());
-        resume.setSelfIntro(req.getSelfIntro());
-        resume.setIsPublic(req.getIsPublic());
-        resume.setStatus(req.getStatus());
-        resume.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
-        resume.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
         CandidateResume saved = resumeRepo.save(resume);
-        System.out.println("[ResumeController] 저장된 resume ID: " + saved.getResumeId());
-        
-        // 학력 저장
+
+        // 학력/경력은 기존 데이터 삭제 후 새로 저장(덮어쓰기)
+        eduRepo.deleteByResume_ResumeId(saved.getResumeId());
+        expRepo.deleteByResume_ResumeId(saved.getResumeId());
         if (req.getEducations() != null) {
             for (ResumeEducation edu : req.getEducations()) {
                 edu.setResume(saved);
                 edu.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
                 edu.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
-                ResumeEducation savedEdu = eduRepo.save(edu);
-                System.out.println("[ResumeController] 저장된 education ID: " + savedEdu.getEducationId());
+                eduRepo.save(edu);
             }
         }
-        
-        // 경력 저장
         if (req.getExperiences() != null) {
             for (ResumeExperience exp : req.getExperiences()) {
                 exp.setResume(saved);
                 exp.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
                 exp.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
-                ResumeExperience savedExp = expRepo.save(exp);
-                System.out.println("[ResumeController] 저장된 experience ID: " + savedExp.getExperienceId());
+                expRepo.save(exp);
             }
         }
-        
-        System.out.println("[ResumeController] 이력서 저장 완료");
         return ResponseEntity.ok(saved.getResumeId());
     }
 
@@ -109,6 +97,18 @@ public class ResumeController {
             resumeDetails.add(new ResumeDetailResponse(resume, educations, experiences));
         }
         
+        return ResponseEntity.ok(resumeDetails);
+    }
+
+    @GetMapping("/public")
+    public ResponseEntity<?> getPublicResumes() {
+        List<CandidateResume> resumes = resumeRepo.findByIsPublicOrderByCreatedAtDesc("Y");
+        List<ResumeDetailResponse> resumeDetails = new ArrayList<>();
+        for (CandidateResume resume : resumes) {
+            List<ResumeEducation> educations = eduRepo.findByResume_ResumeId(resume.getResumeId());
+            List<ResumeExperience> experiences = expRepo.findByResume_ResumeId(resume.getResumeId());
+            resumeDetails.add(new ResumeDetailResponse(resume, educations, experiences));
+        }
         return ResponseEntity.ok(resumeDetails);
     }
 

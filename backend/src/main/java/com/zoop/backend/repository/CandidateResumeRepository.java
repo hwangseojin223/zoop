@@ -8,4 +8,5 @@ import com.zoop.backend.domain.entity.CandidateResume;
 
 public interface CandidateResumeRepository extends JpaRepository<CandidateResume, Long> {
     List<CandidateResume> findByCandidateIdOrderByCreatedAtDesc(Long candidateId);
+    List<CandidateResume> findByIsPublicOrderByCreatedAtDesc(String isPublic);
 } 

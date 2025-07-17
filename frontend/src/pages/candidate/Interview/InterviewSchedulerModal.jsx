@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './InterviewSchedulerModal.css';
 
 function InterviewSchedulerModal({ isOpen, onClose, onSchedule, postId, candidateId }) {
@@ -7,17 +7,90 @@ function InterviewSchedulerModal({ isOpen, onClose, onSchedule, postId, candidat
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date()); // 현재 시간을 실시간으로 관리
+  const [jobPosting, setJobPosting] = useState(null); // 공고 정보
+  const [maxInterviewDate, setMaxInterviewDate] = useState(null); // 면접 가능 최대 날짜
+
+  // 1분마다 현재 시간 업데이트
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDate(new Date());
+    }, 1000); // 1초마다 업데이트 (더 빠른 반응을 위해)
+
+    return () => clearInterval(timer);
+  }, []);
 
   // 오늘 날짜
-  const today = new Date();
+  const today = currentDate; // currentDate 사용
   const todayString = today.toISOString().split('T')[0];
 
-  // 시간대 옵션들 (9시부터 18시까지, 1시간 간격)
-  const timeSlots = [
-    '09:00', '10:00', '11:00', '12:00', 
-    '13:00', '14:00', '15:00', '16:00', '17:00', '18:00',
-    '19:00', '20:00', '21:00', '22:00', '23:00'
-  ];
+  // 현재 시간 + 1시간 이후의 시간대 옵션들 생성
+  const generateTimeSlots = () => {
+    const now = currentDate; // currentDate 사용
+    const currentHour = now.getHours();
+    
+    const slots = [];
+    
+    // 오늘 날짜인 경우에만 현재 시간 + 1시간 이후부터, 다른 날짜는 9시부터
+    const isToday = selectedDate === todayString;
+    const actualStartHour = isToday ? currentHour + 1 : 9;
+    
+    // 24시를 넘어가는 경우 처리
+    if (actualStartHour >= 24) {
+      return slots; // 빈 배열 반환 (선택 가능한 시간 없음)
+    }
+    
+    for (let hour = actualStartHour; hour <= 23; hour++) {
+      const timeString = `${hour.toString().padStart(2, '0')}:00`;
+      slots.push(timeString);
+    }
+    
+    console.log('시간 슬롯 생성:', {
+      currentHour,
+      isToday,
+      actualStartHour,
+      selectedDate,
+      todayString,
+      slots
+    });
+    
+    return slots;
+  };
+
+  const [timeSlots, setTimeSlots] = useState([]);
+
+  // 공고 정보 가져오기 및 면접 가능 날짜 계산
+  useEffect(() => {
+    if (isOpen && postId) {
+      const fetchJobPosting = async () => {
+        try {
+          const response = await fetch(`http://localhost:8081/api/postings/info/${postId}`);
+          if (response.ok) {
+            const data = await response.json();
+            setJobPosting(data);
+            
+            // 공고 마감일로부터 1주일 후까지 면접 가능
+            if (data.postExpiryDate) {
+              const expiryDate = new Date(data.postExpiryDate);
+              const maxDate = new Date(expiryDate);
+              maxDate.setDate(maxDate.getDate() + 7); // 마감일 + 7일
+              setMaxInterviewDate(maxDate);
+              console.log('면접 가능 최대 날짜:', maxDate.toLocaleDateString('ko-KR'));
+            }
+          }
+        } catch (error) {
+          console.error('공고 정보 가져오기 실패:', error);
+        }
+      };
+      
+      fetchJobPosting();
+    }
+  }, [isOpen, postId]);
+
+  // 선택된 날짜가 변경될 때마다 시간 옵션 업데이트
+  useEffect(() => {
+    setTimeSlots(generateTimeSlots());
+  }, [selectedDate, currentDate]);
 
   // 달력 관련 함수들
   const getDaysInMonth = (date) => {
@@ -54,7 +127,21 @@ function InterviewSchedulerModal({ isOpen, onClose, onSchedule, postId, candidat
     const targetDate = new Date(date);
     targetDate.setHours(0, 0, 0, 0);
     
-    return targetDate < today;
+    // 오늘 이전 날짜는 비활성화
+    if (targetDate < today) {
+      return true;
+    }
+    
+    // 공고 마감일 + 1주일 이후 날짜는 비활성화
+    if (maxInterviewDate) {
+      const maxDate = new Date(maxInterviewDate);
+      maxDate.setHours(0, 0, 0, 0);
+      if (targetDate > maxDate) {
+        return true;
+      }
+    }
+    
+    return false;
   };
 
   const isDateSelected = (date) => {
@@ -73,6 +160,8 @@ function InterviewSchedulerModal({ isOpen, onClose, onSchedule, postId, candidat
       const formattedDate = formatDate(date);
       console.log('선택된 날짜:', formattedDate);
       setSelectedDate(formattedDate);
+      // 날짜가 변경되면 선택된 시간 초기화
+      setSelectedTime('');
     }
   };
 
@@ -227,7 +316,60 @@ function InterviewSchedulerModal({ isOpen, onClose, onSchedule, postId, candidat
   };
 
   const handleTimeSlotClick = (time) => {
+    // currentDate 사용 (실시간 업데이트되는 시간)
+    const currentDateString = currentDate.toISOString().split('T')[0];
+    
+    // 오늘 날짜가 선택되었을 때만 시간 제한 적용
+    if (selectedDate === currentDateString) {
+      const [selectedHour] = time.split(':').map(Number);
+      const currentHour = currentDate.getHours();
+      
+      // 현재 시간 + 1시간 계산
+      let oneHourLaterHour = currentHour + 1;
+      if (oneHourLaterHour >= 24) {
+        oneHourLaterHour = 0;
+      }
+      
+      // 시간 비교 (분 단위는 무시하고 시간만 비교)
+      const isDisabled = selectedHour < oneHourLaterHour;
+      
+      if (isDisabled) {
+        setError(`현재 시간 ${currentHour}:00으로부터 1시간 이후부터 선택 가능합니다.`);
+        return;
+      }
+    }
+    
     setSelectedTime(time);
+    setError('');
+  };
+
+  // 시간대가 비활성화되어야 하는지 확인하는 함수
+  const isTimeDisabled = (time) => {
+    // currentDate 사용 (실시간 업데이트되는 시간)
+    const currentDateString = currentDate.toISOString().split('T')[0];
+    
+    // 오늘 날짜가 선택되었을 때만 시간 제한 적용
+    if (selectedDate === currentDateString) {
+      const [selectedHour] = time.split(':').map(Number);
+      const currentHour = currentDate.getHours();
+      
+      // 현재 시간 + 1시간 계산
+      const oneHourLaterHour = currentHour + 1;
+      
+      // 시간 비교 (분 단위는 무시하고 시간만 비교)
+      const isDisabled = selectedHour < oneHourLaterHour;
+      
+      console.log(`시간 슬롯 ${time} 비활성화 체크:`, {
+        selectedHour,
+        currentHour,
+        oneHourLaterHour,
+        isDisabled
+      });
+      
+      return isDisabled;
+    }
+    
+    return false;
   };
 
   if (!isOpen) return null;
@@ -235,18 +377,51 @@ function InterviewSchedulerModal({ isOpen, onClose, onSchedule, postId, candidat
   return (
     <div className="modal-overlay" onClick={handleClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>면접 일정 정하기</h2>
+        <div className="modal-header" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <img src={process.env.PUBLIC_URL + '/icons/interview.svg'} alt="interview" style={{ width: 28, height: 28, marginRight: 8 }} />
+          <span style={{ fontWeight: 600, fontSize: 20, color: '#333' }}>면접 일정 정하기</span>
           <button 
             className="close-button" 
             onClick={handleClose}
             disabled={isSubmitting}
+            style={{ marginLeft: 'auto' }}
           >
             ×
           </button>
         </div>
         
         <form onSubmit={handleSubmit} className="scheduler-form">
+          {/* 공고 정보 및 면접 가능 기간 표시 */}
+          {jobPosting && (
+            <div className="job-info-section">
+              <div className="job-info-card">
+                <h4 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <img src={process.env.PUBLIC_URL + '/icons/interview.svg'} alt="interview" style={{ width: 20, height: 20, verticalAlign: 'middle' }} />
+                  {jobPosting.postTitle}
+                </h4>
+                <p className="company-name">{jobPosting.companyName}</p>
+                <div className="interview-period-info">
+                  <p>
+                    <svg className="info-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M8 2V5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M16 2V5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    면접 가능 기간: 오늘 ~ {maxInterviewDate ? maxInterviewDate.toLocaleDateString('ko-KR') : '공고 마감일 + 1주일'}
+                  </p>
+                  <p>
+                    <svg className="info-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                      <polyline points="12,6 12,12 16,14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    공고 마감일: {jobPosting.postExpiryDate ? new Date(jobPosting.postExpiryDate).toLocaleDateString('ko-KR') : '정보 없음'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <div className="scheduler-layout">
             {/* 왼쪽: 달력 */}
             <div className="calendar-section">
@@ -295,24 +470,28 @@ function InterviewSchedulerModal({ isOpen, onClose, onSchedule, postId, candidat
             <div className="time-section">
               <h3>시간 선택</h3>
               <div className="time-slots-scroll">
-                {timeSlots.map((time) => (
-                  <button
-                    key={time}
-                    type="button"
-                    className={`time-slot ${selectedTime === time ? 'selected' : ''}`}
-                    onClick={() => handleTimeSlotClick(time)}
-                    disabled={isSubmitting}
-                  >
-                    {time}
-                  </button>
-                ))}
+                {timeSlots.map((time) => {
+                  const isDisabled = isTimeDisabled(time);
+                  
+                  return (
+                    <button
+                      key={`${time}-${currentDate.getTime()}`}
+                      type="button"
+                      className={`time-slot ${selectedTime === time ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
+                      onClick={() => handleTimeSlotClick(time)}
+                      disabled={isSubmitting || isDisabled}
+                    >
+                      {time}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
           
           {/* 선택된 정보 행 */}
           {(selectedDate || selectedTime) && (
-            <div className="selected-info-row">
+            <div className="selected-info-row" style={{ minHeight: '48px', alignItems: 'center' }}>
               {selectedDate && (
                 <div className="selected-date-info">
                   <p>선택된 날짜: {(() => {
@@ -341,12 +520,13 @@ function InterviewSchedulerModal({ isOpen, onClose, onSchedule, postId, candidat
             </div>
           )}
           
-          <div className="modal-actions">
+          <div className="modal-actions" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '20px' }}>
             <button 
               type="button" 
               onClick={handleClose}
               className="cancel-button"
               disabled={isSubmitting}
+              style={{ height: '48px', fontSize: '16px', fontWeight: 600, minWidth: '140px' }}
             >
               취소
             </button>
@@ -354,6 +534,7 @@ function InterviewSchedulerModal({ isOpen, onClose, onSchedule, postId, candidat
               type="submit" 
               className="submit-button"
               disabled={isSubmitting || !selectedDate || !selectedTime}
+              style={{ height: '48px', fontSize: '16px', fontWeight: 600, minWidth: '140px' }}
             >
               {isSubmitting ? '등록 중...' : '일정 등록'}
             </button>

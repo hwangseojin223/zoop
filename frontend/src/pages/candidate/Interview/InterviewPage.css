@@ -71,19 +71,33 @@
 }
 
 .job-info-section h2::before {
-  content: "📋";
+  content: "";
   margin-right: 8px;
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2330C59B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpolyline points='14,2 14,8 20,8'/%3E%3Cline x1='16' y1='13' x2='8' y2='13'/%3E%3Cline x1='16' y1='17' x2='8' y2='17'/%3E%3Cpolyline points='10,9 9,9 8,9'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .interview-info-section h2::before {
-  content: "📅";
+  content: "";
   margin-right: 8px;
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2330C59B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .job-info-grid,
 .interview-info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 }
 
@@ -91,10 +105,19 @@
 .interview-info-item {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
+  padding: 16px 20px;
   background-color: #f8f9fa;
-  border-radius: 8px;
-  border-left: 4px solid #4CAF50;
+  border-radius: 12px;
+  border-left: 4px solid #30C59B;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.job-info-item:hover,
+.interview-info-item:hover {
+  background-color: #f0f9f6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(48, 197, 155, 0.1);
 }
 
 .job-info-item .label,
@@ -145,8 +168,15 @@
 }
 
 .interview-notice h3::before {
-  content: "⚠️";
+  content: "";
   margin-right: 8px;
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffc107' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/%3E%3Cline x1='12' y1='9' x2='12' y2='13'/%3E%3Cline x1='12' y1='17' x2='12.01' y2='17'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .interview-notice ul {
@@ -166,21 +196,43 @@
 
 .go-to-interview-button {
   display: inline-block;
-  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  background: linear-gradient(135deg, #30C59B 0%, #2dd4bf 100%);
   color: white;
   text-decoration: none;
-  padding: 16px 32px;
-  border-radius: 8px;
+  padding: 18px 40px;
+  border-radius: 12px;
   font-size: 18px;
   font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(48, 197, 155, 0.3);
   margin-bottom: 16px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.5px;
+  min-width: 200px;
+}
+
+.go-to-interview-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.go-to-interview-button:hover::before {
+  left: 100%;
 }
 
 .go-to-interview-button:hover {
+  background: linear-gradient(135deg, #28a085 0%, #26c6b3 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+  box-shadow: 0 8px 25px rgba(48, 197, 155, 0.4);
   color: white;
   text-decoration: none;
 }
@@ -218,6 +270,7 @@
   .job-info-grid,
   .interview-info-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
   
   .job-info-item,

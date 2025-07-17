@@ -14,30 +14,23 @@ const SENTENCES = [
 // Slide data for 2/4, 3/4, 4/4
 const SLIDES = [
   {
-    step: 2,
+    step: 1,
     title: '영상 과제는 답변을 준비하는 시간과\n녹화하는 시간이 따로 주어져요.',
     desc: '준비 시간에는 녹화하지 않고, 답변 시간에만 녹화를 진행해요.',
-    img: 'https://cdn.pixabay.com/photo/2017/01/31/13/14/avatar-2026510_1280.png',
+    img: process.env.PUBLIC_URL + '/images/talkingopinions.svg',
     button: '다음',
   },
   {
-    step: 3,
+    step: 2,
     title: '준비 시간 동안에는 질문을 확인하고\n답변을 생각해 주세요.',
     desc: '준비 시간이 끝나면 자동으로 답변 시간이 시작돼요.',
-    img: 'https://cdn.pixabay.com/photo/2017/01/31/13/14/avatar-2026510_1280.png',
-    button: '다음',
-  },
-  {
-    step: 4,
-    title: '답변 시간 동안에는 녹화가 시작되니\n편하게 답변해 주세요.',
-    desc: '다시하기 버튼을 누르면 한 번의 다시 할 기회가 주어져요.',
-    img: 'https://cdn.pixabay.com/photo/2017/01/31/13/14/avatar-2026510_1280.png',
+    img: process.env.PUBLIC_URL + '/images/People-Working-Illustrations@4x.png',
     button: '면접 시작하기',
   },
 ];
 
 function InterviewGuideSlides({ onStart }) {
-  const [current, setCurrent] = useState(0); // 0: 2/4, 1: 3/4, 2: 4/4
+  const [current, setCurrent] = useState(0); // 0: 1/2, 1: 2/2
   const [timeLeft, setTimeLeft] = useState(600); // 10분 = 600초
   const navigate = useNavigate();
   const { id } = useParams(); // scheduleId, if available
@@ -48,7 +41,6 @@ function InterviewGuideSlides({ onStart }) {
     const timer = setInterval(() => {
       setTimeLeft((prevTime) => {
         if (prevTime <= 1) {
-          // 시간이 다 되면 면접 시작
           handleStartInterview();
           return 0;
         }
@@ -58,6 +50,9 @@ function InterviewGuideSlides({ onStart }) {
 
     return () => clearInterval(timer);
   }, []);
+
+  // slide가 undefined일 때 예외 방지 (모든 hook 호출 이후에 위치)
+  if (!slide) return null;
 
   // 시간을 MM:SS 형식으로 변환
   const formatTime = (seconds) => {
@@ -81,8 +76,7 @@ function InterviewGuideSlides({ onStart }) {
         {/* 탭/진행 표시 */}
         <div style={{ width: '100%', display: 'flex', alignItems: 'center', marginBottom: 32 }}>
           <div style={{ flex: 1, display: 'flex', gap: 24, fontWeight: 600, fontSize: 18 }}>
-            <span style={{ color: '#888' }}>자기소개</span>
-            <span style={{ color: '#222' }}>설명 <b>({slide.step}/4)</b></span>
+            <span style={{ color: '#222' }}>설명 <b>({slide.step}/2)</b></span>
           </div>
           <div style={{ background: '#f4f8ff', color: '#30C59B', fontWeight: 700, fontSize: 18, borderRadius: 12, padding: '6px 22px' }}>{formatTime(timeLeft)}</div>
         </div>
@@ -94,23 +88,27 @@ function InterviewGuideSlides({ onStart }) {
           {slide.desc}
         </div>
         {/* 일러스트/이미지 */}
-        <div style={{ width: 320, height: 160, background: '#f8f9fa', borderRadius: 18, marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #eee' }}>
-          <img src={slide.img} alt="설명 일러스트" style={{ width: 100, height: 100, objectFit: 'contain', opacity: 0.7 }} />
+        <div style={{ width: 320, height: 200, background: '#f8f9fa', borderRadius: 18, marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #eee' }}>
+          <img src={slide.img} alt="설명 일러스트" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         </div>
         {/* 네비게이션 */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32, marginBottom: current === 2 ? 32 : 0 }}>
-          <button onClick={() => setCurrent(current - 1)} disabled={current === 0} style={{ width: 48, height: 48, borderRadius: '50%', background: current === 0 ? '#f4f4f4' : '#e6f9f3', border: 'none', color: current === 0 ? '#bbb' : '#30C59B', fontSize: 28, cursor: current === 0 ? 'not-allowed' : 'pointer' }}>←</button>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32, marginBottom: current === 1 ? 32 : 0 }}>
+          {current !== 0 && (
+            <button onClick={() => setCurrent(current - 1)} style={{ width: 48, height: 48, borderRadius: '50%', background: '#e6f9f3', border: 'none', color: '#30C59B', fontSize: 28, cursor: 'pointer' }}>←</button>
+          )}
+          {/* 네비 dots */}
           <div style={{ display: 'flex', gap: 8 }}>
-            {[0, 1, 2].map((i) => (
+            {[0, 1].map((i) => (
               <span key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: i === current ? '#30C59B' : '#d1fae5', display: 'inline-block' }}></span>
             ))}
           </div>
-          {current !== 2 && (
+          {/* 오른쪽 화살표(다음) 버튼은 current !== 1에서만 보이게 */}
+          {current !== 1 && (
             <button onClick={() => setCurrent(current + 1)} style={{ width: 48, height: 48, borderRadius: '50%', background: '#e6f9f3', border: 'none', color: '#30C59B', fontSize: 28, cursor: 'pointer' }}>→</button>
           )}
         </div>
-        {/* 4/4에서만 버튼 노출 */}
-        {current === 2 && (
+        {/* 2/2에서만 면접 시작하기 버튼 노출 */}
+        {current === 1 && (
           <button
             onClick={handleStartInterview}
             style={{ width: 'auto', padding: '16px 32px', borderRadius: 20, border: 'none', background: '#30C59B', color: 'white', fontWeight: 600, fontSize: 18, cursor: 'pointer', marginTop: 8 }}

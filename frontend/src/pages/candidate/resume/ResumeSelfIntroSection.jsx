@@ -30,19 +30,33 @@ const ResumeSelfIntroSection = ({ form, setForm }) => {
   return (
     <section className="resume-section">
       <div className="selfintro-card">
-        <div className="selfintro-header">
-          <span className="selfintro-title">커리어 소개</span>
-          <button className="ai-career-btn" onClick={handleAICareer} disabled={aiLoading}>
-            {aiLoading ? '생성 중...' : 'AI 커리어 소개생성'}
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+          <div style={{ color: '#222', fontSize: '1.5rem', fontWeight: 700, paddingBottom: '0.75rem', borderBottom: '2px solid #e2e8f0', flex: 1, position: 'relative' }}>
+            커리어 소개
+            <span style={{
+              content: "''",
+              position: 'absolute',
+              bottom: -2,
+              left: 0,
+              width: 60,
+              height: 2,
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              borderRadius: 1,
+              display: 'inline-block',
+            }} />
+          </div>
         </div>
         <div className="selfintro-tip">
           <b>ChatGPT API 기반!</b> TIP. 이력서를 구체적으로 작성할수록 AI 생성 결과의 퀄리티가 올라가요!
         </div>
-        <div className="selfintro-btns">
-          <button className="selfintro-sub-btn" onClick={() => setForm(prev => ({ ...prev, selfIntro: '' }))}>직접 작성하기</button>
-          <button className="selfintro-sub-btn" onClick={addCoreSkill}>+ 핵심역량</button>
-          <button className="selfintro-sub-btn" onClick={addUrl}>+ URL</button>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div className="selfintro-btns" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button className="selfintro-sub-btn" onClick={addCoreSkill}>+ 핵심역량</button>
+            <button className="selfintro-sub-btn" onClick={addUrl}>+ URL</button>
+          </div>
+          <button className="ai-career-btn" onClick={handleAICareer} disabled={aiLoading} style={{ marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+            {aiLoading ? '생성 중...' : 'AI 커리어 소개생성'}
+          </button>
         </div>
         <div className="selfintro-inputs">
           {coreSkills.length > 0 && (

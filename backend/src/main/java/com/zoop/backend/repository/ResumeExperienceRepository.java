@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface ResumeExperienceRepository extends JpaRepository<ResumeExperience, Long> {
     List<ResumeExperience> findByResume_ResumeId(Long resumeId);
+    void deleteByResume_ResumeId(Long resumeId);
 } 
