@@ -18,6 +18,20 @@ SPRING_API_URL = os.getenv("SPRING_API_URL", "http://localhost:8081")
 
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
+def call_openai_chat(messages, max_tokens=800, temperature=0.3):
+    """OpenAI API 호출 함수"""
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=temperature
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        print(f"OpenAI API 호출 오류: {e}")
+        return f"API 호출 중 오류가 발생했습니다: {e}"
+
 app = FastAPI(
     title="Portfolio Matching API",
     description="AI 기반 포트폴리오 분석 및 채용공고 매칭 API",
@@ -889,4 +903,4 @@ def start_auto_analyze():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8002) 
+    uvicorn.run(app, host="0.0.0.0", port=8003) 
