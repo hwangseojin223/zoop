@@ -239,9 +239,9 @@ html {
 }
 
 .tab-button:not(.active):hover { 
-    color: #0056b3;
-    background-color: rgba(0, 123, 255, 0.05); /* ✨ New: Subtle background on hover */
-    border-radius: 4px; /* ✨ New: Slight rounding on hover */
+    color: #30C59B;
+    background-color: rgba(48, 197, 155, 0.08); /* subtle green background */
+    border-radius: 4px;
 }
 
 /* ✅ 탭 버튼 포커스 스타일 */

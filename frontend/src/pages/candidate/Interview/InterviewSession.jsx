@@ -158,23 +158,50 @@ const InterviewSession = () => {
   else if (phase === 'done') statusMsg = '면접이 완료되었습니다!';
 
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
-      <div style={{ flex: 1, padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontSize: 24, background: '#f8f9fa' }}>
-        {error && <div style={{ color: 'red', marginBottom: 16 }}>{error}</div>}
-        <div style={{ fontWeight: 600, marginBottom: 24 }}>면접 질문</div>
-        <div style={{ fontSize: 22, marginBottom: 32 }}>{questions[currentIdx]}</div>
-        <div style={{ fontSize: 18, marginBottom: 16 }}>{phase === 'think' ? '생각 시간' : phase === 'answer' ? '답변 시간' : ''}</div>
-        <div style={{ fontSize: 48, fontWeight: 700, color: '#30C59B', marginBottom: 24 }}>{phase !== 'done' ? timer + '초' : ''}</div>
-        <div style={{ color: '#888', fontSize: 18 }}>{statusMsg}</div>
-      </div>
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#222' }}>
-        <video
-          ref={videoRef}
-          autoPlay
-          muted
-          playsInline
-          style={{ width: '80%', borderRadius: 16, background: '#000' }}
-        />
+    <div style={{ minHeight: '100vh', background: '#f4f8fb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', width: 1100, minHeight: 620, background: 'white', borderRadius: 32, boxShadow: '0 8px 32px rgba(48,197,155,0.10)', overflow: 'hidden' }}>
+        {/* 왼쪽: 질문/타이머/진행 */}
+        <div style={{ flex: 1, padding: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8f9fa', position: 'relative' }}>
+          {/* 진행 바 */}
+          <div style={{ width: '100%', marginBottom: 32 }}>
+            <div style={{ fontWeight: 600, fontSize: 16, color: '#30C59B', marginBottom: 8, letterSpacing: 1 }}>질문 진행</div>
+            <div style={{ width: '100%', height: 8, background: '#e0e0e0', borderRadius: 4, overflow: 'hidden', marginBottom: 8 }}>
+              <div style={{ width: `${questions.length ? ((currentIdx+1)/questions.length)*100 : 0}%`, height: '100%', background: 'linear-gradient(90deg,#30C59B 60%,#6ee7b7 100%)', borderRadius: 4, transition: 'width 0.3s' }} />
+            </div>
+            <div style={{ fontSize: 14, color: '#888', textAlign: 'right' }}>{questions.length ? `${currentIdx+1} / ${questions.length}` : ''}</div>
+          </div>
+          {/* 질문 */}
+          <div style={{ fontWeight: 700, fontSize: 22, marginBottom: 18, color: '#222', textAlign: 'center', minHeight: 48 }}>
+            {questions[currentIdx] || '질문을 불러오는 중...'}
+          </div>
+          {/* 타이머/상태 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 18 }}>
+            {phase !== 'done' && (
+              <div style={{ fontSize: 44, fontWeight: 800, color: '#30C59B', letterSpacing: 1, minWidth: 80, textAlign: 'center' }}>{timer}초</div>
+            )}
+            <div style={{ fontSize: 16, color: '#fff', background: phase === 'think' ? '#30C59B' : phase === 'answer' ? '#1976d2' : phase === 'upload' ? '#fbc02d' : '#aaa', borderRadius: 16, padding: '6px 18px', fontWeight: 600, letterSpacing: 1, boxShadow: '0 2px 8px #30C59B22' }}>
+              {phase === 'think' && '준비 시간'}
+              {phase === 'answer' && '답변 시간'}
+              {phase === 'upload' && '업로드 중'}
+              {phase === 'done' && '완료'}
+            </div>
+          </div>
+          {/* 안내 메시지 */}
+          <div style={{ color: '#888', fontSize: 16, marginBottom: 0, minHeight: 24 }}>{statusMsg}</div>
+          {error && <div style={{ color: '#e74c3c', marginTop: 18, fontWeight: 600 }}>{error}</div>}
+        </div>
+        {/* 오른쪽: 비디오 */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#222', position: 'relative' }}>
+          <div style={{ width: 420, height: 320, background: '#111', borderRadius: 24, boxShadow: '0 4px 24px #0002', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '5px solid #30C59B' }}>
+            <video
+              ref={videoRef}
+              autoPlay
+              muted
+              playsInline
+              style={{ width: '100%', height: '100%', objectFit: 'cover', background: '#000', borderRadius: 18 }}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -132,7 +132,7 @@ def match_portfolio_to_jobs(analysis_data: str) -> Dict[str, Any]:
 
 {analysis_data}
 
-이 분석 결과를 바탕으로, 이 지원자에게 가장 적합한 채용공고의 특징을 파악해주세요.
+이 분석 결과를 바탕으로, IT 채용 전문가인 당신이 이 지원자에게 가장 적합한 채용공고의 특징을 파악해주세요.
 
 다음 기준으로 매칭 점수를 계산해주세요:
 
