@@ -72,106 +72,145 @@ const ResumeCareerSection = ({ form, setForm }) => {
       <h3>경력</h3>
       {(form.career || []).map((car, idx) => (
         <div className="career-card" key={idx}>
-          <div className="career-form-col">
-            <div className="career-field" style={{ width: '100%' }}>
-              <label>회사명</label>
-              <div className="company-input-wrapper">
+          <div className="career-form-grid">
+            {/* 1행: 회사명, 직무, 부서, 직급 */}
+            <div className="career-row career-row-1">
+              <div className="career-field flex2">
+                <label>회사명</label>
+                <div className="company-input-wrapper">
+                  <input 
+                    type="text"
+                    value={car.company} 
+                    onChange={e => handleChange(idx, 'company', e.target.value)}
+                    placeholder="회사명을 입력하세요"
+                    className={car.isCompanyHidden ? 'hidden-company' : ''}
+                  />
+                  <button
+                    type="button"
+                    className="company-hide-toggle"
+                    onClick={() => handleChange(idx, 'isCompanyHidden', !car.isCompanyHidden)}
+                    title={car.isCompanyHidden ? '회사명 표시' : '회사명 숨김'}
+                  >
+                    {car.isCompanyHidden ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+              </div>
+              <div className="career-field flex2">
+                <label>직무</label>
                 <input 
                   type="text"
-                  value={car.company} 
-                  onChange={e => handleChange(idx, 'company', e.target.value)}
-                  placeholder="회사명을 입력하세요"
-                  className={car.isCompanyHidden ? 'hidden-company' : ''}
+                  value={car.jobTitle} 
+                  onChange={e => handleChange(idx, 'jobTitle', e.target.value)}
+                  placeholder="직무를 입력하세요"
                 />
-                <button
-                  type="button"
-                  className="company-hide-toggle"
-                  onClick={() => handleChange(idx, 'isCompanyHidden', !car.isCompanyHidden)}
-                  title={car.isCompanyHidden ? '회사명 표시' : '회사명 숨김'}
-                >
-                  {car.isCompanyHidden ? <FaEyeSlash /> : <FaEye />}
-                </button>
+              </div>
+              <div className="career-field">
+                <label>부서</label>
+                <input 
+                  type="text"
+                  value={car.department}
+                  onChange={e => handleChange(idx, 'department', e.target.value)}
+                  placeholder="부서를 입력하세요"
+                />
+              </div>
+              <div className="career-field">
+                <label>직급</label>
+                <input 
+                  type="text"
+                  value={car.position}
+                  onChange={e => handleChange(idx, 'position', e.target.value)}
+                  placeholder="직급을 입력하세요"
+                />
               </div>
             </div>
-            <div className="career-field" style={{ width: '100%' }}>
-              <label>직무</label>
-              <input 
-                type="text"
-                value={car.jobTitle} 
-                onChange={e => handleChange(idx, 'jobTitle', e.target.value)}
-                placeholder="직무를 입력하세요"
-              />
-            </div>
-            <div className="career-field" style={{ width: '100%' }}>
-              <label>부서</label>
-              <input 
-                type="text"
-                value={car.department}
-                onChange={e => handleChange(idx, 'department', e.target.value)}
-                placeholder="부서를 입력하세요"
-              />
-            </div>
-            <div className="career-field" style={{ width: '100%' }}>
-              <label>직급</label>
-              <input 
-                type="text"
-                value={car.position}
-                onChange={e => handleChange(idx, 'position', e.target.value)}
-                placeholder="직급을 입력하세요"
-              />
-            </div>
-            <div className="career-field" style={{ width: '100%' }}>
-              <label>시작년월</label>
-              <DatePicker
-                selected={parseYearMonth(car.startDate)}
-                onChange={date => handleChange(idx, 'startDate', date)}
-                dateFormat="yyyy-MM"
-                showMonthYearPicker
-                showFullMonthYearPicker
-                placeholderText="시작년월 선택"
-                className="datepicker-input"
-                maxDate={new Date()}
-                isClearable
-              />
-            </div>
-            <div className="career-field" style={{ width: '100%' }}>
-              <label>종료년월</label>
-              <DatePicker
-                selected={parseYearMonth(car.endDate)}
-                onChange={date => handleChange(idx, 'endDate', date)}
-                dateFormat="yyyy-MM"
-                showMonthYearPicker
-                showFullMonthYearPicker
-                placeholderText="종료년월 선택"
-                className="datepicker-input"
-                maxDate={new Date()}
-                isClearable
-                disabled={car.current}
-              />
-            </div>
-            <div className="career-field" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <label className="career-checkbox-label" style={{ marginBottom: 0 }}>
-                <input 
-                  type="checkbox" 
-                  checked={car.current} 
-                  onChange={e => handleChange(idx, 'current', e.target.checked)}
+            {/* 2행: 시작년월, 종료년월, 삭제버튼 */}
+            <div className="career-row career-row-2">
+              <div className="career-field">
+                <label>시작년월</label>
+                <DatePicker
+                  selected={parseYearMonth(car.startDate)}
+                  onChange={date => handleChange(idx, 'startDate', date)}
+                  dateFormat="yyyy-MM"
+                  showMonthYearPicker
+                  showFullMonthYearPicker
+                  placeholderText="시작년월 선택"
+                  className="datepicker-input"
+                  maxDate={new Date()}
+                  isClearable
                 />
-                <span className="career-checkbox-text">재직중</span>
-              </label>
-              <button 
-                type="button" 
-                className="remove-career-btn" 
-                onClick={() => removeCareer(idx)}
-                style={{ marginLeft: 'auto' }}
-              >
-                <FaTrash />
-              </button>
+              </div>
+              <div className="career-field">
+                <label>종료년월</label>
+                <DatePicker
+                  selected={parseYearMonth(car.endDate)}
+                  onChange={date => handleChange(idx, 'endDate', date)}
+                  dateFormat="yyyy-MM"
+                  showMonthYearPicker
+                  showFullMonthYearPicker
+                  placeholderText="종료년월 선택"
+                  className="datepicker-input"
+                  maxDate={new Date()}
+                  isClearable
+                  disabled={car.current}
+                />
+              </div>
+            </div>
+            {/* 3행: 재직중 체크박스와 삭제버튼을 같은 줄에 좌우로 배치 */}
+            <div className="career-row career-row-3" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div className="career-field career-checkbox-wrap" style={{ flex: 1 }}>
+                <label className="career-checkbox-label" style={{ marginBottom: 0 }}>
+                  <input 
+                    type="checkbox" 
+                    checked={car.current} 
+                    onChange={e => handleChange(idx, 'current', e.target.checked)}
+                  />
+                  <span className="career-checkbox-text">재직중</span>
+                </label>
+              </div>
+              <div className="career-field career-delete-wrap" style={{}}>
+                <button 
+                  type="button" 
+                  className="remove-career-btn" 
+                  onClick={() => removeCareer(idx)}
+                >
+                  <FaTrash />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       ))}
-      <button type="button" className="add-career-btn" onClick={addCareer} style={{ background: '#30C59B', color: '#fff' }}>
-        <FaPlus /> 경력 추가
+      <button
+        type="button"
+        className="add-career-btn minimal-add-btn green-btn"
+        onClick={addCareer}
+        style={{
+          background: '#fff',
+          color: '#30C59B',
+          border: '1.5px solid #30C59B',
+          borderRadius: '8px',
+          padding: '0.55rem 1.1rem',
+          fontSize: '1rem',
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          marginTop: '0.7rem',
+          transition: 'background 0.15s, color 0.15s, border 0.15s',
+          cursor: 'pointer',
+        }}
+        onMouseOver={e => {
+          e.currentTarget.style.background = '#30C59B';
+          e.currentTarget.style.color = '#fff';
+          e.currentTarget.style.border = '1.5px solid #30C59B';
+        }}
+        onMouseOut={e => {
+          e.currentTarget.style.background = '#fff';
+          e.currentTarget.style.color = '#30C59B';
+          e.currentTarget.style.border = '1.5px solid #30C59B';
+        }}
+      >
+        <FaPlus style={{ fontSize: 16 }} /> 경력 추가
       </button>
     </section>
   );

@@ -455,7 +455,6 @@ function PortfolioSubmissionPage() {
                     ✕
                   </button>
                 )}
-                
                 <div className="experience-form">
                   <div className="form-row">
                     <div className="form-field">
@@ -472,7 +471,6 @@ function PortfolioSubmissionPage() {
                         className="form-input"
                       />
                     </div>
-                    
                     <div className="form-field">
                       <label htmlFor={`jobTitle-${index}`} className="field-label">
                         담당 직무명 <span className="required">*</span>
@@ -488,19 +486,25 @@ function PortfolioSubmissionPage() {
                       />
                     </div>
                   </div>
-                  
                   <div className="form-row">
-                    <div className="form-field">
+                    <div className="form-field" style={{ width: '100%' }}>
                       <label className="field-label">
                         재직 기간 <span className="required">*</span>
                       </label>
-                      <div className="date-range">
+                      {/* Always show the single-line period above the pickers */}
+                      <div style={{ marginBottom: '0.5rem', fontWeight: 500, color: '#2c3e50', minHeight: '1.5em' }}>
+                        {experience.startDate
+                          ? `${experience.startDate} ~ ${experience.currentlyWorking ? '재직중' : (experience.endDate ? experience.endDate : '')}`
+                          : '재직 기간을 입력해 주세요.'}
+                      </div>
+                      <div className="date-range" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'nowrap' }}>
                         <input
                           type="date"
                           value={experience.startDate}
                           onChange={(e) => handleWorkExperienceChange(index, 'startDate', e.target.value)}
                           required
                           className="date-input"
+                          style={{ minWidth: '130px' }}
                         />
                         <span className="date-separator">~</span>
                         {!experience.currentlyWorking && (
@@ -510,9 +514,10 @@ function PortfolioSubmissionPage() {
                             onChange={(e) => handleWorkExperienceChange(index, 'endDate', e.target.value)}
                             required={!experience.currentlyWorking}
                             className="date-input"
+                            style={{ minWidth: '130px' }}
                           />
                         )}
-                        <label className="currently-working">
+                        <label className="currently-working" style={{ marginLeft: '8px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
                           <input
                             type="checkbox"
                             checked={experience.currentlyWorking}
