@@ -15,6 +15,7 @@ import {
   BenefitSelectionModal
 } from '../Modals';
 import { InterviewSchedulerModal } from '../Interview';
+import InterviewPreparationModal from '../../../components/InterviewPreparationModal';
 
 import './CandidateDashboard.css';
 
@@ -130,6 +131,10 @@ function CandidateDashboard() {
   const [isInterviewSchedulerModalOpen, setIsInterviewSchedulerModalOpen] = useState(false);
   const [selectedPostIdForScheduling, setSelectedPostIdForScheduling] = useState(null);
 
+  // 면접 예상질문 모달 관련 상태
+  const [isInterviewPreparationModalOpen, setIsInterviewPreparationModalOpen] = useState(false);
+  const [selectedPostIdForPreparation, setSelectedPostIdForPreparation] = useState(null);
+
   // 면접 일정이 잡힌 공고들을 추적하는 상태
   const [scheduledInterviews, setScheduledInterviews] = useState({});
 
@@ -193,6 +198,18 @@ function CandidateDashboard() {
     setIsInterviewSchedulerModalOpen(false);
     setSelectedPostIdForScheduling(null);
   };
+
+  // 면접 예상질문 모달 열기/닫기 핸들러
+  const openInterviewPreparationModal = (postId) => {
+    setSelectedPostIdForPreparation(postId);
+    setIsInterviewPreparationModalOpen(true);
+  };
+
+  const closeInterviewPreparationModal = () => {
+    setIsInterviewPreparationModalOpen(false);
+    setSelectedPostIdForPreparation(null);
+  };
+
   // 면접 일정이 정해졌을 때 처리하는 함수
   const handleInterviewScheduled = async (postId, scheduleInfo) => {
     console.log("면접 일정 저장됨:", postId, scheduleInfo);
@@ -715,7 +732,7 @@ function CandidateDashboard() {
                   면접 일정 정하기
                 </button>
               )}
-              {post.jobCandCurrStage === '3n' && (
+                            {post.jobCandCurrStage === '3n' && (
                 (() => {
                   const interview = scheduledInterviews[post.postId];
                   const now = new Date();
@@ -723,16 +740,43 @@ function CandidateDashboard() {
                   const remainingTime = interview && interview.deadline ? calculateRemainingTime(new Date(interview.deadline)) : '';
                   
                   return (
-                    <button 
-                      onClick={() => navigateToInterview(post.postId)}
-                      className={`action-button interview-button ${!isInterviewStarted ? 'disabled' : ''}`}
-                      disabled={!isInterviewStarted}>
-                      {interview && interview.date
-                        ? isInterviewStarted 
-                          ? remainingTime || '면접 보러가기'
-                          : `${interview.date} (시작 대기중)`
-                        : '면접 일정'}
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <button 
+                        onClick={() => navigateToInterview(post.postId)}
+                        className={`action-button interview-button ${!isInterviewStarted ? 'disabled' : ''}`}
+                        disabled={!isInterviewStarted}>
+                        {interview && interview.date
+                          ? isInterviewStarted 
+                            ? remainingTime || '면접 보러가기'
+                            : `${interview.date} (시작 대기중)`
+                          : '면접 일정'}
+                      </button>
+                      <button 
+                        onClick={() => openInterviewPreparationModal(post.postId)}
+                        className="action-button"
+                        style={{
+                          background: 'linear-gradient(45deg, #eab308 0%, #f59e0b 100%)',
+                          color: 'white',
+                          border: 'none',
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                        }}
+                        onMouseOver={(e) => {
+                          e.target.style.transform = 'translateY(-1px)';
+                          e.target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+                        }}
+                        onMouseOut={(e) => {
+                          e.target.style.transform = 'translateY(0)';
+                          e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                        }}>
+                        💡 면접 예상질문
+                      </button>
+                    </div>
                   );
                 })()
               )}
@@ -871,6 +915,7 @@ function CandidateDashboard() {
                   const remainingTime = interview && interview.deadline ? calculateRemainingTime(new Date(interview.deadline)) : '';
                   
                   return (
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     <button 
                       onClick={() => navigateToInterview(post.postId)}
                       className={`action-button interview-button ${!isInterviewStarted ? 'disabled' : ''}`}
@@ -881,6 +926,32 @@ function CandidateDashboard() {
                           : `${interview.date} (시작 대기중)`
                         : '면접 일정'}
                     </button>
+                      <button 
+                        onClick={() => openInterviewPreparationModal(post.postId)}
+                        className="action-button"
+                        style={{
+                          background: 'linear-gradient(45deg, #eab308 0%, #f59e0b 100%)',
+                          color: 'white',
+                          border: 'none',
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                        }}
+                        onMouseOver={(e) => {
+                          e.target.style.transform = 'translateY(-1px)';
+                          e.target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+                        }}
+                        onMouseOut={(e) => {
+                          e.target.style.transform = 'translateY(0)';
+                          e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                        }}>
+                        💡 면접 예상질문
+                      </button>
+                    </div>
                   );
                 })()
               ) : null}
@@ -971,6 +1042,14 @@ function CandidateDashboard() {
         postId={selectedPostIdForScheduling}
         candidateId={candidateId}
         onSchedule={handleInterviewScheduled}
+      />
+
+      {/* 면접 예상질문 모달 */}
+      <InterviewPreparationModal
+        isOpen={isInterviewPreparationModalOpen}
+        onClose={closeInterviewPreparationModal}
+        postId={selectedPostIdForPreparation}
+        candidateId={candidateId}
       />
     </div>
   );
