@@ -77,7 +77,9 @@ function Header({ whiteBg }) {
           src={process.env.PUBLIC_URL + '/logo_zoop.png'}
           alt="ZOOP Logo"
           style={{ height: 48, marginLeft: 24, marginRight: 0, cursor: 'pointer', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.08))' }}
-          onClick={() => navigate('/candidate/dashboard')}
+          onClick={() => {
+            navigate('/');
+          }}
         />
       </div>
       <div className="header-right">
@@ -91,16 +93,15 @@ function Header({ whiteBg }) {
           <img src="../../icons/message-circle.svg" alt="채팅" />
         </span>
         {/* User Profile Area - 클릭 시 드롭다운 토글 */}
-        <div className="user-profile" onClick={toggleDropdown} ref={dropdownRef}>
+        <div className="user-profile" onClick={toggleDropdown} ref={dropdownRef} style={{ cursor: 'pointer' }}>
           <img src="../../person.png" alt="User Avatar" className="user-avatar" />
           <span>{displayedUserName}</span>
 
           {/* 드롭다운 메뉴 (isDropdownOpen 상태에 따라 표시) */}
-          {isDropdownOpen && ( // <--- isDropdownOpen이 정의되어 있습니다.
+          {isDropdownOpen && (
             <div className="dropdown-menu">
               <div className="dropdown-item" onClick={() => handleMenuItemClick('/mypage')}>마이페이지</div>
               <div className="dropdown-item" onClick={() => handleMenuItemClick('/settings')}>설정</div>
-              {/* 로그아웃 버튼은 드롭다운 항목 중 하나로 배치 */}
               {authState?.token && (
                 <div className="dropdown-item logout-dropdown-item" onClick={handleLogout}>
                   로그아웃

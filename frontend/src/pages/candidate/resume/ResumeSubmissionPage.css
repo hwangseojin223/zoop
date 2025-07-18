@@ -31,14 +31,12 @@
 }
 
 .resume-basic-info-wrapper,
-.resume-section-wrapper {
+.resume-offer-section,
+.resume-agreement-section {
   max-width: 1200px;
   margin: 0 auto 24px auto;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  padding: 32px 40px 24px 40px;
-  border: 1px solid #e9ecef;
+  padding: 0;
+  border-radius: 0;
 }
 
 @media (max-width: 1000px) {
@@ -255,7 +253,6 @@
   padding: 2.5rem;
   margin-bottom: 2rem;
   box-shadow: 0 4px 25px rgba(0, 0, 0, 0.06);
-  border: 1px solid #f1f5f9;
 }
 
 .resume-section:last-child {
@@ -1337,12 +1334,12 @@ select:hover {
 /* --- 너비 정렬: 기업 제안 수신 여부 & 동의 체크박스 --- */
 .resume-offer-section,
 .resume-agreement-section {
-  max-width: 600px;
-  margin: 32px auto 0 auto;
-  padding: 24px 40px 16px 40px;
-  background: #f8fafc;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  max-width: 1200px;
+  margin: 0 auto 24px auto;
+  padding: 2.5rem;
+  background: white;
+  border-radius: 20px;
+  border: none;
   box-sizing: border-box;
 }
 
@@ -1355,15 +1352,9 @@ select:hover {
 } 
 
 .resume-agreement-section {
-  margin: 32px auto 0 auto;
-  max-width: 1200px;
-  padding: 24px 40px 16px 40px;
-  background: #f8fafc;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  display: flex;
+  min-height: 56px;
   align-items: center;
-  justify-content: flex-start;
+  padding: 1.5rem 2.5rem !important;
 }
 
 .resume-agreement-label {
@@ -1475,4 +1466,24 @@ select:hover {
     justify-content: flex-start;
     margin-top: 0.5rem;
   }
+} 
+
+.basic-info-section [style*="border: 1.5px solid #e2e8f0"] {
+  border: none !important;
+} 
+
+.resume-section,
+.resume-file-upload-section,
+.selfintro-card {
+  margin-bottom: 32px !important;
+}
+
+.resume-offer-section {
+  padding: 2.5rem !important;
+}
+
+.resume-agreement-section {
+  min-height: 56px;
+  align-items: center;
+  padding: 1.5rem 2.5rem !important;
 } 

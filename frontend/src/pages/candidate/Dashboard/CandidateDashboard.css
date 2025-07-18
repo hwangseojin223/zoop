@@ -347,22 +347,12 @@
 }
 .clickable-job-title:hover {
   color: #059669;
-  text-decoration: underline;
+  text-decoration: none;
 }
-.clickable-job-title::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: linear-gradient(90deg, #30C59B, #2dd4bf);
-    transition: width 0.3s ease;
-    border-radius: 1px;
-}
-
+.clickable-job-title::after,
 .clickable-job-title:hover::after {
-    width: 100%;
+  content: none !important;
+  display: none !important;
 }
 
 .clickable-job-title:active {

@@ -212,74 +212,75 @@ const ResumeSubmissionPage = () => {
     <>
       <Header whiteBg />
       <form className="resume-submission-page" onSubmit={handleSubmit} style={{ paddingBottom: '100px' }}>
-        <div className="resume-basic-info-wrapper" style={{ paddingRight: 0 }}>
-          <ResumeBasicInfoSection form={form} setForm={setForm} />
-        </div>
-        <div className="resume-section-wrapper">
-          <ResumeEducationSection form={form} setForm={setForm} />
-        </div>
-        <div className="resume-section-wrapper">
-          <ResumeCareerSection form={form} setForm={setForm} />
-        </div>
-        <div className="resume-section-wrapper">
-          <ResumeSelfIntroSection form={form} setForm={setForm} />
-        </div>
-        <div className="resume-section-wrapper">
-          <ResumeFileUploadSection form={form} setForm={setForm} />
-        </div>
-        {/* 기업 제안 수신 여부 UI */}
-        <div className="resume-offer-section">
-          <div className="resume-offer-title">기업으로부터 제안을 받으시겠어요?</div>
-          <div style={{ display: 'flex', gap: '1rem', margin: '18px 0 8px 0', justifyContent: 'flex-start' }}>
-            {RESUME_OFFER_OPTIONS.map(opt => (
-              <label
-                key={opt.value}
-                style={{
-                  background: offerOption === opt.value ? '#e6faf6' : '#fff',
-                  border: offerOption === opt.value ? '2.5px solid #30C59B' : '1.5px solid #e2e8f0',
-                  color: offerOption === opt.value ? '#30C59B' : '#222',
-                  borderRadius: '12px',
-                  padding: '0.95rem 2.1rem',
-                  minWidth: 140,
-                  textAlign: 'center',
-                  fontSize: '1.04rem',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  boxShadow: offerOption === opt.value ? '0 4px 18px rgba(48,197,155,0.10)' : '0 2px 8px rgba(30,200,170,0.03)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  userSelect: 'none',
-                  transition: 'all 0.18s',
-                }}
-                onClick={() => setOfferOption(opt.value)}
-              >
-                <input
-                  type="radio"
-                  name="resume-offer"
-                  value={opt.value}
-                  checked={offerOption === opt.value}
-                  onChange={() => setOfferOption(opt.value)}
-                  style={{ display: 'none' }}
-                />
-                <span style={{ lineHeight: 1.5, whiteSpace: 'pre-line' }}>{opt.label}</span>
-              </label>
-            ))}
+        <div style={{maxWidth: '1200px', margin: '0 auto'}}>
+          <div className="resume-basic-info-wrapper" style={{ padding: 0 }}>
+            <ResumeBasicInfoSection form={form} setForm={setForm} />
           </div>
-        </div>
-        {/* 동의 체크 UI */}
-        <div className="resume-agreement-section">
-          <label className="resume-agreement-label">
-            <input
-              type="checkbox"
-              checked={agreementChecked}
-              onChange={e => setAgreementChecked(e.target.checked)}
-              className="resume-agreement-checkbox"
-            />
-            <span className="resume-agreement-text" style={{ fontSize: '0.93rem', color: '#888', fontWeight: 400 }}>
-              이력서 제출 시 개인정보 제공 및 이용에 동의합니다. (필수)
-            </span>
-          </label>
+          <div className="resume-section-wrapper">
+            <ResumeEducationSection form={form} setForm={setForm} />
+          </div>
+          <div className="resume-section-wrapper">
+            <ResumeCareerSection form={form} setForm={setForm} />
+          </div>
+          <div className="resume-section-wrapper">
+            <ResumeSelfIntroSection form={form} setForm={setForm} />
+          </div>
+          <div className="resume-section-wrapper">
+            <ResumeFileUploadSection form={form} setForm={setForm} />
+          </div>
+          {/* 기업 제안 수신 여부 UI + 개인정보 동의 UI 너비 통일 */}
+          <div className="resume-offer-section" style={{ padding: 0 }}>
+            <div className="resume-offer-title">기업으로부터 제안을 받으시겠어요?</div>
+            <div style={{ display: 'flex', gap: '1rem', margin: '18px 0 8px 0', justifyContent: 'flex-start' }}>
+              {RESUME_OFFER_OPTIONS.map(opt => (
+                <label
+                  key={opt.value}
+                  style={{
+                    background: offerOption === opt.value ? '#e6faf6' : '#fff',
+                    border: offerOption === opt.value ? '2.5px solid #30C59B' : '1.5px solid #e2e8f0',
+                    color: offerOption === opt.value ? '#30C59B' : '#222',
+                    borderRadius: '12px',
+                    padding: '0.95rem 2.1rem',
+                    minWidth: 140,
+                    textAlign: 'center',
+                    fontSize: '1.04rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    boxShadow: offerOption === opt.value ? '0 4px 18px rgba(48,197,155,0.10)' : '0 2px 8px rgba(30,200,170,0.03)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    userSelect: 'none',
+                    transition: 'all 0.18s',
+                  }}
+                  onClick={() => setOfferOption(opt.value)}
+                >
+                  <input
+                    type="radio"
+                    name="resume-offer"
+                    value={opt.value}
+                    checked={offerOption === opt.value}
+                    onChange={() => setOfferOption(opt.value)}
+                    style={{ display: 'none' }}
+                  />
+                  <span style={{ lineHeight: 1.5, whiteSpace: 'pre-line' }}>{opt.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="resume-agreement-section" style={{ padding: 0 }}>
+            <label className="resume-agreement-label">
+              <input
+                type="checkbox"
+                checked={agreementChecked}
+                onChange={e => setAgreementChecked(e.target.checked)}
+                className="resume-agreement-checkbox"
+              />
+              <span className="resume-agreement-text" style={{ fontSize: '0.93rem', color: '#888', fontWeight: 400 }}>
+                이력서 제출 시 개인정보 제공 및 이용에 동의합니다. (필수)
+              </span>
+            </label>
+          </div>
         </div>
         {/* 하단 고정 버튼 영역 - 세련된 스타일 적용 */}
         <div className="resume-fixed-action-bar">

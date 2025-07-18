@@ -1,0 +1,225 @@
+/* Bookmarks Page Styles */
+.bookmarks-page {
+  background: #f7f9fc;
+  min-height: 100vh;
+  padding-top: 80px; /* Account for navbar */
+}
+
+/* Header */
+.bookmarks-header {
+  background: linear-gradient(135deg, #30c59b 0%, #28a085 100%);
+  padding: 3rem 2rem;
+  text-align: center;
+  color: white;
+  margin-bottom: 0;
+}
+
+.bookmarks-header h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  letter-spacing: -1px;
+}
+
+.bookmarks-header p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin: 0;
+}
+
+/* Loading and Error States */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #30c59b;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #ef4444;
+  font-size: 1.1rem;
+}
+
+/* Filter Bar */
+.bookmarks-filter-bar {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1.5rem 0;
+  position: sticky;
+  top: 80px;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.bookmarks-filter-bar.sticky {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  flex-wrap: wrap;
+}
+
+.filter-select {
+  padding: 0.875rem 1rem;
+  border: 1px solid #e8eaed;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1f2937;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+  outline: none;
+}
+
+.filter-select:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.filter-select:focus {
+  border-color: #30c59b;
+  box-shadow: 0 0 0 3px rgba(48, 197, 155, 0.1);
+  outline: none;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  border-radius: 12px;
+  border: 1px solid #e8eaed;
+  background: #ffffff;
+  padding: 0.875rem 1rem;
+  min-width: 240px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.search-box:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.search-box:focus-within {
+  border-color: #30c59b;
+  box-shadow: 0 0 0 3px rgba(48, 197, 155, 0.1);
+}
+
+.search-box input {
+  border: none;
+  background: transparent;
+  flex: 1;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #1f2937;
+  outline: none;
+  padding: 0;
+}
+
+.search-box input::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.search-icon {
+  margin-left: 0.75rem;
+  color: #6b7280;
+  font-size: 1rem;
+  transition: color 0.2s ease;
+}
+
+.search-box:focus-within .search-icon {
+  color: #30c59b;
+}
+
+/* Job Listings Grid */
+.bookmarks-job-listings-grid {
+  background: #f7f9fc;
+  padding: 2rem 0 4rem;
+}
+
+.bookmarks-job-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.no-jobs {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #64748b;
+  font-size: 1.1rem;
+  grid-column: 1 / -1;
+}
+
+/* Responsive Design */
+@media (max-width: 900px) {
+  .bookmarks-header h1 {
+    font-size: 2rem;
+  }
+  
+  .filter-group {
+    padding: 0 1rem;
+  }
+  
+  .bookmarks-job-grid {
+    gap: 16px;
+    padding: 0 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .bookmarks-header {
+    padding: 2rem 1rem;
+  }
+  
+  .bookmarks-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .filter-select,
+  .search-box {
+    flex: 1 1 100%;
+    min-width: auto;
+  }
+  
+  .filter-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .bookmarks-job-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+} 

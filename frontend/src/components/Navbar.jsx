@@ -94,13 +94,7 @@ const Navbar = ({ onLangChange, hideAuth }) => {
 
   const handleLogoClick = () => {
     setMenuOpen(false);
-    if (authState.token) {
-      if (authState.userType === 'candidate') navigate('/candidate/dashboard');
-      else if (authState.userType === 'company') navigate('/company/dashboard');
-      else navigate('/');
-    } else {
-      navigate('/');
-    }
+    navigate('/');
   };
 
   const handleLogout = () => {

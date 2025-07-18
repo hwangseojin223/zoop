@@ -31,6 +31,7 @@ function Careers() {
   const [showText, setShowText] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [currentPage, setCurrentPage] = useState(1); // 페이지네이션 추가
+  const [bookmarkedPostIds, setBookmarkedPostIds] = useState([]);
   const videoRef = useRef(null);
   const { authState, isInitialized } = useAuth();
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ function Careers() {
   const POSTS_PER_PAGE = 12; // 페이지당 공고 수
 
   // Fetch postings once
-  useEffect(() => { fetchPublicPostings(); }, []);
+  useEffect(() => { fetchPublicPostings(); fetchBookmarks(); }, []);
 
   // Set video playback rate when video loads
   useEffect(() => {
@@ -81,6 +82,18 @@ function Careers() {
     }
   };
 
+  const fetchBookmarks = async () => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+    try {
+      const res = await fetch(`http://localhost:8081/api/bookmarks/candidate/${userId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setBookmarkedPostIds(data.map(b => b.post.postId));
+      }
+    } catch {}
+  };
+
   const handleApply = post => { setSelectedPost(post); setShowApplyModal(true); };
   const handleCancelApplication = () => setShowApplyModal(false);
   const handleSubmitApplication = async formData => {
@@ -110,6 +123,35 @@ function Careers() {
 
   const handleJobClick = post => {
     navigate(`/job/${post.postId}`);
+  };
+
+  const handleBookmarkToggle = async (post) => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+    const isBookmarked = bookmarkedPostIds.includes(post.postId);
+
+    // Optimistic UI update
+    if (isBookmarked) {
+      setBookmarkedPostIds(prev => prev.filter(id => id !== post.postId));
+    } else {
+      setBookmarkedPostIds(prev => [...prev, post.postId]);
+    }
+
+    // API call
+    if (isBookmarked) {
+      await fetch(`http://localhost:8081/api/bookmarks?candidateId=${userId}&postId=${post.postId}`, { method: 'DELETE' });
+    } else {
+      await fetch('http://localhost:8081/api/bookmarks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ candidateId: userId, postId: post.postId })
+      });
+    }
+    // Final sync
+    fetchBookmarks();
   };
 
   // Filter logic
@@ -265,7 +307,13 @@ function Careers() {
             ) : currentPosts.length === 0 ? (
               <div className="no-jobs">조건에 맞는 채용 공고가 없습니다.</div>
             ) : currentPosts.map(post => (
-              <CompactJobCard key={post.postId} post={post} onClick={() => handleJobClick(post)} />
+              <CompactJobCard
+                key={post.postId}
+                post={post}
+                onClick={() => handleJobClick(post)}
+                isBookmarked={bookmarkedPostIds.includes(post.postId)}
+                onBookmarkToggle={handleBookmarkToggle}
+              />
             ))}
           </div>
           
