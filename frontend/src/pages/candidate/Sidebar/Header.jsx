@@ -5,7 +5,7 @@ import './Header.css';
 import { useAuth } from '../../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-function Header() {
+function Header({ whiteBg }) {
   // --- FIX IS HERE ---
   // 이 부분에 isDropdownOpen과 setIsDropdownOpen 상태를 선언해야 합니다.
   const [displayedUserName, setDisplayedUserName] = useState('');
@@ -62,14 +62,23 @@ function Header() {
 
   // 마이페이지, 설정 등 클릭 핸들러 (예시)
   const handleMenuItemClick = (path) => {
-    navigate(path);
+    if (path === '/mypage') {
+      navigate('/candidate/dashboard');
+    } else {
+      navigate(path);
+    }
     setIsDropdownOpen(false); // 메뉴 클릭 후 드롭다운 닫기
   };
 
   return (
-    <div className="header">
-      <div className="header-left">
-        {/* Placeholder for menu icon if needed */}
+    <div className="header" style={{ background: '#fff', padding: 30 }}>
+      <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+        <img
+          src={process.env.PUBLIC_URL + '/logo_zoop.png'}
+          alt="ZOOP Logo"
+          style={{ height: 48, marginLeft: 24, marginRight: 0, cursor: 'pointer', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.08))' }}
+          onClick={() => navigate('/candidate/dashboard')}
+        />
       </div>
       <div className="header-right">
         <span className="header-icon" aria-label="알림">

@@ -412,6 +412,11 @@ function CandidateDashboard() {
     await savePreferencesToDB({ preferredBenefit: benefits.join(', ') });
   };
 
+  // 공고 제목 클릭 시 해당 공고 상세 페이지로 이동
+  const handleJobTitleClick = (postId) => {
+    navigate(`/job/${postId}`);
+  };
+
   // 사용자 설정을 DB에 저장하는 함수
   const savePreferencesToDB = async (preferences) => {
     try {
@@ -678,142 +683,133 @@ function CandidateDashboard() {
           {/* jobPostings 배열을 순회하며 각 공고 항목을 렌더링 */}
           {jobPostings.map(post => (
             <li key={post.postId} className="job-posting-item">
-              <div className="job-posting-content">
-                <div className="company-title-row">
-                  <h3>{post.companyName}</h3> {/* Company Name */}
-                  <p>{post.postTitle}</p>     {/* Job Title/Language/Region */}
+              <div className="job-posting-flex-row">
+                <div className="job-posting-content">
+                  <div className="company-title-row">
+                    <h3>{post.companyName}</h3>
+                    <p 
+                      onClick={() => handleJobTitleClick(post.postId)}
+                      className="clickable-job-title"
+                    >
+                      {post.postTitle}
+                    </p>
+                  </div>
+                  <div className="job-posting-dates">
+                    <p>등록일: {post.postPostedDate}</p>
+                    <p>마감일: {post.postExpiryDate}</p>
+                  </div>
                 </div>
-                <div className="job-posting-dates">
-                  <p>등록일: {post.postPostedDate}</p>
-                  <p>마감일: {post.postExpiryDate}</p>
+                <div className="job-posting-action-col">
+                  {/* jobCandCurrStage 값에 따라 버튼 표시 로직 추가 */}
+                  {post.jobCandCurrStage === '1n' && (
+                    <button onClick={() => handleGoToSubmitPortfolio(post.postId)}
+                      className="submit-portfolio-button">
+                      포트폴리오 제출하기
+                    </button>
+                  )}
+                  {post.jobCandCurrStage === '2n' && (
+                    <button onClick={() => handleGoToSubmitPortfolio(post.postId)}
+                      className="submit-portfolio-button">
+                      포트폴리오 제출하기
+                    </button>
+                  )}
+                  {post.jobCandCurrStage === '2y' && (
+                    <div 
+                      className="pending-status"
+                      style={{
+                        backgroundColor: '#fef5e7',
+                        color: '#d69e2e',
+                        border: '1px solid #fbd38d',
+                        padding: '8px 16px',
+                        borderRadius: '20px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                        cursor: 'default',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <img src={process.env.PUBLIC_URL + '/icons/interview.svg'} alt="interview" style={{ width: 20, height: 20, verticalAlign: 'middle' }} />
+                      면접 수락 요청 중
+                    </div>
+                  )}
+                  {post.jobCandCurrStage === '2p' && (
+                    <button 
+                      onClick={() => openInterviewSchedulerModal(post.postId)}
+                      className="action-button interview-scheduler-button">
+                      면접 일정 정하기
+                    </button>
+                  )}
+                  {post.jobCandCurrStage === '3n' && (
+                    (() => {
+                      const interview = scheduledInterviews[post.postId];
+                      const now = new Date();
+                      const isInterviewStarted = interview && interview.iso && new Date(interview.iso) <= now;
+                      const remainingTime = interview && interview.deadline ? calculateRemainingTime(new Date(interview.deadline)) : '';
+                      
+                      return (
+                        <div className="button-group">
+                          <button 
+                            onClick={() => openInterviewPreparationModal(post.postId)}
+                            className="action-button preparation-button">
+                            면접 예상질문
+                          </button>
+                          <button 
+                            onClick={() => navigateToInterview(post.postId)}
+                            className={`action-button interview-button ${!isInterviewStarted ? 'disabled' : ''}`}
+                            disabled={!isInterviewStarted}>
+                            {interview && interview.date
+                              ? isInterviewStarted 
+                                ? remainingTime || '면접 보러가기'
+                                : `${interview.date} (시작 대기중)`
+                              : '면접 일정'}
+                          </button>
+                        </div>
+                      );
+                    })()
+                  )}
+                  {post.jobCandCurrStage === '3y' && (
+                    <button 
+                      onClick={() => navigate(`/interview-result/${post.postId}`)}
+                      className="action-button result-button"
+                      disabled
+                      style={{ cursor: 'not-allowed', opacity: 0.7 }}
+                    >
+                      결과 취합 중
+                    </button>
+                  )}
+                  {(post.jobCandCurrStage === '4n' || post.jobCandCurrStage === '4y') && (
+                    <div 
+                      className="result-badge"
+                      style={{
+                        backgroundColor: getStageColor(post.jobCandCurrStage).bg,
+                        color: getStageColor(post.jobCandCurrStage).text,
+                        border: `1px solid ${getStageColor(post.jobCandCurrStage).border}`,
+                        padding: '8px 16px',
+                        borderRadius: '20px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      {post.jobCandCurrStage === '4y' && (
+                        <span style={{ fontSize: '16px' }}>✓</span>
+                      )}
+                      {post.jobCandCurrStage === '4n' && (
+                        <span style={{ fontSize: '16px' }}>✗</span>
+                      )}
+                      {getStageLabel(post.jobCandCurrStage)}
+                    </div>
+                  )}
                 </div>
               </div>
-              
-              {/* jobCandCurrStage 값에 따라 버튼 표시 로직 추가 */}
-              {post.jobCandCurrStage === '1n' && (
-                <button onClick={() => handleGoToSubmitPortfolio(post.postId)}
-                  className="submit-portfolio-button">
-                  포트폴리오 제출하기
-                </button>
-              )}
-              {post.jobCandCurrStage === '2n' && (
-                <button onClick={() => handleGoToSubmitPortfolio(post.postId)}
-                  className="submit-portfolio-button">
-                  포트폴리오 제출하기
-                </button>
-              )}
-              {post.jobCandCurrStage === '2y' && (
-                <div 
-                  className="pending-status"
-                  style={{
-                    backgroundColor: '#fef5e7',
-                    color: '#d69e2e',
-                    border: '1px solid #fbd38d',
-                    padding: '8px 16px',
-                    borderRadius: '20px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                    cursor: 'default',
-                    userSelect: 'none'
-                  }}
-                >
-                  <span style={{ fontSize: '16px' }}>⏳</span>
-                  면접 수락 요청 중
-                </div>
-              )}
-              {post.jobCandCurrStage === '2p' && (
-                <button 
-                  onClick={() => openInterviewSchedulerModal(post.postId)}
-                  className="action-button interview-scheduler-button">
-                  면접 일정 정하기
-                </button>
-              )}
-                            {post.jobCandCurrStage === '3n' && (
-                (() => {
-                  const interview = scheduledInterviews[post.postId];
-                  const now = new Date();
-                  const isInterviewStarted = interview && interview.iso && new Date(interview.iso) <= now;
-                  const remainingTime = interview && interview.deadline ? calculateRemainingTime(new Date(interview.deadline)) : '';
-                  
-                  return (
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                      <button 
-                        onClick={() => navigateToInterview(post.postId)}
-                        className={`action-button interview-button ${!isInterviewStarted ? 'disabled' : ''}`}
-                        disabled={!isInterviewStarted}>
-                        {interview && interview.date
-                          ? isInterviewStarted 
-                            ? remainingTime || '면접 보러가기'
-                            : `${interview.date} (시작 대기중)`
-                          : '면접 일정'}
-                      </button>
-                      <button 
-                        onClick={() => openInterviewPreparationModal(post.postId)}
-                        className="action-button"
-                        style={{
-                          background: 'linear-gradient(45deg, #eab308 0%, #f59e0b 100%)',
-                          color: 'white',
-                          border: 'none',
-                          padding: '8px 16px',
-                          borderRadius: '6px',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                        }}
-                        onMouseOver={(e) => {
-                          e.target.style.transform = 'translateY(-1px)';
-                          e.target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
-                        }}
-                        onMouseOut={(e) => {
-                          e.target.style.transform = 'translateY(0)';
-                          e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-                        }}>
-                        💡 면접 예상질문
-                      </button>
-                    </div>
-                  );
-                })()
-              )}
-              {post.jobCandCurrStage === '3y' && (
-                <button 
-                  onClick={() => navigate(`/interview-result/${post.postId}`)}
-                  className="action-button result-button">
-                  결과 취합 중
-                </button>
-              )}
-              {(post.jobCandCurrStage === '4n' || post.jobCandCurrStage === '4y') && (
-                <div 
-                  className="result-badge"
-                  style={{
-                    backgroundColor: getStageColor(post.jobCandCurrStage).bg,
-                    color: getStageColor(post.jobCandCurrStage).text,
-                    border: `1px solid ${getStageColor(post.jobCandCurrStage).border}`,
-                    padding: '8px 16px',
-                    borderRadius: '20px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  {post.jobCandCurrStage === '4y' && (
-                    <span style={{ fontSize: '16px' }}>✓</span>
-                  )}
-                  {post.jobCandCurrStage === '4n' && (
-                    <span style={{ fontSize: '16px' }}>✗</span>
-                  )}
-                  {getStageLabel(post.jobCandCurrStage)}
-                </div>
-              )}
             </li>
           ))}
         </ul>
@@ -823,60 +819,78 @@ function CandidateDashboard() {
       )}
     </div>
   )}
-          {/* 다른 탭 콘텐츠는 유사한 방식으로 구현 */}
-          {activeTab === 'positionOffer' && (
-            <div>
-              {jobPostings.filter(post => post.jobCandCurrStage === '1n' || post.jobCandCurrStage === '2n').length > 0 ? (
-                <ul>
-                  {jobPostings.filter(post => post.jobCandCurrStage === '1n' || post.jobCandCurrStage === '2n').map(post => (
-                    <li key={post.postId} className="job-posting-item">
-                      {/* 포지션 제안 항목의 내용 - 전체 탭과 유사한 구조 */}
-                      <div className="job-posting-content">
-                        <div className="company-title-row">
-                          <h3>{post.companyName}</h3>
-                          <p>{post.postTitle}</p>
-                        </div>
-                        <div className="job-posting-dates">
-                          <p>등록일: {post.postPostedDate}</p>
-                          <p>마감일: {post.postExpiryDate}</p>
-                        </div>
-                      </div>
-                      <button onClick={() => handleGoToSubmitPortfolio(post.postId)}
-                        className="submit-portfolio-button">
-                        포트폴리오 제출하기
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>표시할 포지션 제안이 없습니다.</p>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'interviewOffer' && (
-    <div>
-      {/* 2y (포트폴리오 제출 완료), 2p (면접 수락됨), 3n (면접 일정 확정), 3y (면접 완료) 상태의 공고를 필터링 */}
-      {jobPostings.filter(post => post.jobCandCurrStage === '2y' || post.jobCandCurrStage === '2p' || post.jobCandCurrStage === '3n' || post.jobCandCurrStage === '3y').length > 0 ? (
+  {activeTab === 'positionOffer' && (
+    <div className="tab-content">
+      {jobPostings.filter(post => post.jobCandCurrStage === '1n' || post.jobCandCurrStage === '2n').length > 0 ? (
         <ul>
-          {jobPostings.filter(post => post.jobCandCurrStage === '2y' || post.jobCandCurrStage === '2p' || post.jobCandCurrStage === '3n' || post.jobCandCurrStage === '3y').map(post => (
+          {jobPostings.filter(post => post.jobCandCurrStage === '1n' || post.jobCandCurrStage === '2n').map(post => (
             <li key={post.postId} className="job-posting-item">
-              <div className="job-posting-content">
-                <div className="company-title-row">
-                  <h3>{post.companyName}</h3>
-                  <p>{post.postTitle}</p>
+              {/* 포지션 제안 항목의 내용 - 전체 탭과 유사한 구조 */}
+              <div className="job-posting-flex-row">
+                <div className="job-posting-content">
+                  <div className="company-title-row">
+                    <h3>{post.companyName}</h3>
+                    <p 
+                      onClick={() => handleJobTitleClick(post.postId)}
+                      className="clickable-job-title"
+                    >
+                      {post.postTitle}
+                    </p>
+                  </div>
+                  <div className="job-posting-dates">
+                    <p>등록일: {post.postPostedDate}</p>
+                    <p>마감일: {post.postExpiryDate}</p>
+                  </div>
                 </div>
-                <div className="job-posting-dates">
-                  <p>등록일: {post.postPostedDate}</p>
-                  <p>마감일: {post.postExpiryDate}</p>
-                </div>
+                <div className="job-posting-action-col">
+                  <button onClick={() => handleGoToSubmitPortfolio(post.postId)}
+                    className="submit-portfolio-button">
+                  포트폴리오 제출하기
+                </button>
               </div>
-              
+            </div>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p>표시할 포지션 제안이 없습니다.</p>
+    )}
+  </div>
+)}
+
+{activeTab === 'interviewOffer' && (
+  <div className="tab-content">
+<div>
+  {/* 2y (포트폴리오 제출 완료), 2p (면접 수락됨), 3n (면접 일정 확정), 3y (면접 완료) 상태의 공고를 필터링 */}
+  {jobPostings.filter(post => post.jobCandCurrStage === '2y' || post.jobCandCurrStage === '2p' || post.jobCandCurrStage === '3n' || post.jobCandCurrStage === '3y').length > 0 ? (
+    <ul>
+      {jobPostings.filter(post => post.jobCandCurrStage === '2y' || post.jobCandCurrStage === '2p' || post.jobCandCurrStage === '3n' || post.jobCandCurrStage === '3y').map(post => (
+        <li key={post.postId} className="job-posting-item">
+          <div className="job-posting-flex-row">
+            <div className="job-posting-content">
+              <div className="company-title-row">
+                <h3>{post.companyName}</h3>
+                <p 
+                  onClick={() => handleJobTitleClick(post.postId)}
+                  className="clickable-job-title"
+                >
+                  {post.postTitle}
+                </p>
+              </div>
+              <div className="job-posting-dates">
+                <p>등록일: {post.postPostedDate}</p>
+                <p>마감일: {post.postExpiryDate}</p>
+              </div>
+            </div>
+            <div className="job-posting-action-col">
               {/* jobCandCurrStage 값에 따라 버튼 표시 */}
               {post.jobCandCurrStage === '3y' ? (
                 <button 
                   onClick={() => navigate(`/interview-result/${post.postId}`)}
-                  className="action-button result-button">
+                  className="action-button result-button"
+                  disabled
+                  style={{ cursor: 'not-allowed', opacity: 0.7 }}
+                >
                   결과 취합 중
                 </button>
               ) : post.jobCandCurrStage === '2y' ? (
@@ -898,125 +912,119 @@ function CandidateDashboard() {
                     userSelect: 'none'
                   }}
                 >
-                  <span style={{ fontSize: '16px' }}>⏳</span>
+                  <img src={process.env.PUBLIC_URL + '/icons/interview.svg'} alt="interview" style={{ width: 20, height: 20, verticalAlign: 'middle' }} />
                   면접 수락 요청 중
                 </div>
               ) : post.jobCandCurrStage === '2p' ? (
                 <button 
                   onClick={() => openInterviewSchedulerModal(post.postId)}
                   className="action-button interview-scheduler-button">
-                  면접 일정 정하기
-                </button>
-              ) : post.jobCandCurrStage === '3n' ? (
-                (() => {
-                  const interview = scheduledInterviews[post.postId];
-                  const now = new Date();
-                  const isInterviewStarted = interview && interview.iso && new Date(interview.iso) <= now;
-                  const remainingTime = interview && interview.deadline ? calculateRemainingTime(new Date(interview.deadline)) : '';
-                  
-                  return (
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                면접 일정 정하기
+              </button>
+            ) : post.jobCandCurrStage === '3n' ? (
+              (() => {
+                const interview = scheduledInterviews[post.postId];
+                const now = new Date();
+                const isInterviewStarted = interview && interview.iso && new Date(interview.iso) <= now;
+                const remainingTime = interview && interview.deadline ? calculateRemainingTime(new Date(interview.deadline)) : '';
+                
+                return (
+                  <div className="button-group">
+                    <button 
+                      onClick={() => openInterviewPreparationModal(post.postId)}
+                      className="action-button preparation-button">
+                      면접 예상질문
+                    </button>
                     <button 
                       onClick={() => navigateToInterview(post.postId)}
                       className={`action-button interview-button ${!isInterviewStarted ? 'disabled' : ''}`}
                       disabled={!isInterviewStarted}>
-                      {interview && interview.date
-                        ? isInterviewStarted 
-                          ? remainingTime || '면접 보러가기'
-                          : `${interview.date} (시작 대기중)`
-                        : '면접 일정'}
-                    </button>
-                      <button 
-                        onClick={() => openInterviewPreparationModal(post.postId)}
-                        className="action-button"
-                        style={{
-                          background: 'linear-gradient(45deg, #eab308 0%, #f59e0b 100%)',
-                          color: 'white',
-                          border: 'none',
-                          padding: '8px 16px',
-                          borderRadius: '6px',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                        }}
-                        onMouseOver={(e) => {
-                          e.target.style.transform = 'translateY(-1px)';
-                          e.target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
-                        }}
-                        onMouseOut={(e) => {
-                          e.target.style.transform = 'translateY(0)';
-                          e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-                        }}>
-                        💡 면접 예상질문
-                      </button>
-                    </div>
-                  );
-                })()
-              ) : null}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>표시할 면접 제안이 없습니다.</p>
-      )}
-    </div>
-  )}
-
-
-
-
-          {activeTab === 'resultAnnouncement' && (
-    // '4n' (불합격), '4y' (합격) 단계만 결과 발표 탭에서 보여주도록 수정
-    <div>
-      {jobPostings.filter(post => post.jobCandCurrStage === '4n' || post.jobCandCurrStage === '4y').length > 0 ? (
-        <ul>
-          {jobPostings.filter(post => post.jobCandCurrStage === '4n' || post.jobCandCurrStage === '4y').map(post => (
-            <li key={post.postId} className="job-posting-item">
-              <div className="job-posting-content">
-                <div className="company-title-row">
-                  <h3>{post.companyName}</h3>
-                  <p>{post.postTitle}</p>
+                    {interview && interview.date
+                      ? isInterviewStarted 
+                        ? remainingTime || '면접 보러가기'
+                        : `${interview.date} (시작 대기중)`
+                      : '면접 일정'}
+                  </button>
                 </div>
-                <div className="job-posting-dates">
-                  <p>등록일: {post.postPostedDate}</p>
-                  <p>마감일: {post.postExpiryDate}</p>
-                </div>
-                <div 
-                  className="result-badge"
-                  style={{
-                    backgroundColor: getStageColor(post.jobCandCurrStage).bg,
-                    color: getStageColor(post.jobCandCurrStage).text,
-                    border: `1px solid ${getStageColor(post.jobCandCurrStage).border}`,
-                    padding: '8px 16px',
-                    borderRadius: '20px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                    transition: 'all 0.2s ease'
-                  }}
+              );
+            })()
+          ) : null}
+        </div>
+      </div>
+    </li>
+  ))}
+</ul>
+) : (
+  <p>표시할 면접 제안이 없습니다.</p>
+)}
+</div>
+</div>
+)}
+
+
+
+
+{activeTab === 'resultAnnouncement' && (
+  <div className="tab-content">
+<div>
+  {/* '4n' (불합격), '4y' (합격) 단계만 결과 발표 탭에서 보여주도록 수정 */}
+  {jobPostings.filter(post => post.jobCandCurrStage === '4n' || post.jobCandCurrStage === '4y').length > 0 ? (
+    <ul>
+      {jobPostings.filter(post => post.jobCandCurrStage === '4n' || post.jobCandCurrStage === '4y').map(post => (
+        <li key={post.postId} className="job-posting-item">
+          <div className="job-posting-flex-row">
+            <div className="job-posting-content">
+              <div className="company-title-row">
+                <h3>{post.companyName}</h3>
+                <p 
+                  onClick={() => handleJobTitleClick(post.postId)}
+                  className="clickable-job-title"
                 >
-                  {post.jobCandCurrStage === '4y' && (
-                    <span style={{ fontSize: '16px' }}>✓</span>
-                  )}
-                  {post.jobCandCurrStage === '4n' && (
-                    <span style={{ fontSize: '16px' }}>✗</span>
-                  )}
-                  {getStageLabel(post.jobCandCurrStage)}
-                </div>
+                  {post.postTitle}
+                </p>
               </div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>표시할 결과 발표가 없습니다.</p>
-      )}
-    </div>
+              <div className="job-posting-dates">
+                <p>등록일: {post.postPostedDate}</p>
+                <p>마감일: {post.postExpiryDate}</p>
+              </div>
+            </div>
+            <div className="job-posting-action-col">
+              <div 
+                className="result-badge"
+                style={{
+                  backgroundColor: getStageColor(post.jobCandCurrStage).bg,
+                  color: getStageColor(post.jobCandCurrStage).text,
+                  border: `1px solid ${getStageColor(post.jobCandCurrStage).border}`,
+                  padding: '8px 16px',
+                  borderRadius: '20px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {post.jobCandCurrStage === '4y' && (
+                  <span style={{ fontSize: '16px' }}>✓</span>
+                )}
+                {post.jobCandCurrStage === '4n' && (
+                  <span style={{ fontSize: '16px' }}>✗</span>
+                )}
+                {getStageLabel(post.jobCandCurrStage)}
+              </div>
+            </div>
+          </div>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p>표시할 결과 발표가 없습니다.</p>
   )}
+</div>
+</div>
+)}
 
         </div>
       </div>

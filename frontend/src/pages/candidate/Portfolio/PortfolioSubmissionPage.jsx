@@ -43,6 +43,7 @@ function PortfolioSubmissionPage() {
 
   // New state for veteran proof file
   const [veteranProofFile, setVeteranProofFile] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     // 사용자가 로그인하지 않았거나 candidateId가 없으면 대시보드로 리다이렉트
@@ -167,6 +168,8 @@ function PortfolioSubmissionPage() {
       return;
     }
 
+    setIsSubmitting(true);
+
     const formData = new FormData();
     formData.append('postId', parseInt(postId, 10));
     formData.append('candidateId', candidateId);
@@ -223,11 +226,13 @@ function PortfolioSubmissionPage() {
         const result = await response.json();
         console.log('제출 성공:', result);
         alert('지원서가 성공적으로 제출되었습니다.');
+        setIsSubmitting(false);
         navigate('/candidate/dashboard');
 
     } catch (error) {
         console.error('지원서 제출 오류:', error);
         alert(`지원서 제출 중 오류가 발생했습니다: ${error.message}`);
+        setIsSubmitting(false);
     }
   };
 
@@ -236,7 +241,7 @@ function PortfolioSubmissionPage() {
       <div className="portfolio-submission-container">
         <PortfolioNavbar />
         <div className="loading-container">
-          <div className="loading-spinner"></div>
+          <div className="loading-spinner" style={{ marginBottom:'1.5rem', width:'48px', height:'48px', border:'6px solid #e2e8f0', borderTop:'6px solid #38a169', borderRadius:'50%', animation:'spin 1s linear infinite' }}></div>
           <p>공고 정보를 불러오는 중입니다...</p>
         </div>
       </div>
@@ -246,6 +251,14 @@ function PortfolioSubmissionPage() {
   return (
     <div className="portfolio-submission-container">
       <PortfolioNavbar />
+      {isSubmitting && (
+        <div className="modal-backdrop" style={{ position: 'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.3)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <div className="modal-content" style={{ background:'#fff', borderRadius: '16px', padding:'2.5rem 3.5rem', boxShadow:'0 8px 32px rgba(0,0,0,0.15)', textAlign:'center', fontSize:'1.2rem', fontWeight:600, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
+            <div className="loading-spinner" style={{ marginBottom:'1.5rem', width:'48px', height:'48px', border:'6px solid #e2e8f0', borderTop:'6px solid #38a169', borderRadius:'50%', animation:'spin 1s linear infinite' }} />
+            <div>분석 중입니다. 잠시만 기다려주세요...</div>
+          </div>
+        </div>
+      )}
       
       <div className="portfolio-header">
         <div className="header-content">
@@ -455,7 +468,6 @@ function PortfolioSubmissionPage() {
                     ✕
                   </button>
                 )}
-                
                 <div className="experience-form">
                   <div className="form-row">
                     <div className="form-field">
@@ -472,7 +484,6 @@ function PortfolioSubmissionPage() {
                         className="form-input"
                       />
                     </div>
-                    
                     <div className="form-field">
                       <label htmlFor={`jobTitle-${index}`} className="field-label">
                         담당 직무명 <span className="required">*</span>
@@ -488,19 +499,25 @@ function PortfolioSubmissionPage() {
                       />
                     </div>
                   </div>
-                  
                   <div className="form-row">
-                    <div className="form-field">
+                    <div className="form-field" style={{ width: '100%' }}>
                       <label className="field-label">
                         재직 기간 <span className="required">*</span>
                       </label>
-                      <div className="date-range">
+                      {/* Always show the single-line period above the pickers */}
+                      <div style={{ marginBottom: '0.5rem', fontWeight: 500, color: '#2c3e50', minHeight: '1.5em' }}>
+                        {experience.startDate
+                          ? `${experience.startDate} ~ ${experience.currentlyWorking ? '재직중' : (experience.endDate ? experience.endDate : '')}`
+                          : '재직 기간을 입력해 주세요.'}
+                      </div>
+                      <div className="date-range" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'nowrap' }}>
                         <input
                           type="date"
                           value={experience.startDate}
                           onChange={(e) => handleWorkExperienceChange(index, 'startDate', e.target.value)}
                           required
                           className="date-input"
+                          style={{ minWidth: '130px' }}
                         />
                         <span className="date-separator">~</span>
                         {!experience.currentlyWorking && (
@@ -510,9 +527,10 @@ function PortfolioSubmissionPage() {
                             onChange={(e) => handleWorkExperienceChange(index, 'endDate', e.target.value)}
                             required={!experience.currentlyWorking}
                             className="date-input"
+                            style={{ minWidth: '130px' }}
                           />
                         )}
-                        <label className="currently-working">
+                        <label className="currently-working" style={{ marginLeft: '8px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
                           <input
                             type="checkbox"
                             checked={experience.currentlyWorking}
