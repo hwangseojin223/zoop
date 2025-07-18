@@ -75,17 +75,18 @@
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   width: 90%;
-  max-width: 800px;
+  max-width: 1000px;
   max-height: 90vh;
   overflow-y: auto;
 }
 
 .modal-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding: 20px 24px;
   border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 24px;
 }
 
 .modal-header h2 {
@@ -122,6 +123,59 @@
 
 .scheduler-form {
   padding: 24px;
+}
+
+/* 공고 정보 섹션 */
+.job-info-section {
+  margin-bottom: 20px;
+  margin-top: 8px;
+}
+
+.job-info-card {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 16px;
+  border-left: 4px solid #4CAF50;
+}
+
+.job-info-card h4 {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.job-info-card .company-name {
+  margin: 0 0 12px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.interview-period-info {
+  background-color: #e8f5e8;
+  border-radius: 6px;
+  padding: 12px;
+  border: 1px solid #c8e6c9;
+}
+
+.interview-period-info p {
+  margin: 0 0 4px 0;
+  color: #2e7d32;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.interview-period-info p:last-child {
+  margin-bottom: 0;
+}
+
+.info-icon {
+  color: #2e7d32;
+  flex-shrink: 0;
 }
 
 /* 좌우 레이아웃 */
@@ -300,11 +354,12 @@
 }
 
 .modal-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: 120px 120px;
   gap: 12px;
-  justify-content: flex-end;
+  justify-content: center;
   margin-top: 24px;
-  flex-direction: row;
+  width: 100%;
 }
 
 .cancel-button {
@@ -317,11 +372,13 @@
   font-size: 14px;
   font-weight: 500;
   transition: background-color 0.2s;
-  min-width: 100px;
+  width: 120px;
   height: 44px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  margin: 0 auto;
 }
 
 .cancel-button:hover {
@@ -343,11 +400,13 @@
   font-size: 14px;
   font-weight: 500;
   transition: background-color 0.2s;
-  min-width: 100px;
+  width: 200px;
   height: 44px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  margin: 0 auto;
 }
 
 .submit-button:hover {
@@ -393,6 +452,22 @@
     padding: 20px;
   }
   
+  .job-info-card {
+    padding: 12px;
+  }
+  
+  .job-info-card h4 {
+    font-size: 15px;
+  }
+  
+  .interview-period-info {
+    padding: 10px;
+  }
+  
+  .interview-period-info p {
+    font-size: 12px;
+  }
+  
   .scheduler-layout {
     flex-direction: column;
     gap: 20px;
@@ -413,13 +488,14 @@
   }
   
   .modal-actions {
-    flex-direction: column; /* 모바일에서만 세로 배치 */
+    grid-template-columns: 120px 120px;
     gap: 8px;
+    justify-content: center;
   }
   
   .cancel-button,
   .submit-button {
-    width: 100%;
+    width: 120px;
   }
 }
 
@@ -498,7 +574,19 @@
   border-color: #4CAF50;
 }
 
-.time-slot:disabled {
+.time-slot:disabled,
+.time-slot.disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  background-color: #f5f5f5;
+  color: #ccc;
+  border-color: #ddd;
+  transform: none;
+}
+
+.time-slot:disabled:hover,
+.time-slot.disabled:hover {
+  border-color: #ddd;
+  background-color: #f5f5f5;
+  transform: none;
 }

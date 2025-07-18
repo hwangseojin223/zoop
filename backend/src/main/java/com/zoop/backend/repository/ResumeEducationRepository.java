@@ -8,4 +8,5 @@ import com.zoop.backend.domain.entity.ResumeEducation;
 
 public interface ResumeEducationRepository extends JpaRepository<ResumeEducation, Long> {
     List<ResumeEducation> findByResume_ResumeId(Long resumeId);
+    void deleteByResume_ResumeId(Long resumeId);
 } 
