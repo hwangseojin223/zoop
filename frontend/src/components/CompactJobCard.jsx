@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaMapMarkerAlt, FaCalendarAlt } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaCalendarAlt, FaRegBookmark, FaBookmark } from 'react-icons/fa';
 import './CompactJobCard.css';
 
 function getInitials(name) {
@@ -9,7 +9,7 @@ function getInitials(name) {
   return words[0][0] + words[1][0];
 }
 
-export default function CompactJobCard({ post, onClick }) {
+export default function CompactJobCard({ post, onClick, isBookmarked, onBookmarkToggle }) {
   const {
     companyName,
     postTitle,
@@ -24,6 +24,17 @@ export default function CompactJobCard({ post, onClick }) {
 
   return (
     <div className="compact-job-card" onClick={onClick}>
+      {/* Bookmark button */}
+      <button
+        className={`bookmark-btn${isBookmarked ? ' active' : ''}`}
+        onClick={e => {
+          e.stopPropagation();
+          if (onBookmarkToggle) onBookmarkToggle(post);
+        }}
+        aria-label={isBookmarked ? '스크랩 해제' : '스크랩'}
+      >
+        {isBookmarked ? <FaBookmark color="#30c59b" size={22} /> : <FaRegBookmark color="#bbb" size={22} />}
+      </button>
       <div className="logo-wrap">
         {companyLogoUrl ? (
           <img src={companyLogoUrl} alt={companyName} className="company-logo" />

@@ -103,7 +103,7 @@ const MileageIcon = () => (
   </svg>
 );
 
-function Sidebar() {
+function Sidebar({ setActiveSection }) {
   const [expandedMenuId, setExpandedMenuId] = useState(null);
   const navigate = useNavigate();
 
@@ -222,7 +222,7 @@ function Sidebar() {
           )}
         </li>
 
-        <li className="menu-item">
+        <li className="menu-item" onClick={() => navigate('/candidate/bookmarks')}>
           <span className="icon"><BookmarkIcon /></span> 스크랩/관심기업
         </li>
 
