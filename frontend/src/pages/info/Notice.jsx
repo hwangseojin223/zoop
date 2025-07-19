@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './Notice.css';
 import Navbar from '../../components/Navbar';
 import SEO from '../../components/SEO';
+import { Navigate } from 'react-router-dom';
 
 const noticeList = [
   {
@@ -59,16 +60,30 @@ const noticeList = [
   }
 ];
 
+// 공지 NEW 뱃지 기준(7일 이내)
+function isNew(dateStr) {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diff = (now - date) / (1000 * 60 * 60 * 24);
+  return diff <= 7;
+}
+
+// 공지 아이콘 SVG
+function NoticeIcon({ size = 48 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style={{marginBottom: 8}}>
+      <path d="M24 14v10" stroke="#fff" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="24" cy="32" r="2" fill="#fff" />
+    </svg>
+  );
+}
+
 function Notice() {
   const [selectedId, setSelectedId] = useState(null);
-
-  const toggleNotice = (id) => {
-    setSelectedId(selectedId === id ? null : id);
-  };
+  const toggleNotice = (id) => setSelectedId(selectedId === id ? null : id);
 
   return (
     <>
-      {/* SEO 컴포넌트 */}
       <SEO
         title="공지사항 - ZOOP | 최신 소식 및 업데이트"
         description="ZOOP의 최신 공지사항과 업데이트 소식을 확인하세요. 서비스 개선, 새로운 기능, 이벤트 등 다양한 소식을 제공합니다."
@@ -94,34 +109,30 @@ function Notice() {
           }))
         }}
       />
-
       <Navbar />
+      {/* 히어로 배너 */}
+      <section className="notice-hero" style={{ backgroundColor: '#ffffff' }}>
+        <h1 className="notice-hero-title">공지사항</h1>
+        <p className="notice-hero-desc">ZOOP의 최신 소식과 업데이트를 한눈에 확인하세요.<br />서비스 개선, 새로운 기능, 이벤트 등 다양한 소식을 제공합니다.</p>
+      </section>
       <div className="notice-page">
         <div className="notice-container">
-          <h1 className="notice-title">공지사항</h1>
           <ul className="notice-list">
             {[...noticeList]
               .sort((a, b) => b.date.localeCompare(a.date))
               .map((notice) => (
-                <React.Fragment key={notice.id}>
-                  <li className="notice-item" onClick={() => toggleNotice(notice.id)}>
-                    <div className="notice-item-content">
-                      <div className="notice-item-title">{notice.title}</div>
-                      <div className="notice-item-summary">{notice.summary}</div>
+                <li key={notice.id} className={`notice-card${selectedId === notice.id ? ' open' : ''}`}
+                    tabIndex={0} onClick={() => toggleNotice(notice.id)} onKeyPress={e => (e.key === 'Enter' || e.key === ' ') && toggleNotice(notice.id)}>
+                  <div className="notice-card-header">
+                    <div className="notice-card-title-row">
+                      <span className="notice-card-title">{notice.title}</span>
+                      {isNew(notice.date) && <span className="notice-badge-new">NEW</span>}
                     </div>
-                    <div className="notice-item-date">{notice.date}</div>
-                  </li>
-                  <li className={`notice-detail-row${selectedId === notice.id ? ' open' : ''}`}
-                      style={{padding: 0, background: '#fff', border: 'none'}}>
-                    {selectedId === notice.id && (
-                      <div className="notice-detail-outer">
-                        <div className="notice-detail-inner">
-                          <div className="notice-detail-content">{notice.detail}</div>
-                        </div>
-                      </div>
-                    )}
-                  </li>
-                </React.Fragment>
+                    <span className="notice-card-date">{notice.date}</span>
+                  </div>
+                  <div className="notice-card-summary">{notice.summary}</div>
+                  <div className={`notice-card-detail${selectedId === notice.id ? ' open' : ''}`}>{selectedId === notice.id && notice.detail}</div>
+                </li>
               ))}
           </ul>
         </div>

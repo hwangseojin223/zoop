@@ -1,7 +1,12 @@
 /* Sidebar.css - Modern & Sophisticated Design */
 
 .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
   width: 260px;
+  z-index: 100;
   background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
   padding: 24px 0;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -10,7 +15,6 @@
   flex-direction: column;
   overflow-y: auto;
   border-right: 1px solid #f0f0f0;
-  position: relative;
 }
 
 .sidebar::before {

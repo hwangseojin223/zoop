@@ -6,10 +6,17 @@
 }
 
 .main-content-area {
-  flex-grow: 1; /* Allows this area to take up remaining space */
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
-  padding: 30px; /* Padding for the content inside */
+  padding: 30px;
+  margin-left: 260px;
+}
+
+@media (max-width: 900px) {
+  .main-content-area {
+    margin-left: 0;
+  }
 }
 
 /* --- Styles previously from MainContent.css start here --- */
@@ -19,6 +26,8 @@
   color: #333;
   margin-bottom: 25px;
   font-weight: bold;
+  margin-left: 0 !important;
+  text-align: left !important;
 }
 
 /* Info Box */

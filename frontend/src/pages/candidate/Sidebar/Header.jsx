@@ -62,7 +62,7 @@ function Header({ whiteBg }) {
 
   // 마이페이지, 설정 등 클릭 핸들러 (예시)
   const handleMenuItemClick = (path) => {
-    if (path === '/mypage') {
+    if (path === '/candidate/dashboard') {
       navigate('/candidate/dashboard');
     } else {
       navigate(path);
@@ -71,16 +71,9 @@ function Header({ whiteBg }) {
   };
 
   return (
-    <div className="header" style={{ background: '#fff', padding: 30 }}>
+    <div className="header" style={{ padding: 30 }}>
       <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-        <img
-          src={process.env.PUBLIC_URL + '/logo_zoop.png'}
-          alt="ZOOP Logo"
-          style={{ height: 48, marginLeft: 24, marginRight: 0, cursor: 'pointer', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.08))' }}
-          onClick={() => {
-            navigate('/');
-          }}
-        />
+        {/* 로고 제거됨 */}
       </div>
       <div className="header-right">
         <span className="header-icon" aria-label="알림">
@@ -100,7 +93,7 @@ function Header({ whiteBg }) {
           {/* 드롭다운 메뉴 (isDropdownOpen 상태에 따라 표시) */}
           {isDropdownOpen && (
             <div className="dropdown-menu">
-              <div className="dropdown-item" onClick={() => handleMenuItemClick('/mypage')}>마이페이지</div>
+              <div className="dropdown-item" onClick={() => handleMenuItemClick('/candidate/dashboard')}>마이페이지</div>
               <div className="dropdown-item" onClick={() => handleMenuItemClick('/settings')}>설정</div>
               {authState?.token && (
                 <div className="dropdown-item logout-dropdown-item" onClick={handleLogout}>

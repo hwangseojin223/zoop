@@ -31,9 +31,8 @@ function Careers() {
   const [showText, setShowText] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [currentPage, setCurrentPage] = useState(1); // 페이지네이션 추가
-  const [bookmarkedPostIds, setBookmarkedPostIds] = useState([]);
   const videoRef = useRef(null);
-  const { authState, isInitialized } = useAuth();
+  const { authState, isInitialized, bookmarkedPostIds, toggleBookmark, fetchBookmarks } = useAuth();
   const navigate = useNavigate();
 
   const POSTS_PER_PAGE = 12; // 페이지당 공고 수
@@ -82,18 +81,6 @@ function Careers() {
     }
   };
 
-  const fetchBookmarks = async () => {
-    const userId = localStorage.getItem('userId');
-    if (!userId) return;
-    try {
-      const res = await fetch(`http://localhost:8081/api/bookmarks/candidate/${userId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setBookmarkedPostIds(data.map(b => b.post.postId));
-      }
-    } catch {}
-  };
-
   const handleApply = post => { setSelectedPost(post); setShowApplyModal(true); };
   const handleCancelApplication = () => setShowApplyModal(false);
   const handleSubmitApplication = async formData => {
@@ -125,33 +112,10 @@ function Careers() {
     navigate(`/job/${post.postId}`);
   };
 
+  // 북마크 토글 함수 (전역 상태 사용)
   const handleBookmarkToggle = async (post) => {
-    const userId = localStorage.getItem('userId');
-    if (!userId) {
-      alert('로그인이 필요합니다.');
-      return;
-    }
-    const isBookmarked = bookmarkedPostIds.includes(post.postId);
-
-    // Optimistic UI update
-    if (isBookmarked) {
-      setBookmarkedPostIds(prev => prev.filter(id => id !== post.postId));
-    } else {
-      setBookmarkedPostIds(prev => [...prev, post.postId]);
-    }
-
-    // API call
-    if (isBookmarked) {
-      await fetch(`http://localhost:8081/api/bookmarks?candidateId=${userId}&postId=${post.postId}`, { method: 'DELETE' });
-    } else {
-      await fetch('http://localhost:8081/api/bookmarks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ candidateId: userId, postId: post.postId })
-      });
-    }
-    // Final sync
-    fetchBookmarks();
+    await toggleBookmark(post.postId);
+    await fetchBookmarks();
   };
 
   // Filter logic
