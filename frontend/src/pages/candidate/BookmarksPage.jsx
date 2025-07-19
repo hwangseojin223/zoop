@@ -3,6 +3,8 @@ import { useAuth } from '../../context/AuthContext';
 import CompactJobCard from '../../components/CompactJobCard';
 import { useNavigate } from 'react-router-dom';
 import { FaSearch } from 'react-icons/fa';
+import { Sidebar } from './Sidebar';
+import { PortfolioNavbar } from './Portfolio';
 import './BookmarksPage.css';
 
 // Constants for filters
@@ -10,12 +12,12 @@ const LANGUAGES = ['Python', 'Java', 'JavaScript', 'TypeScript', 'C++', 'C#', 'G
 const LOCATIONS = ['서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종', '경기', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주'];
 
 export default function BookmarksPage() {
-  const { authState } = useAuth();
+  const { authState, bookmarkedPostIds, toggleBookmark, fetchBookmarks: fetchGlobalBookmarks } = useAuth();
   const candidateId = authState.userId;
   const [bookmarkedPosts, setBookmarkedPosts] = useState([]);
-  const [bookmarkedPostIds, setBookmarkedPostIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userName, setUserName] = useState('게스트');
   const navigate = useNavigate();
 
   // Filter states
@@ -50,7 +52,6 @@ export default function BookmarksPage() {
         }));
         
         setBookmarkedPosts(posts);
-        setBookmarkedPostIds(posts.map(p => p.postId));
       } else {
         setError('북마크 정보를 불러오지 못했습니다.');
       }
@@ -63,36 +64,29 @@ export default function BookmarksPage() {
   };
 
   const handleBookmarkToggle = async (post) => {
-    if (!candidateId) {
-      alert('로그인이 필요합니다.');
-      return;
-    }
-    const isBookmarked = bookmarkedPostIds.includes(post.postId);
-    // Optimistic UI update
-    if (isBookmarked) {
-      setBookmarkedPostIds(prev => prev.filter(id => id !== post.postId));
-      setBookmarkedPosts(prev => prev.filter(p => p.postId !== post.postId));
-    } else {
-      setBookmarkedPostIds(prev => [...prev, post.postId]);
-      setBookmarkedPosts(prev => [...prev, post]);
-    }
-    // API call
-    if (isBookmarked) {
-      await fetch(`http://localhost:8081/api/bookmarks?candidateId=${candidateId}&postId=${post.postId}`, { method: 'DELETE' });
-    } else {
-      await fetch('http://localhost:8081/api/bookmarks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ candidateId, postId: post.postId })
-      });
-    }
+    await toggleBookmark(post.postId);
+    // 북마크 페이지에서는 북마크된 공고 목록을 다시 가져와야 함
     fetchBookmarks();
   };
 
   useEffect(() => {
     if (!candidateId) return;
     fetchBookmarks();
+    fetchUserName();
   }, [candidateId]);
+
+  const fetchUserName = async () => {
+    try {
+      const userResponse = await fetch(`http://localhost:8081/api/candidates/${candidateId}`);
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        setUserName(userData.candidateName || '사용자');
+      }
+    } catch (error) {
+      console.error('사용자 정보 가져오기 오류:', error);
+      setUserName('사용자');
+    }
+  };
 
   const handleJobTitleClick = (postId) => {
     navigate(`/job/${postId}`);
@@ -116,11 +110,19 @@ export default function BookmarksPage() {
 
   return (
     <div className="bookmarks-page">
-      {/* Header */}
-      <div className="bookmarks-header">
-        <h1>스크랩/관심기업</h1>
-        <p>저장한 채용 공고를 한눈에 확인하세요</p>
-      </div>
+      <Sidebar />
+      <div className="main-content-area">
+        <PortfolioNavbar userName={userName} />
+        
+        <h1 className="page-title">스크랩/관심기업</h1>
+        
+        <div className="info-box company-proposal">
+          <p>
+            <span className="icon">
+              <img src="../../icons/bookmark.svg" alt="bookmark" />
+            </span> 저장한 채용 공고를 한눈에 확인하세요
+          </p>
+        </div>
 
       {/* Filter Bar */}
       <section className="bookmarks-filter-bar">
@@ -161,7 +163,7 @@ export default function BookmarksPage() {
               <CompactJobCard
                 key={post.postId}
                 post={post}
-                isBookmarked={bookmarkedPostIds.includes(post.postId)}
+                isBookmarked={true}
                 onBookmarkToggle={handleBookmarkToggle}
                 onClick={() => handleJobTitleClick(post.postId)}
               />
@@ -173,6 +175,7 @@ export default function BookmarksPage() {
           )}
         </div>
       </section>
+      </div>
     </div>
   );
-} 
+}

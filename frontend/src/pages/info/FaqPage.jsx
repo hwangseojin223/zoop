@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
 import SEO from '../../components/SEO';
 import './FaqPage.css';
+import { useLocation } from 'react-router-dom';
 
 const navLinks = [
-  { label: '고객센터', href: '/customer' },
   { label: '자주 묻는 질문', href: '/faq', active: true },
   { label: '피해사건 신고', href: '/report' },
+  { label: 'HOME', href: '/' },
 ];
 
 const faqData = [
@@ -35,8 +36,20 @@ const categories = [
 ];
 
 function FaqPage() {
+  const location = useLocation();
   const [openIdx, setOpenIdx] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('회원가입/로그인');
+
+  // 쿼리 파라미터로 카테고리 선택
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const cat = params.get('category');
+    if (cat && categories.includes(cat)) {
+      setSelectedCategory(cat);
+    } else {
+      setSelectedCategory('회원가입/로그인');
+    }
+  }, [location.search]);
 
   // 선택된 카테고리의 FAQ만 필터링
   const filteredFaqData = faqData.filter(faq => faq.category === selectedCategory);
@@ -65,9 +78,11 @@ function FaqPage() {
         }}
       />
 
+      <Navbar />
+      
       <div className="customer-main-bg">
         <nav className="customer-nav">
-          <div className="customer-nav-logo">고객센터</div>
+          <div className="customer-nav-logo" style={{cursor: 'pointer'}} onClick={() => window.location.href = '/support'}>고객센터</div>
           <ul className="customer-nav-links">
             {navLinks.map(link => (
               <li key={link.label} className={link.active ? 'active' : ''}>
@@ -101,7 +116,10 @@ function FaqPage() {
               <ul className="faq-list">
                 {filteredFaqData.map((item, idx) => (
                   <li key={`${item.category}-${idx}`} className={`faq-item${openIdx === idx ? ' open' : ''}`}> 
-                    <button className="faq-question" onClick={() => setOpenIdx(openIdx === idx ? null : idx)} aria-expanded={openIdx === idx}>
+                    <button className="faq-question center" onClick={() => setOpenIdx(openIdx === idx ? null : idx)} aria-expanded={openIdx === idx}>
+                      <span className="faq-q-icon" aria-hidden="true" style={{marginRight: 12, color: '#22c55e', fontWeight: 700, fontSize: '1.3rem', display: 'flex', alignItems: 'center'}}>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{marginRight: 4}}><circle cx="12" cy="12" r="11" stroke="#22c55e" strokeWidth="2" fill="#f6fff3"/><text x="8" y="17" fontSize="12" fontWeight="bold" fill="#22c55e">Q</text></svg>
+                      </span>
                       <span>{item.question}</span>
                       <span className={`faq-arrow${openIdx === idx ? ' open' : ''}`}
                         aria-hidden="true"
@@ -111,7 +129,12 @@ function FaqPage() {
                         </svg>
                       </span>
                     </button>
-                    <div className={`faq-answer${openIdx === idx ? ' open' : ''}`}>{item.answer}</div>
+                    <div className={`faq-answer${openIdx === idx ? ' open' : ''}`}> 
+                      <span className="faq-a-icon" aria-hidden="true" style={{marginRight: 10, color: '#a3e635', fontWeight: 700, fontSize: '1.1rem', display: 'inline-flex', alignItems: 'center', verticalAlign: 'top'}}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{marginRight: 3}}><circle cx="12" cy="12" r="9" stroke="#a3e635" strokeWidth="2" fill="#f6fff3"/><text x="7" y="16" fontSize="10" fontWeight="bold" fill="#a3e635">A</text></svg>
+                      </span>
+                      {item.answer}
+                    </div>
                   </li>
                 ))}
               </ul>

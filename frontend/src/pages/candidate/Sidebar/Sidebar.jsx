@@ -117,7 +117,7 @@ function Sidebar({ setActiveSection }) {
         e.preventDefault();
         e.stopPropagation();
         console.log('로고 클릭됨');
-        // 로고 클릭 플래그 설정
+        // 로고 클릭 플래그 설정 (PublicOnlyRoute에서 홈페이지 표시를 위해)
         sessionStorage.setItem('logoClick', 'true');
         // 현재 탭에서 홈페이지로 이동 (인증 정보 유지)
         window.location.replace('/');

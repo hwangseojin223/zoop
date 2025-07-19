@@ -1,3 +1,12 @@
+.portfolio-submission-page {
+  background: #f8fafc !important;
+  min-height: 100vh !important;
+}
+
+.content-row {
+  display: flex;
+}
+
 .portfolio-submission-container {
   max-width: 900px;
   margin: 0 auto;
@@ -151,26 +160,44 @@
 }
 
 .portfolio-form {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 0 2rem 2rem 2rem;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  padding: 0 2rem 2rem 2rem !important;
+  box-sizing: border-box !important;
 }
 
 .form-section {
   background: white;
-  border-radius: 16px;
+  border-radius: 24px;
   padding: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .section-title {
-  color: #2c3e50;
+  color: #1e293b;
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0 0 1.5rem 0;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+  position: relative;
+  letter-spacing: -0.3px;
+  background: #fff;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 1px;
 }
 
 .section-description {
@@ -181,14 +208,19 @@
 
 .question-group {
   margin-bottom: 2rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .question-label {
   display: block;
-  color: #2c3e50;
-  font-weight: 600;
   font-size: 1.1rem;
-  margin-bottom: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #374151;
+  letter-spacing: 0.025em;
+  background: #fff;
   line-height: 1.4;
 }
 
@@ -201,20 +233,25 @@
 .question-textarea {
   width: 100%;
   min-height: 120px;
-  padding: 1rem;
-  border: 2px solid #e9ecef;
-  border-radius: 12px;
+  padding: 14px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
   font-size: 1rem;
   font-family: inherit;
   resize: vertical;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: all 0.2s ease;
+  outline: none;
+  box-shadow: none;
+  font-weight: 400;
+  background: #fff;
+  color: #333;
   box-sizing: border-box;
 }
 
 .question-textarea:focus {
-  outline: none;
   border-color: #30C59B;
   box-shadow: 0 0 0 3px rgba(48, 197, 155, 0.1);
+  background: #fff;
 }
 
 .char-counter {
@@ -226,6 +263,9 @@
 
 .file-upload-group {
   margin-bottom: 1.5rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .file-upload-label {
@@ -236,6 +276,9 @@
   padding: 1.5rem;
   transition: all 0.3s ease;
   background: #f8f9fa;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .file-upload-label:hover {
@@ -260,9 +303,9 @@
 
 .file-title {
   display: block;
-  font-weight: 600;
-  color: #2c3e50;
-  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 1.1rem;
 }
 
 .file-subtitle {
@@ -335,7 +378,7 @@
 }
 
 .radio-label {
-  font-weight: 600;
+  font-weight: 700;
   color: #2c3e50;
 }
 
@@ -345,9 +388,10 @@
 
 .experience-label {
   display: block;
-  font-weight: 600;
-  color: #2c3e50;
+  font-weight: 700;
+  color: #1e293b;
   margin-bottom: 0.5rem;
+  font-size: 1.1rem;
 }
 
 .required {
@@ -361,18 +405,26 @@
 }
 
 .years-input {
-  width: 100px;
-  padding: 0.75rem;
-  border: 2px solid #e9ecef;
+  width: 120px;
+  padding: 14px 16px;
+  border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 1rem;
   text-align: center;
-  transition: border-color 0.3s ease;
+  transition: all 0.2s ease;
+  outline: none;
+  box-shadow: none;
+  font-family: inherit;
+  font-weight: 400;
+  background: #fff;
+  color: #333;
+  box-sizing: border-box;
 }
 
 .years-input:focus {
-  outline: none;
   border-color: #30C59B;
+  box-shadow: 0 0 0 3px rgba(48, 197, 155, 0.1);
+  background: #fff;
 }
 
 .years-unit {
@@ -429,23 +481,32 @@
 }
 
 .field-label {
-  font-weight: 600;
-  color: #2c3e50;
+  font-weight: 700;
+  color: #1e293b;
   margin-bottom: 0.5rem;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
 }
 
 .form-input {
-  padding: 0.75rem;
-  border: 2px solid #e9ecef;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 1rem;
-  transition: border-color 0.3s ease;
+  background: #fff;
+  color: #333;
+  transition: all 0.2s ease;
+  outline: none;
+  box-shadow: none;
+  font-family: inherit;
+  font-weight: 400;
+  box-sizing: border-box;
 }
 
 .form-input:focus {
-  outline: none;
   border-color: #30C59B;
+  box-shadow: 0 0 0 3px rgba(48, 197, 155, 0.1);
+  background: #fff;
 }
 
 .date-range {
@@ -456,16 +517,26 @@
 }
 
 .date-input {
-  padding: 0.75rem;
-  border: 2px solid #e9ecef;
+  width: 100%;
+  max-width: 150px;
+  padding: 14px 16px;
+  border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 1rem;
-  transition: border-color 0.3s ease;
+  transition: all 0.2s ease;
+  outline: none;
+  box-shadow: none;
+  font-family: inherit;
+  font-weight: 400;
+  background: #fff;
+  color: #333;
+  box-sizing: border-box;
 }
 
 .date-input:focus {
-  outline: none;
   border-color: #30C59B;
+  box-shadow: 0 0 0 3px rgba(48, 197, 155, 0.1);
+  background: #fff;
 }
 
 .date-separator {
@@ -642,22 +713,27 @@
 }
 
 .submit-button {
-  background: #30C59B;
-  color: white;
-  border: none;
-  padding: 1rem 2rem;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 700;
-  cursor: pointer;
-  width: 100%;
-  transition: all 0.3s ease;
-  margin-top: 2rem;
+  background: #30C59B !important;
+  color: white !important;
+  border: none !important;
+  padding: 0.85rem 1.8rem !important;
+  border-radius: 12px !important;
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  width: auto !important;
+  min-width: 200px !important;
+  max-width: 280px !important;
+  transition: all 0.3s ease !important;
+  margin-top: 2rem !important;
+  display: block !important;
+  margin-left: auto !important;
+  margin-right: 0 !important;
 }
 
 .submit-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(48, 197, 155, 0.3);
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(48, 197, 155, 0.3) !important;
 }
 
 .submit-button:active {
@@ -717,3 +793,42 @@
     width: 100%;
   }
 } 
+
+.portfolio-submission-page .main-content-area {
+  flex: 1 !important;
+  margin-left: 260px !important;
+  padding: 8px 20px 20px 8px !important;
+  background: #f8fafc !important;
+  min-height: 100vh !important;
+  display: block !important;
+}
+
+.portfolio-submission-page .page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 20px 0 20px 0;
+  text-align: left;
+  margin-left: 240px;
+}
+
+.portfolio-submission-page .page-title {
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  margin: 20px 0 20px 0 !important;
+  text-align: left !important;
+  margin-left: 200px !important;
+  display: block !important;
+}
+
+@media (max-width: 768px) {
+  .portfolio-submission-page .main-content-area {
+    margin-left: 0;
+    padding: 10px;
+  }
+  .portfolio-submission-page .page-title {
+    font-size: 2rem;
+    margin: 2px 0 20px 0;
+  }
+}

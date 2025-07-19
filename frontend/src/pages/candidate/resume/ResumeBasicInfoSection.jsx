@@ -23,7 +23,9 @@ const valueStyle = {
   fontSize: '1.08rem',
   color: '#444',
   marginLeft: 30,
-  marginBottom: 16
+  marginBottom: 16,
+  maxWidth: '400px',
+  wordBreak: 'break-word'
 };
 
 const ResumeBasicInfoSection = ({ form }) => {
@@ -47,12 +49,12 @@ const ResumeBasicInfoSection = ({ form }) => {
   };
 
   return (
-    <div style={{maxWidth: '1200px', margin: '0 auto'}}>
-      <div className="resume-section basic-info-section" style={{ position: 'relative', paddingLeft: '2.5rem', paddingRight: '2.5rem' }}>
-        <h2 className="section-title" style={{ marginLeft: 2, marginTop: '10px' }}>기본 정보</h2>
+    <section className="resume-section">
+      <h3>기본 정보</h3>
+      <div style={{ position: 'relative', paddingLeft: '2.5rem', paddingRight: '2.5rem' }}>
         <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', marginTop: 12 }}>
           {/* 좌측: 기본 정보 */}
-          <div style={{ flex: '0 1 auto', minWidth: 0 }}>
+          <div style={{ flex: '1', minWidth: 0, maxWidth: '600px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {/* 이름 */}
               <div>
@@ -143,7 +145,7 @@ const ResumeBasicInfoSection = ({ form }) => {
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 
