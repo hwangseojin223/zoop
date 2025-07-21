@@ -1,8 +1,41 @@
 /* 이력서 제출 페이지 전용 스타일 */
 .resume-submission-page {
-  background: #fff;
+  background: #f8fafc;
   min-height: 100vh;
-  padding-bottom: 150px; /* 하단 버튼 공간 */
+}
+
+.content-row {
+  display: flex;
+}
+
+.main-content-area {
+  flex: 1;
+  margin-left: 260px;
+  padding: 8px 20px 20px 8px;
+  background: #f8fafc;
+  min-height: 100vh;
+  display: block;
+}
+
+.page-title {
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  margin: 20px 0 20px 0 !important;
+  text-align: left !important;
+  margin-left: 200px !important;
+}
+
+@media (max-width: 768px) {
+  .main-content-area {
+    margin-left: 0;
+    padding: 10px;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
+    margin: 2px 0 20px 0;
+  }
 }
 
 .resume-header {
@@ -31,14 +64,13 @@
 }
 
 .resume-basic-info-wrapper,
-.resume-section-wrapper {
+.resume-offer-section,
+.resume-agreement-section {
   max-width: 1200px;
   margin: 0 auto 24px auto;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  padding: 32px 40px 24px 40px;
-  border: 1px solid #e9ecef;
+  padding: 0 2rem 2rem 2rem;
+  border-radius: 0;
+  box-sizing: border-box;
 }
 
 @media (max-width: 1000px) {
@@ -47,6 +79,10 @@
     max-width: 99vw;
     padding: 18px 4px 12px 4px;
     border-radius: 10px;
+  }
+  .basic-info-section {
+    max-width: 99vw;
+    padding: 0 1rem;
   }
   .resume-title {
     font-size: 1.15rem;
@@ -76,12 +112,18 @@
   flex-wrap: wrap;
   gap: 20px;
   align-items: flex-start;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .basic-info-section .form-group {
   flex: 1;
   min-width: 0;
+  max-width: 100%;
   margin-bottom: 20px;
+  box-sizing: border-box;
 }
 
 .basic-info-section label {
@@ -98,6 +140,7 @@
 .basic-info-section input[type="email"],
 .basic-info-section input[type="tel"] {
   width: 100%;
+  max-width: 100%;
   padding: 14px 16px;
   border: 1px solid #ddd;
   border-radius: 8px;
@@ -109,6 +152,7 @@
   box-shadow: none;
   font-family: inherit;
   font-weight: 400;
+  box-sizing: border-box;
 }
 .basic-info-section input:focus {
   border-color: #30C59B;
@@ -131,7 +175,8 @@
 .resume-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 2rem 2rem 2rem;
+  box-sizing: border-box;
 }
 
 .resume-form-container {
@@ -140,6 +185,9 @@
   box-shadow: 0 10px 50px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   border: 1px solid #e2e8f0;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 /* 고정된 하단 버튼 */
@@ -255,7 +303,6 @@
   padding: 2.5rem;
   margin-bottom: 2rem;
   box-shadow: 0 4px 25px rgba(0, 0, 0, 0.06);
-  border: 1px solid #f1f5f9;
 }
 
 .resume-section:last-child {
@@ -323,6 +370,10 @@
   padding: 1.5rem;
   margin-bottom: 1rem;
   transition: all 0.3s ease;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
 }
 
 .education-card:hover {
@@ -332,12 +383,14 @@
 
 .education-form-row {
   display: grid;
-  grid-template-columns: repeat(6, 1fr) 50px;
+  grid-template-columns: 1fr 2fr 2fr 1fr 1fr 1fr 50px;
   gap: 1rem;
   align-items: end;
   position: relative;
   margin-bottom: 1rem;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .education-field {
@@ -345,12 +398,16 @@
   flex-direction: column;
   min-width: 0;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .education-field:has(.checkbox-label) {
   grid-column: 1 / 4;
   margin-top: 1rem;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .education-field:has(.remove-education-btn) {
@@ -375,6 +432,7 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: white;
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
 }
 
@@ -410,6 +468,7 @@ input[type="date"] {
   background: white;
   cursor: pointer;
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
 }
 
@@ -449,6 +508,7 @@ select {
   background-size: 1em;
   padding-right: 2.5rem;
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
 }
 
@@ -1124,6 +1184,18 @@ select:hover {
   z-index: 1000;
 }
 
+.resume-fixed-action-bar .resume-actions-content,
+.resume-fixed-action-bar > div {
+  margin-left: 280px;
+}
+
+@media (max-width: 900px) {
+  .resume-fixed-action-bar .resume-actions-content,
+  .resume-fixed-action-bar > div {
+    margin-left: 0;
+  }
+}
+
 .styled-action-btn {
   min-width: 110px;
   font-size: 1.04rem;
@@ -1160,6 +1232,7 @@ select:hover {
 
 @media (max-width: 600px) {
   .resume-fixed-action-bar {
+    left: 0; /* 모바일에서는 사이드바가 숨겨지므로 전체 너비 사용 */
     flex-direction: column;
     gap: 8px;
     padding: 10px 0 10px 0;
@@ -1337,12 +1410,12 @@ select:hover {
 /* --- 너비 정렬: 기업 제안 수신 여부 & 동의 체크박스 --- */
 .resume-offer-section,
 .resume-agreement-section {
-  max-width: 600px;
-  margin: 32px auto 0 auto;
-  padding: 24px 40px 16px 40px;
-  background: #f8fafc;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  max-width: 1200px;
+  margin: 0 auto 24px auto;
+  padding: 2.5rem;
+  background: white;
+  border-radius: 20px;
+  border: none;
   box-sizing: border-box;
 }
 
@@ -1355,15 +1428,9 @@ select:hover {
 } 
 
 .resume-agreement-section {
-  margin: 32px auto 0 auto;
-  max-width: 1200px;
-  padding: 24px 40px 16px 40px;
-  background: #f8fafc;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  display: flex;
+  min-height: 56px;
   align-items: center;
-  justify-content: flex-start;
+  padding: 1.5rem 2.5rem !important;
 }
 
 .resume-agreement-label {
@@ -1475,4 +1542,39 @@ select:hover {
     justify-content: flex-start;
     margin-top: 0.5rem;
   }
+} 
+
+.basic-info-section [style*="border: 1.5px solid #e2e8f0"] {
+  border: none !important;
+} 
+
+.resume-section,
+.resume-file-upload-section,
+.selfintro-card {
+  margin-bottom: 32px !important;
+}
+
+.resume-offer-section {
+  padding: 2.5rem !important;
+}
+
+.resume-agreement-section {
+  min-height: 56px;
+  align-items: center;
+  padding: 1.5rem 2.5rem !important;
+} 
+
+.resume-basic-info-wrapper,
+.resume-section-wrapper,
+.resume-offer-section,
+.resume-agreement-section {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 24px;
+  align-self: center;
+  padding: 0 2rem 2rem 2rem;
+  border-radius: 0;
+  box-sizing: border-box;
 } 

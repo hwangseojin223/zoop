@@ -15,6 +15,8 @@ export function AuthProvider({ children }) {
       // 필요한 경우 사용자 이름 등 추가 정보 필드
     });
 
+    const [bookmarkedPostIds, setBookmarkedPostIds] = useState([]);
+
     const [isInitialized, setIsInitialized] = useState(false);
 
     // JWT 토큰 만료 확인 함수
@@ -75,9 +77,25 @@ export function AuthProvider({ children }) {
         }
         
         setAuthState({ token, userType, userId, loginId }); // 필요한 정보 포함
+        
+        // 북마크 목록 로드
+        fetchBookmarks(userId);
       }
       setIsInitialized(true); // ✅ 상태 복원 완료 표시
     }, []);
+
+    // 북마크 목록 가져오기
+    const fetchBookmarks = async (userId) => {
+      try {
+        const res = await fetch(`http://localhost:8081/api/bookmarks/candidate/${userId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setBookmarkedPostIds(data.map(bookmark => bookmark.postId));
+        }
+      } catch (error) {
+        console.error('북마크 로드 오류:', error);
+      }
+    };
 
     // 토큰 만료 감지를 위한 주기적 체크 (5분마다)
     useEffect(() => {
@@ -115,11 +133,59 @@ export function AuthProvider({ children }) {
         loginId: null,
         // 필요한 경우 추가 정보 필드도 null로 초기화
       });
+
+      // 북마크 상태 초기화
+      setBookmarkedPostIds([]);
+    };
+
+    // 북마크 토글 함수
+    const toggleBookmark = async (postId) => {
+      const userId = authState.userId;
+      if (!userId) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+
+      const isBookmarked = bookmarkedPostIds.includes(postId);
+      
+      try {
+        if (isBookmarked) {
+          const response = await fetch(`http://localhost:8081/api/bookmarks?candidateId=${userId}&postId=${postId}`, { 
+            method: 'DELETE' 
+          });
+          if (response.ok) {
+            await fetchBookmarks(userId);
+          } else {
+            console.error('북마크 삭제 실패');
+          }
+        } else {
+          const response = await fetch('http://localhost:8081/api/bookmarks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ candidateId: userId, postId })
+          });
+          if (response.ok) {
+            await fetchBookmarks(userId);
+          } else {
+            console.error('북마크 추가 실패');
+          }
+        }
+      } catch (error) {
+        console.error('북마크 토글 오류:', error);
+      }
     };
 
     return (
       // ✅ value prop에 logout 함수 포함
-      <AuthContext.Provider value={{ authState, setAuthState, isInitialized, logout }}>
+      <AuthContext.Provider value={{ 
+        authState, 
+        setAuthState, 
+        isInitialized, 
+        logout, 
+        bookmarkedPostIds, 
+        toggleBookmark,
+        fetchBookmarks: () => fetchBookmarks(authState.userId)
+      }}>
         {children}
       </AuthContext.Provider>
     );

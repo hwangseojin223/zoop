@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Notice.css';
 import Navbar from '../../components/Navbar';
 import SEO from '../../components/SEO';
+import { Navigate } from 'react-router-dom';
 
 const noticeList = [
   {
     id: 1,
     title: '서비스 점검 안내',
     date: '2025-07-01',
+    category: '시스템',
     summary: '7월 10일(수) 00:00~02:00까지 서비스 점검이 예정되어 있습니다.',
     detail: (
       <ul style={{ textAlign: "left", marginTop: 10, marginBottom: 0 }}>
@@ -21,6 +23,7 @@ const noticeList = [
     id: 2,
     title: '신규 기능 오픈 안내',
     date: '2025-07-05',
+    category: '새로운 기능',
     summary: '구직자 맞춤 알림 기능이 추가되었습니다. 많은 이용 바랍니다.',
     detail: (
       <ul style={{ textAlign: "left", marginTop: 10, marginBottom: 0 }}>
@@ -34,6 +37,7 @@ const noticeList = [
     id: 3,
     title: '챗봇 기능 안내',
     date: '2025-07-10',
+    category: '서비스 개선',
     summary: '챗봇 기능이 업데이트 되었습니다. 많은 이용 바랍니다.',
     detail: (
       <ul style={{ textAlign: "left", marginTop: 10, marginBottom: 0 }}>
@@ -47,6 +51,7 @@ const noticeList = [
     id: 4,
     title: '[ZOOP] 고객센터 채팅상담 서비스 일시중단 안내',
     date: '2025-07-15',
+    category: '시스템',
     summary: '고객센터 채팅상담 서비스가 일시적으로 중단됩니다.',
     detail: (
       <ul style={{ textAlign: "left", marginTop: 10, marginBottom: 0 }}>
@@ -59,16 +64,69 @@ const noticeList = [
   }
 ];
 
+// 공지 NEW 뱃지 기준(7일 이내)
+function isNew(dateStr) {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diff = (now - date) / (1000 * 60 * 60 * 24);
+  return diff <= 7;
+}
+
+// 공지 아이콘 SVG
+function NoticeIcon({ size = 48 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style={{marginBottom: 8}}>
+      <path d="M24 14v10" stroke="#fff" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="24" cy="32" r="2" fill="#fff" />
+    </svg>
+  );
+}
+
+// 카테고리별 아이콘
+function CategoryIcon({ category, size = 20 }) {
+  const icons = {
+    '시스템': (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    '새로운 기능': (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    '서비스 개선': (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <path d="M9 12l2 2 4-4M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    )
+  };
+  
+  return icons[category] || icons['시스템'];
+}
+
 function Notice() {
   const [selectedId, setSelectedId] = useState(null);
+  const [filter, setFilter] = useState('all');
+  const [visibleNotices, setVisibleNotices] = useState([]);
+  
+  const toggleNotice = (id) => setSelectedId(selectedId === id ? null : id);
 
-  const toggleNotice = (id) => {
-    setSelectedId(selectedId === id ? null : id);
-  };
+  // 필터링된 공지사항
+  const filteredNotices = filter === 'all' 
+    ? noticeList 
+    : noticeList.filter(notice => notice.category === filter);
+
+  // 카테고리 목록
+  const categories = ['all', ...new Set(noticeList.map(notice => notice.category))];
+
+  // 애니메이션을 위한 지연 로딩
+  useEffect(() => {
+    setVisibleNotices(filteredNotices);
+  }, [filteredNotices]);
 
   return (
     <>
-      {/* SEO 컴포넌트 */}
       <SEO
         title="공지사항 - ZOOP | 최신 소식 및 업데이트"
         description="ZOOP의 최신 공지사항과 업데이트 소식을 확인하세요. 서비스 개선, 새로운 기능, 이벤트 등 다양한 소식을 제공합니다."
@@ -94,36 +152,100 @@ function Notice() {
           }))
         }}
       />
-
       <Navbar />
+      
+      {/* 히어로 섹션 */}
+      <section className="notice-hero">
+        <div className="notice-hero-content">
+          <h1 className="notice-hero-title">공지사항</h1>
+          <p className="notice-hero-desc">
+            ZOOP의 최신 소식과 업데이트를 한눈에 확인하세요.<br />
+            서비스 개선, 새로운 기능, 이벤트 등 다양한 소식을 제공합니다.
+          </p>
+        </div>
+      </section>
+
+      {/* 필터 섹션 */}
+      <div className="notice-filter-section">
+        <div className="notice-filter-container">
+          <div className="filter-buttons">
+            {categories.map(category => (
+              <button
+                key={category}
+                className={`filter-btn ${filter === category ? 'active' : ''}`}
+                onClick={() => setFilter(category)}
+              >
+                {category === 'all' ? '전체' : category}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 공지사항 목록 */}
       <div className="notice-page">
         <div className="notice-container">
-          <h1 className="notice-title">공지사항</h1>
           <ul className="notice-list">
-            {[...noticeList]
+            {visibleNotices
               .sort((a, b) => b.date.localeCompare(a.date))
-              .map((notice) => (
-                <React.Fragment key={notice.id}>
-                  <li className="notice-item" onClick={() => toggleNotice(notice.id)}>
-                    <div className="notice-item-content">
-                      <div className="notice-item-title">{notice.title}</div>
-                      <div className="notice-item-summary">{notice.summary}</div>
-                    </div>
-                    <div className="notice-item-date">{notice.date}</div>
-                  </li>
-                  <li className={`notice-detail-row${selectedId === notice.id ? ' open' : ''}`}
-                      style={{padding: 0, background: '#fff', border: 'none'}}>
-                    {selectedId === notice.id && (
-                      <div className="notice-detail-outer">
-                        <div className="notice-detail-inner">
-                          <div className="notice-detail-content">{notice.detail}</div>
-                        </div>
+              .map((notice, index) => (
+                <li 
+                  key={notice.id} 
+                  className={`notice-card${selectedId === notice.id ? ' open' : ''}`}
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                  tabIndex={0} 
+                  onClick={() => toggleNotice(notice.id)} 
+                  onKeyPress={e => (e.key === 'Enter' || e.key === ' ') && toggleNotice(notice.id)}
+                >
+                  <div className="notice-card-header">
+                    <div className="notice-card-left">
+                      <div className="notice-card-title-row">
+                        <span className="notice-card-title">{notice.title}</span>
+                        {isNew(notice.date) && <span className="notice-badge-new">NEW</span>}
                       </div>
-                    )}
-                  </li>
-                </React.Fragment>
+                      <div className="notice-card-meta">
+                        <span className="notice-card-category">
+                          <CategoryIcon category={notice.category} />
+                          {notice.category}
+                        </span>
+                        <span className="notice-card-date">{notice.date}</span>
+                      </div>
+                    </div>
+                    <div className="notice-card-arrow">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path 
+                          d="M7 10l5 5 5-5" 
+                          stroke="currentColor" 
+                          strokeWidth="2" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                          style={{ 
+                            transform: selectedId === notice.id ? 'rotate(180deg)' : 'rotate(0deg)',
+                            transition: 'transform 0.3s ease'
+                          }}
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="notice-card-summary">{notice.summary}</div>
+                  <div className={`notice-card-detail${selectedId === notice.id ? ' open' : ''}`}>
+                    {selectedId === notice.id && notice.detail}
+                  </div>
+                </li>
               ))}
           </ul>
+          
+          {visibleNotices.length === 0 && (
+            <div className="notice-empty">
+              <div className="notice-empty-icon">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                  <circle cx="24" cy="24" r="20" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="2"/>
+                  <path d="M24 16v8M24 28h.01" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <p className="notice-empty-text">해당 카테고리의 공지사항이 없습니다.</p>
+            </div>
+          )}
         </div>
       </div>
     </>

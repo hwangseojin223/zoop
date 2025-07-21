@@ -82,7 +82,7 @@ function PortfolioNavbar() {
           {/* 드롭다운 메뉴 */}
           {isDropdownOpen && (
             <div className="portfolio-dropdown-menu">
-              <div className="portfolio-dropdown-item" onClick={() => handleMenuItemClick('/mypage')}>마이페이지</div>
+              <div className="portfolio-dropdown-item" onClick={() => handleMenuItemClick('/candidate/dashboard')}>마이페이지</div>
               <div className="portfolio-dropdown-item" onClick={() => handleMenuItemClick('/settings')}>설정</div>
               {authState?.token && (
                 <div className="portfolio-dropdown-item portfolio-logout-dropdown-item" onClick={handleLogout}>

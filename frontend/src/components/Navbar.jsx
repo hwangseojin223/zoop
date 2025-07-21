@@ -94,10 +94,11 @@ const Navbar = ({ onLangChange, hideAuth }) => {
 
   const handleLogoClick = () => {
     setMenuOpen(false);
-    if (authState.token) {
-      if (authState.userType === 'candidate') navigate('/candidate/dashboard');
-      else if (authState.userType === 'company') navigate('/company/dashboard');
-      else navigate('/');
+    // 로고 클릭 플래그 설정
+    sessionStorage.setItem('logoClick', 'true');
+    // 현재 위치가 홈페이지여도 확실히 홈페이지로 이동
+    if (window.location.pathname === '/') {
+      window.location.href = '/';
     } else {
       navigate('/');
     }
@@ -262,7 +263,7 @@ const Navbar = ({ onLangChange, hideAuth }) => {
                 <span className="mobile-user-name">{displayedUserName}</span>
               </div>
               <AccessibleButton
-                onClick={() => handleMenuItemClick('/mypage')}
+                onClick={() => handleMenuItemClick('/candidate/dashboard')}
                 ariaLabel="마이페이지"
                 role="menuitem"
                 tabIndex="0"
@@ -351,7 +352,7 @@ const Navbar = ({ onLangChange, hideAuth }) => {
               {/* 드롭다운 메뉴 */}
               {isDropdownOpen && (
                 <div className="dropdown-menu">
-                  <div className="dropdown-item" onClick={() => handleMenuItemClick('/mypage')}>
+                  <div className="dropdown-item" onClick={() => handleMenuItemClick('/candidate/dashboard')}>
                     마이페이지
                   </div>
                   <div className="dropdown-item" onClick={() => handleMenuItemClick('/settings')}>

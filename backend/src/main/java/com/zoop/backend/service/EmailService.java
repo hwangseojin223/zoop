@@ -1,8 +1,9 @@
 package com.zoop.backend.service;
 
-import java.util.Random;
 import java.net.URLEncoder;
+import java.util.Random;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,6 @@ import com.zoop.backend.repository.EmailVerificationRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 
 @Slf4j
 @Service
@@ -251,6 +251,66 @@ public class EmailService {
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         helper.setTo(toEmail);      // 수신자 설정
+        helper.setSubject(subject);
+        helper.setText(body, true); // HTML 전송
+
+        mailSender.send(message);
+    }
+
+    /**
+     * 합격 안내 이메일
+     */
+    public void sendPassNotificationEmail(String toEmail, String candidateName, String postTitle, String companyName) throws MessagingException {
+        String subject = "[ZOOP] " + postTitle + " - 합격 안내";
+
+        String body = String.format("""
+        <div style=\"font-family:Arial, sans-serif; background-color:#f9f9f9; padding:20px;\">
+            <h2 style=\"color:#333;\">🎉 축하합니다! %s 님</h2>
+            <p style=\"font-size:15px; color:#555;\">ZOOP 플랫폼을 통해 지원하신 공고에 합격하셨습니다!</p>
+
+            <div style=\"background-color:#fff; border:2px solid #28a745; border-radius:8px; padding:20px; margin:20px 0;\">
+                <h3 style=\"color:#28a745; margin-top:0;\">✅ 합격 안내</h3>
+                <table style=\"width:100%%; font-size:14px; color:#444; border-collapse:collapse;\">
+                    <tr>
+                        <td style=\"padding:8px 0; font-weight:bold;\">회사명</td>
+                        <td>%s</td>
+                    </tr>
+                    <tr>
+                        <td style=\"padding:8px 0; font-weight:bold;\">공고명</td>
+                        <td>%s</td>
+                    </tr>
+                    <tr>
+                        <td style=\"padding:8px 0; font-weight:bold;\">합격일</td>
+                        <td>%s</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div style=\"margin-top:30px; padding:16px; background-color:#e8f5e8; border-radius:8px;\">
+                <h4 style=\"color:#28a745; margin-top:0;\">📋 다음 단계</h4>
+                <ol style=\"color:#555; font-size:14px;\">
+                    <li>기업에서 별도로 연락을 드릴 예정입니다</li>
+                    <li>입사 관련 상세 안내를 받으실 수 있습니다</li>
+                    <li>문의사항이 있으시면 기업에 직접 연락하시기 바랍니다</li>
+                </ol>
+            </div>
+
+            <div style=\"margin-top:30px; text-align:center;\">
+                <a href=\"%s\" style=\"background-color:#28a745; color:#fff; text-decoration:none; padding:12px 24px; border-radius:6px; font-weight:bold; display:inline-block;\">
+                    🏠 ZOOP 홈으로 가기
+                </a>
+            </div>
+
+            <p style=\"margin-top:30px; font-size:13px; color:#777;\">합격을 진심으로 축하드립니다!<br/>ZOOP 팀 드림</p>
+        </div>
+        """, candidateName, companyName, postTitle, 
+             java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy년 MM월 dd일")),
+             frontendUrl);
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setTo(toEmail);
         helper.setSubject(subject);
         helper.setText(body, true); // HTML 전송
 

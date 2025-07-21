@@ -1,0 +1,202 @@
+/* Modern Mint Design for Incident Report Page - Full Width */
+
+body, .customer-main-bg {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #e6fcf6 0%, #f8fffd 60%, #c6f7ec 100%);
+}
+
+.faq-main-content {
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.incident-report-page {
+  max-width: 1920px;
+  width: 100%;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 0 128px; /* Fixed 128px horizontal padding */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fff; /* Fullscreen white background */
+}
+
+.incident-title-banner {
+  width: 100%;
+  background: linear-gradient(90deg, #30C59B 60%, #22c55e 100%);
+  color: #fff;
+  text-align: center;
+  padding: 2.5rem 0 1.5rem 0;
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 4px 24px rgba(48,197,155,0.10);
+  border-radius: 0 0 2.5rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.incident-title-banner svg {
+  margin-bottom: 0.5rem;
+}
+
+.incident-sections {
+  display: flex;
+  flex-direction: row;
+  gap: 2.5rem;
+  width: 100%;
+  max-width: 1920px;
+  min-width: 0;
+  justify-content: center;
+  align-items: flex-start;
+  margin: 0 auto;
+  padding: 0 128px; /* Fixed 128px horizontal padding */
+}
+
+.notice-section, .report-form {
+  background: #fff;
+  border-radius: 22px;
+  box-shadow: 0 4px 24px rgba(48,197,155,0.10);
+  padding: 2.2rem 2rem 1.5rem 2rem;
+  width: 100%;
+  max-width: 540px;
+  min-width: 0; /* Remove hard min-width for flexibility */
+  margin-bottom: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  border: none; /* Remove colored border */
+}
+.notice-section {
+  color: #17806d;
+  background: #fff; /* Remove mint background */
+  border: none; /* Remove colored border */
+}
+.notice-header {
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  color: #30C59B;
+  margin-bottom: 0.7rem;
+  font-size: 1.1rem;
+}
+.warning-icon {
+  margin-right: 8px;
+  font-size: 1.3rem;
+}
+
+.report-form label {
+  font-weight: 700;
+  color: #30C59B;
+  margin-bottom: 0.4rem;
+  display: block;
+}
+.report-form input,
+.report-form textarea {
+  width: 100%;
+  border: 1.5px solid #b2f2e9;
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  font-size: 1.08rem;
+  margin-top: 0.2rem;
+  margin-bottom: 0.5rem;
+  background: #fff; /* Remove mint background */
+  color: #222;
+  transition: border 0.2s;
+}
+.report-form input:focus,
+.report-form textarea:focus {
+  border: 1.5px solid #30C59B;
+  outline: none;
+}
+.form-help {
+  color: #17806d;
+  font-size: 0.98rem;
+  margin-top: 0.1rem;
+}
+.submit-button {
+  background: linear-gradient(90deg, #30C59B 60%, #22c55e 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.13rem;
+  border: none;
+  border-radius: 8px;
+  padding: 0.95rem 0;
+  margin-top: 0.7rem;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(48,197,155,0.08);
+}
+.submit-button:hover {
+  background: linear-gradient(90deg, #22c55e 60%, #30C59B 100%);
+  box-shadow: 0 4px 16px rgba(48,197,155,0.13);
+}
+
+/* 역할 탭 */
+.role-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  justify-content: center;
+  width: 100%;
+  max-width: 540px;
+}
+.role-tabs button {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 15px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+  color: #6c757d;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.role-tabs button.active {
+  background: linear-gradient(90deg, #30C59B 60%, #22c55e 100%);
+  color: white;
+  box-shadow: 0 8px 25px rgba(48,197,155,0.13);
+}
+.role-tabs button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #e9ecef;
+  color: #6c757d;
+}
+
+@media (max-width: 1200px) {
+  .incident-sections {
+    flex-direction: column;
+    gap: 1.2rem;
+    align-items: stretch;
+    padding: 0 128px; /* Fixed 128px horizontal padding for tablet */
+  }
+  .notice-section, .report-form {
+    max-width: 100%;
+    min-width: 0;
+    padding: 1.2rem 0.7rem;
+  }
+}
+@media (max-width: 600px) {
+  .incident-title-banner {
+    font-size: 1.3rem;
+    padding: 1.2rem 0 0.7rem 0;
+    border-radius: 0 0 1.2rem 1.2rem;
+  }
+  .incident-report-page {
+    padding: 0 12px; /* Small padding for mobile */
+  }
+  .incident-sections {
+    padding: 0 4px;
+  }
+} 
