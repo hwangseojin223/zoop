@@ -10,7 +10,7 @@ import './components/Chatbot.css';
 import Index from './pages/Index';
 
 // incident report
-import IncidentReportPage from './pages/IncidentReportPage';
+import IncidentReportPage from './pages/info/IncidentReportPage';
 
 // signup - lazy loading으로 변경
 const Signup = lazy(() => import('./pages/signup/Signup'));
