@@ -1,6 +1,7 @@
 package com.zoop.backend.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,7 @@ public class AiInterviewVideoService {
     }
 
     @Transactional
-    public AiInterviewVideo uploadInterviewVideo(Integer scheduleId, Integer questionNumber, String questionContent, MultipartFile videoFile) throws Exception {
+    public AiInterviewVideo uploadInterviewVideo(Long scheduleId, Integer questionNumber, String questionContent, MultipartFile videoFile) throws Exception {
         AiInterviewSchedule schedule = aiInterviewScheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new RuntimeException("해당 면접 일정을 찾을 수 없습니다."));
         // S3 업로드
@@ -47,8 +48,25 @@ public class AiInterviewVideoService {
         AiInterviewVideo saved = aiInterviewVideoRepository.save(video);
         // 마지막 질문(3번) 업로드 시 면접 완료 처리
         if (questionNumber == 3) {
+            System.out.println("[AiInterviewVideoService] 마지막 질문(3번) 업로드 완료 - 면접 완료 처리 시작: scheduleId=" + scheduleId);
             aiInterviewScheduleService.completeInterview(scheduleId);
+            System.out.println("[AiInterviewVideoService] 면접 완료 처리 완료");
+        } else {
+            System.out.println("[AiInterviewVideoService] 질문 " + questionNumber + " 업로드 완료 (마지막 질문 아님)");
         }
         return saved;
+    }
+
+    public List<AiInterviewVideo> findByScheduleId(Long scheduleId) {
+        return aiInterviewVideoRepository.findByAiInterviewSchedule_AiInterviewScheduleId(scheduleId.intValue());
+    }
+
+    public AiInterviewVideo findById(Long videoId) {
+        return aiInterviewVideoRepository.findById(videoId)
+                .orElseThrow(() -> new RuntimeException("해당 영상을 찾을 수 없습니다."));
+    }
+
+    public List<AiInterviewVideo> getVideosByJobCandidateId(Long jobCandidateId) {
+        return aiInterviewVideoRepository.findByAiInterviewSchedule_JobCandProgress_JobCandidateId(jobCandidateId);
     }
 } 

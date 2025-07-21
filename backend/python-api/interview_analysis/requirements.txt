@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+requests
+pydantic
+openai
+python-dotenv
+whisper
+yt-dlp 

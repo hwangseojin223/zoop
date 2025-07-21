@@ -1,74 +1,23 @@
+// 통합된 ApplicantSignupProcess 컴포넌트 코드입니다.
+// 이메일 인증 + 아이디 중복확인 기능이 모두 포함됨
+
 import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
-import './ApplicantSignupProcess.css';
-import { useNavigate, useParams } from 'react-router-dom';
 import axios from '../../api/axios';
 
 
-//export default는 그 함수를 다른 파일에서 import해서 사용할 수 있도록 내보내는 역할
 export default function ApplicantSignupProcess() {
   const navigate = useNavigate();
-  const { token } = useParams(); // URL 파라미터에서 토큰 가져오기
+  const location = useLocation();
+  const { token: invitationToken } = useParams(); // URL 파라미터에서 초대 토큰 가져오기
   
-  // 초대 정보 상태
-  const [invitationData, setInvitationData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // 초대 토큰으로 정보 조회
-  useEffect(() => {
-    const fetchInvitationData = async () => {
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
-      
-      try {
-        // 1. 초대 토큰으로 정보 조회
-        const invitationResponse = await axios.post(`/api/invitations/clicked/${token}`);
-        const { githubLogin, isSignedUp } = invitationResponse.data;
-        
-        // 2. 이미 가입된 사용자인 경우 로그인 페이지로 이동
-        if (isSignedUp) {
-          navigate('/login', { 
-            state: { 
-              githubLogin: githubLogin,
-              message: '이미 가입된 계정입니다. 로그인해주세요.' 
-            } 
-          });
-          return;
-        }
-        
-        // 3. 이메일 정보 조회
-        try {
-          const emailResponse = await axios.get(`/api/candidates/email/${githubLogin}`);
-          const { email } = emailResponse.data;
-          
-          // 이메일 파싱 (아이디@도메인)
-          const [emailId, domain] = email.split('@');
-          setEmailLocal(emailId);
-          setEmailDomain(domain);
-          
-          // 이메일이 자동으로 입력되었으므로 인증 완료 상태로 설정
-          setIsEmailVerified(true);
-        } catch (emailError) {
-          console.log('이메일 정보를 찾을 수 없습니다:', emailError);
-          // 이메일이 없어도 계속 진행
-        }
-        
-        // 4. githubLogin을 아이디 입력란에 설정
-        setInvitationData({ githubLogin });
-        
-      } catch (error) {
-        console.error('초대 정보 조회 실패:', error);
-        alert('초대 링크가 유효하지 않습니다.');
-        navigate('/');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchInvitationData();
-  }, [token, navigate]);
+  // ============ [초대 링크 관련 상태 변수들 추가] ============
+  const [fromInvite, setFromInvite] = useState(false); // 초대 링크로 들어왔는지 여부
+  const [isFormValid, setIsFormValid] = useState(false); // 폼 유효성 검사 결과
+  const [isLoading, setIsLoading] = useState(false); // 로딩 상태
+  // ============ [초대 링크 관련 상태 변수들 추가 끝] ============
+  //==================================================================================================
 
 //==================================================================================================
 // 이메일 인증
@@ -85,6 +34,121 @@ const [resendTimer, setResendTimer] = useState(300); // 재전송 타이머 (단
 const [isSendingCode, setIsSendingCode] = useState(false); // 인증 코드 전송 중 여부 (버튼 비활성화용)
 const [errorMessage, setErrorMessage] = useState(''); // 에러메시지지
 
+// ============ [누락된 상태 변수들 추가] ============
+const [password, setPassword] = useState('');
+const [passwordMessage, setPasswordMessage] = useState('');
+const [isPasswordValid, setIsPasswordValid] = useState(false);
+// [추가] 비밀번호 확인 관련 상태
+const [passwordConfirm, setPasswordConfirm] = useState('');
+const [passwordConfirmMessage, setPasswordConfirmMessage] = useState('');
+const [isPasswordConfirmValid, setIsPasswordConfirmValid] = useState(false);
+const [idCheck, setIdCheck] = useState('');
+const [idMessage, setIdMessage] = useState('');
+const [isIdAvailable, setIsIdAvailable] = useState(false);
+const [allAgree, setAllAgree] = useState(false);
+const [individualAgree, setIndividualAgree] = useState({
+  terms: false,
+  privacy: false,
+  location: false,
+  emailMarketing: false,
+  smsMarketing: false,
+});
+  // ============ [누락된 상태 변수들 추가 끝] ============
+
+  // ============ [폼 유효성 검사 useEffect 추가] ============
+  useEffect(() => {
+    console.log('ApplicantSignupProcess - location.state:', location.state);
+    console.log('ApplicantSignupProcess - invitationToken:', invitationToken);
+    
+    // location.state에서 초대 정보 확인
+    if (location.state?.fromInvite && location.state?.githubLogin) {
+      console.log('location.state에서 초대 정보 확인됨:', location.state.githubLogin);
+      setFromInvite(true);
+      setIdCheck(location.state.githubLogin);
+      setIsIdAvailable(true);
+      setIdMessage('초대 링크를 통해 자동 설정된 아이디입니다.');
+    }
+    // 초대 토큰이 있으면 초대 링크로 들어온 것으로 간주
+    else if (invitationToken) {
+      setFromInvite(true);
+      // 초대 토큰을 통해 GitHub 로그인 정보 가져오기
+      const fetchInvitationInfo = async () => {
+        try {
+          const response = await fetch(`http://localhost:8081/api/invitations/clicked/${invitationToken}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            if (data.githubLogin) {
+              setIdCheck(data.githubLogin);
+              setIsIdAvailable(true);
+              setIdMessage('초대 링크를 통해 자동 설정된 아이디입니다.');
+            }
+          }
+        } catch (error) {
+          console.error('초대 정보 가져오기 실패:', error);
+        }
+      };
+      fetchInvitationInfo();
+    }
+  }, [invitationToken, location.state]);
+
+  // ============ [초대 링크로 들어온 경우 쿼리파라미터 email 처리] ============
+  useEffect(() => {
+    console.log('=== Email 파라미터 디버깅 ===');
+    console.log('fromInvite:', fromInvite);
+    console.log('location.search:', location.search);
+    console.log('location.pathname:', location.pathname);
+    console.log('전체 URL:', window.location.href);
+    
+    if (fromInvite) {
+      const params = new URLSearchParams(location.search);
+      const email = params.get('email');
+      console.log('email:', email);
+      if (email) {
+        const [local, domain] = email.split('@');
+        setEmailLocal(local);
+        setEmailDomain(domain);
+        console.log('설정할 emailLocal:', local);
+        console.log('설정할 emailDomain:', domain);
+      } else {
+        console.log('❌ email 파라미터가 없습니다!');
+      }
+    } else {
+      console.log('❌ fromInvite가 false입니다!');
+    }
+  }, [fromInvite, location.search]);
+  // ============ [폼 유효성 검사 useEffect 추가 끝] ============
+
+  // ============ [폼 유효성 검사 로직 추가] ============
+  useEffect(() => {
+    const validateForm = () => {
+      // 기본 조건들
+      const hasValidId = idCheck && isIdAvailable;
+      const hasValidPassword = isPasswordValid;
+      const hasValidPasswordConfirm = isPasswordConfirmValid;
+      const hasRequiredAgreements = individualAgree.terms && individualAgree.privacy;
+      const hasRequiredFields = document.getElementById('phone')?.value && document.getElementById('candidate_name')?.value;
+      
+      // 이메일 인증 조건 (초대 링크가 아닐 때만)
+      const hasValidEmail = fromInvite || (emailLocal && emailDomain && isEmailVerified);
+      
+      const isValid = hasValidId && hasValidPassword && hasValidPasswordConfirm && 
+                     hasRequiredAgreements && hasRequiredFields && hasValidEmail;
+      
+      setIsFormValid(isValid);
+    };
+
+    validateForm();
+  }, [
+    idCheck, isIdAvailable, isPasswordValid, isPasswordConfirmValid, 
+    individualAgree.terms, individualAgree.privacy, fromInvite, 
+    emailLocal, emailDomain, isEmailVerified
+  ]);
+  // ============ [폼 유효성 검사 로직 추가 끝] ============
 
 /**
  * async : 비동기 함수를 명시할떄 사용, Promise를 반환한다. 
@@ -132,34 +196,57 @@ useEffect(() => {
   return () => clearInterval(timer); // 언마운트 또는 조건 해제 시 타이머 정리
 }, [codeSent, resendTimer, isEmailVerified]);
 
-// 4. 입력한 인증 코드 검증
-const handleVerifyCode = async () => {
-  const fullEmail = `${emailLocal}@${emailDomain}`; // 전체 이메일 주소
-  const res = await fetch(`http://localhost:8081/api/email/verify?email=${encodeURIComponent(fullEmail)}&code=${verificationCode}`, {
-    method: 'POST',
-  });
+  // 비밀번호 입력 시 유효성 검사
+  // [수정] 비밀번호 입력 시 비밀번호 확인도 다시 체크
+  const handlePasswordChange = (e) => {
+    const value = e.target.value;
+    setPassword(value);
+    // 영문자+숫자 조합, 최소 8자리 (특수문자 선택적 포함 가능)
+    const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+\-=[\]{}\\|;:'"<>,.?/~]{8,}$/;
+    if (regex.test(value)) {
+      setPasswordMessage('사용 가능한 비밀번호입니다.');
+      setIsPasswordValid(true);
+    } else {
+      setPasswordMessage('영문자+숫자 조합, 최소 8자리여야 합니다. (특수문자 !@#$%^&_-~ 선택적 사용 가능)');
+      setIsPasswordValid(false);
+    }
+    // 비밀번호가 바뀌면 비밀번호 확인도 다시 체크
+    if (passwordConfirm.length > 0) {
+      if (passwordConfirm === value) {
+        setPasswordConfirmMessage('비밀번호가 일치합니다.');
+        setIsPasswordConfirmValid(true);
+      } else {
+        setPasswordConfirmMessage('비밀번호가 일치하지 않습니다.');
+        setIsPasswordConfirmValid(false);
+      }
+    }
+  };
 
-  if (res.ok) {
-    alert('이메일 인증 완료');
-    setIsEmailVerified(true); // 인증 성공 시 상태 변경
-  } else {
-    alert('인증 실패. 코드를 확인해주세요.');
-  }
-};
+  // [추가] 비밀번호 확인 입력값 변경 핸들러
+  const handlePasswordConfirmChange = (e) => {
+    const value = e.target.value;
+    setPasswordConfirm(value);
+    if (value === password && value.length > 0) {
+      setPasswordConfirmMessage('비밀번호가 일치합니다.');
+      setIsPasswordConfirmValid(true);
+    } else {
+      setPasswordConfirmMessage('비밀번호가 일치하지 않습니다.');
+      setIsPasswordConfirmValid(false);
+    }
+  };
 
-// 5. 이메일 도메인 선택 변경 시 처리
-const handleDomainChange = (e) => {
-  const value = e.target.value;
-  if (value === 'custom') {
-    setCustomInput(true); // 직접 입력 모드로 전환
-    setEmailDomain(''); // 도메인 초기화
-  } else {
-    setCustomInput(false); // 직접 입력 해제
-    setEmailDomain(value); // 선택한 도메인으로 설정
-  }
-};
+  // 이메일 인증 확인
+  const handleVerifyCode = async () => {
+    const fullEmail = `${emailLocal}@${emailDomain}`;
+    const res = await fetch(`http://localhost:8081/api/email/verify?email=${encodeURIComponent(fullEmail)}&code=${verificationCode}`, { method: 'POST' });
+    if (res.ok) {
+      alert('이메일 인증 완료');
+      setIsEmailVerified(true);
+    } else {
+      alert('인증 실패. 코드를 확인해주세요.');
+    }
+  };
 
-//6. 
   const handleResend = async () => {
     setCodeSent(false);
     setResendTimer(300);
@@ -167,32 +254,32 @@ const handleDomainChange = (e) => {
     await handleSendCode();
   };
 
+  // 아이디 중복 확인
+  const checkDuplicateId = async () => {
+    if (!idCheck.trim()) {
+      setIdMessage('아이디를 입력해주세요.');
+      setIsIdAvailable(false);
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:8081/api/candidates/check-id?githubLogin=${idCheck}`);
+      if (res.ok) {
+        setIdMessage('사용 가능한 아이디입니다.');
+        setIsIdAvailable(true);
+      } else {
+        setIdMessage('이미 사용 중인 아이디입니다.');
+        setIsIdAvailable(false);
+      }
+    } catch (e) {
+      setIdMessage('확인 중 오류가 발생했습니다.');
+      setIsIdAvailable(false);
+    }
+  };
 
-
-
-
-
-
-  // 전체 동의 상태 관리
-  const [allAgree, setAllAgree] = useState(false);
-
-  // 개별 동의 상태 관리
-  const [individualAgree, setIndividualAgree] = useState({
-    terms: false,
-    privacy: false,
-    location: false,
-    emailMarketing: false,
-    smsMarketing: false,
-  });
-
-  //==================================================================================================
-  // 전체 동의 체크박스를 클릭했을 때
-  //==================================================================================================
+  // 약관 관련
   const handleAllAgreeChange = () => {
     const newAllAgree = !allAgree;
     setAllAgree(newAllAgree);
-
-    // 모든 개별 동의 항목도 동일하게 설정
     setIndividualAgree({
       terms: newAllAgree,
       privacy: newAllAgree,
@@ -201,326 +288,352 @@ const handleDomainChange = (e) => {
       smsMarketing: newAllAgree,
     });
   };
-  //==================================================================================================
-  // 개별 동의 체크박스를 클릭했을 때
-  //==================================================================================================
+
   const handleIndividualAgreeChange = (event) => {
     const { name, checked } = event.target;
     setIndividualAgree((prev) => {
-      const newIndividualAgree = { ...prev, [name]: checked };
-      // 개별 항목들이 모두 체크되었으면 전체 동의도 체크
-      setAllAgree(Object.values(newIndividualAgree).every(Boolean));
-      return newIndividualAgree;
+      const newState = { ...prev, [name]: checked };
+      setAllAgree(Object.values(newState).every(Boolean));
+      return newState;
     });
+  };
+
+  // 이메일 도메인 변경 핸들러
+  const handleDomainChange = (e) => {
+    const value = e.target.value;
+    if (value === 'custom') {
+      setCustomInput(true);
+      setEmailDomain('');
+    } else {
+      setCustomInput(false);
+      setEmailDomain(value);
+    }
   };
 
   //==================================================================================================
   // 가입하기 버튼 클릭했을 때
   //==================================================================================================
   const handleSubmit = async (event) => {
-    event.preventDefault(); // 기본 form 제출 방지
-
-    //이메일 인증이 안되어있을 때때
-    if (!isEmailVerified) {
-      setErrorMessage('이메일 인증이 필요합니다.');
+    event.preventDefault();
+    if (!idCheck || !isIdAvailable) {
+      setErrorMessage('아이디를 입력하고 중복 확인을 완료해주세요.');
       return;
     }
 
-    //키 값이 JPA ENTITY 객체의 프로퍼티와 일치해야한다.
-    const formData = {
-      githubLogin : document.getElementById('candidate_id').value,
-      candidatePassword : document.getElementById('password').value,
-      candidatePhoneNumber : document.getElementById('phone').value,
-      candidateName : document.getElementById('candidate_name').value,
-      candidateEmail : `${emailLocal}@${emailDomain}`,
-      candidateRegistrationDate: new Date().toISOString(),  // 현재 시각
-      candidateCreatedAt: new Date().toISOString(),        // 현재 시각
-      candidateUpdatedAt: new Date().toISOString(),        // 현재 시각
-    };
+    // [수정] 초대 링크가 아닐 때만 이메일 인증 검사
+    if (!fromInvite && (!emailLocal || !emailDomain || !isEmailVerified)) {
+      setErrorMessage('이메일 인증을 완료해주세요.');
+      return;
+    }
 
+    if (!isPasswordValid) {
+      setErrorMessage('비밀번호 형식을 확인해주세요.');
+      return;
+    }
+
+    if (!isPasswordConfirmValid) {
+      setErrorMessage('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    if (!individualAgree.terms || !individualAgree.privacy) {
+      setErrorMessage('필수 항목에 동의해주세요.');
+      return;
+    }
+
+    if (!document.getElementById('phone')?.value || !document.getElementById('candidate_name')?.value) {
+      setErrorMessage('모든 필수 입력 항목을 작성해주세요.');
+      return;
+    }
+
+  setErrorMessage(''); // 모든 조건 만족 시 에러메시지 초기화
+    const formData = {
+      githubLogin: idCheck,
+      candidatePassword: document.getElementById('password').value,
+      candidatePhoneNumber: document.getElementById('phone').value,
+      candidateName: document.getElementById('candidate_name').value,
+      candidateEmail: `${emailLocal}@${emailDomain}`,
+      candidateRegistrationDate: new Date().toISOString(),
+      candidateCreatedAt: new Date().toISOString(),
+      candidateUpdatedAt: new Date().toISOString(),
+      invitationToken: invitationToken,
+    };
     try {
 
       const response = await fetch('http://localhost:8081/api/candidates/process', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-
-      if (response.ok) {
+      if (response.ok) {    //요청 성공 , 상태코드 200 ~ 299
+        const candidateData = await response.json();
+        
+        // 초대 링크를 통해 들어온 경우 job_cand_progress 업데이트
+        if (invitationToken) {
+          try {
+            const updateResponse = await fetch('http://localhost:8081/api/progress/update-candidate-id', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                invitationToken: invitationToken,
+                candidateId: candidateData.candidateId
+              }),
+            });
+            
+            if (updateResponse.ok) {
+              console.log('job_cand_progress candidate_id 업데이트 성공');
+            } else {
+              console.error('job_cand_progress candidate_id 업데이트 실패');
+            }
+          } catch (error) {
+            console.error('job_cand_progress 업데이트 중 오류:', error);
+          }
+        }
+        
         navigate('/auth/applicant/signup/success');
         // 원한다면 페이지 이동: window.location.href = '/welcome';
       } else {
-        alert('회원가입 실패');
+        // 서버에서 보낸 에러 메시지 읽기
+        const errorData = await response.text();
+        console.error('서버 응답:', response.status, errorData);
+        
+        if (response.status === 400 || response.status === 500) {
+          if (errorData.includes('이미 가입된 GitHub 계정입니다')) {
+            alert('이미 가입된 GitHub 계정입니다. 다른 계정으로 시도해주세요.');
+          } else if (errorData.includes('이미 가입된 이메일 주소입니다')) {
+            alert('이미 가입된 이메일 주소입니다. 다른 이메일로 시도해주세요.');
+          } else {
+            alert('회원가입 중 오류가 발생했습니다: ' + errorData);
+          }
+        } else {
+          alert('회원가입 실패: ' + errorData);
+        }
       }
-    } catch (error) {
+    } catch (error) {   // fetch요청 자체가 실패한 경우
       console.error('오류 발생:', error);
-      alert('서버 오류');
+      alert('네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.');
     }
   };
-
 
   return (
     <>
       <Navbar />
-      <div className="applicant-signup-container">
-        <h2>ZOOP 통합 개인회원 가입</h2>
-        {isLoading ? (
-          <div style={{ textAlign: 'center', padding: '2rem' }}>
-            <p>초대 정보를 불러오는 중...</p>
-          </div>
-        ) : (
-        <form onSubmit={handleSubmit}>
-          <div className="applicant-signup-form-group">
-            <label htmlFor="candidate_id" className="applicant-signup-label">아이디</label>
-            <input 
-              type="text" 
-              id="candidate_id" 
-              name="candidate_id" 
-              className="applicant-signup-input" 
-              placeholder="4~20자리/영문, 숫자, 특수문자 '_'사용 가능"
-              defaultValue={invitationData?.githubLogin || ''}
-              readOnly={!!invitationData?.githubLogin}
-              style={{
-                backgroundColor: invitationData?.githubLogin ? '#f5f5f5' : 'white',
-                color: '#333'
-              }}
-            />
-          </div>
-
-          <div className="applicant-signup-form-group">
-            <label htmlFor="password" className="applicant-signup-label">비밀번호</label>
-            <input type="password" id="password" name="password" className="applicant-signup-input" placeholder="8~16자리/영문 대소문자, 숫자, 특수문자 조합" />
-          </div>
-
-          <div className="applicant-signup-form-group">
-            <label htmlFor="candidate_name" className="applicant-signup-label">이름</label>
-            <input type="text" id="candidate_name" name="candidate_name" className="applicant-signup-input" placeholder="이름을 입력해주세요" />
-          </div>
-
-          <div className="applicant-signup-form-group">
-            <label htmlFor="phone" className="applicant-signup-label">휴대폰</label>
-            <div>
-              <input type="text" id="phone" name="phone" className="applicant-signup-input" placeholder="하이픈(-) 제외" />
-              <label className="applicant-signup-label">
-                <input type="checkbox" name="overseas" /> 해외 거주 중이에요
-              </label>
+      <div className="min-h-screen bg-gray-50 pt-20 pb-8 px-4">
+        <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-lg p-8">
+          <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">ZOOP 통합 개인회원 가입</h2>
+          {isLoading ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600">초대 정보를 불러오는 중...</p>
             </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+
+        {/* 아이디 입력 */}
+        <div>
+          <label className="block mb-2 font-semibold">아이디</label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={idCheck}
+              onChange={e => {
+                if (!fromInvite) {
+                  setIdCheck(e.target.value);
+                  setIsIdAvailable(null);
+                  setIdMessage('');
+                }
+              }}
+              className={`flex-1 border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:border-sky-400 focus:ring-sky-200 transition-colors ${
+                fromInvite ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
+              }`}
+              placeholder="4~20자 영문, 숫자, _ 사용"
+              disabled={fromInvite}
+            />
+            {!fromInvite && (
+              <button
+                type="button"
+                onClick={checkDuplicateId}
+                className="bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600"
+              >
+                중복확인
+              </button>
+            )}
           </div>
+          {idMessage && (
+            <p className={`mt-1 text-sm ${isIdAvailable ? 'text-green-600' : 'text-red-500'}`}>{idMessage}</p>
+          )}
 
-          {/* <button type="button" className="applicant-signup-button">인증요청</button>
+        </div>
 
-          <div className="applicant-signup-form-group">
-            <label htmlFor="email" className="applicant-signup-label">이메일</label>
-            <input type="email" id="email" name="email" className="applicant-signup-input" defaultValue="email@saramin.co.kr" />
-            <small className="applicant-signup-info-icon">ⓘ 취업에 관련된 정보를 받을 때 필요해요</small>
-          </div> */}
+        {/* 비밀번호 */}
+        <div>
+          <label htmlFor="password" className="block mb-2 font-semibold">비밀번호</label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={handlePasswordChange}
+            placeholder="영문자+숫자 조합, 최소 8자리 (특수문자 사용 가능)"
+            className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:border-sky-400 focus:ring-sky-200 transition-colors"
+          />
+          {passwordMessage && (
+            <p className={`mt-1 text-sm ${isPasswordValid ? 'text-green-600' : 'text-red-500'}`}>
+              {passwordMessage}
+            </p>
+          )}
+        </div>
+        {/* [추가] 비밀번호 확인 */}
+        <div>
+          <label htmlFor="passwordConfirm" className="block mb-2 font-semibold">비밀번호 확인</label>
+          <input
+            id="passwordConfirm"
+            type="password"
+            value={passwordConfirm}
+            onChange={handlePasswordConfirmChange}
+            placeholder="비밀번호를 한 번 더 입력해주세요"
+            className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:border-sky-400 focus:ring-sky-200 transition-colors"
+          />
+          {passwordConfirmMessage && (
+            <p className={`mt-1 text-sm ${isPasswordConfirmValid ? 'text-green-600' : 'text-red-500'}`}>
+              {passwordConfirmMessage}
+            </p>
+          )}
+        </div>
 
-          <div className="applicant-signup-form-group">
-              <label>이메일</label>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        {/* 이름 */}
+        <div>
+          <label htmlFor="candidate_name" className="block mb-2 font-semibold">이름</label>
+          <input
+            id="candidate_name"
+            type="text"
+            placeholder="이름을 입력해주세요"
+            className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:border-sky-400 focus:ring-sky-200 transition-colors"
+          />
+        </div>
+
+        {/* 휴대폰 */}
+        <div>
+          <label htmlFor="phone" className="block mb-2 font-semibold">휴대폰</label>
+          <input
+            id="phone"
+            type="text"
+            placeholder="하이픈(-) 제외"
+            className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:border-sky-400 focus:ring-sky-200 transition-colors"
+          />
+        </div>
+
+        {/* 이메일 입력 */}
+        {!fromInvite && (
+          <div>
+            <label className="block mb-2 font-semibold">이메일</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={emailLocal}
+                onChange={e => setEmailLocal(e.target.value)}
+                disabled={isEmailVerified}
+                className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white text-base focus:outline-none focus:border-sky-400 focus:ring-sky-200 transition-colors"
+              />
+              <span className="text-lg font-semibold text-gray-600">@</span>
+              {customInput ? (
                 <input
                   type="text"
-                  className="form-input"
-                  placeholder="이메일 아이디"
-                  value={emailLocal}
-                  onChange={(e) => {
-                    setEmailLocal(e.target.value);
-                    if (isEmailVerified) {
-                      setIsEmailVerified(false);
-                      setCodeSent(false);
-                      setVerificationCode('');
-                    }
-                  }}
-                  style={{
-                    flex: 1,
-                    backgroundColor: 'white',
-                    color: '#333'
-                  }}
+                  value={emailDomain}
+                  onChange={e => setEmailDomain(e.target.value)}
+                  disabled={isEmailVerified}
+                  className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white text-base focus:outline-none focus:border-sky-400 focus:ring-sky-200 transition-colors"
                 />
-                <span>@</span>
-                {customInput ? (
-                  <input
-                    type="text"
-                    className="applicant-signup-input"
-                    placeholder="도메인 입력"
-                    value={emailDomain}
-                    onChange={(e) => {
-                      setEmailDomain(e.target.value);
-                      if (isEmailVerified) {
-                        setIsEmailVerified(false);
-                        setCodeSent(false);
-                        setVerificationCode('');
-                      }
-                    }}
-                    style={{
-                      flex: 1,
-                      backgroundColor: 'white',
-                      color: '#333'
-                    }}
-                  />
-                ) : (
-                  <select
-                    className="applicant-signup-input"
-                    value={emailDomain}
-                    onChange={(e) => {
-                      handleDomainChange(e);
-                      if (isEmailVerified) {
-                        setIsEmailVerified(false);
-                        setCodeSent(false);
-                        setVerificationCode('');
-                      }
-                    }}
-                    style={{
-                      flex: 1,
-                      backgroundColor: 'white',
-                      color: '#333'
-                    }}
-                  >
-                    <option value="">선택</option>
-                    <option value="naver.com">naver.com</option>
-                    <option value="gmail.com">gmail.com</option>
-                    <option value="daum.net">daum.net</option>
-                    <option value="custom">직접 입력</option>
-                  </select>
+              ) : (
+                <select
+                  value={emailDomain}
+                  onChange={handleDomainChange}
+                  disabled={isEmailVerified}
+                  className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white text-base focus:outline-none focus:border-sky-400 focus:ring-sky-200 transition-colors"
+                >
+                  <option value="">선택</option>
+                  <option value="naver.com">naver.com</option>
+                  <option value="gmail.com">gmail.com</option>
+                  <option value="daum.net">daum.net</option>
+                  <option value="custom">직접 입력</option>
+                </select>
+              )}
+            </div>
+
+          </div>
+        )}
+
+        {/* 인증코드 */}
+        {!fromInvite && (
+          <div>
+            <label className="block mb-2 font-semibold">인증코드 입력</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={verificationCode}
+                onChange={e => setVerificationCode(e.target.value)}
+                placeholder="6자리 인증코드"
+                disabled={!codeSent || isEmailVerified}
+                className="flex-1 border border-gray-300 px-4 py-2 rounded-lg bg-white focus:outline-none focus:border-sky-400 focus:ring-sky-200 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={codeSent ? handleVerifyCode : handleSendCode}
+                disabled={isSendingCode}
+                className="bg-emerald-500 text-white w-32 py-2 rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSendingCode ? '전송 중...' : codeSent ? '확인' : '인증코드 받기'}
+              </button>
+            </div>
+            {codeSent && !isEmailVerified && (
+              <div className="text-sm text-gray-600 mt-2">
+                남은 시간: {Math.floor(resendTimer / 60)}:{String(resendTimer % 60).padStart(2, '0')}
+                {resendTimer === 0 && (
+                  <button type="button" onClick={handleResend} className="ml-2 text-green-600 underline">다시 보내기</button>
                 )}
               </div>
-              {isEmailVerified && (
-                <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#2dc997' }}>
-                  ✅ 이메일이 인증되었습니다. 변경하려면 이메일을 수정하세요.
-                </div>
-              )}
-            </div>
-
-            <div className="applicant-signup-form-group">
-              <label>인증코드 입력</label>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <input
-                  type="text"
-                  className="applicant-signup-input"
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  placeholder="6자리 인증코드"
-                  disabled={!codeSent}
-                  style={{
-                    width: '100%',
-                    backgroundColor: !codeSent ? '#f0f0f0' : 'white',
-                    cursor: !codeSent ? 'not-allowed' : 'text'
-                  }}
-                />
-                <button
-                type="button"
-                className="submit-button"
-                onClick={codeSent ? handleVerifyCode : handleSendCode}
-                disabled={!emailLocal || !emailDomain}
-                style={{
-                    backgroundColor: (!emailLocal || !emailDomain) ? '#ccc' : '#2dc997',
-                    fontSize: '0.85rem',
-                    padding: '0.4rem 0.8rem',
-                    width: '160px',
-                    height: '40px',
-                    cursor: (!emailLocal || !emailDomain) ? 'not-allowed' : 'pointer'
-                }}
-                >
-                {isSendingCode ? '전송 중...' : codeSent ? '확인' : '인증코드 받기'}
-                </button>
-              </div>
-              {codeSent && !isEmailVerified && (
-                <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#777' }}>
-                  남은 시간: {Math.floor(resendTimer / 60)}:{String(resendTimer % 60).padStart(2, '0')}
-                  {resendTimer === 0 && (
-                    <button
-                      onClick={handleResend}
-                      type="button"
-                      style={{ marginLeft: '1rem', border: 'none', background: 'none', color: '#2dc997', cursor: 'pointer', textDecoration: 'underline' }}
-                    >
-                      다시 보내기
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-            {/* {errorMessage && <p style={{ color: 'red', marginTop: '0.5rem' }}>{errorMessage}</p>} */}
-
-          <div className="applicant-signup-agreement">
-            <label className="applicant-signup-label">
-              <input 
-                type="checkbox"  
-                id="all-agree"
-                checked={allAgree}
-                onChange={handleAllAgreeChange}
-              /> 
-              전체 동의
-              <p className="applicant-signup-optional">
-                (필수) 개인회원 약관 동의, (필수) 개인정보 수집 및 이용에 동의를 포함합니다.
-              </p>
-            </label>
-
-            <div className="applicant-signup-checkbox-group">
-              <div className="applicant-signup-agreement-item">
-                <label className="applicant-signup-label">
-                  <input 
-                    type="checkbox" 
-                    name="terms"
-                    checked={individualAgree.terms}
-                    onChange={handleIndividualAgreeChange}
-                    required
-                  /> 
-                  (필수) 개인회원 약관에 동의
-                </label>
-              </div>
-              <div className="applicant-signup-agreement-item">
-                <label className="applicant-signup-label">
-                  <input 
-                    type="checkbox" 
-                    name="privacy"
-                    checked={individualAgree.privacy}
-                    onChange={handleIndividualAgreeChange}
-                    required
-                  /> 
-                  (필수) 개인정보 수집 및 이용에 동의
-                </label>
-              </div>
-              <div className="applicant-signup-agreement-item">
-                <label className="applicant-signup-label">
-                  <input 
-                    type="checkbox" 
-                    name="location"
-                    checked={individualAgree.location}
-                    onChange={handleIndividualAgreeChange}
-                  /> 
-                  (선택) 위치기반서비스 이용약관에 동의
-                </label>
-              </div>
-              <div className="applicant-signup-agreement-item">
-                <label className="applicant-signup-label">
-                  <input 
-                    type="checkbox" 
-                    name="emailMarketing"
-                    checked={individualAgree.emailMarketing}
-                    onChange={handleIndividualAgreeChange}
-                  /> 
-                  (선택) 마케팅 정보 수신 동의 - 이메일
-                </label>
-              </div>
-              <div className="applicant-signup-agreement-item">
-                <label className="applicant-signup-label">
-                  <input 
-                    type="checkbox" 
-                    name="smsMarketing"
-                    checked={individualAgree.smsMarketing}
-                    onChange={handleIndividualAgreeChange}
-                  /> 
-                  (선택) 마케팅 정보 수신 동의 - SMS/MMS
-                </label>
-              </div>
-            </div>
+            )}
           </div>
-
-          <button type="submit" className="applicant-signup-button">가입하기</button>
-        </form>
         )}
+
+        {/* 약관 동의 */}
+        <div className="border border-gray-200 p-4 rounded-xl bg-gray-50 mt-8">
+          <label className="block font-semibold">
+            <input type="checkbox" checked={allAgree} onChange={handleAllAgreeChange} className="mr-2" />
+            전체 동의
+          </label>
+          <p className="text-sm text-gray-500">(필수) 약관 및 개인정보 수집 동의를 포함합니다.</p>
+          <div className="mt-3 space-y-2">
+            {Object.entries(individualAgree).map(([key, value]) => (
+              <label key={key} className="block text-sm">
+                <input type="checkbox" name={key} checked={value} onChange={handleIndividualAgreeChange} className="mr-2" />
+                {(key === 'terms' || key === 'privacy') ? '(필수)' : '(선택)'} {
+                  key === 'terms' ? '개인회원 약관' :
+                  key === 'privacy' ? '개인정보 수집 및 이용' :
+                  key === 'location' ? '위치기반서비스 이용약관' :
+                  key === 'emailMarketing' ? '마케팅 정보 수신 - 이메일' :
+                  '마케팅 정보 수신 - SMS/MMS'
+                }
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* 에러 메시지 & 제출 버튼 */}
+        {errorMessage && <p className="text-red-600 text-sm font-medium">⚠ {errorMessage}</p>}
+        <button
+          type="submit"
+          disabled={!isFormValid}
+          className={`
+            w-full py-3 rounded-2xl font-semibold
+            ${isFormValid
+              ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+              : 'bg-emerald-500 opacity-50 text-white cursor-not-allowed'}
+          `}
+        >
+          가입하기
+        </button>
+      </form>
+        )}
+        </div>
       </div>
     </>
   );

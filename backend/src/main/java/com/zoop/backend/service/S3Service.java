@@ -12,6 +12,9 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.core.ResponseInputStream;
 
 @Service
 public class S3Service {
@@ -88,5 +91,38 @@ public class S3Service {
         System.out.println("[S3Service] 파일명: " + file.getOriginalFilename());
         System.out.println("[S3Service] S3 키: " + key);
         return url;
+    }
+
+    /**지훈 추가 
+     * 파일 다운로드 메서드
+     * @param s3Url S3 URL
+     * @return ResponseInputStream<GetObjectResponse>
+     * @throws IOException
+    */
+    public ResponseInputStream<GetObjectResponse> downloadFile(String s3Url) throws IOException {
+        // S3 URL에서 bucket과 key 추출
+        // 예: https://bucket-name.s3.ap-northeast-2.amazonaws.com/portfolios/uuid_filename.pdf
+        String[] urlParts = s3Url.replace("https://", "").split("/");
+        String bucketAndRegion = urlParts[0]; // bucket-name.s3.ap-northeast-2.amazonaws.com
+        String bucket = bucketAndRegion.split("\\.")[0]; // bucket-name
+        
+        // key는 URL의 나머지 부분
+        String key = s3Url.substring(s3Url.indexOf("/", 8) + 1); // https:// 이후 첫 번째 / 다음부터
+        
+        System.out.println("[S3Service] S3 다운로드 시도: bucket=" + bucket + ", key=" + key);
+        
+        try {
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+            
+            ResponseInputStream<GetObjectResponse> response = s3Client.getObject(getObjectRequest);
+            System.out.println("[S3Service] S3 다운로드 성공: " + key);
+            return response;
+        } catch (Exception e) {
+            System.err.println("[S3Service] S3 다운로드 실패: " + e.getMessage());
+            throw e;
+        }
     }
 } 

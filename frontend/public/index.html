@@ -1,43 +1,118 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
+    <meta name="theme-color" content="#30c59b" />
+    
+    <!-- SEO Meta Tags -->
+    <title>ZOOP - AI 기반 채용 플랫폼</title>
+    <meta name="description" content="AI가 추천하는 최고의 개발자와 기업을 연결하는 혁신적인 채용 플랫폼입니다. GitHub 기반 포트폴리오 분석과 AI 면접으로 정확한 매칭을 제공합니다." />
+    <meta name="keywords" content="채용, 개발자, AI, GitHub, 포트폴리오, 면접, 매칭, IT, 소프트웨어, 프로그래머" />
+    <meta name="author" content="ZOOP Team" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="ZOOP - AI 기반 채용 플랫폼" />
+    <meta property="og:description" content="AI가 추천하는 최고의 개발자와 기업을 연결하는 혁신적인 채용 플랫폼입니다." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://zoop.com" />
+    <meta property="og:image" content="%PUBLIC_URL%/zoop_hero_final.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="ZOOP" />
+    <meta property="og:locale" content="ko_KR" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ZOOP - AI 기반 채용 플랫폼" />
+    <meta name="twitter:description" content="AI가 추천하는 최고의 개발자와 기업을 연결하는 혁신적인 채용 플랫폼입니다." />
+    <meta name="twitter:image" content="%PUBLIC_URL%/zoop_hero_final.png" />
+    
+    <!-- Additional SEO Meta Tags -->
+    <meta name="application-name" content="ZOOP" />
+    <meta name="apple-mobile-web-app-title" content="ZOOP" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-TileColor" content="#30c59b" />
+    <meta name="msapplication-config" content="%PUBLIC_URL%/browserconfig.xml" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://zoop.com" />
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Favicon and App Icons -->
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
+    <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16x16.png" />
+    <link rel="mask-icon" href="%PUBLIC_URL%/safari-pinned-tab.svg" color="#30c59b" />
+    
+    <!-- Manifest -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
-
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'GA_MEASUREMENT_ID', {
+        page_title: 'ZOOP - AI 기반 채용 플랫폼',
+        page_location: window.location.href,
+        send_page_view: true
+      });
+    </script>
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "ZOOP",
+      "url": "https://zoop.com",
+      "logo": "https://zoop.com/logo_zoop.png",
+      "description": "AI 기반 채용 플랫폼",
+      "sameAs": [
+        "https://github.com/zoop",
+        "https://linkedin.com/company/zoop"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "email": "support@zoop.com"
+      }
+    }
+    </script>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>
+      <div style="
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #30c59b 0%, #6be8c8 100%);
+        color: white;
+        text-align: center;
+        padding: 2rem;
+      ">
+        <div>
+          <h1 style="font-size: 2rem; margin-bottom: 1rem;">ZOOP</h1>
+          <p style="font-size: 1.1rem; margin-bottom: 1rem;">
+            JavaScript를 활성화해야 ZOOP를 사용할 수 있습니다.
+          </p>
+          <p style="font-size: 0.9rem; opacity: 0.8;">
+            브라우저 설정에서 JavaScript를 활성화한 후 페이지를 새로고침해주세요.
+          </p>
+        </div>
+      </div>
+    </noscript>
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
   </body>
 </html>

@@ -92,6 +92,8 @@ export default function CompanySidebar({
   loading,
   selectedPostId,
   onPostClick,
+  onDirectApplicantsClick,
+  showDirectApplicants,
 }) {
   const navigate = useNavigate();
 
@@ -200,11 +202,55 @@ export default function CompanySidebar({
           e.currentTarget.style.boxShadow = '0 4px 15px rgba(104, 211, 145, 0.3)';
         }}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: '0.5rem' }}>
-          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-        </svg>
-        새 공고 추가
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+          <span style={{ fontSize: '1rem', fontWeight: '600' }}>새 공고 추가</span>
+        </div>
       </button>
+
+      <div
+        onClick={() => onDirectApplicantsClick && onDirectApplicantsClick()}
+        style={{
+          padding: '1.5rem',
+          border: showDirectApplicants ? '1px solid #68d391' : '1px solid #e2e8f0',
+          borderRadius: '14px',
+          background: showDirectApplicants
+            ? 'linear-gradient(135deg, #e6fffa 0%, #c6f6d5 100%)'
+            : 'transparent',
+          color: showDirectApplicants ? '#22543d' : '#4a5568',
+          transition: 'all 0.3s ease',
+          marginBottom: '2rem',
+          position: 'relative',
+          cursor: 'pointer',
+          boxShadow: showDirectApplicants
+            ? '0 8px 24px rgba(56, 178, 172, 0.13)'
+            : '0 2px 8px rgba(0,0,0,0.08)',
+        }}
+        onMouseEnter={(e) => {
+          if (!showDirectApplicants) {
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 12px 30px rgba(0,0,0,0.15)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!showDirectApplicants) {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+          }
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem' }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <span style={{ fontWeight: '600', fontSize: '1.1rem' }}>
+            추가 지원자 보기
+          </span>
+        </div>
+        </div>
 
       {loading ? (
         <div style={{
@@ -336,11 +382,21 @@ export default function CompanySidebar({
                         padding: '0.2rem 0.6rem',
                         borderRadius: '12px',
                         fontSize: '0.7rem',
-                        fontWeight: '600'
+                        fontWeight: '600',
+                        zIndex: 10
                       }}>
                         {post.postStatus === 'ACTIVE' ? '진행중' : '마감'}
                       </div>
-                      <div style={{ fontWeight: '600', marginBottom: '0.8rem', color: '#2d3748', fontSize: '1.1rem' }}>{post.postTitle}</div>
+                      <div style={{ 
+                        fontWeight: '600', 
+                        marginBottom: '0.8rem', 
+                        color: '#2d3748', 
+                        fontSize: '1.1rem',
+                        paddingRight: '4rem',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>{post.postTitle}</div>
                       <div style={{ fontSize: '0.9rem', color: '#4a5568', display: 'flex', gap: '1rem', flexWrap: 'wrap', flexDirection: 'column' }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           {/* 위치 SVG */}
@@ -442,11 +498,21 @@ export default function CompanySidebar({
                       padding: '0.2rem 0.6rem',
                       borderRadius: '12px',
                       fontSize: '0.7rem',
-                      fontWeight: '600'
+                      fontWeight: '600',
+                      zIndex: 10
                     }}>
                       {post.postStatus === 'ACTIVE' ? '진행중' : '마감'}
                     </div>
-                    <div style={{ fontWeight: '600', marginBottom: '0.8rem', color: '#2d3748', fontSize: '1.1rem' }}>{post.postTitle}</div>
+                    <div style={{ 
+                      fontWeight: '600', 
+                      marginBottom: '0.8rem', 
+                      color: '#2d3748', 
+                      fontSize: '1.1rem',
+                      paddingRight: '4rem',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>{post.postTitle}</div>
                     <div style={{ fontSize: '0.9rem', color: '#4a5568', display: 'flex', gap: '1rem', flexWrap: 'wrap', flexDirection: 'column' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         {/* 위치 SVG */}

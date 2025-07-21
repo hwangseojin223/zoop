@@ -78,7 +78,7 @@
     padding: 0.3rem 1rem;
     border-radius: 999px;
     font-weight: 500;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     cursor: pointer;
     transition: all 0.3s ease;
     color: #333;
@@ -95,6 +95,87 @@
     display: flex;
     gap: 0.8rem;
     align-items: center;
+  }
+
+  /* 사용자 프로필 드롭다운 스타일 */
+  .user-profile {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #333;
+    cursor: pointer;
+    position: relative;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+    gap: 0.5rem;
+  }
+
+  .zoop-navbar.about .user-profile {
+    color: white;
+  }
+
+  .user-profile:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  .zoop-navbar.about .user-profile:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .user-name {
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .zoop-navbar.about .user-avatar {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  /* 드롭다운 메뉴 스타일 */
+  .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 180px;
+    z-index: 101;
+    overflow: hidden;
+    margin-top: 0.5rem;
+    padding: 0.5rem 0;
+  }
+
+  .dropdown-item {
+    padding: 0.75rem 1.25rem;
+    color: #333;
+    font-size: 0.9rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.2s ease;
+  }
+
+  .dropdown-item:hover {
+    background-color: #f5f5f5;
+  }
+
+  .logout-dropdown-item {
+    color: #dc3545;
+    font-weight: 500;
+  }
+
+  .logout-dropdown-item:hover {
+    background-color: #ffeaea;
   }
   
   /* .auth-buttons span::after {
@@ -217,5 +298,55 @@
     .zoop-navbar {
       padding: 0.5rem 0.8rem;
     }
+  }
+
+  /* 모바일 사용자 정보 스타일 */
+  .mobile-user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1rem 0;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  .mobile-user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    object-fit: cover;
+  }
+
+  .mobile-user-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .mobile-menu-item {
+    width: 100%;
+    padding: 0.8rem 0;
+    text-align: left;
+    background: none;
+    border: none;
+    font-size: 1rem;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-radius: 0;
+  }
+
+  .mobile-menu-item:hover {
+    background-color: #f5f5f5;
+  }
+
+  .mobile-menu-item.logout {
+    color: #dc3545;
+    font-weight: 500;
+  }
+
+  .mobile-menu-item.logout:hover {
+    background-color: #ffeaea;
   }
   

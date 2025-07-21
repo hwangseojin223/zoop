@@ -10,7 +10,6 @@ import lombok.Data;
 public class PortfolioSubmissionRequestDto {
     private Integer postId;
     private Integer candidateId;
-    private String portfolioContent;
     private String portfolioUrl;
     private String goalStatement;
     private String suitabilityStatement;

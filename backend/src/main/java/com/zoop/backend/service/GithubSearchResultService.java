@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import com.zoop.backend.domain.dto.GithubSearchResultWithStageDto;
 
 @Service
 @RequiredArgsConstructor
@@ -34,5 +36,9 @@ public class GithubSearchResultService {
 
     public Optional<GithubSearchResult> findById(Long githubSearchResultId) {
         return githubSearchResultRepository.findById(githubSearchResultId);
+    }
+
+    public List<GithubSearchResultWithStageDto> getSearchResultsWithStage(Long postId) {
+        return githubSearchResultRepository.findSearchResultsWithStageByPostId(postId);
     }
 } 
