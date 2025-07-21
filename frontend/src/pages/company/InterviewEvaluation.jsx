@@ -2,6 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import SEO from '../../components/SEO';
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
+
+// SVG 아이콘 컴포넌트 (단색, 흰색/회색)
+const LightbulbIcon = ({size=28, color='#bbb'}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12c.3.3.5.7.5 1.1V17a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1v-1.9c0-.4.2-.8.5-1.1A7 7 0 0 0 12 2z"/></svg>
+);
+const ChatIcon = ({size=28, color='#bbb'}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+);
+const WrenchIcon = ({size=28, color='#bbb'}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.7 19.3l-2.4-2.4a1 1 0 0 0-1.4 0l-2.1 2.1a7 7 0 1 1 2.1-2.1l2.1-2.1a1 1 0 0 0 0-1.4l-2.4-2.4"/></svg>
+);
+const StarIcon = ({size=28, color='#bbb'}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15 8.5 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 9 8.5 12 2"/></svg>
+);
+const BookIcon = ({size=28, color='#bbb'}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/><path d="M16 2v4"/><path d="M8 2v4"/></svg>
+);
+const CATEGORY_SVGS = {
+  '전문성': <LightbulbIcon color="#bbb" />, '의사소통': <ChatIcon color="#bbb" />, '의사소통 능력': <ChatIcon color="#bbb" />, '문제해결': <WrenchIcon color="#bbb" />, '문제해결 능력': <WrenchIcon color="#bbb" />, '자신감': <StarIcon color="#bbb" />, '자신감과 태도': <StarIcon color="#bbb" />, '경험의 구체성': <BookIcon color="#bbb" />
+};
 
 export default function InterviewEvaluation() {
   const { postId, candidateId } = useParams();
@@ -106,53 +127,28 @@ export default function InterviewEvaluation() {
   // 분석 데이터 파싱 함수
   const parseAnalysisData = (analysisData) => {
     if (!analysisData) return null;
-    
     try {
-      // JSON 형태인 경우 파싱
-      if (typeof analysisData === 'string' && analysisData.startsWith('{')) {
+      // JSON 형태인 경우 파싱 (새 구조)
+      if (typeof analysisData === 'string' && analysisData.trim().startsWith('{')) {
         const parsed = JSON.parse(analysisData);
-        // JSON 내부의 analysis 필드에서 실제 분석 텍스트 추출
-        const actualAnalysis = parsed.analysis || analysisData;
-        
-        // 텍스트 형태인 경우 파싱
-        const lines = actualAnalysis.split('\n');
-        const categories = [];
-        let totalScore = 0;
-        let overallEvaluation = '';
-        
-        for (const line of lines) {
-          if (line.includes('점 -')) {
-            const match = line.match(/(.+):\s*(\d+)점\s*-\s*(.+)/);
-            if (match) {
-              const category = match[1].trim();
-              const score = parseInt(match[2]);
-              const reason = match[3].trim();
-              categories.push({ category, score, reason });
-              totalScore += score;
-            }
-          } else if (line.includes('총점:')) {
-            const match = line.match(/총점:\s*(\d+)점/);
-            if (match) {
-              totalScore = parseInt(match[1]);
-            }
-          } else if (line.includes('종합평가:')) {
-            overallEvaluation = line.replace('종합평가:', '').trim();
-          }
+        // 새 구조: categories, total_feedback, visualization
+        if (parsed.categories && Array.isArray(parsed.categories)) {
+          return {
+            categories: parsed.categories,
+            totalScore: parsed.visualization?.score_distribution?.current || null,
+            totalFeedback: parsed.total_feedback || null,
+            visualization: parsed.visualization || null
+          };
         }
-        
-        return {
-          categories,
-          totalScore,
-          overallEvaluation
-        };
+        // 구버전 호환
+        const actualAnalysis = parsed.analysis || analysisData;
+        // 이하 구버전 파싱 로직...
       }
-      
-      // 일반 텍스트 형태인 경우 파싱
+      // 이하 구버전 파싱 로직...
       const lines = analysisData.split('\n');
       const categories = [];
       let totalScore = 0;
       let overallEvaluation = '';
-      
       for (const line of lines) {
         if (line.includes('점 -')) {
           const match = line.match(/(.+):\s*(\d+)점\s*-\s*(.+)/);
@@ -172,7 +168,6 @@ export default function InterviewEvaluation() {
           overallEvaluation = line.replace('종합평가:', '').trim();
         }
       }
-      
       return {
         categories,
         totalScore,
@@ -235,6 +230,18 @@ export default function InterviewEvaluation() {
       </div>
     );
   }
+
+  // 카테고리별 이모지 매핑
+  const CATEGORY_ICONS = {
+    '전문성': '💡',
+    '의사소통': '🗣️',
+    '의사소통 능력': '🗣️',
+    '문제해결': '🛠️',
+    '문제해결 능력': '🛠️',
+    '자신감': '😎',
+    '자신감과 태도': '😎',
+    '경험의 구체성': '📚',
+  };
 
   return (
     <div style={{ fontFamily: 'SUIT, Apple SD Gothic Neo, sans-serif', backgroundColor: '#ffffff', minHeight: '100vh' }}>
@@ -327,107 +334,179 @@ export default function InterviewEvaluation() {
               <h2 style={{ fontSize: '1.3rem', fontWeight: '600', marginBottom: '1rem', color: '#2d3748' }}>
                 AI 면접 분석 결과
               </h2>
-              {analysisResult && parsedAnalysis ? (
+              {parsedAnalysis && parsedAnalysis.categories ? (
                 <div>
-                  {/* 총점 표시 */}
-                  <div style={{ 
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
-                    color: 'white', 
-                    padding: '1.5rem', 
-                    borderRadius: '12px', 
-                    marginBottom: '1.5rem',
-                    textAlign: 'center'
+                  {/* 종합 요약 헤더 */}
+                  <div style={{
+                    background: 'linear-gradient(90deg, #30c59b 0%, #6ee7b7 100%)',
+                    color: 'white',
+                    padding: '2.2rem 1.5rem 1.5rem 1.5rem',
+                    borderRadius: '18px',
+                    marginBottom: '2rem',
+                    textAlign: 'center',
+                    boxShadow: '0 6px 32px 0 #30c59b33',
+                    position: 'relative',
+                    overflow: 'hidden',
                   }}>
-                    <div style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                      {parsedAnalysis.totalScore || analysisResult.analysisScore}점
+                    <div style={{ fontSize: '2.8rem', fontWeight: 'bold', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                      {/* 별 SVG로 대체 */}
+                      {parsedAnalysis.totalScore >= 90
+                        ? <StarIcon size={38} color="#fff" />
+                        : <StarIcon size={38} color="#fff" />}
+                      {parsedAnalysis.totalScore}점
                     </div>
-                    <div style={{ fontSize: '1rem', opacity: 0.9 }}>
+                    <div style={{ fontSize: '1.08rem', opacity: 0.93, fontWeight: 500, letterSpacing: '-0.5px' }}>
                       AI 면접 종합 평가
                     </div>
                   </div>
 
-                  {/* 카테고리별 점수 테이블 */}
-                  {parsedAnalysis.categories && parsedAnalysis.categories.length > 0 && (
-                    <div style={{ marginBottom: '1.5rem' }}>
-                      <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem', color: '#2d3748' }}>
-                        세부 평가
-                      </h3>
-                      <div style={{ 
-                        background: '#f8fafc', 
-                        borderRadius: '8px',
-                        border: '1px solid #e2e8f0',
-                        overflow: 'hidden'
-                      }}>
-                        {parsedAnalysis.categories.map((category, index) => (
-                          <div key={index} style={{
-                            padding: '1rem',
-                            borderBottom: index < parsedAnalysis.categories.length - 1 ? '1px solid #e2e8f0' : 'none',
-                            background: index % 2 === 0 ? '#ffffff' : '#f8fafc'
-                          }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                              <span style={{ fontWeight: '600', color: '#2d3748', fontSize: '0.95rem' }}>
-                                {category.category}
-                              </span>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <div style={{
-                                  width: '60px',
-                                  height: '8px',
-                                  background: '#e2e8f0',
-                                  borderRadius: '4px',
-                                  overflow: 'hidden'
-                                }}>
-                                  <div style={{
-                                    width: `${(category.score / 25) * 100}%`,
-                                    height: '100%',
-                                    background: category.score >= 20 ? '#48bb78' : 
-                                               category.score >= 15 ? '#f6ad55' : '#e53e3e',
-                                    transition: 'width 0.3s ease'
-                                  }} />
-                                </div>
-                                <span style={{ 
-                                  fontWeight: 'bold', 
-                                  color: category.score >= 20 ? '#48bb78' : 
-                                         category.score >= 15 ? '#f6ad55' : '#e53e3e',
-                                  fontSize: '0.9rem',
-                                  minWidth: '30px'
-                                }}>
-                                  {category.score}점
+                  {/* 카테고리별 상세 카드 */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                    gap: '1.5rem',
+                    marginBottom: '2.5rem',
+                  }}>
+                    {parsedAnalysis.categories.map((cat, idx) => (
+                      <div key={cat.name || idx} style={{
+                        background: 'linear-gradient(135deg, #f8fafc 60%, #e6f9f3 100%)',
+                        borderRadius: '16px',
+                        border: '1.5px solid #e2e8f0',
+                        padding: '1.5rem 1.2rem',
+                        boxShadow: '0 4px 24px #30c59b13',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.7rem',
+                        position: 'relative',
+                        transition: 'box-shadow 0.2s',
+                        minHeight: 260,
+                        cursor: 'pointer',
+                      }}
+                      onMouseOver={e => e.currentTarget.style.boxShadow = '0 8px 32px #30c59b22'}
+                      onMouseOut={e => e.currentTarget.style.boxShadow = '0 4px 24px #30c59b13'}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 2 }}>
+                          <span style={{ fontSize: '2rem' }}>{CATEGORY_SVGS[cat.name] || <StarIcon color="#bbb" />}</span>
+                          <span style={{ fontWeight: 700, fontSize: '1.13rem', color: '#059669' }}>{cat.name}</span>
+                          <span style={{ color: '#222', fontWeight: 500, fontSize: '1.05rem', marginLeft: 6 }}>({cat.score}/{cat.max_score})</span>
+                        </div>
+                        <div style={{ fontSize: '0.99rem', color: '#333', marginBottom: 2 }}><b>근거:</b> {cat.reason}</div>
+                        <div style={{ fontSize: '0.97rem', color: '#444' }}><b>좋은 예시:</b> {cat.good_example}</div>
+                        <div style={{ fontSize: '0.97rem', color: '#888' }}><b>아쉬운 예시:</b> {cat.bad_example}</div>
+                        <div style={{ fontSize: '0.97rem', color: '#444' }}><b>개선점:</b> {cat.improvement}</div>
+                        <div style={{ fontSize: '0.97rem', color: '#444' }}><b>다른 지원자와의 비교:</b> {cat.compare_to_others}</div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
+                          {cat.tags && cat.tags.length > 0 ? cat.tags.map((tag, i) => (
+                            <span key={tag+i} style={{
+                              background: 'linear-gradient(90deg,#30c59b22 60%,#6ee7b733 100%)',
+                              color: '#059669',
+                              fontWeight: 600,
+                              fontSize: '0.93rem',
+                              borderRadius: 8,
+                              padding: '2px 10px',
+                              marginRight: 2,
+                              marginBottom: 2,
+                              letterSpacing: '-0.5px',
+                              border: '1px solid #b2f5ea',
+                              boxShadow: '0 1px 4px #30c59b11',
+                            }}>{tag}</span>
+                          )) : <span style={{ color: '#bbb' }}>-</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* 시각화: 카테고리별 점수 바 차트 */}
+                  {parsedAnalysis.visualization && parsedAnalysis.visualization.category_scores && (
+                    <>
+                      <div style={{ marginBottom: '2.5rem', background: '#f8fafc', borderRadius: 14, padding: '2rem 1.5rem', boxShadow: '0 2px 12px #30c59b11', border: '1.5px solid #e2e8f0' }}>
+                        <h3 style={{ fontSize: '1.13rem', fontWeight: '700', marginBottom: '1.2rem', color: '#059669', letterSpacing: '-0.5px' }}>카테고리별 점수 시각화</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.7rem' }}>
+                          {parsedAnalysis.visualization.category_labels.map((label, i) => (
+                            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 18, minHeight: 44 }}>
+                              {/* SVG + 제목 한 줄에 */}
+                              <div style={{ display: 'flex', alignItems: 'center', width: 150, minWidth: 120 }}>
+                                <span style={{ display: 'flex', alignItems: 'center', marginRight: 10 }}>
+                                  {/* SVG 크기 크게 */}
+                                  {React.cloneElement(CATEGORY_SVGS[label] || <StarIcon color="#bbb" />, { size: 32 })}
                                 </span>
+                                <span style={{ color: '#059669', fontWeight: 700, fontSize: '1.08rem', letterSpacing: '-0.5px' }}>{label}</span>
+                              </div>
+                              <div style={{ flex: 1, background: '#e2e8f0', borderRadius: 8, height: 22, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+                                <div style={{
+                                  width: `${(parsedAnalysis.visualization.category_scores[i] / (parsedAnalysis.categories[i]?.max_score || 25)) * 100}%`,
+                                  height: '100%',
+                                  background: 'linear-gradient(90deg,#30C59B 60%,#6ee7b7 100%)',
+                                  borderRadius: 8,
+                                  transition: 'width 0.7s cubic-bezier(.4,2,.6,1)',
+                                  boxShadow: '0 2px 8px #30c59b22',
+                                }} />
+                                <span style={{
+                                  position: 'absolute',
+                                  right: 10,
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                  fontWeight: 700,
+                                  color: '#059669',
+                                  fontSize: '1.05rem',
+                                  background: '#fff',
+                                  borderRadius: 8,
+                                  padding: '0 12px',
+                                  boxShadow: '0 1px 4px #30c59b11',
+                                  lineHeight: 1.7
+                                }}>{parsedAnalysis.visualization.category_scores[i]}점</span>
                               </div>
                             </div>
-                            <p style={{ 
-                              fontSize: '0.85rem', 
-                              color: '#4a5568', 
-                              lineHeight: '1.4',
-                              margin: 0
-                            }}>
-                              {category.reason}
-                            </p>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
+                        {/* 평균/상위10% 비교 */}
+                        <div style={{ marginTop: 22, fontSize: '1.01rem', color: '#444', display: 'flex', gap: 18, alignItems: 'center' }}>
+                          <span><b>평균 점수:</b> <span style={{ color: '#059669', fontWeight: 700 }}>{parsedAnalysis.visualization.score_distribution?.average}</span></span>
+                          <span><b>상위 10%:</b> <span style={{ color: '#f59e42', fontWeight: 700 }}>{parsedAnalysis.visualization.score_distribution?.top_10_percent}</span></span>
+                        </div>
                       </div>
-                    </div>
+                      {/* Radar Chart 시각화 */}
+                      <div style={{ width: '100%', maxWidth: 520, margin: '0 auto 2.5rem auto', background: '#fff', borderRadius: 16, boxShadow: '0 2px 12px #30c59b11', border: '1.5px solid #e2e8f0', padding: '1.5rem', overflow: 'visible' }}>
+                        <h3 style={{ fontSize: '1.13rem', fontWeight: '700', marginBottom: '1.2rem', color: '#059669', letterSpacing: '-0.5px', textAlign: 'center' }}>카테고리별 점수 레이더 차트</h3>
+                        <ResponsiveContainer width="100%" height={340}>
+                          <RadarChart cx="50%" cy="50%" outerRadius="80%" data={parsedAnalysis.visualization.category_labels.map((label, i) => ({
+                            category: label,
+                            score: parsedAnalysis.visualization.category_scores[i],
+                            max: parsedAnalysis.categories[i]?.max_score || 25
+                          }))}>
+                            <PolarGrid stroke="#e0e0e0" />
+                            <PolarAngleAxis dataKey="category" tick={{ fill: '#888', fontWeight: 600, fontSize: 15 }} tickLine={false} tickMargin={18} />
+                            <Radar name="점수" dataKey="score" stroke="#30c59b" fill="#30c59b" fillOpacity={0.25} />
+                          </RadarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </>
                   )}
 
-                  {/* 종합 평가 */}
-                  {parsedAnalysis.overallEvaluation && (
-                    <div style={{ 
-                      background: '#f0fdf4', 
-                      padding: '1rem', 
-                      borderRadius: '8px',
-                      border: '1px solid #bbf7d0'
-                    }}>
-                      <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#166534' }}>
-                        종합 평가
-                      </h3>
-                      <p style={{ 
-                        fontSize: '0.9rem', 
-                        lineHeight: '1.5',
-                        color: '#14532d',
-                        margin: 0
-                      }}>
-                        {parsedAnalysis.overallEvaluation}
-                      </p>
+                  {/* 전체 요약/추천 포인트 */}
+                  {parsedAnalysis.totalFeedback && (
+                    <div style={{ background: 'linear-gradient(90deg,#f0fdf4 60%,#e6f9f3 100%)', padding: '1.5rem', borderRadius: '14px', border: '1.5px solid #bbf7d0', marginBottom: '2rem', boxShadow: '0 2px 12px #30c59b11' }}>
+                      <h3 style={{ fontSize: '1.13rem', fontWeight: '700', marginBottom: '0.7rem', color: '#166534', letterSpacing: '-0.5px' }}>전체 요약</h3>
+                      <div style={{ fontSize: '1.01rem', color: '#14532d', marginBottom: 8 }}><b>요약:</b> {parsedAnalysis.totalFeedback.summary}</div>
+                      <div style={{ fontSize: '1.01rem', color: '#14532d', marginBottom: 8 }}><b>헤드헌팅 추천 포인트:</b> {parsedAnalysis.totalFeedback.headhunting_point}</div>
+                      <div style={{ fontSize: '1.01rem', color: '#14532d', marginBottom: 8 }}><b>추천/코멘트:</b> {parsedAnalysis.totalFeedback.recommendation}</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
+                        {parsedAnalysis.totalFeedback.tags && parsedAnalysis.totalFeedback.tags.length > 0 ? parsedAnalysis.totalFeedback.tags.map((tag, i) => (
+                          <span key={tag+i} style={{
+                            background: 'linear-gradient(90deg,#30c59b22 60%,#6ee7b733 100%)',
+                            color: '#059669',
+                            fontWeight: 600,
+                            fontSize: '0.97rem',
+                            borderRadius: 8,
+                            padding: '2px 12px',
+                            marginRight: 2,
+                            marginBottom: 2,
+                            letterSpacing: '-0.5px',
+                            border: '1px solid #b2f5ea',
+                            boxShadow: '0 1px 4px #30c59b11',
+                          }}>{tag}</span>
+                        )) : <span style={{ color: '#bbb' }}>-</span>}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -632,15 +711,32 @@ export default function InterviewEvaluation() {
                       padding: '0.75rem 1.5rem',
                       border: 'none',
                       borderRadius: '8px',
-                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                      color: '#ffffff',
-                      fontSize: '1rem',
-                      fontWeight: '600',
-                      cursor: submitting ? 'not-allowed' : 'pointer',
-                      opacity: submitting ? 0.7 : 1
+                      background: "linear-gradient(135deg, #30C59B 0%, #2563eb 100%)",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "999px",
+                      width: "auto",
+                      height: "44px",
+                      padding: "0 1.5rem",
+                      cursor: "pointer",
+                      transition: "0.2s",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "0.7rem",
+                      fontWeight: 700,
+                      fontSize: "1.08rem",
+                      boxShadow: "0 2px 8px rgba(48,197,155,0.18)",
                     }}
                   >
-                    {submitting ? '저장 중...' : '평가 저장'}
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="4" y="3" width="16" height="18" rx="2" />
+                      <path d="M9 7h6" />
+                      <path d="M9 11h6" />
+                      <path d="M9 15h2" />
+                      <path d="M15 19l2 2 4-4" stroke="#30C59B" strokeWidth="2" fill="none"/>
+                    </svg>
+                    면접 평가
                   </button>
                 </div>
               </form>
