@@ -1,17 +1,19 @@
 package com.zoop.backend.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.zoop.backend.domain.dto.AiAnalysisResultDto;
 import com.zoop.backend.domain.entity.AiAnalysisResult;
 import com.zoop.backend.domain.entity.GithubSearchResult;
 import com.zoop.backend.repository.AiAnalysisResultRepository;
 import com.zoop.backend.repository.GithubSearchResultRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -28,8 +30,8 @@ public class AiAnalysisResultService {
                 .jobCandidateId(dto.getJobCandidateId())
                 .analysisData(dto.getAnalysisData())
                 .analysisScore(dto.getAnalysisScore())
-                .analysisDate(LocalDateTime.now())
-                .analysisCreatedAt(LocalDateTime.now())
+                .analysisDate(dto.getAnalysisDate() != null ? dto.getAnalysisDate() : LocalDateTime.now())
+                .analysisCreatedAt(dto.getAnalysisCreatedAt() != null ? dto.getAnalysisCreatedAt() : LocalDateTime.now())
                 .build();
 
         AiAnalysisResult saved = aiAnalysisResultRepository.save(entity);
@@ -62,7 +64,32 @@ public class AiAnalysisResultService {
         return aiAnalysisResultRepository.findById(analysisId);
     }
 
+    public AiAnalysisResult save(AiAnalysisResult aiAnalysisResult) {
+        return aiAnalysisResultRepository.save(aiAnalysisResult);
+    }
+
     public List<AiAnalysisResult> findAll() {
         return aiAnalysisResultRepository.findAll();
+    }
+
+    // 내 버전: jobCandidateId와 analysisType으로 최신순 정렬 조회
+    public List<AiAnalysisResult> findByJobCandidateIdAndAnalysisType(Long jobCandidateId, String analysisType) {
+        return aiAnalysisResultRepository.findByJobCandidateIdAndAnalysisTypeOrderByAnalysisDateDesc(jobCandidateId, analysisType);
+    }
+
+    // 팀 버전: 분석 결과 삭제 기능
+    @Transactional
+    public boolean deleteById(Long analysisId) {
+        Optional<AiAnalysisResult> result = aiAnalysisResultRepository.findById(analysisId);
+        if (result.isPresent()) {
+            aiAnalysisResultRepository.deleteById(analysisId);
+            return true;
+        }
+        return false;
+    }
+
+    @Transactional
+    public int updateJobCandidateIdForPortfolio(Long candPortfolioId, Long jobCandidateId) {
+        return aiAnalysisResultRepository.updateJobCandidateIdByCandPortfolioId(jobCandidateId, candPortfolioId);
     }
 } 

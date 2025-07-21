@@ -86,7 +86,6 @@ export default function Index() {
     waves.push({ r, idx: i });
   }
 
-
   // 사선 회전 angle
   const [angle, setAngle] = useState(0);
   useEffect(() => {

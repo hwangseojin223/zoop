@@ -19,4 +19,9 @@ public class CompanyService {
         System.out.println("📦 저장 시도 중...");
         return companyRepository.save(company);
     }
+
+    @Transactional(readOnly = true)
+    public Company getCompanyById(Long companyId) {
+        return companyRepository.findById(companyId).orElse(null);
+    }
 }

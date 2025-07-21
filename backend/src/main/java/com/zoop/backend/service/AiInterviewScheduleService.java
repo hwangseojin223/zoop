@@ -6,6 +6,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -16,6 +17,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.zoop.backend.domain.dto.InterviewScheduleRequestDto;
 import com.zoop.backend.domain.dto.InterviewScheduleResponseDto;
+import com.zoop.backend.domain.dto.modal.AiInterviewScheduleResponse;
+import com.zoop.backend.domain.dto.modal.InterviewVideoResponse;
 import com.zoop.backend.domain.entity.AiInterviewSchedule;
 import com.zoop.backend.domain.entity.JobCandProgress;
 import com.zoop.backend.repository.AiInterviewScheduleRepository;
@@ -26,14 +29,17 @@ public class AiInterviewScheduleService {
     private final AiInterviewScheduleRepository aiInterviewScheduleRepository;
     private final JobCandProgressRepository jobCandProgressRepository;
     private final S3Service s3Service;
+    private final InterviewAnalysisService interviewAnalysisService;
 
     @Autowired
     public AiInterviewScheduleService(AiInterviewScheduleRepository aiInterviewScheduleRepository,
                                     JobCandProgressRepository jobCandProgressRepository,
-                                    S3Service s3Service) {
+                                    S3Service s3Service,
+                                    InterviewAnalysisService interviewAnalysisService) {
         this.aiInterviewScheduleRepository = aiInterviewScheduleRepository;
         this.jobCandProgressRepository = jobCandProgressRepository;
         this.s3Service = s3Service;
+        this.interviewAnalysisService = interviewAnalysisService;
     }
     
     @Transactional
@@ -70,39 +76,40 @@ public class AiInterviewScheduleService {
         // 2. 면접 일정 생성
         LocalDateTime receivedDateTime = LocalDateTime.parse(requestDto.getScheduledTime(), DateTimeFormatter.ISO_DATE_TIME);
         
-        // 한국 시간대(KST)로 ZonedDateTime 생성
-        ZonedDateTime koreaTime = receivedDateTime.atZone(ZoneId.of("Asia/Seoul"));
-        
-        // UTC 시간대로 변환
-        ZonedDateTime utcTime = koreaTime.withZoneSameInstant(ZoneId.of("UTC"));
+        // 받은 시간을 UTC로 가정하고 파싱 (프론트엔드에서 이미 UTC로 전송됨)
+        ZonedDateTime utcTime = receivedDateTime.atZone(ZoneId.of("UTC"));
         
         // 데이터베이스에 저장할 LocalDateTime (UTC 기준)
         LocalDateTime timeToSave = utcTime.toLocalDateTime();
-        LocalDateTime deadlineTime = timeToSave.plusHours(24); // 면접 마감 시간은 예약 시간 + 24시간으로 설정
+        LocalDateTime deadlineTime = timeToSave.plusDays(7); // 면접 마감 시간은 예약 시간 + 7일로 설정
+        
+        // 한국 시간으로 변환 (응답용)
+        ZonedDateTime koreaTime = utcTime.withZoneSameInstant(ZoneId.of("Asia/Seoul"));
         
         // 3. 면접 링크 생성 (실제로는 더 복잡한 로직이 필요할 수 있음)
         String interviewLink = "https://zoop.ai/interview/" + UUID.randomUUID().toString();
         
         // 4. AiInterviewSchedule 엔티티 생성 및 저장
         AiInterviewSchedule schedule = AiInterviewSchedule.builder()
-            .jobCandidateId(jobCandProgress.getJobCandidateId().intValue()) // Long을 Integer로 변환
+            .jobCandProgress(jobCandProgress) // 관계 설정 (jobCandidateId 대신)
             .aiInterviewScheduledTime(timeToSave)
             .aiInterviewDeadlineTime(deadlineTime)
             .aiInterviewLink(interviewLink)
             .aiInterviewStatus("scheduled") // 초기 상태는 'scheduled'
+            .aiAnalysisStatus("not_started") // 초기 분석 상태는 'not_started'
             .build();
         
         AiInterviewSchedule savedSchedule = aiInterviewScheduleRepository.save(schedule);
         
         // 5. JobCandProgress 상태 업데이트 (2y -> 3n)
         jobCandProgress.setJobCandCurrStage("3n");
-        jobCandProgress.setAiIntrvwScheduleId(savedSchedule.getAiInterviewScheduleId().longValue()); // Integer를 Long으로 변환
+        jobCandProgress.setAiIntrvwScheduleId(savedSchedule.getAiInterviewScheduleId());
         jobCandProgressRepository.save(jobCandProgress);
 
         // 6. 응답 DTO 생성 및 반환
         return InterviewScheduleResponseDto.builder()
                 .scheduleId(savedSchedule.getAiInterviewScheduleId())
-                .jobCandidateId(jobCandProgress.getJobCandidateId().intValue())
+                .jobCandidateId(savedSchedule.getJobCandProgress().getJobCandidateId())
                 .scheduledTime(koreaTime.toLocalDateTime()) // 응답은 한국 시간으로
                 .deadlineTime(deadlineTime.atZone(ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of("Asia/Seoul")).toLocalDateTime()) // 마감 시간도 한국 시간으로
                 .interviewLink(interviewLink)
@@ -112,11 +119,9 @@ public class AiInterviewScheduleService {
                 .build();
     }
 
-    
     @Transactional(readOnly = true)
-    public List<InterviewScheduleResponseDto> getInterviewSchedulesByCandidate(Integer candidateId) {
-        List<AiInterviewSchedule> schedules = aiInterviewScheduleRepository.findByJobCandidateId(candidateId);
-        
+    public List<InterviewScheduleResponseDto> getInterviewSchedulesByCandidate(Long candidateId) {
+        List<AiInterviewSchedule> schedules = aiInterviewScheduleRepository.findByJobCandProgress_JobCandidateId(candidateId);
         return schedules.stream()
                 .map(schedule -> {
                     // 저장된 UTC 시간을 한국 시간으로 변환
@@ -129,7 +134,7 @@ public class AiInterviewScheduleService {
                     LocalDateTime koreaDeadlineTime = utcZonedDeadlineTime.withZoneSameInstant(ZoneId.of("Asia/Seoul")).toLocalDateTime();
                     return InterviewScheduleResponseDto.builder()
                             .scheduleId(schedule.getAiInterviewScheduleId())
-                            .jobCandidateId(schedule.getJobCandidateId())
+                            .jobCandidateId(schedule.getJobCandProgress().getJobCandidateId())
                             .scheduledTime(koreaScheduledTime) // 한국 시간으로 반환
                             .deadlineTime(koreaDeadlineTime) // 한국 시간으로 반환
                             .interviewLink(schedule.getAiInterviewLink())
@@ -140,9 +145,9 @@ public class AiInterviewScheduleService {
                 })
                 .collect(Collectors.toList());
     }
-    
+
     @Transactional(readOnly = true)
-    public InterviewScheduleResponseDto getInterviewSchedule(Integer scheduleId) {
+    public InterviewScheduleResponseDto getInterviewSchedule(Long scheduleId) {
         // 디버깅 로그 추가
         System.out.println("면접 일정 조회 시도: " + scheduleId);
         
@@ -165,7 +170,7 @@ public class AiInterviewScheduleService {
 
         return InterviewScheduleResponseDto.builder()
                 .scheduleId(schedule.getAiInterviewScheduleId())
-                .jobCandidateId(schedule.getJobCandidateId())
+                .jobCandidateId(schedule.getJobCandProgress().getJobCandidateId())
                 .scheduledTime(koreaScheduledTime) // 한국 시간으로 반환
                 .deadlineTime(koreaDeadlineTime) // 한국 시간으로 반환
                 .interviewLink(schedule.getAiInterviewLink())
@@ -176,7 +181,7 @@ public class AiInterviewScheduleService {
     }
     
     @Transactional
-    public InterviewScheduleResponseDto updateInterviewStatus(Integer scheduleId, String status) {
+    public InterviewScheduleResponseDto updateInterviewStatus(Long scheduleId, String status) {
         AiInterviewSchedule schedule = aiInterviewScheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new RuntimeException("해당 면접 일정을 찾을 수 없습니다."));
         
@@ -199,7 +204,7 @@ public class AiInterviewScheduleService {
 
         return InterviewScheduleResponseDto.builder()
                 .scheduleId(updatedSchedule.getAiInterviewScheduleId())
-                .jobCandidateId(updatedSchedule.getJobCandidateId())
+                .jobCandidateId(updatedSchedule.getJobCandProgress().getJobCandidateId())
                 .scheduledTime(koreaScheduledTime)
                 .deadlineTime(koreaDeadlineTime)
                 .interviewLink(updatedSchedule.getAiInterviewLink())
@@ -210,23 +215,23 @@ public class AiInterviewScheduleService {
     }
     
     @Transactional(readOnly = true)
-    public InterviewScheduleResponseDto getInterviewByPostIdAndCandidateId(Integer postId, Integer candidateId) {
+    public InterviewScheduleResponseDto getInterviewByPostIdAndCandidateId(Long postId, Long candidateId) {
         // JobCandProgress 테이블에서 postId와 candidateId로 jobCandidateId 찾기
         JobCandProgress jobCandProgress = jobCandProgressRepository
             .findByPost_PostIdAndCandidate_CandidateId(postId, candidateId)
             .orElseThrow(() -> new RuntimeException("해당 공고에 대한 후보자 진행 상태를 찾을 수 없습니다."));
         
         // jobCandidateId로 면접 일정 찾기
-        Integer jobCandidateId = jobCandProgress.getJobCandidateId().intValue();
+        Long jobCandidateId = jobCandProgress.getJobCandidateId();
         
         // aiIntrvwScheduleId가 있으면 해당 ID로 면접 일정 조회
         if (jobCandProgress.getAiIntrvwScheduleId() != null) {
-            Integer scheduleId = jobCandProgress.getAiIntrvwScheduleId().intValue();
+            Long scheduleId = jobCandProgress.getAiIntrvwScheduleId();
             return getInterviewSchedule(scheduleId);
         }
         
         // 없으면 jobCandidateId로 면접 일정 조회 (최신 일정 하나만)
-        List<AiInterviewSchedule> schedules = aiInterviewScheduleRepository.findByJobCandidateId(jobCandidateId);
+        List<AiInterviewSchedule> schedules = aiInterviewScheduleRepository.findByJobCandProgress_JobCandidateId(jobCandidateId);
         if (schedules.isEmpty()) {
             throw new RuntimeException("해당 후보자의 면접 일정을 찾을 수 없습니다.");
         }
@@ -241,24 +246,35 @@ public class AiInterviewScheduleService {
     }
 
     @Transactional
-    public InterviewScheduleResponseDto completeInterview(Integer scheduleId) {
+    public InterviewScheduleResponseDto completeInterview(Long scheduleId) {
+        System.out.println("[AiInterviewScheduleService] 면접 완료 처리 시작: scheduleId=" + scheduleId);
+        
         AiInterviewSchedule schedule = aiInterviewScheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new RuntimeException("해당 면접 일정을 찾을 수 없습니다."));
+        
+        System.out.println("[AiInterviewScheduleService] 면접 일정 조회 성공: " + schedule.getAiInterviewScheduleId());
         
         // 면접 상태를 완료로 변경
         schedule.setAiInterviewStatus("completed");
         schedule.setAiInterviewCompletionTime(LocalDateTime.now());
         
+        // 분석 상태를 pending으로 변경 (영상이 업로드되면 분석 시작)
+        schedule.setAiAnalysisStatus("pending");
+        
         AiInterviewSchedule updatedSchedule = aiInterviewScheduleRepository.save(schedule);
+        System.out.println("[AiInterviewScheduleService] 면접 일정 상태 업데이트 완료: " + updatedSchedule.getAiInterviewStatus());
         
         // JobCandProgress 상태를 3y로 업데이트
-        JobCandProgress jobCandProgress = jobCandProgressRepository
-            .findByJobCandidateId(schedule.getJobCandidateId().longValue())
-            .orElseThrow(() -> new RuntimeException("해당 후보자 진행 상태를 찾을 수 없습니다."));
+        JobCandProgress jobCandProgress = schedule.getJobCandProgress();
+        String oldStage = jobCandProgress.getJobCandCurrStage();
+        
+        System.out.println("[AiInterviewScheduleService] JobCandProgress stage 업데이트: " + oldStage + " → 3y");
         
         jobCandProgress.setJobCandCurrStage("3y"); // 면접 완료 상태로 변경
         jobCandProgress.setJobCandAiIntrvwCompltDate(LocalDateTime.now());
-        jobCandProgressRepository.save(jobCandProgress);
+        JobCandProgress savedProgress = jobCandProgressRepository.save(jobCandProgress);
+        
+        System.out.println("[AiInterviewScheduleService] JobCandProgress stage 업데이트 완료: " + savedProgress.getJobCandCurrStage());
         
         // 응답 시에도 한국 시간으로 변환하여 반환
         LocalDateTime utcScheduledTime = updatedSchedule.getAiInterviewScheduledTime();
@@ -269,9 +285,11 @@ public class AiInterviewScheduleService {
         ZonedDateTime utcZonedDeadlineTime = utcDeadlineTime.atZone(ZoneId.of("UTC"));
         LocalDateTime koreaDeadlineTime = utcZonedDeadlineTime.withZoneSameInstant(ZoneId.of("Asia/Seoul")).toLocalDateTime();
 
+        System.out.println("[AiInterviewScheduleService] 면접 완료 처리 완료");
+        
         return InterviewScheduleResponseDto.builder()
                 .scheduleId(updatedSchedule.getAiInterviewScheduleId())
-                .jobCandidateId(updatedSchedule.getJobCandidateId())
+                .jobCandidateId(updatedSchedule.getJobCandProgress().getJobCandidateId())
                 .scheduledTime(koreaScheduledTime)
                 .deadlineTime(koreaDeadlineTime)
                 .interviewLink(updatedSchedule.getAiInterviewLink())
@@ -282,8 +300,37 @@ public class AiInterviewScheduleService {
     }
 
     @Transactional
-    public String uploadInterviewVideo(Integer scheduleId, MultipartFile videoFile) throws Exception {
+    public String uploadInterviewVideo(Long scheduleId, MultipartFile videoFile) throws Exception {
         // 이 메서드는 더 이상 schedule의 videoFilePath를 사용하지 않습니다.
         throw new UnsupportedOperationException("영상 업로드는 ai_interview_videos 테이블을 사용하세요.");
+    }
+
+    public Optional<AiInterviewScheduleResponse> getScheduleInfo(Long jobCandidateId) {
+        return aiInterviewScheduleRepository.findByJobCandProgress_JobCandidateId(jobCandidateId).stream()
+                .findFirst()
+                .map(s -> new AiInterviewScheduleResponse(s.getAiInterviewScheduledTime(), s.getAiInterviewStatus()));
+    }
+
+    public Optional<InterviewVideoResponse> getInterviewVideo(Long jobCandidateId) {
+        // AiInterviewSchedule 엔티티에는 videoFilePath 필드가 없으므로 null 반환
+        return Optional.empty();
+    }
+
+    @Transactional
+    public void updateAnalysisStatus(Long scheduleId, String status) {
+        AiInterviewSchedule schedule = aiInterviewScheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new RuntimeException("해당 면접 일정을 찾을 수 없습니다."));
+        schedule.setAiAnalysisStatus(status);
+        aiInterviewScheduleRepository.save(schedule);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AiInterviewSchedule> getPendingAnalysisSchedules() {
+        return aiInterviewScheduleRepository.findByAiAnalysisStatus("pending");
+    }
+
+    @Transactional(readOnly = true)
+    public List<AiInterviewSchedule> getPendingInterviewSchedules() {
+        return aiInterviewScheduleRepository.findByAiAnalysisStatus("pending");
     }
 }

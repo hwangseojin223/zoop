@@ -12,15 +12,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InterviewScheduleResponseDto {
-    private Integer scheduleId;
-    private Integer jobCandidateId;
+    private Long scheduleId;
+    private Long jobCandidateId;
     private LocalDateTime scheduledTime;
     private LocalDateTime deadlineTime;
     private String interviewLink;
     private String status;
     private String message;
     private boolean success;
-
-    
 }
 

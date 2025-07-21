@@ -1,6 +1,7 @@
 package com.zoop.backend.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 import com.zoop.backend.domain.dto.CandidatePreferencesDto;
+import com.zoop.backend.domain.dto.finding.FindGithubLoginRequest;
+import com.zoop.backend.domain.dto.finding.FindGithubLoginResponse;
 import com.zoop.backend.domain.entity.Candidate;
 import com.zoop.backend.repository.CandidateRepository;
 import com.zoop.backend.repository.InvitationRepository;
@@ -40,9 +43,31 @@ public class CandidateService {
         return candidateRepository.findAll();
     }
 
+    public Optional<Candidate> findById(Long candidateId) {
+        return candidateRepository.findById(candidateId);
+    }
+
     @Transactional 
     public Candidate save(Candidate candidate) {
         try {
+            // GitHub 로그인 중복 체크
+            if (candidate.getGithubLogin() != null) {
+                Optional<Candidate> existingCandidate = candidateRepository.findByGithubLogin(candidate.getGithubLogin());
+                if (existingCandidate.isPresent()) {
+                    logger.warn("이미 존재하는 GitHub 로그인: {}", candidate.getGithubLogin());
+                    throw new RuntimeException("이미 가입된 GitHub 계정입니다: " + candidate.getGithubLogin());
+                }
+            }
+            
+            // 이메일 중복 체크
+            if (candidate.getCandidateEmail() != null) {
+                Optional<Candidate> existingEmail = candidateRepository.findByCandidateEmail(candidate.getCandidateEmail());
+                if (existingEmail.isPresent()) {
+                    logger.warn("이미 존재하는 이메일: {}", candidate.getCandidateEmail());
+                    throw new RuntimeException("이미 가입된 이메일 주소입니다: " + candidate.getCandidateEmail());
+                }
+            }
+            
             // 비밀번호 암호화
             String encrypted = passwordEncoder.encode(candidate.getCandidatePassword());
             
@@ -139,6 +164,31 @@ public class CandidateService {
         } catch (Exception e) {
             logger.error("사용자 설정 조회 중 오류 발생: {}", e.getMessage(), e);
             throw e;
+        }
+    }
+
+    // 회원가입시 아이디 중복확인을 위한 메서드
+    public boolean isDuplicateGithubLogin(String githubLogin) {
+        return candidateRepository.existsByGithubLogin(githubLogin);
+    }
+
+    /** 합친 이후 */
+    public FindGithubLoginResponse findGithubLogin(FindGithubLoginRequest request) {
+        try {
+            logger.info("GitHub 로그인 찾기 요청: name={}, email={}", request.getName(), request.getEmail());
+            
+            Candidate candidate = candidateRepository
+                    .findByCandidateNameAndCandidateEmail(request.getName(), request.getEmail())
+                    .orElseThrow(() -> new IllegalArgumentException("일치하는 회원이 없습니다."));
+
+            logger.info("GitHub 로그인 찾기 성공: githubLogin={}", candidate.getGithubLogin());
+            return new FindGithubLoginResponse(candidate.getGithubLogin());
+        } catch (IllegalArgumentException e) {
+            logger.warn("GitHub 로그인 찾기 실패: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("GitHub 로그인 찾기 중 예상치 못한 오류 발생: {}", e.getMessage(), e);
+            throw new RuntimeException("GitHub 로그인 찾기 중 오류가 발생했습니다.", e);
         }
     }
 }

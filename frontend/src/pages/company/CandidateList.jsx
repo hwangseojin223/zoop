@@ -3,6 +3,7 @@ import { useParams, useLocation } from 'react-router-dom';
 import styled, { css, keyframes } from 'styled-components';
 import Navbar from '../../components/Navbar';
 import { FaGithub, FaExpandAlt, FaTimes, FaStar, FaCode, FaEnvelope, FaEdit } from 'react-icons/fa';
+import SEO from '../../components/SEO';
 
 // =========== Styled Components ===========
 
@@ -268,42 +269,56 @@ const ShowAnalysisBtn = styled.button`
 
 const ModalOverlay = styled.div`
   position: fixed; top:0; left:0; right:0; bottom:0;
-  background: rgba(12,24,46,0.53);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
   z-index: 1200;
   display: flex; align-items: center; justify-content: center;
-  animation: ${fadeIn} 0.26s cubic-bezier(.36,1.07,.57,1.01);
+  animation: ${fadeIn} 0.3s cubic-bezier(.36,1.07,.57,1.01);
 `;
 
 const ModalCard = styled.div`
   background: #fff;
-  border-radius: 22px;
-  max-width: 480px;
+  border-radius: 24px;
+  max-width: 600px;
   width: 95vw;
-  min-width: 340px;
-  padding: 2.8rem 2rem 2.1rem 2rem;
-  box-shadow: 0 18px 80px rgba(30,70,80,0.20);
+  min-width: 400px;
+  padding: 0;
+  box-shadow: 0 25px 100px rgba(0, 0, 0, 0.25);
   position: relative;
   display: flex; flex-direction: column;
-  animation: ${fadeIn} 0.35s cubic-bezier(.22,1.04,.38,1.01);
+  animation: ${fadeIn} 0.4s cubic-bezier(.22,1.04,.38,1.01);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 const ModalCloseBtn = styled.button`
-  position: absolute; top: 1.25rem; right: 1.35rem;
-  background: none; border: none;
-  font-size: 2rem; color: #aaa;
+  position: absolute; 
+  top: 20px; 
+  right: 20px;
+  background: rgba(255, 255, 255, 0.9); 
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 18px; 
+  color: #666;
   cursor: pointer;
-  transition: color 0.2s;
-  &:hover { color: #333; }
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  z-index: 10;
+  &:hover { 
+    background: rgba(255, 255, 255, 1);
+    color: #333;
+    transform: scale(1.1);
+  }
 `;
 
 const ModalHeader = styled.div`
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: #1b2437;
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  margin-bottom: 1.3rem;
+  padding: 32px 32px 0 32px;
+  margin-bottom: 0;
 `;
 
 const ModalScoreBarWrap = styled.div`
@@ -320,18 +335,20 @@ const ModalScoreValue = styled.div`
 
 const ModalScoreBar = styled.div`
   width: 100%;
-  background: #e8f5e8;
-  height: 15px;
-  border-radius: 10px;
+  background: #f1f5f9;
+  height: 12px;
+  border-radius: 6px;
   overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 `;
 
 const ModalScoreFill = styled.div`
-  background: linear-gradient(90deg, #30c59b 65%, #7df6c7 100%);
+  background: linear-gradient(90deg, #10b981 0%, #34d399 50%, #6ee7b7 100%);
   height: 100%;
   width: ${props => props.score > 100 ? 100 : props.score}%;
-  border-radius: 10px;
-  transition: width 0.37s cubic-bezier(0.17,1,0.33,1);
+  border-radius: 6px;
+  transition: width 0.8s cubic-bezier(0.17,1,0.33,1);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
 `;
 
 const ModalBody = styled.div`
@@ -345,19 +362,27 @@ const ModalBody = styled.div`
 
 const ModalFooter = styled.div`
   display: flex; justify-content: flex-end;
+  padding: 0 32px 32px 32px;
 `;
 
+// 모달 액션 버튼 (Toss 스타일)
 const ModalActionBtn = styled.button`
-  background: #30c59b;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #fff;
   border: none;
   border-radius: 8px;
-  padding: 0.82rem 2.1rem;
+  padding: 12px 32px;
   font-size: 1.08rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s;
-  &:hover { background: #28a085;}
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.18);
+  transition: all 0.18s;
+  min-width: 120px;
+  &:hover {
+    background: linear-gradient(135deg, #5a67d8 0%, #6b21a8 100%);
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.22);
+  }
 `;
 
 // ==========================================
@@ -372,6 +397,11 @@ export default function CandidateList() {
   const [selectedAnalysis, setSelectedAnalysis] = useState(null);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [modalScore, setModalScore] = useState(0);
+
+  // ============ [CURRENT 버전에서 추가된 기능] ============
+  // 개별 이메일 전송을 위한 로딩 상태 관리
+  const [loadingId, setLoadingId] = useState(null);
+  // ============ [CURRENT 버전에서 추가된 기능 끝] ============
 
   // 실제 데이터 fetch (네가 쓰던 코드 그대로!)
   useEffect(() => {
@@ -405,16 +435,16 @@ export default function CandidateList() {
           const aiAnalysis = aiAnalysisMap[candidate.githubSearchResultId];
           let portfolioAnalysis = '';
           let candidateLanguages = '';
+          console.log(`후보자 ${candidate.githubLogin}의 AI 분석:`, aiAnalysis);
           if (aiAnalysis && aiAnalysis.analysisData) {
-            try {
-              const analysisData = JSON.parse(aiAnalysis.analysisData);
-              portfolioAnalysis = analysisData.analysis || '';
-              candidateLanguages = analysisData.languages || '';
-            } catch {
-              portfolioAnalysis = '분석 데이터 파싱 오류';
-            }
+            // AI 분석 데이터는 일반 텍스트로 저장되어 있으므로 JSON.parse 하지 않음
+            portfolioAnalysis = aiAnalysis.analysisData;
+            // GitHub 분석의 경우 언어 정보는 별도로 저장되지 않으므로 빈 문자열로 설정
+            candidateLanguages = '';
+            console.log(`후보자 ${candidate.githubLogin}의 분석 데이터:`, portfolioAnalysis.substring(0, 100) + '...');
           } else {
             portfolioAnalysis = 'AI 분석 결과 없음';
+            console.log(`후보자 ${candidate.githubLogin}의 AI 분석 결과 없음`);
           }
           return {
             githubLogin: candidate.githubLogin,
@@ -423,10 +453,20 @@ export default function CandidateList() {
             portfolioAnalysis: portfolioAnalysis,
             candidateLanguages: candidateLanguages,
             profileUrl: candidate.githubProfileUrl,
+            // ============ [CURRENT 버전에서 추가된 기능] ============
+            // 검색일 정보 추가
+            githubSearchDate: candidate.githubSearchDate,
+            // ============ [CURRENT 버전에서 추가된 기능 끝] ============
             ...candidate
           };
         });
-        setCandidates(mappedCandidates);
+
+        // ============ [CURRENT 버전에서 추가된 기능] ============
+        // 이메일 있는 사람을 먼저, 없는 사람을 나중에 정렬
+        const emailFirst = mappedCandidates.filter(c => c.candidateEmail !== 'not_found@example.com');
+        const noEmail = mappedCandidates.filter(c => c.candidateEmail === 'not_found@example.com');
+        setCandidates([...emailFirst, ...noEmail]);
+        // ============ [CURRENT 버전에서 추가된 기능 끝] ============
         setLoading(false);
       } catch (error) {
         setCandidates([]);
@@ -474,7 +514,7 @@ export default function CandidateList() {
     if (!langs) return [];
     if (Array.isArray(langs)) return langs;
     if (typeof langs === 'string') {
-      return langs.split(/[\s,\/]+/).filter(Boolean);
+      return langs.split(/[\s,/]+/).filter(Boolean);
     }
     return [];
   }
@@ -485,6 +525,7 @@ export default function CandidateList() {
   }
 
   const openAnalysisModal = (analysis, score) => {
+    console.log('openAnalysisModal 호출됨:', { analysis, score });
     setSelectedAnalysis(analysis);
     setModalScore(score || 0);
     setShowAnalysisModal(true);
@@ -494,6 +535,42 @@ export default function CandidateList() {
     setSelectedAnalysis(null);
     setModalScore(0);
   };
+
+  // ============ [CURRENT 버전에서 추가된 기능] ============
+  // 개별 이메일 전송 기능
+  const sendInvitation = async (postId, githubLogin, companyAdminId, candidateEmail) => {
+    const payload = {
+      postId: parseInt(postId),
+      githubLogin,
+      companyAdminId,
+      candidateEmail,
+    };
+
+    try {
+      setLoadingId(githubLogin); // 👉 로딩 시작
+
+      const res = await fetch("http://localhost:8081/api/invitations/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        alert("📨 초대 메일을 전송했습니다!");
+        console.log("전달한 데이터 : ", payload);
+      } else {
+        alert("❌ 전송 실패");
+      }
+    } catch (err) {
+      console.error("메일 전송 오류:", err);
+      alert("⚠️ 서버 오류로 전송에 실패했습니다.");
+    } finally {
+      setLoadingId(null); // 👉 로딩 종료
+    }
+  };
+  // ============ [CURRENT 버전에서 추가된 기능 끝] ============
 
   const handleSendMail = () => {
     const selectedEmails = candidates.filter(c => selected.includes(c.githubLogin || c.login)).map(c => c.candidateEmail);
@@ -506,6 +583,11 @@ export default function CandidateList() {
 
   return (
     <Wrapper>
+      <SEO 
+        title={`${postInfo?.postTitle ? `${postInfo.postTitle} - 후보자 목록` : '후보자 목록'}`}
+        description={`${postInfo?.postTitle ? `${postInfo.postTitle} 공고에 대한 AI 추천 후보자 ${candidates.length}명을 확인하세요.` : 'AI가 추천한 개발자 후보자들을 확인하세요.'}`}
+        keywords={`${postInfo?.postTitle ? `${postInfo.postTitle}, 개발자 채용, AI 추천 후보자, GitHub 개발자` : '개발자 채용, AI 추천 후보자, GitHub 개발자'}`}
+      />
       <Navbar />
       <Container>
         {/* 공고 정보 */}
@@ -594,6 +676,54 @@ export default function CandidateList() {
                       onClick={e => { e.stopPropagation(); openAnalysisModal(analysisText, score); }}>
                       <FaExpandAlt /> 전체 분석 보기
                     </ShowAnalysisBtn>
+                    {/* ============ [CURRENT 버전에서 추가된 기능] ============ */}
+                    {/* 개별 이메일 전송 버튼 */}
+                    {email && email !== 'not_found@example.com' && (
+                      <button
+                        onClick={e => { 
+                          e.stopPropagation(); 
+                          sendInvitation(postId, login, 42, email);
+                        }}
+                        disabled={loadingId === login}
+                        style={{
+                          backgroundColor: loadingId === login ? '#ccc' : '#30c59b',
+                          color: 'white',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '999px',
+                          fontWeight: 500,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '160px',
+                          height: '42px',
+                          border: 'none',
+                          cursor: loadingId === login ? 'not-allowed' : 'pointer',
+                          position: 'relative',
+                          opacity: loadingId === login ? 0.6 : 1,
+                          filter: loadingId === login ? 'blur(0.5px)' : 'none',
+                          marginTop: '0.5rem'
+                        }}
+                      >
+                        {loadingId === login ? (
+                          <div
+                            style={{
+                              width: '20px',
+                              height: '20px',
+                              border: '3px solid #fff',
+                              borderTop: '3px solid transparent',
+                              borderRadius: '50%',
+                              animation: 'spin 1s linear infinite'
+                            }}
+                          />
+                        ) : (
+                          <>
+                            <FaEnvelope />
+                            <span>이메일 보내기</span>
+                          </>
+                        )}
+                      </button>
+                    )}
+                    {/* ============ [CURRENT 버전에서 추가된 기능 끝] ============ */}
                   </CandidateCard>
                 );
               })}
@@ -606,21 +736,143 @@ export default function CandidateList() {
       {showAnalysisModal && selectedAnalysis && (
         <ModalOverlay onClick={closeAnalysisModal}>
           <ModalCard onClick={e => e.stopPropagation()}>
-            <ModalCloseBtn onClick={closeAnalysisModal}><FaTimes /></ModalCloseBtn>
-            <ModalHeader><FaCode />AI 분석 상세 결과</ModalHeader>
-            {/* 모달 점수 ProgressBar */}
-            <ModalScoreBarWrap>
-              <ModalScoreValue>
-                <FaStar style={{ color: '#fabb3b' }} />
-                <span style={{fontWeight:800, color:'#30c59b'}}>{modalScore}점</span>
-              </ModalScoreValue>
+            <ModalCloseBtn onClick={closeAnalysisModal}>
+              <FaTimes />
+            </ModalCloseBtn>
+            
+            {/* 헤더 섹션 */}
+            <ModalHeader>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  borderRadius: '50%',
+                  width: '48px',
+                  height: '48px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
+                }}>
+                  <FaCode style={{ color: 'white', fontSize: '20px' }} />
+                </div>
+                <div>
+                  <h2 style={{ 
+                    margin: 0, 
+                    fontSize: '24px', 
+                    fontWeight: '700',
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text'
+                  }}>
+                    AI 분석 상세 결과
+                  </h2>
+                  <p style={{ 
+                    margin: '4px 0 0 0', 
+                    fontSize: '14px', 
+                    color: '#6b7280',
+                    fontWeight: '500'
+                  }}>
+                    종합적인 개발자 역량 평가
+                  </p>
+                </div>
+              </div>
+            </ModalHeader>
+
+            {/* 점수 섹션 */}
+            <div style={{
+              background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+              borderRadius: '16px',
+              padding: '20px',
+              margin: '20px 0',
+              border: '1px solid #e2e8f0'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FaStar style={{ color: '#fbbf24', fontSize: '20px' }} />
+                  <span style={{ 
+                    fontSize: '18px', 
+                    fontWeight: '700',
+                    color: '#1f2937'
+                  }}>
+                    종합 평가 점수
+                  </span>
+                </div>
+                <div style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: 'white',
+                  padding: '8px 16px',
+                  borderRadius: '20px',
+                  fontSize: '16px',
+                  fontWeight: '700',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                }}>
+                  {modalScore}점
+                </div>
+              </div>
               <ModalScoreBar>
                 <ModalScoreFill score={modalScore} />
               </ModalScoreBar>
-            </ModalScoreBarWrap>
-            <ModalBody>{selectedAnalysis}</ModalBody>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                marginTop: '8px',
+                fontSize: '12px',
+                color: '#6b7280',
+                fontWeight: '500'
+              }}>
+                <span>0점</span>
+                <span>100점</span>
+              </div>
+            </div>
+
+            {/* 분석 내용 섹션 */}
+            <div style={{ marginBottom: '24px' }}>
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: '600',
+                color: '#1f2937',
+                margin: '0 0 16px 0',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <div style={{
+                  width: '4px',
+                  height: '20px',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  borderRadius: '2px'
+                }} />
+                상세 분석 결과
+              </h3>
+              <div style={{
+                background: 'white',
+                border: '1px solid #e5e7eb',
+                borderRadius: '12px',
+                padding: '20px',
+                maxHeight: '400px',
+                overflowY: 'auto',
+                lineHeight: '1.6',
+                fontSize: '15px',
+                color: '#374151',
+                boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.06)'
+              }}>
+                {selectedAnalysis.split('\n').map((line, index) => (
+                  <p key={index} style={{ 
+                    margin: line.trim() ? '0 0 12px 0' : '0 0 8px 0',
+                    whiteSpace: 'pre-wrap'
+                  }}>
+                    {line}
+                  </p>
+                ))}
+              </div>
+            </div>
+
+            {/* 푸터 */}
             <ModalFooter>
-              <ModalActionBtn onClick={closeAnalysisModal}>닫기</ModalActionBtn>
+              <ModalActionBtn onClick={closeAnalysisModal}>
+                확인
+              </ModalActionBtn>
             </ModalFooter>
           </ModalCard>
         </ModalOverlay>

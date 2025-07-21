@@ -152,6 +152,35 @@ public class GithubBridgeService {
                 GithubSearchResult savedResult = resultRepo.save(result);
                 System.out.println("[DEBUG] GitHub 결과 저장 완료: ID = " + savedResult.getGithubSearchResultId());
                 
+                // === AI 분석 결과 저장 ===
+                if (user.get("analysis") != null) {
+                    try {
+                        String analysisData = (String) user.get("analysis");
+                        Double analysisScore = score; // llm_score를 분석 점수로 사용
+                        
+                        AiAnalysisResult aiAnalysis = AiAnalysisResult.builder()
+                            .analysisType("github")
+                            .githubSearchResultId(savedResult.getGithubSearchResultId())
+                            .jobCandidateId(null) // GitHub 검색 결과는 jobCandidateId가 없을 수 있음
+                            .analysisData(analysisData)
+                            .analysisScore(analysisScore)
+                            .analysisDate(LocalDateTime.now())
+                            .analysisCreatedAt(LocalDateTime.now())
+                            .build();
+                        
+                        AiAnalysisResult savedAiAnalysis = aiAnalysisResultRepository.save(aiAnalysis);
+                        System.out.println("[DEBUG] AI 분석 결과 저장 완료: ID = " + savedAiAnalysis.getAnalysisId());
+                        
+                        // GitHub 검색 결과에 AI 분석 ID 연결
+                        savedResult.setAiGithubAnalysisId(savedAiAnalysis.getAnalysisId());
+                        resultRepo.save(savedResult);
+                        
+                    } catch (Exception e) {
+                        System.err.println("[ERROR] AI 분석 결과 저장 실패: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                }
+                
                 // === JobCandProgress 저장 ===
                 String githubLogin = (String) user.get("login");
                 Optional<Candidate> candidateOpt = candidateRepository.findByGithubLogin(githubLogin);
@@ -167,75 +196,10 @@ public class GithubBridgeService {
                 progress.setJobCandCreatedAt(LocalDateTime.now());
                 progress.setJobCandUpdatedAt(LocalDateTime.now());
                 jobCandProgressRepository.save(progress);
-                // === JobCandProgress 저장 끝 ===
-                
-                // AI 분석 결과 저장
-                if (user.get("analysis") != null) {
-                    try {
-                        System.out.println("[DEBUG] AI 분석 데이터 저장 시작: " + user.get("login"));
-                        
-                        // 필요한 정보만 추출
-                        String analysisText = (String) user.get("analysis");
-                        String topLanguage = "";
-                        String followers = "";
-                        List<String> languagesList = new ArrayList<>();
-                        
-                        // details에서 top_language와 languages 추출
-                        if (user.get("details") != null) {
-                            Map<String, Object> details = (Map<String, Object>) user.get("details");
-                            topLanguage = details.get("top_language") != null ? (String) details.get("top_language") : "";
-                            if (details.get("languages") != null) {
-                                Object languagesObj = details.get("languages");
-                                if (languagesObj instanceof List) {
-                                    languagesList = (List<String>) languagesObj;
-                                }
-                            }
-                        }
-                        
-                        // followers 추출
-                        if (user.get("followers") != null) {
-                            followers = user.get("followers").toString();
-                        }
-                        
-                        // 간결한 분석 데이터 생성 (원래 형식에서 필요한 필드만)
-                        String analysisData = mapper.writeValueAsString(Map.of(
-                            "followers", followers,
-                            "top_language", topLanguage,
-                            "languages", languagesList,
-                            "analysis", analysisText
-                        ));
-                        
-                        AiAnalysisResult aiResult = AiAnalysisResult.builder()
-                            .analysisType("github")
-                            .githubSearchResultId(savedResult.getGithubSearchResultId())
-                            .analysisData(analysisData)
-                            .analysisScore(score)
-                            .analysisDate(LocalDateTime.now())
-                            .analysisCreatedAt(LocalDateTime.now())
-                            .build();
-                        
-                        System.out.println("[DEBUG] AI 분석 결과 저장: " + aiResult);
-                        AiAnalysisResult savedAiResult = aiAnalysisResultRepository.save(aiResult);
-                        System.out.println("[DEBUG] AI 분석 결과 저장 완료: ID = " + savedAiResult.getAnalysisId());
-                        
-                        // GitHub 검색 결과에 AI 분석 ID 업데이트
-                        savedResult.setAiGithubAnalysisId(savedAiResult.getAnalysisId());
-                        resultRepo.save(savedResult);
-                        
-                        System.out.println("[INFO] AI 분석 결과 저장 완료: " + savedResult.getGithubLogin());
-                    } catch (Exception e) {
-                        System.err.println("[ERROR] AI 분석 결과 저장 실패: " + e.getMessage());
-                        e.printStackTrace();
-                    }
-                }
             }
-            
-            System.out.println("[INFO] " + candidates.size() + "명의 후보자가 저장되었습니다.");
-            
         } catch (Exception e) {
-            System.err.println("[ERROR] fetchFromPythonAndSave 실패: " + e.getMessage());
+            System.err.println("[ERROR] fetchFromPythonAndSave 예외: " + e.getMessage());
             e.printStackTrace();
-            throw new RuntimeException("GitHub 검색 및 저장 중 오류 발생", e);
         }
     }
     

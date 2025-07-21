@@ -1,42 +1,27 @@
 package com.zoop.backend.service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.zoop.backend.domain.dto.PostingRequestDto;
 import com.zoop.backend.domain.entity.CompanyAdmin;
 import com.zoop.backend.domain.entity.Post;
 import com.zoop.backend.repository.CompanyAdminRepository;
 import com.zoop.backend.repository.PostRepository;
+import lombok.RequiredArgsConstructor;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class PostService {
 
-    private PostRepository postRepository;
-    private CompanyAdminRepository companyAdminRepository;
-    
-    @Autowired
-    public void setPostRepository(PostRepository postRepository) {
-        this.postRepository = postRepository;
-    }
-    
-    @Autowired
-    public void setCompanyAdminRepository(CompanyAdminRepository companyAdminRepository) {
-        this.companyAdminRepository = companyAdminRepository;
-    }
+    private final PostRepository postRepository;
+    private final CompanyAdminRepository companyAdminRepository; // ✅ 여기에 주입 선언
 
-    public Post getPostById(Long postId) {
-        Optional<Post> post = postRepository.findById(postId);
-        return post.orElse(null);
-    }
-
-    // 오버로드된 createPost(dto, loginId) 메서드
+    // ✅ 1. 오버로드된 createPost(dto, loginId) 메서드 추가
     public Post createPost(PostingRequestDto dto, String loginId) {
         CompanyAdmin admin = companyAdminRepository.findByCompanyAdminLogin(loginId)
             .orElseThrow(() -> new RuntimeException("존재하지 않는 관리자입니다."));
@@ -47,6 +32,7 @@ public class PostService {
         return createPost(dto); // 기존 메서드 호출
     }
     
+
     public Post createPost(PostingRequestDto dto) {
         Post post = new Post();
 
@@ -74,14 +60,34 @@ public class PostService {
         return postRepository.save(post);
     }
 
+    public Post getPostById(Long postId) {
+        return postRepository.findById(postId).orElse(null);
+    }
+
     // 회사별 공고 목록 조회 메서드 추가
     public List<Post> getPostsByCompanyId(Long companyId) {
         return postRepository.findByCompanyIdOrderByPostCreatedAtDesc(companyId);
     }
 
+    // 회사 관리자의 loginId로 해당 회사의 공고 목록 조회 메서드 추가
+    public List<Post> getPostsByCompanyAdmin(String loginId) {
+        CompanyAdmin admin = companyAdminRepository.findByCompanyAdminLogin(loginId)
+            .orElseThrow(() -> new RuntimeException("존재하지 않는 관리자입니다."));
+        
+        return postRepository.findByCompanyIdOrderByPostCreatedAtDesc(admin.getCompany().getCompanyId());
+    }
+
     // 모든 공고 목록 조회 메서드 추가
     public List<Post> getAllPosts() {
         return postRepository.findAllByOrderByPostCreatedAtDesc();
+    }
+
+    // 공개 공고 목록 조회 메서드 추가
+    public List<Post> getPublicPosts() {
+        // 조회 전에 만료된 공고들 상태 업데이트
+        updateExpiredPosts();
+        
+        return postRepository.findActivePostsNotExpired("ACTIVE", LocalDate.now());
     }
 
     // 공고 업데이트 메서드 추가
@@ -112,5 +118,38 @@ public class PostService {
         post.setPostIdealCandidate(idealCandidate);
         post.setPostUpdatedAt(LocalDateTime.now());
         return postRepository.save(post);
+    }
+
+    // 만료된 공고들을 INACTIVE 상태로 업데이트하는 메서드 추가
+    public int updateExpiredPosts() {
+        List<Post> allPosts = postRepository.findAll();
+        int updatedCount = 0;
+        
+        for (Post post : allPosts) {
+            if (post.getPostExpiryDate() != null && 
+                post.getPostExpiryDate().isBefore(LocalDate.now()) && 
+                "ACTIVE".equals(post.getPostStatus())) {
+                
+                post.setPostStatus("INACTIVE");
+                post.setPostUpdatedAt(LocalDateTime.now());
+                postRepository.save(post);
+                updatedCount++;
+                
+                System.out.println("만료된 공고 상태 업데이트: " + post.getPostTitle() + 
+                                 " (만료일: " + post.getPostExpiryDate() + ")");
+            }
+        }
+        
+        System.out.println("총 " + updatedCount + "개의 만료된 공고 상태를 업데이트했습니다.");
+        return updatedCount;
+    }
+
+    // 만료된 공고 목록 조회 메서드 추가
+    public List<Post> getExpiredPosts() {
+        List<Post> allPosts = postRepository.findAll();
+        return allPosts.stream()
+            .filter(post -> post.getPostExpiryDate() != null && 
+                           post.getPostExpiryDate().isBefore(LocalDate.now()))
+            .toList();
     }
 }
