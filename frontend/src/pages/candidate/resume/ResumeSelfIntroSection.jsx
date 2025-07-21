@@ -29,7 +29,7 @@ const ResumeSelfIntroSection = ({ form, setForm }) => {
 
   return (
     <section className="resume-section">
-      <div className="selfintro-card">
+      <div className="selfintro-card" style={{ background: 'white', border: 'none', borderRadius: 20, padding: 0, boxShadow: 'none', margin: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
           <div style={{ color: '#222', fontSize: '1.5rem', fontWeight: 700, paddingBottom: '0.75rem', borderBottom: '2px solid #e2e8f0', flex: 1, position: 'relative' }}>
             커리어 소개
