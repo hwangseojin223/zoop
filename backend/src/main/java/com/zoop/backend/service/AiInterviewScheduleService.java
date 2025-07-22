@@ -30,16 +30,19 @@ public class AiInterviewScheduleService {
     private final JobCandProgressRepository jobCandProgressRepository;
     private final S3Service s3Service;
     private final InterviewAnalysisService interviewAnalysisService;
+    private final JobCandProgressService jobCandProgressService;
 
     @Autowired
     public AiInterviewScheduleService(AiInterviewScheduleRepository aiInterviewScheduleRepository,
                                     JobCandProgressRepository jobCandProgressRepository,
                                     S3Service s3Service,
-                                    InterviewAnalysisService interviewAnalysisService) {
+                                    InterviewAnalysisService interviewAnalysisService,
+                                    JobCandProgressService jobCandProgressService) {
         this.aiInterviewScheduleRepository = aiInterviewScheduleRepository;
         this.jobCandProgressRepository = jobCandProgressRepository;
         this.s3Service = s3Service;
         this.interviewAnalysisService = interviewAnalysisService;
+        this.jobCandProgressService = jobCandProgressService;
     }
     
     @Transactional
@@ -101,8 +104,10 @@ public class AiInterviewScheduleService {
         
         AiInterviewSchedule savedSchedule = aiInterviewScheduleRepository.save(schedule);
         
-        // 5. JobCandProgress 상태 업데이트 (2y -> 3n)
-        jobCandProgress.setJobCandCurrStage("3n");
+        // 5. JobCandProgress 상태 업데이트 (2y -> 3n) - 알림 생성 포함
+        jobCandProgressService.updateStageWithNotification(jobCandProgress.getJobCandidateId(), "3n");
+        
+        // aiIntrvwScheduleId 업데이트
         jobCandProgress.setAiIntrvwScheduleId(savedSchedule.getAiInterviewScheduleId());
         jobCandProgressRepository.save(jobCandProgress);
 
@@ -270,11 +275,14 @@ public class AiInterviewScheduleService {
         
         System.out.println("[AiInterviewScheduleService] JobCandProgress stage 업데이트: " + oldStage + " → 3y");
         
-        jobCandProgress.setJobCandCurrStage("3y"); // 면접 완료 상태로 변경
-        jobCandProgress.setJobCandAiIntrvwCompltDate(LocalDateTime.now());
-        JobCandProgress savedProgress = jobCandProgressRepository.save(jobCandProgress);
+        // 알림 생성과 함께 stage 업데이트
+        jobCandProgressService.updateStageWithNotification(jobCandProgress.getJobCandidateId(), "3y");
         
-        System.out.println("[AiInterviewScheduleService] JobCandProgress stage 업데이트 완료: " + savedProgress.getJobCandCurrStage());
+        // 면접 완료 날짜 업데이트
+        jobCandProgress.setJobCandAiIntrvwCompltDate(LocalDateTime.now());
+        jobCandProgressRepository.save(jobCandProgress);
+        
+        System.out.println("[AiInterviewScheduleService] JobCandProgress stage 업데이트 완료: 3y");
         
         // 응답 시에도 한국 시간으로 변환하여 반환
         LocalDateTime utcScheduledTime = updatedSchedule.getAiInterviewScheduledTime();

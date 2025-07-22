@@ -32,6 +32,8 @@ public class JobCandProgressService {
     private final InvitationRepository invitationRepository;
     private final CandidateRepository candidateRepository;
     private final PostRepository postRepository;
+    private final CandidateNotificationService candidateNotificationService;
+    private final CompanyNotificationService companyNotificationService;
 
     public List<JobCandProgress> getAllJobCandProgress() {
         return jobCandProgressRepository.findAll();
@@ -80,7 +82,47 @@ public class JobCandProgressService {
             .githubLogin(candidate.getGithubLogin())
             .build();
         
-        return jobCandProgressRepository.save(newProgress);
+        JobCandProgress savedProgress = jobCandProgressRepository.save(newProgress);
+        
+        // 지원 시(0) → 기업에게만 알림
+        if ("0".equals(stage)) {
+            try {
+                companyNotificationService.createAdditionalApplicantNotification(
+                    post.getCompanyAdminId(),
+                    postId,
+                    candidateId
+                );
+            } catch (Exception e) {
+                log.error("추가 지원자 알림 생성 중 오류 발생: {}", e.getMessage(), e);
+            }
+        }
+        // 포트폴리오 직접 제출(2y)는 기존대로(별도 알림)
+        return savedProgress;
+    }
+
+    // 수락(2p)/거절(0n) 시 개인에게만 알림
+    public void acceptOrRejectAdditionalApplicant(Long jobCandidateId, String newStage) {
+        var progressOpt = jobCandProgressRepository.findByJobCandidateId(jobCandidateId);
+        if (progressOpt.isPresent()) {
+            JobCandProgress progress = progressOpt.get();
+            String oldStage = progress.getJobCandCurrStage();
+            progress.setJobCandCurrStage(newStage);
+            progress.setJobCandUpdatedAt(LocalDateTime.now());
+            jobCandProgressRepository.save(progress);
+            if ("2p".equals(newStage)) {
+                candidateNotificationService.createAcceptedNotification(
+                    progress.getCandidate().getCandidateId(),
+                    progress.getPost().getPostId(),
+                    progress.getPost().getCompanyId()
+                );
+            } else if ("0n".equals(newStage)) {
+                candidateNotificationService.createRejectedNotification(
+                    progress.getCandidate().getCandidateId(),
+                    progress.getPost().getPostId(),
+                    progress.getPost().getCompanyId()
+                );
+            }
+        }
     }
 
     @Transactional(readOnly = true)
@@ -164,11 +206,16 @@ public class JobCandProgressService {
             
             if (progressOpt.isPresent()) {
                 JobCandProgress progress = progressOpt.get();
-                // stage가 "0"인 경우에만 업데이트 (직접 지원자)
-                if ("0".equals(progress.getJobCandCurrStage())) {
+                // stage가 "0" 또는 "1y"인 경우 업데이트 (직접 지원자 또는 메일 회신자)
+                if ("0".equals(progress.getJobCandCurrStage()) || "1y".equals(progress.getJobCandCurrStage())) {
+                    String oldStage = progress.getJobCandCurrStage();
                     progress.setJobCandCurrStage(newStage);
                     progress.setJobCandUpdatedAt(LocalDateTime.now());
                     jobCandProgressRepository.save(progress);
+                    
+                    // 알림 생성
+                    createNotificationOnStageChange(progress, oldStage, newStage);
+                    
                     updatedCount++;
                 }
             }
@@ -186,16 +233,27 @@ public class JobCandProgressService {
             Integer candidateId = (Integer) data.get("candidateId");
             Long postId = Long.valueOf(data.get("postId").toString());
             
+            // candidateId null 체크 추가
+            if (candidateId == null) {
+                log.warn("candidateId가 null입니다. 데이터: {}", data);
+                continue; // null인 경우 건너뛰기
+            }
+            
             // 특정 공고와 지원자 조합으로 JobCandProgress 찾기
             var progressOpt = jobCandProgressRepository.findByPost_PostIdAndCandidate_CandidateId(postId, Long.valueOf(candidateId));
             
             if (progressOpt.isPresent()) {
                 JobCandProgress progress = progressOpt.get();
-                // stage가 "0"인 경우에만 업데이트 (직접 지원자)
-                if ("0".equals(progress.getJobCandCurrStage())) {
+                // stage가 "0" 또는 "1y"인 경우 업데이트 (직접 지원자 또는 메일 회신자)
+                if ("0".equals(progress.getJobCandCurrStage()) || "1y".equals(progress.getJobCandCurrStage())) {
+                    String oldStage = progress.getJobCandCurrStage();
                     progress.setJobCandCurrStage(newStage);
                     progress.setJobCandUpdatedAt(LocalDateTime.now());
                     jobCandProgressRepository.save(progress);
+                    
+                    // 알림 생성
+                    createNotificationOnStageChange(progress, oldStage, newStage);
+                    
                     updatedCount++;
                 }
             }
@@ -225,5 +283,126 @@ public class JobCandProgressService {
     public Optional<JobCandProgressWithCandidateDto> getJobCandProgressWithCandidateById(Long jobCandidateId) {
         // 이 메서드는 DTO 변환이 필요하므로 추후 구현
         return Optional.empty();
+    }
+
+    /**
+     * Stage 변경 시 알림 생성
+     */
+    private void createNotificationOnStageChange(JobCandProgress progress, String oldStage, String newStage) {
+        try {
+            // Stage가 "2y"로 변경될 때 (포트폴리오 제출 완료) - 추가지원자 수락 알림 생성
+            if ("2y".equals(newStage) && !"2y".equals(oldStage)) {
+                log.info("Stage 2y 변경 감지 - 추가지원자 수락 알림 생성: candidateId={}, postId={}", 
+                    progress.getCandidate().getCandidateId(), progress.getPost().getPostId());
+                
+                candidateNotificationService.createAdditionalApplicantAcceptedNotification(
+                    progress.getCandidate().getCandidateId(),
+                    progress.getPost().getPostId(),
+                    progress.getPost().getCompanyId()
+                );
+            }
+            
+            // Stage가 "1y"로 변경될 때 (메일 회신) - 메일 회신 알림 생성
+            if ("1y".equals(newStage) && !"1y".equals(oldStage)) {
+                log.info("Stage 1y 변경 감지 - 메일 회신 알림 생성: companyAdminId={}, postId={}, candidateId={}", 
+                    progress.getPost().getCompanyAdminId(), 
+                    progress.getPost().getPostId(), 
+                    progress.getCandidate().getCandidateId());
+                
+                companyNotificationService.createEmailResponseNotification(
+                    progress.getPost().getCompanyAdminId(),
+                    progress.getPost().getPostId(),
+                    progress.getCandidate().getCandidateId()
+                );
+            }
+            
+            // Stage가 "2n"로 변경될 때 (면접 일정 잡음) - 면접 일정 알림 생성
+            if ("2n".equals(newStage) && !"2n".equals(oldStage)) {
+                log.info("Stage 2n 변경 감지 - 면접 일정 알림 생성: companyAdminId={}, postId={}, candidateId={}", 
+                    progress.getPost().getCompanyAdminId(), 
+                    progress.getPost().getPostId(), 
+                    progress.getCandidate().getCandidateId());
+                
+                companyNotificationService.createInterviewScheduledNotification(
+                    progress.getPost().getCompanyAdminId(),
+                    progress.getPost().getPostId(),
+                    progress.getCandidate().getCandidateId()
+                );
+            }
+            
+            // Stage가 "3y"로 변경될 때 (면접 완료) - 면접 완료 알림 생성
+            if ("3y".equals(newStage) && !"3y".equals(oldStage)) {
+                log.info("Stage 3y 변경 감지 - 면접 완료 알림 생성: companyAdminId={}, postId={}, candidateId={}", 
+                    progress.getPost().getCompanyAdminId(), 
+                    progress.getPost().getPostId(), 
+                    progress.getCandidate().getCandidateId());
+                
+                companyNotificationService.createInterviewCompletedNotification(
+                    progress.getPost().getCompanyAdminId(),
+                    progress.getPost().getPostId(),
+                    progress.getCandidate().getCandidateId()
+                );
+            }
+            
+            // Stage가 "4y"로 변경될 때 (최종 합격) - 최종 합격 알림 생성
+            if ("4y".equals(newStage) && !"4y".equals(oldStage)) {
+                log.info("Stage 4y 변경 감지 - 최종 합격 알림 생성: companyAdminId={}, postId={}, candidateId={}", 
+                    progress.getPost().getCompanyAdminId(), 
+                    progress.getPost().getPostId(), 
+                    progress.getCandidate().getCandidateId());
+                
+                companyNotificationService.createFinalResultNotification(
+                    progress.getPost().getCompanyAdminId(),
+                    progress.getPost().getPostId(),
+                    progress.getCandidate().getCandidateId(),
+                    true // 합격
+                );
+            }
+            
+            // Stage가 "4n"로 변경될 때 (최종 불합격) - 최종 불합격 알림 생성
+            if ("4n".equals(newStage) && !"4n".equals(oldStage)) {
+                log.info("Stage 4n 변경 감지 - 최종 불합격 알림 생성: companyAdminId={}, postId={}, candidateId={}", 
+                    progress.getPost().getCompanyAdminId(), 
+                    progress.getPost().getPostId(), 
+                    progress.getCandidate().getCandidateId());
+                
+                companyNotificationService.createFinalResultNotification(
+                    progress.getPost().getCompanyAdminId(),
+                    progress.getPost().getPostId(),
+                    progress.getCandidate().getCandidateId(),
+                    false // 불합격
+                );
+            }
+            
+        } catch (Exception e) {
+            log.error("알림 생성 중 오류 발생: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Stage 업데이트 (알림 생성 포함)
+     */
+    public JobCandProgress updateStageWithNotification(Long jobCandidateId, String newStage) {
+        var progressOpt = jobCandProgressRepository.findByJobCandidateId(jobCandidateId);
+        if (progressOpt.isPresent()) {
+            JobCandProgress progress = progressOpt.get();
+            String oldStage = progress.getJobCandCurrStage();
+            
+            // Stage 업데이트
+            progress.setJobCandCurrStage(newStage);
+            progress.setJobCandUpdatedAt(LocalDateTime.now());
+            JobCandProgress savedProgress = jobCandProgressRepository.save(progress);
+            
+            // 알림 생성
+            createNotificationOnStageChange(savedProgress, oldStage, newStage);
+            
+            return savedProgress;
+        } else {
+            throw new RuntimeException("JobCandProgress를 찾을 수 없습니다: " + jobCandidateId);
+        }
+    }
+
+    public List<ResponderDto> getCandidatesAtStage0ByPost(Long postId) {
+        return jobCandProgressRepository.findCandidatesAtStage0ByPost(postId);
     }
 }

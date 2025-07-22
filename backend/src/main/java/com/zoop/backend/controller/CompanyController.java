@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,6 +17,7 @@ import com.zoop.backend.domain.entity.Company;
 import com.zoop.backend.service.CompanyService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -94,5 +96,27 @@ public class CompanyController {
         }
         System.out.println("[디버그] companyId=" + companyId + " 회사 정보: " + company);
         return ResponseEntity.ok(company);
+    }
+
+    @Operation(summary="회사 정보 수정", description="기존 회사 정보를 수정합니다.")
+    @ApiResponses(value={
+        @ApiResponse(responseCode="200", description="회사 정보 수정 성공",
+            content=@Content(schema=@Schema(implementation=Company.class))),
+        @ApiResponse(responseCode="404", description="회사를 찾을 수 없음"),
+        @ApiResponse(responseCode="400", description="잘못된 요청")
+    })
+    @PutMapping("/{companyId}")
+    public ResponseEntity<?> updateCompany(
+        @Parameter(description="수정할 회사의 ID", required=true, example="1")
+        @PathVariable Long companyId,
+        @RequestBody CompanyDto dto) {
+        try {
+            Company updatedCompany = service.updateCompany(companyId, dto);
+            return ResponseEntity.ok(updatedCompany);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

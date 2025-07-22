@@ -9,7 +9,7 @@ import './ResumeSubmissionPage.css';
 import { useNavigate } from 'react-router-dom';
 import { FaTimes, FaSave, FaCheck } from 'react-icons/fa';
 import { Sidebar } from '../Sidebar';
-import Header from '../Sidebar/Header';
+import PortfolioNavbar from '../Portfolio/PortfolioNavbar';
 
 const RESUME_OFFER_OPTIONS = [
   { value: 'active', label: '적극 구직 중이에요\n제안 받을래요' },
@@ -214,119 +214,121 @@ const ResumeSubmissionPage = () => {
 
   return (
     <div className="resume-submission-page">
-      <Header />
+      <PortfolioNavbar />
       <div className="content-row">
         <Sidebar />
         <div className="main-content-area">
-          <h1 className="page-title">이력서 등록</h1>
+          <div style={{ marginTop: '72px' }}>
+            <h1 className="page-title">이력서 등록</h1>
         
-        <form onSubmit={handleSubmit} style={{ paddingBottom: '100px' }}>
-          <div style={{maxWidth: '1200px', margin: '0 auto'}}>
-          <div className="resume-section-wrapper">
-            <ResumeBasicInfoSection form={form} setForm={setForm} />
-          </div>
-          <div className="resume-section-wrapper">
-            <ResumeEducationSection form={form} setForm={setForm} />
-          </div>
-          <div className="resume-section-wrapper">
-            <ResumeCareerSection form={form} setForm={setForm} />
-          </div>
-          <div className="resume-section-wrapper">
-            <ResumeSelfIntroSection form={form} setForm={setForm} />
-          </div>
-          <div className="resume-section-wrapper">
-            <ResumeFileUploadSection form={form} setForm={setForm} />
-          </div>
-          {/* 기업 제안 수신 여부 UI + 개인정보 동의 UI 너비 통일 */}
-          <div className="resume-section-wrapper">
-            <div className="resume-offer-section" style={{ padding: 0 }}>
-              <div className="resume-offer-title">기업으로부터 제안을 받으시겠어요?</div>
-              <div style={{ display: 'flex', gap: '1rem', margin: '18px 0 8px 0', justifyContent: 'flex-start' }}>
-                {RESUME_OFFER_OPTIONS.map(opt => (
-                  <label
-                    key={opt.value}
-                    style={{
-                      background: offerOption === opt.value ? '#e6faf6' : '#fff',
-                      border: offerOption === opt.value ? '2.5px solid #30C59B' : '1.5px solid #e2e8f0',
-                      color: offerOption === opt.value ? '#30C59B' : '#222',
-                      borderRadius: '12px',
-                      padding: '0.95rem 2.1rem',
-                      minWidth: 140,
-                      textAlign: 'center',
-                      fontSize: '1.04rem',
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                      boxShadow: offerOption === opt.value ? '0 4px 18px rgba(48,197,155,0.10)' : '0 2px 8px rgba(30,200,170,0.03)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      userSelect: 'none',
-                      transition: 'all 0.18s',
-                    }}
-                    onClick={() => setOfferOption(opt.value)}
-                  >
+            <form onSubmit={handleSubmit} style={{ paddingBottom: '100px' }}>
+              <div style={{maxWidth: '1200px', margin: '0 auto'}}>
+              <div className="resume-section-wrapper">
+                <ResumeBasicInfoSection form={form} setForm={setForm} />
+              </div>
+              <div className="resume-section-wrapper">
+                <ResumeEducationSection form={form} setForm={setForm} />
+              </div>
+              <div className="resume-section-wrapper">
+                <ResumeCareerSection form={form} setForm={setForm} />
+              </div>
+              <div className="resume-section-wrapper">
+                <ResumeSelfIntroSection form={form} setForm={setForm} />
+              </div>
+              <div className="resume-section-wrapper">
+                <ResumeFileUploadSection form={form} setForm={setForm} />
+              </div>
+              {/* 기업 제안 수신 여부 UI + 개인정보 동의 UI 너비 통일 */}
+              <div className="resume-section-wrapper">
+                <div className="resume-offer-section" style={{ padding: 0 }}>
+                  <div className="resume-offer-title">기업으로부터 제안을 받으시겠어요?</div>
+                  <div style={{ display: 'flex', gap: '1rem', margin: '18px 0 8px 0', justifyContent: 'flex-start' }}>
+                    {RESUME_OFFER_OPTIONS.map(opt => (
+                      <label
+                        key={opt.value}
+                        style={{
+                          background: offerOption === opt.value ? '#e6faf6' : '#fff',
+                          border: offerOption === opt.value ? '2.5px solid #30C59B' : '1.5px solid #e2e8f0',
+                          color: offerOption === opt.value ? '#30C59B' : '#222',
+                          borderRadius: '12px',
+                          padding: '0.95rem 2.1rem',
+                          minWidth: 140,
+                          textAlign: 'center',
+                          fontSize: '1.04rem',
+                          fontWeight: 500,
+                          cursor: 'pointer',
+                          boxShadow: offerOption === opt.value ? '0 4px 18px rgba(48,197,155,0.10)' : '0 2px 8px rgba(30,200,170,0.03)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          userSelect: 'none',
+                          transition: 'all 0.18s',
+                        }}
+                        onClick={() => setOfferOption(opt.value)}
+                      >
+                        <input
+                          type="radio"
+                          name="resume-offer"
+                          value={opt.value}
+                          checked={offerOption === opt.value}
+                          onChange={() => setOfferOption(opt.value)}
+                          style={{ display: 'none' }}
+                        />
+                        <span style={{ lineHeight: 1.5, whiteSpace: 'pre-line' }}>{opt.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="resume-section-wrapper">
+                <div className="resume-agreement-section" style={{ padding: 0 }}>
+                  <label className="resume-agreement-label">
                     <input
-                      type="radio"
-                      name="resume-offer"
-                      value={opt.value}
-                      checked={offerOption === opt.value}
-                      onChange={() => setOfferOption(opt.value)}
-                      style={{ display: 'none' }}
+                      type="checkbox"
+                      checked={agreementChecked}
+                      onChange={e => setAgreementChecked(e.target.checked)}
+                      className="resume-agreement-checkbox"
                     />
-                    <span style={{ lineHeight: 1.5, whiteSpace: 'pre-line' }}>{opt.label}</span>
+                    <span className="resume-agreement-text" style={{ fontSize: '0.93rem', color: '#888', fontWeight: 400 }}>
+                      이력서 제출 시 개인정보 제공 및 이용에 동의합니다. (필수)
+                    </span>
                   </label>
-                ))}
+                </div>
               </div>
             </div>
-          </div>
-          <div className="resume-section-wrapper">
-            <div className="resume-agreement-section" style={{ padding: 0 }}>
-              <label className="resume-agreement-label">
-                <input
-                  type="checkbox"
-                  checked={agreementChecked}
-                  onChange={e => setAgreementChecked(e.target.checked)}
-                  className="resume-agreement-checkbox"
-                />
-                <span className="resume-agreement-text" style={{ fontSize: '0.93rem', color: '#888', fontWeight: 400 }}>
-                  이력서 제출 시 개인정보 제공 및 이용에 동의합니다. (필수)
-                </span>
-              </label>
+            {/* 하단 고정 버튼 영역 - 세련된 스타일 적용 */}
+            <div className="resume-fixed-action-bar">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="resume-cancel-btn styled-action-btn"
+                aria-label="이력서 등록 취소"
+                style={{ background: '#30C59B', color: '#fff' }}
+              >
+                <FaTimes style={{ marginRight: 8 }} /> 취소
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving}
+                className="resume-save-btn styled-action-btn"
+                aria-label="임시저장"
+                style={{ background: '#30C59B', color: '#fff' }}
+              >
+                <FaSave style={{ marginRight: 8 }} /> {saving ? '저장 중...' : '임시저장'}
+              </button>
+              <button
+                type="submit"
+                disabled={loading || !agreementChecked || !form.file}
+                className="resume-submit-btn styled-action-btn"
+                aria-label="이력서 제출"
+                style={{ background: '#30C59B', color: '#fff' }}
+              >
+                <FaCheck style={{ marginRight: 8 }} /> {loading ? '제출 중...' : '제출'}
+              </button>
             </div>
+            </form>
           </div>
-        </div>
-        {/* 하단 고정 버튼 영역 - 세련된 스타일 적용 */}
-        <div className="resume-fixed-action-bar">
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="resume-cancel-btn styled-action-btn"
-            aria-label="이력서 등록 취소"
-            style={{ background: '#30C59B', color: '#fff' }}
-          >
-            <FaTimes style={{ marginRight: 8 }} /> 취소
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving}
-            className="resume-save-btn styled-action-btn"
-            aria-label="임시저장"
-            style={{ background: '#30C59B', color: '#fff' }}
-          >
-            <FaSave style={{ marginRight: 8 }} /> {saving ? '저장 중...' : '임시저장'}
-          </button>
-          <button
-            type="submit"
-            disabled={loading || !agreementChecked || !form.file}
-            className="resume-submit-btn styled-action-btn"
-            aria-label="이력서 제출"
-            style={{ background: '#30C59B', color: '#fff' }}
-          >
-            <FaCheck style={{ marginRight: 8 }} /> {loading ? '제출 중...' : '제출'}
-          </button>
-        </div>
-        </form>
         </div>
       </div>
     </div>

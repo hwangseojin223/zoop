@@ -5,7 +5,7 @@ import './Header.css';
 import { useAuth } from '../../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-function Header({ whiteBg }) {
+function Header() {
   // --- FIX IS HERE ---
   // 이 부분에 isDropdownOpen과 setIsDropdownOpen 상태를 선언해야 합니다.
   const [displayedUserName, setDisplayedUserName] = useState('');
@@ -62,8 +62,13 @@ function Header({ whiteBg }) {
 
   // 마이페이지, 설정 등 클릭 핸들러 (예시)
   const handleMenuItemClick = (path) => {
-    if (path === '/candidate/dashboard') {
-      navigate('/candidate/dashboard');
+    if (path === '/mypage') {
+      console.log('DEBUG userType:', authState?.userType); // TEMP DEBUG
+      if (authState?.userType === 'candidate') {
+        navigate('/candidate/dashboard');
+      } else {
+        navigate('/mypage');
+      }
     } else {
       navigate(path);
     }
@@ -71,9 +76,9 @@ function Header({ whiteBg }) {
   };
 
   return (
-    <div className="header" style={{ padding: 30 }}>
-      <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-        {/* 로고 제거됨 */}
+    <div className="header">
+      <div className="header-left">
+        {/* Placeholder for menu icon if needed */}
       </div>
       <div className="header-right">
         <span className="header-icon" aria-label="알림">
@@ -93,7 +98,7 @@ function Header({ whiteBg }) {
           {/* 드롭다운 메뉴 (isDropdownOpen 상태에 따라 표시) */}
           {isDropdownOpen && (
             <div className="dropdown-menu">
-              <div className="dropdown-item" onClick={() => handleMenuItemClick('/candidate/dashboard')}>마이페이지</div>
+              <div className="dropdown-item" onClick={() => handleMenuItemClick('/mypage')}>마이페이지</div>
               <div className="dropdown-item" onClick={() => handleMenuItemClick('/settings')}>설정</div>
               {authState?.token && (
                 <div className="dropdown-item logout-dropdown-item" onClick={handleLogout}>

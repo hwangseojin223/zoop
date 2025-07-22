@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import CompanySidebar from './CompanySidebar';
 import CandidateModal from '../../components/CandidateModal';
@@ -6,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../../components/SEO';
 
 export default function CompanyDashboard() {
+  const location = useLocation();
   const [companyInfo, setCompanyInfo] = useState(null);
   const [postings, setPostings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -212,21 +214,75 @@ export default function CompanyDashboard() {
     e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)';
   };
 
+  // URL 파라미터 처리 및 초기 설정
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const postId = urlParams.get('postId');
+    const tab = urlParams.get('tab');
+    const filter = urlParams.get('filter');
+    
+    console.log('URL 파라미터:', { postId, tab, filter });
+    
+    // postId가 있으면 해당 공고 선택
+    if (postId) {
+      setSelectedPostId(parseInt(postId));
+    }
+    
+    // tab이 있으면 해당 탭으로 설정
+    if (tab && (tab === 'details' || tab === 'candidates')) {
+      setActiveTab(tab);
+    }
+    
+    // filter가 있으면 해당 필터로 설정
+    if (filter) {
+      // URL 파라미터의 필터 값을 기존 필터 라벨과 매핑
+      const filterMapping = {
+        'additional-applicants': '추가 지원자',
+        'matched': '매칭',
+        'all': '전체',
+        'no-response': '미회신자',
+        'response': '회신자',
+        'interview-scheduled': '면접 예정자',
+        'interview-completed': '면접 완료자',
+        'portfolio-matched': '매칭' // 포트폴리오 매칭도 매칭으로 처리
+      };
+      
+      const mappedFilter = filterMapping[filter] || filter;
+      console.log('필터 매핑:', filter, '->', mappedFilter);
+      setCandidateFilter(mappedFilter);
+    }
+  }, [location.search]); // location.search가 변경될 때마다 실행
+
   // 회사 정보 불러오기
   useEffect(() => {
     const userId = localStorage.getItem('userId');
     if (!userId) return;
+    
+    console.log('🔍 회사 정보 불러오기 시작 - userId:', userId);
+    
     fetch(`http://localhost:8081/api/companyadmins/info/${userId}`, {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('jwtToken')}`,
+        'Content-Type': 'application/json',
       },
     })
-      .then((res) => res.json())
+      .then((res) => {
+        console.log('🔍 회사 정보 API 응답 상태:', res.status);
+        if (!res.ok) {
+          throw new Error(`API 호출 실패: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((data) => {
+        console.log('✅ 회사 정보 로드 성공:', data);
+        console.log('🔍 관리자명:', data.adminName);
+        console.log('🔍 이메일:', data.email);
         setCompanyInfo(data);
         setCompanyAdminId(data.companyAdminId || 0);
       })
-      .catch(() => setCompanyInfo(null));
+      .catch((error) => {
+        console.error('❌ 회사 정보 로드 실패:', error);
+        setCompanyInfo(null);
+      });
   }, []);
 
   // 저장된 공고 불러오기
@@ -735,64 +791,49 @@ export default function CompanyDashboard() {
     if (postings.length > 0) fetchInterviewScheduledCandidates();
   }, [postings]);
 
-  const fetchDirectApplicants = async (specificPostId = null) => {
+  const handleDirectApplicantsClick = () => {
+    if (showDirectApplicants) {
+      // 이미 추가 지원자 화면이면 기업정보 화면으로 돌아가기
+      setShowDirectApplicants(false);
+      setSelectedApplicants(new Set()); // 선택 상태 초기화
+    } else {
+      // 기업정보 화면이면 추가 지원자 화면으로 전환
+      setShowDirectApplicants(true);
+      setSelectedPostId(null); // 선택된 공고 해제
+      setSelectedApplicants(new Set()); // 선택 상태 초기화
+      fetchAdditionalApplicants(); // 추가 지원자 목록 가져오기
+    }
+  };
+
+  // 추가 지원자 목록 가져오기 (모든 공고의 추가 지원자)
+  const fetchAdditionalApplicants = async () => {
     setLoadingDirectApplicants(true);
     try {
       const allApplicants = [];
       
-      if (specificPostId) {
-        // 특정 공고의 직접 지원자만 조회
-        const post = postings.find(p => p.postId === specificPostId);
-        if (post) {
-          const response = await fetch(`http://localhost:8081/api/portfolios/by-post/${post.postId}`);
-          if (response.ok) {
-            const applicants = await response.json();
-            const applicantsWithPostInfo = applicants.map(applicant => ({
-              ...applicant,
-              postTitle: post.postTitle,
-              postLocation: post.postLocation,
-              postProgrammingLanguage: post.postProgrammingLanguage
-            }));
-            allApplicants.push(...applicantsWithPostInfo);
-          }
-        }
-      } else {
-        // 모든 공고의 직접 지원자를 조회
-        for (const post of postings) {
-          const response = await fetch(`http://localhost:8081/api/portfolios/by-post/${post.postId}`);
-          if (response.ok) {
-            const applicants = await response.json();
-            const applicantsWithPostInfo = applicants.map(applicant => ({
-              ...applicant,
-              postTitle: post.postTitle,
-              postLocation: post.postLocation,
-              postProgrammingLanguage: post.postProgrammingLanguage
-            }));
-            allApplicants.push(...applicantsWithPostInfo);
-          }
+      // 모든 공고의 추가 지원자를 조회
+      for (const post of postings) {
+        const response = await fetch(`http://localhost:8081/api/github-search/by-post/${post.postId}/additional-applicants`);
+        if (response.ok) {
+          const applicants = await response.json();
+          const applicantsWithPostInfo = applicants.map(applicant => ({
+            ...applicant.candidate, // candidate 객체의 내용을 펼침
+            postTitle: post.postTitle,
+            postLocation: post.postLocation,
+            postProgrammingLanguage: post.postProgrammingLanguage,
+            postId: post.postId, // postId 추가
+            portfolioSubmissionDate: applicant.candidate.createdAt // 지원일을 createdAt으로 설정
+          }));
+          allApplicants.push(...applicantsWithPostInfo);
         }
       }
       
       setDirectApplicants(allApplicants);
     } catch (error) {
-      console.error('직접 지원자 조회 오류:', error);
+      console.error('추가 지원자 조회 오류:', error);
       setDirectApplicants([]);
     } finally {
       setLoadingDirectApplicants(false);
-    }
-  };
-
-  const handleDirectApplicantsClick = () => {
-    if (showDirectApplicants) {
-      // 이미 직접 지원자 화면이면 기업정보 화면으로 돌아가기
-      setShowDirectApplicants(false);
-      setSelectedApplicants(new Set()); // 선택 상태 초기화
-    } else {
-      // 기업정보 화면이면 직접 지원자 화면으로 전환
-      setShowDirectApplicants(true);
-      setSelectedPostId(null); // 선택된 공고 해제
-      setSelectedApplicants(new Set()); // 선택 상태 초기화
-      fetchDirectApplicants();
     }
   };
 
@@ -808,9 +849,11 @@ export default function CompanyDashboard() {
       const currentApplicants = showDirectApplicants ? directApplicants : githubCandidates;
       
       // 선택된 지원자들의 candidateId와 postId를 모두 수집
-      const candidateData = Array.from(selectedApplicants).map(candidateId => {
+      const candidateData = Array.from(selectedApplicants).map(uniqueKey => {
+        // uniqueKey에서 candidateId와 postId 추출
+        const [candidateId, postId] = uniqueKey.split('_');
         const candidate = currentApplicants.find(c => 
-          (c.candidateId || c.githubLogin) === candidateId
+          c.candidateId == candidateId && c.postId == postId
         );
         return candidate ? {
           candidateId: candidate.candidateId,
@@ -837,7 +880,7 @@ export default function CompanyDashboard() {
         // 선택 해제 및 목록 새로고침
         setSelectedApplicants(new Set());
         if (showDirectApplicants) {
-          fetchDirectApplicants();
+          fetchAdditionalApplicants();
         } else if (candidateFilter === '추가 지원자') {
           fetchCandidates(selectedPostId, '추가 지원자');
         }
@@ -862,9 +905,11 @@ export default function CompanyDashboard() {
       const currentApplicants = showDirectApplicants ? directApplicants : githubCandidates;
       
       // 선택된 지원자들의 candidateId와 postId를 모두 수집
-      const candidateData = Array.from(selectedApplicants).map(candidateId => {
+      const candidateData = Array.from(selectedApplicants).map(uniqueKey => {
+        // uniqueKey에서 candidateId와 postId 추출
+        const [candidateId, postId] = uniqueKey.split('_');
         const candidate = currentApplicants.find(c => 
-          (c.candidateId || c.githubLogin) === candidateId
+          c.candidateId == candidateId && c.postId == postId
         );
         return candidate ? {
           candidateId: candidate.candidateId,
@@ -891,7 +936,7 @@ export default function CompanyDashboard() {
         // 선택 해제 및 목록 새로고침
         setSelectedApplicants(new Set());
         if (showDirectApplicants) {
-          fetchDirectApplicants();
+          fetchAdditionalApplicants();
         } else if (candidateFilter === '추가 지원자') {
           fetchCandidates(selectedPostId, '추가 지원자');
         }
@@ -938,7 +983,7 @@ export default function CompanyDashboard() {
           fetchCandidates(selectedPostId, '추가 지원자');
         }
         if (showDirectApplicants) {
-          fetchDirectApplicants();
+          fetchAdditionalApplicants();
         }
       } else {
         alert('수락 처리 중 오류가 발생했습니다: ' + result.message);
@@ -983,7 +1028,7 @@ export default function CompanyDashboard() {
           fetchCandidates(selectedPostId, '추가 지원자');
         }
         if (showDirectApplicants) {
-          fetchDirectApplicants();
+          fetchAdditionalApplicants();
         }
       } else {
         alert('거절 처리 중 오류가 발생했습니다: ' + result.message);
@@ -998,22 +1043,6 @@ export default function CompanyDashboard() {
 
   // 후보자 목록 필터 버튼 부분
   const filterLabels = ['추가 지원자', '매칭', '전체', '미회신자', '회신자', '면접 예정자', '면접 완료자'];
-  const [indicatorProps, setIndicatorProps] = useState({ left: 0, width: 0 });
-  const btnRefs = useRef([]);
-  const groupRef = useRef(null);
-
-  useEffect(() => {
-    const idx = filterLabels.indexOf(candidateFilter);
-    if (btnRefs.current[idx]) {
-      const btn = btnRefs.current[idx];
-      const groupRect = groupRef.current?.getBoundingClientRect();
-      const btnRect = btn.getBoundingClientRect();
-      setIndicatorProps({
-        left: btnRect.left - (groupRect?.left || 0),
-        width: btnRect.width
-      });
-    }
-  }, [candidateFilter]);
 
   // AI 분석 결과 가져오기
   const fetchAiAnalysis = async (jobCandidateId) => {
@@ -1188,14 +1217,15 @@ export default function CompanyDashboard() {
                     <rect x="3.5" y="15" width="17" height="6" rx="3" stroke="#b5c6d6" strokeWidth="1.5"/>
                   </svg>
                   <div style={{ fontSize: '1.08rem', color: '#7b8794', fontWeight: 500 }}>
-                    아직 직접 지원한 지원자가 없습니다.
+                    아직 추가 지원자가 없습니다.
                   </div>
                 </div>
               ) : (
                 <div style={{ display: 'grid', gap: '1.5rem' }}>
                   {directApplicants.map((applicant, index) => {
                     const candidateId = applicant.candidateId || applicant.githubLogin;
-                    const isSelected = selectedApplicants.has(candidateId);
+                    const uniqueKey = `${candidateId}_${applicant.postId}`; // candidateId + postId 조합으로 고유 키 생성
+                    const isSelected = selectedApplicants.has(uniqueKey);
                     return (
                     <div
                       key={index}
@@ -1211,10 +1241,10 @@ export default function CompanyDashboard() {
                       }}
                       onClick={() => {
                         const newSelected = new Set(selectedApplicants);
-                        if (newSelected.has(candidateId)) {
-                          newSelected.delete(candidateId);
+                        if (newSelected.has(uniqueKey)) {
+                          newSelected.delete(uniqueKey);
                         } else {
-                          newSelected.add(candidateId);
+                          newSelected.add(uniqueKey);
                         }
                         setSelectedApplicants(newSelected);
                       }}
@@ -1236,7 +1266,7 @@ export default function CompanyDashboard() {
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                             <h3 style={{ fontSize: '1.3rem', fontWeight: '700', color: '#2d3748', margin: 0 }}>
-                              {applicant.candidateName}
+                              {applicant.githubName || applicant.candidateName}
                             </h3>
                                                          <span style={{
                                background: applicant.careerType === '경력' ? '#e6fffa' : '#edf2f7',
@@ -1256,7 +1286,7 @@ export default function CompanyDashboard() {
                                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                                 <polyline points="22,6 12,13 2,6"/>
                               </svg>
-                              {applicant.candidateEmail}
+                              {applicant.githubEmail || applicant.candidateEmail}
                             </div>
                             <div style={{ color: '#4a5568', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4a5568" strokeWidth="2">
@@ -1283,7 +1313,7 @@ export default function CompanyDashboard() {
                           </div>
                           
                           <div style={{ color: '#666', fontSize: '0.9rem' }}>
-                            지원일: {new Date(applicant.portfolioSubmissionDate).toLocaleDateString('ko-KR')}
+                            지원일: {applicant.portfolioSubmissionDate ? new Date(applicant.portfolioSubmissionDate).toLocaleDateString('ko-KR') : '날짜 정보 없음'}
                           </div>
                         </div>
                         
@@ -1617,23 +1647,7 @@ export default function CompanyDashboard() {
                     {loadingCandidates ? (
                       <p style={{ color: '#888', textAlign: 'center', padding: '2rem' }}>후보자 정보를 불러오는 중...</p>
                     ) : activeTab === 'candidates' && (
-                      <div ref={groupRef} style={{ position: 'relative', display: 'flex', gap: '1rem', marginBottom: '1.5rem', justifyContent: 'center' }}>
-                        {/* 슬라이딩 인디케이터 */}
-                        <motion.div
-                          layout
-                          transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-                          style={{
-                            position: 'absolute',
-                            bottom: 0,
-                            left: indicatorProps.left,
-                            width: indicatorProps.width,
-                            height: 5,
-                            borderRadius: 3,
-                            background: 'linear-gradient(90deg, #30c59b 0%, #6be8c8 100%)',
-                            zIndex: 2,
-                            pointerEvents: 'none',
-                          }}
-                        />
+                      <div style={{ position: 'relative', display: 'flex', gap: '1rem', marginBottom: '1.5rem', justifyContent: 'center' }}>
                         {filterLabels.map((label, i) => {
                           // 추가 지원자 버튼 특별 스타일
                           const isAdditionalApplicant = label === '추가 지원자';
@@ -1644,7 +1658,6 @@ export default function CompanyDashboard() {
                           return (
                           <motion.button
                             key={label}
-                            ref={el => btnRefs.current[i] = el}
                             type="button"
                             whileHover={{ scale: 1.06 }}
                             whileTap={{ scale: 0.97 }}
@@ -1668,6 +1681,7 @@ export default function CompanyDashboard() {
                                 borderColor: isActiveFilter ? '#30c59b' : '#e2e8f0',
                               zIndex: 3,
                               transition: 'all 0.2s',
+                              whiteSpace: 'nowrap',
                             }}
                             onClick={() => {
                               if (candidateFilter !== label) {
@@ -1803,7 +1817,8 @@ export default function CompanyDashboard() {
                             </div>
                             {githubCandidates.map((candidate, index) => {
                               const candidateId = candidate.candidateId || candidate.githubLogin;
-                              const isSelected = selectedApplicants.has(candidateId);
+                              const uniqueKey = `${candidateId}_${selectedPostId}`; // candidateId + selectedPostId 조합으로 고유 키 생성
+                              const isSelected = selectedApplicants.has(uniqueKey);
                               return (
                               <motion.div
                                 key={candidate.candidateId || index}
@@ -1861,7 +1876,7 @@ export default function CompanyDashboard() {
                                     fontSize: '0.8rem',
                                     fontWeight: '600'
                                   }}>
-                                    직접 지원
+                                    추가 지원
                                   </div>
                                   {candidateFilter === '매칭' && (
                                     <div style={{
@@ -2162,7 +2177,8 @@ export default function CompanyDashboard() {
                               })
                               .map((candidate, index) => {
                                 const candidateId = candidate.candidateId || candidate.githubLogin;
-                                const isSelected = selectedApplicants.has(candidateId);
+                                const uniqueKey = `${candidateId}_${selectedPostId}`; // candidateId + selectedPostId 조합으로 고유 키 생성
+                                const isSelected = selectedApplicants.has(uniqueKey);
                                 return (
                                   <motion.div
                                     key={candidate.githubSearchResultId}
@@ -2188,10 +2204,10 @@ export default function CompanyDashboard() {
                                       }
                                       
                                       const newSelected = new Set(selectedApplicants);
-                                      if (newSelected.has(candidateId)) {
-                                        newSelected.delete(candidateId);
+                                      if (newSelected.has(uniqueKey)) {
+                                        newSelected.delete(uniqueKey);
                                       } else {
-                                        newSelected.add(candidateId);
+                                        newSelected.add(uniqueKey);
                                       }
                                       setSelectedApplicants(newSelected);
                                     }}
@@ -2237,28 +2253,33 @@ export default function CompanyDashboard() {
                                           window.location.href = `/company/interview-evaluation/${selectedPostId}/${candidate.jobCandidateId}`;
                                         }}
                                         style={{
-                                          background: 'linear-gradient(135deg, #30C59B 0%, #2563eb 100%)',
+                                          background: '#22c55e',
                                           color: 'white',
                                           border: 'none',
                                           borderRadius: '999px',
-                                          height: '40px',
-                                          padding: '0 1.3rem',
+                                          height: '44px',
+                                          padding: '0 1.6rem',
                                           display: 'flex',
                                           alignItems: 'center',
-                                          gap: '0.6rem',
+                                          gap: '0.7rem',
                                           fontWeight: 700,
-                                          fontSize: '1.01rem',
-                                          boxShadow: '0 2px 8px rgba(48,197,155,0.18)',
+                                          fontSize: '1.08rem',
+                                          boxShadow: '0 2px 8px rgba(34,197,94,0.13)',
                                           cursor: 'pointer',
-                                          transition: 'all 0.2s',
+                                          transition: 'background 0.18s, box-shadow 0.18s, transform 0.14s',
+                                          letterSpacing: '0.01em',
+                                          outline: 'none',
+                                          marginTop: 0,
                                         }}
                                         onMouseEnter={e => {
-                                          e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)';
-                                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(48,197,155,0.22)';
+                                          e.currentTarget.style.background = '#16a34a';
+                                          e.currentTarget.style.boxShadow = '0 6px 18px rgba(34,197,94,0.18)';
+                                          e.currentTarget.style.transform = 'translateY(-2px) scale(1.04)';
                                         }}
                                         onMouseLeave={e => {
-                                          e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(48,197,155,0.18)';
+                                          e.currentTarget.style.background = '#22c55e';
+                                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(34,197,94,0.13)';
+                                          e.currentTarget.style.transform = 'none';
                                         }}
                                         title="면접 평가"
                                       >
@@ -2267,7 +2288,7 @@ export default function CompanyDashboard() {
                                           <path d="M9 7h6" />
                                           <path d="M9 11h6" />
                                           <path d="M9 15h2" />
-                                          <path d="M15 19l2 2 4-4" stroke="#30C59B" strokeWidth="2" fill="none"/>
+                                          <path d="M15 19l2 2 4-4" stroke="#22c55e" strokeWidth="2" fill="none"/>
                                         </svg>
                                         면접 평가
                                       </button>
@@ -2391,7 +2412,7 @@ export default function CompanyDashboard() {
                                           title="GitHub 프로필 보기"
                                         >
                                           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#4a5568' }}>
-                                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.95 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85.004 1.71.115 2.51.337 1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.85-2.34 4.7-4.57 4.95.36.31.68.92.68 1.85 0 1.33-.01 2.4-.01 2.73 0 .27.16.58.67.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
+                                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.09.66-.261.66-.48 0-.24-.01-.87-.01-1.7-2.78.6-3.37-1.34-3.37-1.34-.45-1.15-1.1-1.46-1.1-1.46-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.95 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85.004 1.71.115 2.51.337 1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.85-2.34 4.7-4.57 4.95.36.31.68.92.68 1.85 0 1.33-.01 2.4-.01 2.73 0 .27.16.58.67.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
                                         </button>
                                         <button
                                           onClick={(e) => {
