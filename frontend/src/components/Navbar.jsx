@@ -120,12 +120,7 @@ const Navbar = ({ onLangChange, hideAuth }) => {
     setMenuOpen(false);
     setIsDropdownOpen(false);
     if (path) {
-      // 고객센터와 자주 묻는 질문은 새탭에서 열기
-      if (path === '/support') {
-        window.open(path, '_blank');
-      } else {
-        navigate(path);
-      }
+      navigate(path);
     }
   };
 
@@ -184,8 +179,7 @@ const Navbar = ({ onLangChange, hideAuth }) => {
         </AccessibleLink>
         <AccessibleLink
           onClick={() => handleMenuItemClick('/support')}
-          ariaLabel="고객센터 (새 창에서 열림)"
-          external={true}
+          ariaLabel="고객센터"
           role="menuitem"
         >
           고객센터

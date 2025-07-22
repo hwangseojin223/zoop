@@ -79,8 +79,7 @@ def extract_audio_from_video(video_path: str) -> str:
         return ""
 
 def analyze_interview_responses(transcripts: List[str], questions: List[str], post_title: str = "", post_description: str = "", ideal_candidate: str = "") -> dict:
-    """OpenAI를 사용하여 면접 답변 분석 (공고/인재상 정보 포함)"""
-    # 모든 답변을 하나로 합치기
+    """OpenAI를 사용하여 면접 답변 분석 (공고/인재상 정보 포함, 구조화된 JSON 반환)"""
     combined_transcript = "\n\n".join([
         f"질문 {i+1}: {questions[i]}\n답변: {transcript}"
         for i, transcript in enumerate(transcripts)
@@ -104,45 +103,66 @@ def analyze_interview_responses(transcripts: List[str], questions: List[str], po
 4. **자신감과 태도 (15점)**: 자신감 있는 답변과 긍정적 태도
 5. **경험의 구체성 (20점)**: 구체적인 사례와 경험 제시
 
-각 항목별 점수와 근거를 제시하고, 최종 점수를 계산해주세요.
+각 항목별로 아래 JSON 포맷에 맞춰서, 점수, 근거, 좋은 예시, 아쉬운 예시, 개선점, 다른 지원자와의 비교, 카테고리별 태그를 반드시 포함해서 작성해주세요. 전체 요약, 헤드헌팅 추천 포인트, 태그, 시각화용 점수 배열, 평균/상위10% 비교도 포함해주세요.
 
-반드시 아래 형식으로 출력해주세요:
-전문성: [점수]점 - [근거]
-의사소통 능력: [점수]점 - [근거]
-문제해결 능력: [점수]점 - [근거]
-자신감과 태도: [점수]점 - [근거]
-경험의 구체성: [점수]점 - [근거]
-총점: [총점]점
-종합평가: [3-4줄 종합 평가]
+반드시 아래 JSON 포맷으로만 출력하세요:
+{{
+  "categories": [
+    {{
+      "name": "전문성",
+      "score": ..., "max_score": 25,
+      "reason": "...",
+      "good_example": "...",
+      "bad_example": "...",
+      "improvement": "...",
+      "compare_to_others": "...",
+      "tags": ["...", "..."]
+    }},
+    ...
+  ],
+  "total_feedback": {{
+    "summary": "...",
+    "headhunting_point": "...",
+    "recommendation": "...",
+    "tags": ["...", "..."]
+  }},
+  "visualization": {{
+    "category_scores": [...],
+    "category_labels": ["전문성", "의사소통", "문제해결", "자신감", "경험의 구체성"],
+    "score_distribution": {{
+      "current": ..., "average": ..., "top_10_percent": ...
+    }}
+  }}
+}}
 """
 
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "당신은 면접 전문가입니다. 객관적이고 공정하게 답변을 평가해주세요."},
+                {"role": "system", "content": "당신은 헤드헌터이자 면접 전문가입니다. 반드시 위 JSON 포맷만 출력하세요."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=1000,
+            max_tokens=1500,
             temperature=0.3
         )
-        
-        analysis_text = response.choices[0].message.content
-        
-        # 점수 추출
-        score_match = re.search(r"총점:\s*(\d+)점", analysis_text)
-        score = float(score_match.group(1)) if score_match else 0.0
-        
+        analysis_json = response.choices[0].message.content
+        try:
+            analysis_data = json.loads(analysis_json)
+            # 총점 추출 (카테고리별 합산)
+            score = sum([cat.get("score", 0) for cat in analysis_data.get("categories", [])])
+        except Exception as e:
+            analysis_data = {"error": f"JSON 파싱 오류: {e}", "raw": analysis_json}
+            score = 0.0
         return {
-            "analysis": analysis_text,
+            "analysis": analysis_data,
             "score": score,
             "transcripts": transcripts
         }
-        
     except Exception as e:
         print(f"OpenAI analysis error: {e}")
         return {
-            "analysis": f"분석 중 오류가 발생했습니다: {e}",
+            "analysis": {"error": f"분석 중 오류가 발생했습니다: {e}"},
             "score": 0.0,
             "transcripts": transcripts
         }
@@ -375,8 +395,7 @@ async def analyze_single_video(video_id: int = Form(...)):
         )
 
 def analyze_single_video_response(transcript: str, question: str) -> dict:
-    """개별 영상 답변 분석"""
-    
+    """개별 영상 답변 분석 (구조화된 JSON 반환)"""
     prompt = f"""
 다음은 AI 면접에서 나온 질문과 답변입니다. 이 답변을 분석해주세요.
 
@@ -391,46 +410,65 @@ def analyze_single_video_response(transcript: str, question: str) -> dict:
 4. **자신감과 태도 (15점)**: 자신감 있는 답변과 긍정적 태도
 5. **경험의 구체성 (20점)**: 구체적인 사례와 경험 제시
 
-각 항목별 점수와 근거를 제시하고, 최종 점수를 계산해주세요.
+각 항목별로 아래 JSON 포맷에 맞춰서, 점수, 근거, 좋은 예시, 아쉬운 예시, 개선점, 다른 지원자와의 비교, 카테고리별 태그를 반드시 포함해서 작성해주세요. 전체 요약, 헤드헌팅 추천 포인트, 태그, 시각화용 점수 배열, 평균/상위10% 비교도 포함해주세요.
 
-반드시 아래 형식으로 출력해주세요:
-전문성: [점수]점 - [근거]
-의사소통 능력: [점수]점 - [근거]
-문제해결 능력: [점수]점 - [근거]
-자신감과 태도: [점수]점 - [근거]
-경험의 구체성: [점수]점 - [근거]
-총점: [총점]점
-종합평가: [3-4줄 종합 평가]
+반드시 아래 JSON 포맷으로만 출력하세요:
+{{
+  "categories": [
+    {{
+      "name": "전문성",
+      "score": ..., "max_score": 25,
+      "reason": "...",
+      "good_example": "...",
+      "bad_example": "...",
+      "improvement": "...",
+      "compare_to_others": "...",
+      "tags": ["...", "..."]
+    }},
+    ...
+  ],
+  "total_feedback": {{
+    "summary": "...",
+    "headhunting_point": "...",
+    "recommendation": "...",
+    "tags": ["...", "..."]
+  }},
+  "visualization": {{
+    "category_scores": [...],
+    "category_labels": ["전문성", "의사소통", "문제해결", "자신감", "경험의 구체성"],
+    "score_distribution": {{
+      "current": ..., "average": ..., "top_10_percent": ...
+    }}
+  }}
+}}
 """
-
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "당신은 면접 전문가입니다. 객관적이고 공정하게 답변을 평가해주세요."},
+                {"role": "system", "content": "당신은 헤드헌터이자 면접 전문가입니다. 반드시 위 JSON 포맷만 출력하세요."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=1000,
+            max_tokens=1500,
             temperature=0.3
         )
-        
-        analysis_text = response.choices[0].message.content
-        
-        # 점수 추출
-        score_match = re.search(r"총점:\s*(\d+)점", analysis_text)
-        score = float(score_match.group(1)) if score_match else 0.0
-        
+        analysis_json = response.choices[0].message.content
+        try:
+            analysis_data = json.loads(analysis_json)
+            score = sum([cat.get("score", 0) for cat in analysis_data.get("categories", [])])
+        except Exception as e:
+            analysis_data = {"error": f"JSON 파싱 오류: {e}", "raw": analysis_json}
+            score = 0.0
         return {
-            "analysis": analysis_text,
+            "analysis": analysis_data,
             "score": score,
             "transcript": transcript,
             "question": question
         }
-        
     except Exception as e:
         print(f"OpenAI analysis error: {e}")
         return {
-            "analysis": f"분석 중 오류가 발생했습니다: {e}",
+            "analysis": {"error": f"분석 중 오류가 발생했습니다: {e}"},
             "score": 0.0,
             "transcript": transcript,
             "question": question

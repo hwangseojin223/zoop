@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
 import SEO from '../../components/SEO';
 import './FaqPage.css';
+import '../info/Notice.css';
 import { useLocation } from 'react-router-dom';
 
 const navLinks = [
@@ -35,6 +36,28 @@ const categories = [
   '연락처 정보'
 ];
 
+// SVG 아이콘 컴포넌트 (단색, 미니멀)
+// Q: HelpCircleIcon (Feather style)
+const QIcon = ({size=22, color='#30C59B'}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M9.09 9a3 3 0 1 1 5.83 1c0 2-3 3-3 3" />
+    <circle cx="12" cy="17" r="1" />
+  </svg>
+);
+// A: CheckCircleIcon (Feather style)
+const AIcon = ({size=22, color='#22c55e'}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="9 12 12 15 16 10" />
+  </svg>
+);
+const ArrowIcon = ({open, size=22, color='#888', activeColor='#22c55e'}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" style={{transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.35s'}}>
+    <path d="M7 10l5 5 5-5" stroke={open ? activeColor : color} strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
 function FaqPage() {
   const location = useLocation();
   const [openIdx, setOpenIdx] = useState(null);
@@ -56,7 +79,6 @@ function FaqPage() {
 
   return (
     <>
-      {/* SEO 컴포넌트 */}
       <SEO
         title="자주 묻는 질문 - ZOOP | FAQ"
         description="ZOOP 서비스 이용에 대한 자주 묻는 질문과 답변을 확인하세요. AI 채용, GitHub 분석, 면접 프로세스 등에 대한 상세한 정보를 제공합니다."
@@ -77,71 +99,175 @@ function FaqPage() {
           }))
         }}
       />
-
       <Navbar />
-      
-      <div className="customer-main-bg">
-        <nav className="customer-nav">
-          <div className="customer-nav-logo" style={{cursor: 'pointer'}} onClick={() => window.location.href = '/support'}>고객센터</div>
-          <ul className="customer-nav-links">
-            {navLinks.map(link => (
-              <li key={link.label} className={link.active ? 'active' : ''}>
-                <a href={link.href}>{link.label}</a>
-              </li>
+      <section
+        className="notice-hero"
+        style={{
+          width: '100vw',
+          position: 'relative',
+          left: '50%',
+          right: '50%',
+          marginLeft: '-50vw',
+          marginRight: '-50vw',
+          padding: '6rem 0 4rem 0',
+          boxSizing: 'border-box',
+        }}
+      >
+        <div className="notice-hero-content">
+          <h1 className="notice-hero-title">자주 묻는 질문</h1>
+          <p className="notice-hero-desc">
+            서비스 이용 중 궁금한 점을 빠르게 확인하세요.<br />
+            회원가입, 이용 방법, 기술 지원 등 자주 묻는 질문을 안내합니다.
+          </p>
+        </div>
+      </section>
+      {/* Set body background for FAQ page only */}
+      <style>{`
+        @keyframes faqCardFadeIn {
+          to { opacity: 1; }
+        }
+        body { background: #fff !important; }
+      `}</style>
+      <div style={{
+        maxWidth: 1040,
+        margin: '0 auto',
+        background: '#fff',
+      }}>
+        <div style={{
+          background: '#fff',
+          borderRadius: '24px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.10)',
+          padding: '2rem',
+          maxWidth: 900,
+          margin: '56px auto 3rem auto',
+          position: 'relative',
+          zIndex: 3,
+          display: 'flex',
+          gap: 48,
+          justifyContent: 'center',
+          alignItems: 'flex-start',
+          opacity: 0,
+          animation: 'faqCardFadeIn 0.7s ease 0.1s forwards'
+        }}>
+          {/* 카테고리 */}
+          <aside style={{
+            minWidth: 180,
+            maxWidth: 220,
+            flex: '0 0 200px',
+            marginBottom: 24,
+            padding: '40px 0 40px 0',
+            background: 'none',
+            borderRight: '1px solid #e6fcf6',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+          }}>
+            <div style={{
+              fontWeight: 700,
+              color: '#30C59B',
+              marginBottom: 16,
+              fontSize: '1.1rem'
+            }}>카테고리</div>
+            {categories.map(category => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  background: selectedCategory === category ? 'linear-gradient(90deg, #30C59B 60%, #22c55e 100%)' : 'none',
+                  color: selectedCategory === category ? '#fff' : '#444',
+                  fontWeight: selectedCategory === category ? 700 : 500,
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '10px 12px',
+                  marginBottom: 6,
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  transition: 'background 0.18s, color 0.18s',
+                  outline: 'none',
+                  ...(selectedCategory !== category ? {
+                    ':hover': {
+                      background: '#e6fcf6',
+                      color: '#30C59B',
+                      fontWeight: 700
+                    }
+                  } : {})
+                }}
+                onMouseOver={e => {
+                  if (selectedCategory !== category) {
+                    e.currentTarget.style.background = '#e6fcf6';
+                    e.currentTarget.style.color = '#30C59B';
+                    e.currentTarget.style.fontWeight = 700;
+                  }
+                }}
+                onMouseOut={e => {
+                  if (selectedCategory !== category) {
+                    e.currentTarget.style.background = 'none';
+                    e.currentTarget.style.color = '#444';
+                    e.currentTarget.style.fontWeight = 500;
+                  }
+                }}
+              >
+                {category}
+              </button>
             ))}
-          </ul>
-        </nav>
-        <div className="faq-container">
-          {/* 사이드바 */}
-          <aside className="faq-sidebar">
-            <h3 className="sidebar-title">카테고리</h3>
-            <ul className="category-list">
-              {categories.map(category => (
-                <li key={category}>
-                  <button 
-                    className={`category-item ${selectedCategory === category ? 'active' : ''}`}
-                    onClick={() => setSelectedCategory(category)}
-                  >
-                    {category}
-                  </button>
-                </li>
-              ))}
-            </ul>
           </aside>
-
-          {/* 메인 콘텐츠 */}
-          <main className="faq-main-content">
-            <h1 className="faq-title">{selectedCategory}</h1>
+          {/* FAQ 리스트 */}
+          <main style={{ flex: 1, minWidth: 0, maxWidth: 700, padding: '40px 0' }}>
             {filteredFaqData.length > 0 ? (
-              <ul className="faq-list">
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 {filteredFaqData.map((item, idx) => (
-                  <li key={`${item.category}-${idx}`} className={`faq-item${openIdx === idx ? ' open' : ''}`}> 
-                    <button className="faq-question center" onClick={() => setOpenIdx(openIdx === idx ? null : idx)} aria-expanded={openIdx === idx}>
-                      <span className="faq-q-icon" aria-hidden="true" style={{marginRight: 12, color: '#22c55e', fontWeight: 700, fontSize: '1.3rem', display: 'flex', alignItems: 'center'}}>
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{marginRight: 4}}><circle cx="12" cy="12" r="11" stroke="#22c55e" strokeWidth="2" fill="#f6fff3"/><text x="8" y="17" fontSize="12" fontWeight="bold" fill="#22c55e">Q</text></svg>
-                      </span>
-                      <span>{item.question}</span>
-                      <span className={`faq-arrow${openIdx === idx ? ' open' : ''}`}
-                        aria-hidden="true"
-                        style={{display: 'flex', alignItems: 'center'}}>
-                        <svg width="22" height="22" viewBox="0 0 24 24" style={{transform: openIdx === idx ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.35s'}}>
-                          <path d="M7 10l5 5 5-5" stroke={openIdx === idx ? '#22c55e' : '#888'} strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </span>
+                  <li key={item.question} style={{
+                    background: openIdx === idx ? '#f6fff9' : '#fff',
+                    border: openIdx === idx ? '1.5px solid #30C59B' : '1px solid #f1f3f5',
+                    borderRadius: 16,
+                    boxShadow: openIdx === idx ? '0 4px 18px rgba(48,197,155,0.10)' : '0 1.5px 8px rgba(48,197,155,0.06)',
+                    marginBottom: 28,
+                    transition: 'box-shadow 0.18s, border 0.18s, background 0.18s',
+                    overflow: 'hidden'
+                  }}>
+                    <button
+                      onClick={() => setOpenIdx(openIdx === idx ? null : idx)}
+                      style={{
+                        width: '100%',
+                        background: 'none',
+                        border: 'none',
+                        outline: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '1.3rem 1.5rem',
+                        fontSize: '1.13rem',
+                        fontWeight: 700,
+                        color: '#30C59B',
+                        cursor: 'pointer',
+                        textAlign: 'left'
+                      }}
+                    >
+                      <QIcon size={22} color="#30C59B" />
+                      <span style={{ marginLeft: 12, flex: 1, color: '#222', fontWeight: 600 }}>{item.question}</span>
+                      <ArrowIcon open={openIdx === idx} size={22} color="#888" activeColor="#22c55e" />
                     </button>
-                    <div className={`faq-answer${openIdx === idx ? ' open' : ''}`}> 
-                      <span className="faq-a-icon" aria-hidden="true" style={{marginRight: 10, color: '#a3e635', fontWeight: 700, fontSize: '1.1rem', display: 'inline-flex', alignItems: 'center', verticalAlign: 'top'}}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{marginRight: 3}}><circle cx="12" cy="12" r="9" stroke="#a3e635" strokeWidth="2" fill="#f6fff3"/><text x="7" y="16" fontSize="10" fontWeight="bold" fill="#a3e635">A</text></svg>
-                      </span>
-                      {item.answer}
+                    <div className={`notice-card-detail${openIdx === idx ? ' open' : ''}`} style={{padding: openIdx === idx ? '1.5rem' : 0, marginTop: openIdx === idx ? '1rem' : 0}}>
+                      {openIdx === idx && (
+                        <div className="notice-card-summary" style={{color: '#17806d', fontWeight: 500}}>{item.answer}</div>
+                      )}
                     </div>
                   </li>
                 ))}
               </ul>
             ) : (
-              <div className="no-faq-message">
-                <p>해당 카테고리의 FAQ가 없습니다.</p>
-                <p>다른 카테고리를 선택해 주세요.</p>
+              <div style={{
+                color: '#888',
+                fontSize: '1.13rem',
+                background: '#f6fff9',
+                borderRadius: 16,
+                padding: '2.2rem 2.2rem',
+                marginTop: 32,
+                border: '1.5px solid #30C59B',
+                textAlign: 'center'
+              }}>
+                해당 카테고리의 FAQ가 없습니다.
               </div>
             )}
           </main>

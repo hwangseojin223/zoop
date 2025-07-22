@@ -32,7 +32,7 @@
 
 .customer-nav {
   width: 100%;
-  background: #f8f9fa;
+  background: #fff;
   border-bottom: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
@@ -140,7 +140,7 @@ nav.customer-nav {
 
 .customer-info-section {
   width: 100vw;
-  background: #f3f7f6;
+  background: #fff;
   margin-top: 60px;
   padding: 48px 0;
   display: flex;
