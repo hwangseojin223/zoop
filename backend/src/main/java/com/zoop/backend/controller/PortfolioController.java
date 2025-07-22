@@ -112,7 +112,10 @@ public class PortfolioController {
             @RequestParam("agreeFutureProposals") Boolean agreeFutureProposals,
             
             @Parameter(description = "채용정보 수신 동의")
-            @RequestParam("agreeReceiveRecruitmentInfo") Boolean agreeReceiveRecruitmentInfo
+            @RequestParam("agreeReceiveRecruitmentInfo") Boolean agreeReceiveRecruitmentInfo,
+            
+            @Parameter(description = "포트폴리오 제출 소스 (예: 'direct', 'resume', 'standalone')")
+            @RequestParam(value = "source", required = false) String source
     ) {
         try {
             System.out.println("=== [DEBUG] PortfolioController.submitPortfolio() 진입 ===");
@@ -140,7 +143,8 @@ public class PortfolioController {
                 agreeRequiredPersonal, 
                 agreeOptionalPersonal, 
                 agreeFutureProposals, 
-                agreeReceiveRecruitmentInfo
+                agreeReceiveRecruitmentInfo,
+                source
             );
             
             // 리다이렉션 URL 추가

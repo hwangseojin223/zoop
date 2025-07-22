@@ -28,6 +28,7 @@ const GoogleAuthCallback = lazy(() => import('./pages/auth/GoogleAuthCallback'))
 
 // company - lazy loading으로 변경
 const CompanyDashboard = lazy(() => import('./pages/company/CompanyDashboard'));
+const CompanySettings = lazy(() => import('./pages/company/CompanySettings'));
 const RecruitCreate = lazy(() => import('./pages/company/RecruitCreate'));
 const CandidateList = lazy(() => import('./pages/company/CandidateList'));
 const ResponderList = lazy(() => import('./pages/company/ResponderList'));
@@ -37,6 +38,7 @@ const InterviewEvaluation = lazy(() => import('./pages/company/InterviewEvaluati
 
 // candidate - lazy loading으로 변경
 const CandidateDashboard = lazy(() => import('./pages/candidate/Dashboard').then(module => ({ default: module.CandidateDashboard })));
+const CandidateSettings = lazy(() => import('./pages/candidate/Portfolio/CandidateSettings'));
 const PortfolioSubmissionPage = lazy(() => import('./pages/candidate/Portfolio/PortfolioSubmissionPage'));
 const InterviewPage = lazy(() => import('./pages/candidate/Interview/InterviewPage'));
 const InterviewSession = lazy(() => import('./pages/candidate/Interview/InterviewSession'));
@@ -157,6 +159,14 @@ function AppContent() {
             </PrivateRoute>
           }
         />
+        <Route
+          path="/company/settings"
+          element={
+            <PrivateRoute allowedUserType="company">
+              <CompanySettings />
+            </PrivateRoute>
+          }
+        />
         <Route path="/company/state/:postId" element={<StatePage />} />
 
         {/*개인회원 대시보드*/}
@@ -165,6 +175,14 @@ function AppContent() {
           element={
             <PrivateRoute allowedUserType='candidate'>
               <CandidateDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path='/candidate/settings'
+          element={
+            <PrivateRoute allowedUserType='candidate'>
+              <CandidateSettings />
             </PrivateRoute>
           }
         />

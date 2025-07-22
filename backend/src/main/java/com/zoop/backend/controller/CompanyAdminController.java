@@ -6,14 +6,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.zoop.backend.domain.entity.Company;
 import com.zoop.backend.domain.entity.CompanyAdmin;
+import com.zoop.backend.domain.dto.CompanyNotificationSettingsDto;
 import com.zoop.backend.service.CompanyAdminService;
+import com.zoop.backend.service.CompanyNotificationSettingsService;
+import com.zoop.backend.util.JwtUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,9 +34,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class CompanyAdminController {
 
     private final CompanyAdminService adminService;
+    private final CompanyNotificationSettingsService notificationSettingsService;
+    private final JwtUtil jwtUtil;
 
-    public CompanyAdminController(CompanyAdminService adminService) {
+    public CompanyAdminController(CompanyAdminService adminService, CompanyNotificationSettingsService notificationSettingsService, JwtUtil jwtUtil) {
         this.adminService = adminService;
+        this.notificationSettingsService = notificationSettingsService;
+        this.jwtUtil = jwtUtil;
     }
 
     @Operation(summary="회사 관리자 등록", description="새로운 회사 관리자 정보를 등록합니다.")
@@ -82,20 +91,146 @@ public class CompanyAdminController {
     public ResponseEntity<?> getCompanyInfoByAdminId(
         @Parameter(description = "조회할 회사 관리자의 ID", required = true, example = "123")
         @PathVariable Long adminId) {
-        System.out.println("✅ [API 호출됨] /info/" + adminId);
-        CompanyAdmin admin = adminService.getAdminById(adminId); // service에서 admin + company join 조회
-        Company company = admin.getCompany();
+        try {
+            System.out.println("✅ [API 호출됨] /info/" + adminId);
+            
+            // 직접 repository에서 조회해보기
+            CompanyAdmin admin = adminService.getAdminById(adminId);
+            System.out.println("✅ [관리자 조회 완료] adminId: " + admin.getCompanyAdminId());
+            
+            Company company = admin.getCompany();
+            System.out.println("✅ [회사 조회 완료] companyId: " + (company != null ? company.getCompanyId() : "null"));
+            
+            if (company == null) {
+                System.out.println("❌ [에러] company가 null입니다.");
+                return ResponseEntity.status(404).body(Map.of("error", "회사 정보를 찾을 수 없습니다."));
+            }
 
-        return ResponseEntity.ok(Map.of(
-            "companyId", company.getCompanyId(),
-            "companyAdminId", admin.getCompanyAdminId(),
-            "companyName", company.getCompanyName(),
-            "businessNumber", company.getBusinessNumber(),
-            "address", company.getCompanyAddress(),
-            "ceoName", company.getCeoName(),
-            "adminName", admin.getName(),
-            "email", admin.getEmail()
-        ));
+            // 각 필드별로 null 체크
+            System.out.println("🔍 [디버그] companyName: " + company.getCompanyName());
+            System.out.println("🔍 [디버그] businessNumber: " + company.getBusinessNumber());
+            System.out.println("🔍 [디버그] companyAddress: " + company.getCompanyAddress());
+            System.out.println("🔍 [디버그] ceoName: " + company.getCeoName());
+
+            return ResponseEntity.ok(Map.of(
+                "companyId", company.getCompanyId(),
+                "companyAdminId", admin.getCompanyAdminId(),
+                "companyName", company.getCompanyName() != null ? company.getCompanyName() : "",
+                "businessNumber", company.getBusinessNumber() != null ? company.getBusinessNumber() : "",
+                "address", company.getCompanyAddress() != null ? company.getCompanyAddress() : "",
+                "ceoName", company.getCeoName() != null ? company.getCeoName() : "",
+                "adminName", admin.getName() != null ? admin.getName() : "",
+                "email", admin.getEmail() != null ? admin.getEmail() : "",
+                "companyAdminLogin", admin.getLoginId() != null ? admin.getLoginId() : ""
+            ));
+        } catch (Exception e) {
+            System.out.println("❌ [에러 발생] " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "서버 오류: " + e.getMessage()));
+        }
+    }
+
+    @Operation(summary="알림 설정 조회", description="회사 관리자의 알림 설정을 조회합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode="200", description="알림 설정 조회 성공",
+            content=@Content(schema=@Schema(implementation=CompanyNotificationSettingsDto.class))),
+        @ApiResponse(responseCode="404", description="관리자를 찾을 수 없음"),
+        @ApiResponse(responseCode="500", description="서버 오류")
+    })
+    @GetMapping("/notification-settings")
+    public ResponseEntity<CompanyNotificationSettingsDto> getNotificationSettings(
+        @Parameter(description="JWT 인증 토큰(Bearer prefix 포함)", required=true)
+        @RequestHeader("Authorization") String authHeader) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            String loginId = jwtUtil.getLoginIdFromToken(token);
+            CompanyAdmin admin = adminService.getAdminByLoginId(loginId);
+            
+            if (admin == null) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            CompanyNotificationSettingsDto settings = notificationSettingsService.getNotificationSettings(admin.getCompanyAdminId());
+            return ResponseEntity.ok(settings);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @Operation(summary="알림 설정 저장", description="회사 관리자의 알림 설정을 저장합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode="200", description="알림 설정 저장 성공",
+            content=@Content(schema=@Schema(implementation=CompanyNotificationSettingsDto.class))),
+        @ApiResponse(responseCode="400", description="잘못된 요청"),
+        @ApiResponse(responseCode="500", description="서버 오류")
+    })
+    @PostMapping("/notification-settings")
+    public ResponseEntity<CompanyNotificationSettingsDto> saveNotificationSettings(
+        @Parameter(description="JWT 인증 토큰(Bearer prefix 포함)", required=true)
+        @RequestHeader("Authorization") String authHeader,
+        @RequestBody Map<String, Boolean> settings) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            String loginId = jwtUtil.getLoginIdFromToken(token);
+            CompanyAdmin admin = adminService.getAdminByLoginId(loginId);
+            
+            if (admin == null) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            CompanyNotificationSettingsDto savedSettings = notificationSettingsService.saveNotificationSettings(admin.getCompanyAdminId(), settings);
+            return ResponseEntity.ok(savedSettings);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @Operation(summary="관리자 정보 수정", description="기존 관리자 정보를 수정합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode="200", description="관리자 정보 수정 성공",
+            content=@Content(schema=@Schema(implementation=CompanyAdmin.class))),
+        @ApiResponse(responseCode="404", description="관리자를 찾을 수 없음"),
+        @ApiResponse(responseCode="400", description="잘못된 요청")
+    })
+    @PutMapping("/{adminId}")
+    public ResponseEntity<?> updateAdmin(
+        @Parameter(description="수정할 관리자의 ID", required=true, example="1")
+        @PathVariable Long adminId,
+        @RequestBody CompanyAdmin adminUpdate) {
+        try {
+            CompanyAdmin updatedAdmin = adminService.updateAdmin(adminId, adminUpdate);
+            return ResponseEntity.ok(updatedAdmin);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @Operation(summary="비밀번호 변경", description="관리자의 비밀번호를 변경합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode="200", description="비밀번호 변경 성공"),
+        @ApiResponse(responseCode="404", description="관리자를 찾을 수 없음"),
+        @ApiResponse(responseCode="400", description="잘못된 요청")
+    })
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+        @Parameter(description="JWT 인증 토큰(Bearer prefix 포함)", required=true)
+        @RequestHeader("Authorization") String authHeader,
+        @RequestBody Map<String, String> passwordRequest) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            String loginId = jwtUtil.getLoginIdFromToken(token);
+            String currentPassword = passwordRequest.get("currentPassword");
+            String newPassword = passwordRequest.get("newPassword");
+            
+            adminService.changePassword(loginId, currentPassword, newPassword);
+            return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
 }

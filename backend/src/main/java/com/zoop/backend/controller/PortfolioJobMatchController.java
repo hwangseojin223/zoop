@@ -23,6 +23,8 @@ import com.zoop.backend.domain.entity.PortfolioJobMatch;
 import com.zoop.backend.repository.AiAnalysisResultRepository;
 import com.zoop.backend.repository.JobCandProgressRepository;
 import com.zoop.backend.repository.PortfolioJobMatchRepository;
+import com.zoop.backend.service.CompanyNotificationService;
+import com.zoop.backend.service.CandidateNotificationService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,6 +42,12 @@ public class PortfolioJobMatchController {
     
     @Autowired
     private AiAnalysisResultRepository aiAnalysisResultRepository;
+
+    @Autowired
+    private CompanyNotificationService companyNotificationService;
+
+    @Autowired
+    private CandidateNotificationService candidateNotificationService;
     
     @PostMapping
     public ResponseEntity<?> savePortfolioJobMatch(@RequestBody Map<String, Object> request) {
@@ -65,7 +73,31 @@ public class PortfolioJobMatchController {
                     .build();
             
             PortfolioJobMatch savedMatch = portfolioJobMatchRepository.save(match);
-            log.info("포트폴리오-채용공고 매칭 결과 저장 완료: matchId={}", savedMatch.getMatchId());
+            System.out.println("매칭 저장 완료: " + savedMatch.getMatchId());
+
+            // --- 매칭 알림 생성 ---
+            Optional<JobCandProgress> progressOpt = jobCandProgressRepository.findByCandPortfolioIdAndPost_PostId(portfolioId, jobPostingId);
+            if (progressOpt.isPresent()) {
+                JobCandProgress progress = progressOpt.get();
+                Long candidateId = progress.getCandidate().getCandidateId();
+                Long companyAdminId = progress.getPost().getCompanyAdminId();
+                Long companyId = progress.getPost().getCompanyId();
+
+                System.out.println("알림 생성 시도: candidateId=" + candidateId + ", companyAdminId=" + companyAdminId + ", companyId=" + companyId);
+
+                // 기업 알림
+                companyNotificationService.createMatchedCandidateNotification(
+                    companyAdminId, jobPostingId, candidateId
+                );
+                System.out.println("기업 알림 생성 완료");
+                // 개인 알림
+                candidateNotificationService.createCompanyMatchedNotification(
+                    candidateId, jobPostingId, companyId
+                );
+                System.out.println("개인 알림 생성 완료");
+            } else {
+                System.out.println("progressOpt가 비어 있음: portfolioId=" + portfolioId + ", jobPostingId=" + jobPostingId);
+            }
             
             // job_cand_progress 테이블의 job_cand_curr_stage를 '2y'로 업데이트
             updateJobCandProgressStage(portfolioId, jobPostingId);
