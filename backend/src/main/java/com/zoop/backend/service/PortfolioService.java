@@ -36,6 +36,7 @@ import com.zoop.backend.repository.CandidateRepository;
 import com.zoop.backend.repository.JobCandProgressRepository;
 import com.zoop.backend.repository.PortfolioRepository;
 import com.zoop.backend.repository.PostRepository;
+import com.zoop.backend.service.CompanyNotificationService;
 
 @Service
 public class PortfolioService {
@@ -47,6 +48,8 @@ public class PortfolioService {
     private final CandidateJobExperienceRepository candidateJobExperienceRepository;
     private final PostRepository postRepository;
     private final AiAnalysisResultService aiAnalysisResultService;
+    private final JobCandProgressService jobCandProgressService;
+    private final CompanyNotificationService companyNotificationService;
     private final RestTemplate restTemplate = new RestTemplate();
     private final String PYTHON_API_URL = "http://localhost:8000/analyze-portfolio";
 
@@ -56,7 +59,9 @@ public class PortfolioService {
                             CandidateRepository candidateRepository,
                             CandidateJobExperienceRepository candidateJobExperienceRepository,
                             PostRepository postRepository,
-                            AiAnalysisResultService aiAnalysisResultService) { // 생성자 주입
+                            AiAnalysisResultService aiAnalysisResultService,
+                            JobCandProgressService jobCandProgressService,
+                            CompanyNotificationService companyNotificationService) { // 생성자 주입
         this.portfolioRepository = portfolioRepository;
         this.s3Service = s3Service;
         this.jobCandProgressRepository = jobCandProgressRepository;
@@ -64,6 +69,8 @@ public class PortfolioService {
         this.candidateJobExperienceRepository = candidateJobExperienceRepository;
         this.postRepository = postRepository;
         this.aiAnalysisResultService = aiAnalysisResultService;
+        this.jobCandProgressService = jobCandProgressService;
+        this.companyNotificationService = companyNotificationService;
     }
     
     @Transactional
@@ -80,7 +87,8 @@ public class PortfolioService {
             boolean agreeRequiredPersonal,
             boolean agreeOptionalPersonal,
             boolean agreeFutureProposals,
-            boolean agreeReceiveRecruitmentInfo
+            boolean agreeReceiveRecruitmentInfo,
+            String source // "apply" or "dashboard"
     ) {
         System.out.println("==== PortfolioService.submitPortfolio() 호출됨 ====");
         System.out.println("[PortfolioService] portfolioFile: " + (portfolioFile != null ? portfolioFile.getOriginalFilename() : "null"));
@@ -118,26 +126,49 @@ public class PortfolioService {
         JobCandProgress jobCandProgress = jobCandProgressRepository
             .findByPost_PostIdAndCandidate_CandidateId(postId.longValue(), candidateId.longValue())
             .orElseGet(() -> {
-                // 레코드가 없으면 새로 생성 (내 버전의 유연한 로직 유지)
+                // 신규 생성
                 System.out.println("[PortfolioService] JobCandProgress 레코드가 없어서 새로 생성합니다.");
                 Candidate candidate = candidateRepository.findById(Long.valueOf(candidateId))
                     .orElseThrow(() -> new RuntimeException("해당 후보자를 찾을 수 없습니다."));
-                
-                // Post 엔티티도 가져오기
                 var post = postRepository.findById(Long.valueOf(postId))
                     .orElseThrow(() -> new RuntimeException("해당 공고를 찾을 수 없습니다."));
-                
                 JobCandProgress newProgress = new JobCandProgress();
                 newProgress.setPost(post);
                 newProgress.setCandidate(candidate);
-                newProgress.setJobCandCurrStage("0"); // 초기 단계
+                // source에 따라 stage 분기
+                if ("dashboard".equals(source)) {
+                    newProgress.setJobCandCurrStage("2y");
+                } else {
+                    newProgress.setJobCandCurrStage("0");
+                }
                 newProgress.setJobCandPortfolioSubDate(LocalDateTime.now());
                 newProgress.setJobCandCreatedAt(LocalDateTime.now());
                 newProgress.setJobCandUpdatedAt(LocalDateTime.now());
-                newProgress.setGithubLogin(candidate.getGithubLogin()); // 후보자의 GitHub 로그인 정보 설정
-                
-                return jobCandProgressRepository.save(newProgress);
+                newProgress.setGithubLogin(candidate.getGithubLogin());
+                JobCandProgress saved = jobCandProgressRepository.save(newProgress);
+                // 추가 지원자 알림 (기업)
+                if ("apply".equals(source)) {
+                    companyNotificationService.createAdditionalApplicantNotification(
+                        post.getCompanyAdminId(),
+                        post.getPostId(),
+                        candidate.getCandidateId()
+                    );
+                }
+                return saved;
             });
+
+        // 이미 존재하는 경우에도 source에 따라 stage를 명확히 분기
+        if ("dashboard".equals(source)) {
+            jobCandProgress.setJobCandCurrStage("2y");
+            jobCandProgress.setJobCandPortfolioSubDate(LocalDateTime.now());
+            jobCandProgress.setJobCandUpdatedAt(LocalDateTime.now());
+            jobCandProgressRepository.save(jobCandProgress);
+        } else if ("apply".equals(source)) {
+            jobCandProgress.setJobCandCurrStage("0");
+            jobCandProgress.setJobCandPortfolioSubDate(LocalDateTime.now());
+            jobCandProgress.setJobCandUpdatedAt(LocalDateTime.now());
+            jobCandProgressRepository.save(jobCandProgress);
+        }
 
         // 2. 찾은 JobCandProgress 레코드의 기본 키(job_candidate_id)를 가져옵니다.
         //    이것이 portfolios 테이블의 job_candidate_id에 들어가야 할 실제 값입니다.
@@ -172,15 +203,17 @@ public class PortfolioService {
         System.out.println("[PortfolioService] DB 저장 완료 - 저장된 Portfolio의 portfolioFilePath: " + savedPortfolio.getPortfolioFilePath());
         System.out.println("[PortfolioService] 저장된 Portfolio 전체 정보: " + savedPortfolio.toString());
 
-        // 개인대시보드에서 포트폴리오 제출 시 stage를 2y로 업데이트
-        // 채용페이지에서 지원했을 때는 0으로 유지, 개인대시보드에서 포트폴리오 제출 시 2y로 변경
-        String currentStage = jobCandProgress.getJobCandCurrStage();
-        if ("0".equals(currentStage) || "1n".equals(currentStage) || "2n".equals(currentStage)) {
-            System.out.println("[PortfolioService] Stage 업데이트: " + currentStage + " → 2y");
-            jobCandProgress.setJobCandCurrStage("2y"); // 포트폴리오 제출 완료 상태로 변경
-        } else {
-            System.out.println("[PortfolioService] Stage 업데이트 스킵: 현재 stage = " + currentStage);
-        }
+        // (기존) 개인대시보드에서 포트폴리오 제출 시 stage를 2y로 업데이트
+        // (기존) 채용페이지에서 지원했을 때는 0으로 유지, 개인대시보드에서 포트폴리오 제출 시 2y로 변경
+        // 아래 코드는 더 이상 필요 없음. source 분기에서 이미 처리됨.
+        // String currentStage = jobCandProgress.getJobCandCurrStage();
+        // if ("0".equals(currentStage) || "1n".equals(currentStage) || "2n".equals(currentStage)) {
+        //     System.out.println("[PortfolioService] Stage 업데이트: " + currentStage + " → 2y");
+        //     // 알림 생성과 함께 stage 업데이트
+        //     jobCandProgressService.updateStageWithNotification(jobCandProgress.getJobCandidateId(), "2y");
+        // } else {
+        //     System.out.println("[PortfolioService] Stage 업데이트 스킵: 현재 stage = " + currentStage);
+        // }
         jobCandProgress.setJobCandPortfolioSubDate(LocalDateTime.now()); // 포트폴리오 제출 시각 기록
         jobCandProgressRepository.save(jobCandProgress); // 업데이트된 JobCandProgress 저장
         

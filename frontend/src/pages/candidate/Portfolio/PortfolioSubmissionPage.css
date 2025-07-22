@@ -796,20 +796,12 @@
 
 .portfolio-submission-page .main-content-area {
   flex: 1 !important;
+  margin-top: 72px !important;
   margin-left: 260px !important;
   padding: 8px 20px 20px 8px !important;
   background: #f8fafc !important;
   min-height: 100vh !important;
   display: block !important;
-}
-
-.portfolio-submission-page .page-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 20px 0 20px 0;
-  text-align: left;
-  margin-left: 240px;
 }
 
 .portfolio-submission-page .page-title {

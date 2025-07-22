@@ -52,16 +52,18 @@ function calculateRemainingTime(deadlineDate) {
   const now = new Date();
   const diffMs = deadlineDate - now;
   
-  if (diffMs <= 0) return '면접 종료';
+  if (diffMs <= 0) return '면접이 종료되었습니다.';
   
   const diffMin = Math.floor(diffMs / 60000);
   const hours = Math.floor(diffMin / 60);
   const minutes = diffMin % 60;
   
-  if (hours > 0) {
-    return `${hours}시간 ${minutes}분 남음`;
+  if (diffMin < 1) {
+    return '곧 종료됩니다!';
+  } else if (hours > 0) {
+    return `면접 종료까지 ${hours}시간 ${minutes}분 남았습니다.`;
   } else {
-    return `${minutes}분 남음`;
+    return `면접 종료까지 ${minutes}분 남았습니다.`;
   }
 }
 
@@ -553,7 +555,7 @@ function CandidateDashboard() {
   };
 
   return (
-    <div className="candidate-dashboard-wrapper">
+    <div className="candidate-dashboard-wrapper dashboard-page">
       <SEO title="개인 대시보드" description="개인 대시보드에서 나의 포지션 제안, 면접 일정, 결과를 확인할 수 있습니다." />
       <Sidebar />
 
@@ -732,7 +734,11 @@ function CandidateDashboard() {
                         userSelect: 'none'
                       }}
                     >
-                      <img src={process.env.PUBLIC_URL + '/icons/interview.svg'} alt="interview" style={{ width: 20, height: 20, verticalAlign: 'middle' }} />
+                      {/* Use a clock SVG for pending/waiting */}
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d69e2e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}>
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
                       면접 수락 요청 중
                     </div>
                   )}
@@ -743,34 +749,75 @@ function CandidateDashboard() {
                       면접 일정 정하기
                     </button>
                   )}
-                  {post.jobCandCurrStage === '3n' && (
-                    (() => {
-                      const interview = scheduledInterviews[post.postId];
-                      const now = new Date();
-                      const isInterviewStarted = interview && interview.iso && new Date(interview.iso) <= now;
-                      const remainingTime = interview && interview.deadline ? calculateRemainingTime(new Date(interview.deadline)) : '';
-                      
-                      return (
+                  {post.jobCandCurrStage === '3n' && (() => {
+                    const interview = scheduledInterviews[post.postId];
+                    const now = new Date();
+                    const isInterviewStarted = interview && interview.iso && new Date(interview.iso) <= now;
+                    const remainingTime = interview && interview.deadline ? calculateRemainingTime(new Date(interview.deadline)) : '';
+                    return (
+                      <>
+                        <div style={{ marginBottom: 8, width: 'fit-content' }}>
+                          <button 
+                            onClick={() => openInterviewPreparationModal(post.postId)}
+                            className="action-button preparation-button"
+                            style={{
+                              borderRadius: '999px',
+                              background: 'linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)',
+                              color: '#fff',
+                              fontWeight: 700,
+                              fontSize: 15,
+                              padding: '7px 15px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '7px',
+                              border: 'none',
+                              boxShadow: '0 2px 8px #fbbf2433',
+                              cursor: 'pointer',
+                              transition: 'background 0.18s, box-shadow 0.18s, transform 0.14s',
+                              outline: 'none',
+                              minWidth: 'auto',
+                              width: 'auto',
+                              lineHeight: 1.2
+                            }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.background = 'linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%)';
+                              e.currentTarget.style.boxShadow = '0 6px 18px #fbbf2444';
+                              e.currentTarget.style.transform = 'translateY(-2px) scale(1.04)';
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.background = 'linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)';
+                              e.currentTarget.style.boxShadow = '0 2px 8px #fbbf2433';
+                              e.currentTarget.style.transform = 'none';
+                            }}
+                          >
+                            {/* Outline Lightbulb SVG */}
+                            <svg width="17" height="17" fill="none" stroke="#fff" strokeWidth="2" viewBox="0 0 24 24" style={{ display: 'block' }}>
+                              <path d="M9 18h6" />
+                              <path d="M10 22h4" />
+                              <path d="M12 2a7 7 0 0 0-4 12c.3.3.5.7.5 1.1V17a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1v-1.9c0-.4.2-.8.5-1.1A7 7 0 0 0 12 2z" />
+                            </svg>
+                            <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-0.5px' }}>면접 예상질문</span>
+                          </button>
+                        </div>
                         <div className="button-group">
                           <button 
                             onClick={() => openInterviewPreparationModal(post.postId)}
-                            className="action-button preparation-button">
-                            면접 예상질문
-                          </button>
+                            style={{ display: 'none' }}
+                          /> {/* dummy for key consistency, not rendered */}
                           <button 
                             onClick={() => navigateToInterview(post.postId)}
                             className={`action-button interview-button ${!isInterviewStarted ? 'disabled' : ''}`}
                             disabled={!isInterviewStarted}>
-                            {interview && interview.date
-                              ? isInterviewStarted 
-                                ? remainingTime || '면접 보러가기'
-                                : `${interview.date} (시작 대기중)`
-                              : '면접 일정'}
-                          </button>
-                        </div>
-                      );
-                    })()
-                  )}
+                          {interview && interview.date
+                            ? isInterviewStarted 
+                              ? remainingTime || '면접 보러가기'
+                              : `${interview.date} (시작 대기중)`
+                            : '면접 일정'}
+                        </button>
+                      </div>
+                    </>
+                  );
+                })()}
                   {post.jobCandCurrStage === '3y' && (
                     <button 
                       onClick={() => navigate(`/interview-result/${post.postId}`)}

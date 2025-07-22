@@ -25,20 +25,25 @@ public class AdminInterviewEvaluationService {
     
     private final AdminInterviewEvaluationRepository adminInterviewEvaluationRepository;
     private final JobCandProgressRepository jobCandProgressRepository;
+    private final JobCandProgressService jobCandProgressService;
     private final EmailService emailService;
     private final CandidateRepository candidateRepository;
     private final PostRepository postRepository;
     private final CompanyRepository companyRepository;
     
     @Autowired
-    public AdminInterviewEvaluationService(AdminInterviewEvaluationRepository adminInterviewEvaluationRepository,
-                                         JobCandProgressRepository jobCandProgressRepository,
-                                         EmailService emailService,
-                                         CandidateRepository candidateRepository,
-                                         PostRepository postRepository,
-                                         CompanyRepository companyRepository) {
+    public AdminInterviewEvaluationService(
+        AdminInterviewEvaluationRepository adminInterviewEvaluationRepository,
+        JobCandProgressRepository jobCandProgressRepository,
+        JobCandProgressService jobCandProgressService,
+        EmailService emailService,
+        CandidateRepository candidateRepository,
+        PostRepository postRepository,
+        CompanyRepository companyRepository
+    ) {
         this.adminInterviewEvaluationRepository = adminInterviewEvaluationRepository;
         this.jobCandProgressRepository = jobCandProgressRepository;
+        this.jobCandProgressService = jobCandProgressService;
         this.emailService = emailService;
         this.candidateRepository = candidateRepository;
         this.postRepository = postRepository;
@@ -58,7 +63,7 @@ public class AdminInterviewEvaluationService {
         
         AdminInterviewEvaluation savedEvaluation = adminInterviewEvaluationRepository.save(evaluation);
         
-        // JobCandProgress의 stage 업데이트
+        // JobCandProgress의 stage 업데이트 (알림 생성 포함)
         Optional<JobCandProgress> progressOpt = jobCandProgressRepository.findById(evaluationDto.getJobCandidateId());
         if (progressOpt.isPresent()) {
             JobCandProgress progress = progressOpt.get();
@@ -71,11 +76,15 @@ public class AdminInterviewEvaluationService {
             System.out.println("  - 새로운 Stage: " + newStage);
             System.out.println("  - 선정 상태: " + evaluationDto.getAdminIntrvwSlctStatus());
             
-            progress.setJobCandCurrStage(newStage);
-            progress.setAdminIntrvwEvalId(savedEvaluation.getAdminIntrvwEvalId());
-            JobCandProgress savedProgress = jobCandProgressRepository.save(progress);
+            // 알림 생성과 함께 stage 업데이트
+            jobCandProgressService.updateStageWithNotification(progress.getJobCandidateId(), newStage);
             
-            System.out.println("[AdminInterviewEvaluation] Stage 업데이트 완료: " + savedProgress.getJobCandCurrStage());
+            // adminIntrvwEvalId 업데이트
+            progress.setAdminIntrvwEvalId(savedEvaluation.getAdminIntrvwEvalId());
+            jobCandProgressRepository.save(progress);
+            
+            System.out.println("[AdminInterviewEvaluation] Stage 업데이트 완료: " + newStage);
+            System.out.println("[AdminInterviewEvaluation] Stage 업데이트 완료: " + progress.getJobCandCurrStage());
             
             // 합격(4y)인 경우 합격 메일 발송
             if ("4y".equals(newStage)) {

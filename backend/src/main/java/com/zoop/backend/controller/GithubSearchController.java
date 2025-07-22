@@ -426,6 +426,7 @@ public class GithubSearchController {
             candidateInfo.put("postId", progress.getPost().getPostId());
             candidateInfo.put("githubLogin", progress.getGithubLogin());
             candidateInfo.put("githubName", progress.getCandidate().getCandidateName());
+            candidateInfo.put("candidateId", progress.getCandidate().getCandidateId()); // 추가: candidateId 필드
             candidateInfo.put("githubEmail", progress.getCandidate().getCandidateEmail());
             candidateInfo.put("candidatePhoneNumber", progress.getCandidate().getCandidatePhoneNumber());
             candidateInfo.put("careerType", progress.getCandidate().getCareerType());

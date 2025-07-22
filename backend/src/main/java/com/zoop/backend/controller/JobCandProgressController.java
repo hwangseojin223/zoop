@@ -50,6 +50,15 @@ public class JobCandProgressController {
         return list;
     }
 
+    // 추가 지원자(stage=0) 목록 조회
+    @GetMapping("/stage0/{postId}")
+    public List<ResponderDto> getCandidatesAtStage0ByPost(@PathVariable Long postId) {
+        log.info("0 스테이지(추가 지원자) 후보자 조회 API 호출: " + postId);
+        List<ResponderDto> list = jobCandProgressService.getCandidatesAtStage0ByPost(postId);
+        log.info("API 응답 후보자 수: " + list.size());
+        return list;
+    }
+
     // 이메일 전송 후 job_cand_curr_stage를 2n으로 업데이트
     @PostMapping("/update-stage-2n")
     public ResponseEntity<?> updateProgressStage(@RequestBody List<InvitationSendRequest> dtos) {
