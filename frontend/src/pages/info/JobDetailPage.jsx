@@ -7,7 +7,7 @@ import axios from 'axios';
 
 function JobDetailPage() {
   const { postId } = useParams();
-  const { authState, setAuthState } = useAuth();
+  const { authState, setAuthState, bookmarkedPostIds, toggleBookmark } = useAuth();
   const [post, setPost] = useState(null);
   const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -20,6 +20,8 @@ function JobDetailPage() {
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [otherPosts, setOtherPosts] = useState([]);
   const [showPortfolioPopup, setShowPortfolioPopup] = useState(false);
+  // 북마크 관련 상태
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
   // 기존 포트폴리오 관련 상태
   const [existingPortfolio, setExistingPortfolio] = useState(null);
   const [useExistingPortfolio, setUseExistingPortfolio] = useState(false);
@@ -72,6 +74,14 @@ function JobDetailPage() {
               setUseExistingPortfolio(true); // 기본적으로 기존 포트폴리오 사용
             }
           }
+
+          // 북마크 상태 확인
+          // const bookmarkRes = await fetch(`http://localhost:8081/api/bookmarks/candidate/${candidateId}`); // 제거
+          // if (bookmarkRes.ok) { // 제거
+          //   const bookmarks = await bookmarkRes.json(); // 제거
+          //   const isBookmarked = bookmarks.some(bookmark => bookmark.postId === parseInt(postId)); // 제거
+          //   setIsBookmarked(isBookmarked); // 제거
+          // } // 제거
         }
       } catch (e) {
         console.error("기업 정보 fetch 에러:", e);
@@ -348,6 +358,13 @@ function JobDetailPage() {
     }
   };
 
+  // 북마크 토글 함수 (전역 상태 사용)
+  const handleBookmarkToggle = async () => {
+    setBookmarkLoading(true);
+    await toggleBookmark(Number(postId));
+    setBookmarkLoading(false);
+  };
+
   if (loading) return <div style={{ padding: '2rem' }}>불러오는 중...</div>;
   if (error)   return <div style={{ padding: '2rem', color: 'red' }}>오류: {error}</div>;
   if (!post)  return <div style={{ padding: '2rem' }}>공고 정보를 찾을 수 없습니다.</div>;
@@ -433,24 +450,59 @@ function JobDetailPage() {
             <h1 style={{ fontSize: '2.2rem', fontWeight: 700, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0 }}>
               {post.postTitle}
             </h1>
-            <button
-              style={{
-                background: hasApplied ? '#e0e0e0' : '#30c59b',
-                color: hasApplied ? '#888' : '#fff',
-                border: 'none',
-                borderRadius: 8,
-                padding: '0.7rem 2.2rem',
-                fontWeight: 700,
-                fontSize: '1.08rem',
-                cursor: hasApplied ? 'not-allowed' : 'pointer',
-                boxShadow: hasApplied ? 'none' : '0 2px 8px rgba(48,197,155,0.08)',
-                whiteSpace: 'nowrap',
-              }}
-              onClick={() => !hasApplied && setShowPortfolioPopup(true)}
-              disabled={hasApplied}
-            >
-              {hasApplied ? '이미 지원한 공고' : '입사지원'}
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              {/* 북마크 버튼 */}
+              <button
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  borderRadius: '50%',
+                  padding: '0.5rem',
+                  cursor: bookmarkLoading ? 'not-allowed' : 'pointer',
+                  color: bookmarkedPostIds.includes(Number(postId)) ? '#30c59b' : '#ccc',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease',
+                  opacity: bookmarkLoading ? 0.6 : 1,
+                  width: '48px',
+                  height: '48px',
+                }}
+                onClick={handleBookmarkToggle}
+                disabled={bookmarkLoading}
+                title={bookmarkedPostIds.includes(Number(postId)) ? '북마크 해제' : '북마크 추가'}
+              >
+                {bookmarkedPostIds.includes(Number(postId)) ? (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+                  </svg>
+                ) : (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+                  </svg>
+                )}
+              </button>
+              
+              {/* 입사지원 버튼 */}
+              <button
+                style={{
+                  background: hasApplied ? '#e0e0e0' : '#30c59b',
+                  color: hasApplied ? '#888' : '#fff',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '0.7rem 2.2rem',
+                  fontWeight: 700,
+                  fontSize: '1.08rem',
+                  cursor: hasApplied ? 'not-allowed' : 'pointer',
+                  boxShadow: hasApplied ? 'none' : '0 2px 8px rgba(48,197,155,0.08)',
+                  whiteSpace: 'nowrap',
+                }}
+                onClick={() => !hasApplied && setShowPortfolioPopup(true)}
+                disabled={hasApplied}
+              >
+                {hasApplied ? '이미 지원한 공고' : '입사지원'}
+              </button>
+            </div>
           </div>
 
           {/* --- Job Info Grid --- */}

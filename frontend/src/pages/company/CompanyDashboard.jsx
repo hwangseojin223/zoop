@@ -1320,7 +1320,7 @@ export default function CompanyDashboard() {
                         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                           {applicant.portfolioFilePath && (
                             <button
-                              onClick={e => {
+                              onClick={(e) => {
                                 e.stopPropagation();
                                 setCurrentPortfolioUrl(applicant.portfolioFilePath);
                                 setShowPortfolioModal(true);
@@ -1358,7 +1358,7 @@ export default function CompanyDashboard() {
                           )}
                           
                           <button
-                            onClick={e => {
+                            onClick={(e) => {
                               e.stopPropagation();
                               // JobCandProgress의 jobCandidateId를 사용해야 함
                               // 직접 지원자의 경우 JobCandProgress에서 jobCandidateId를 찾아야 함
@@ -2180,32 +2180,29 @@ export default function CompanyDashboard() {
                                 const uniqueKey = `${candidateId}_${selectedPostId}`; // candidateId + selectedPostId 조합으로 고유 키 생성
                                 const isSelected = selectedApplicants.has(uniqueKey);
                                 return (
-                                  <div 
+                                  <motion.div
                                     key={candidate.githubSearchResultId}
-                                    style={{ 
-                                      display: 'flex', 
-                                      alignItems: 'flex-start', 
-                                      gap: '1rem',
+                                    initial={{ opacity: 0, y: 16 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -16 }}
+                                    transition={{ duration: 0.28, type: 'spring', stiffness: 70 }}
+                                    style={{
+                                      padding: '1.5rem',
+                                      border: isSelected ? '2px solid #22c55e' : '1px solid #e2e8f0',
+                                      borderRadius: '14px',
+                                      background: isSelected ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                                      transition: 'all 0.3s ease',
+                                      position: 'relative',
+                                      cursor: 'pointer',
+                                      boxShadow: isSelected ? '0 8px 30px rgba(34,197,94,0.15)' : '0 4px 20px rgba(0,0,0,0.08)',
                                       marginBottom: '1rem'
                                     }}
-                                  >
-                                    {/* 체크박스 */}
-                                    <div style={{
-                                      width: '20px',
-                                      height: '20px',
-                                      borderRadius: '6px',
-                                      border: isSelected ? '2px solid #22c55e' : '2px solid #cbd5e0',
-                                      background: isSelected ? '#22c55e' : '#ffffff',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      cursor: 'pointer',
-                                      transition: 'all 0.2s ease',
-                                      boxShadow: isSelected ? '0 2px 8px rgba(34, 197, 94, 0.25)' : '0 1px 3px rgba(0, 0, 0, 0.1)',
-                                      flexShrink: 0,
-                                      marginTop: '0.75rem' // 카드와 수직 정렬
-                                    }}
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                      // 버튼 클릭인지 확인
+                                      if (e.target.closest('button')) {
+                                        return; // 버튼 클릭이면 카드 선택 방지
+                                      }
+                                      
                                       const newSelected = new Set(selectedApplicants);
                                       if (newSelected.has(uniqueKey)) {
                                         newSelected.delete(uniqueKey);
@@ -2214,52 +2211,6 @@ export default function CompanyDashboard() {
                                       }
                                       setSelectedApplicants(newSelected);
                                     }}
-                                    onMouseEnter={(e) => {
-                                      if (!isSelected) {
-                                        e.currentTarget.style.borderColor = '#94a3b8';
-                                        e.currentTarget.style.background = '#f8fafc';
-                                      }
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      if (!isSelected) {
-                                        e.currentTarget.style.borderColor = '#cbd5e0';
-                                        e.currentTarget.style.background = '#ffffff';
-                                      }
-                                    }}
-                                    >
-                                      {isSelected && (
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
-                                          <polyline points="20,6 9,17 4,12"/>
-                                        </svg>
-                                      )}
-                                    </div>
-
-                                    {/* 기존 카드 */}
-                                    <motion.div
-                                      initial={{ opacity: 0, y: 16 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      exit={{ opacity: 0, y: -16 }}
-                                      transition={{ duration: 0.28, type: 'spring', stiffness: 70 }}
-                                      style={{
-                                        flex: 1,
-                                        padding: '1.5rem',
-                                        border: isSelected ? '2px solid #22c55e' : '1px solid #e2e8f0',
-                                        borderRadius: '14px',
-                                        background: isSelected ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-                                        transition: 'all 0.3s ease',
-                                        position: 'relative',
-                                        cursor: 'pointer',
-                                        boxShadow: isSelected ? '0 8px 30px rgba(34,197,94,0.15)' : '0 4px 20px rgba(0,0,0,0.08)'
-                                      }}
-                                      onClick={() => {
-                                        const newSelected = new Set(selectedApplicants);
-                                        if (newSelected.has(index)) {
-                                          newSelected.delete(index);
-                                        } else {
-                                          newSelected.add(index);
-                                        }
-                                        setSelectedApplicants(newSelected);
-                                      }}
                                       onMouseEnter={(e) => {
                                         if (!isSelected) {
                                           e.currentTarget.style.transform = 'translateY(-2px)';
@@ -2296,38 +2247,45 @@ export default function CompanyDashboard() {
                                       right: '1rem'
                                     }}>
                                       <button
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                          e.stopPropagation();
                                           // 면접 평가 페이지로 이동
                                           window.location.href = `/company/interview-evaluation/${selectedPostId}/${candidate.jobCandidateId}`;
                                         }}
                                         style={{
-                                          background: 'linear-gradient(135deg, #805ad5 0%, #6b46c1 100%)',
+                                          background: 'linear-gradient(135deg, #30C59B 0%, #2563eb 100%)',
                                           color: 'white',
                                           border: 'none',
-                                          borderRadius: '50%',
-                                          width: '40px',
+                                          borderRadius: '999px',
                                           height: '40px',
-                                          cursor: 'pointer',
-                                          transition: 'all 0.2s',
+                                          padding: '0 1.3rem',
                                           display: 'flex',
                                           alignItems: 'center',
-                                          justifyContent: 'center',
-                                          boxShadow: '0 2px 8px rgba(128, 90, 213, 0.3)'
+                                          gap: '0.6rem',
+                                          fontWeight: 700,
+                                          fontSize: '1.01rem',
+                                          boxShadow: '0 2px 8px rgba(48,197,155,0.18)',
+                                          cursor: 'pointer',
+                                          transition: 'all 0.2s',
                                         }}
-                                        onMouseEnter={(e) => {
-                                          e.currentTarget.style.transform = 'translateY(-2px) scale(1.1)';
-                                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(128, 90, 213, 0.4)';
+                                        onMouseEnter={e => {
+                                          e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)';
+                                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(48,197,155,0.22)';
                                         }}
-                                        onMouseLeave={(e) => {
+                                        onMouseLeave={e => {
                                           e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(128, 90, 213, 0.3)';
+                                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(48,197,155,0.18)';
                                         }}
                                         title="면접 평가"
                                       >
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                          <path d="M9 12l2 2 4-4"/>
-                                          <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"/>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                          <rect x="4" y="3" width="16" height="18" rx="2" />
+                                          <path d="M9 7h6" />
+                                          <path d="M9 11h6" />
+                                          <path d="M9 15h2" />
+                                          <path d="M15 19l2 2 4-4" stroke="#30C59B" strokeWidth="2" fill="none"/>
                                         </svg>
+                                        면접 평가
                                       </button>
                                     </div>
                                   )}
@@ -2425,7 +2383,10 @@ export default function CompanyDashboard() {
                                           )}
                                         </div>
                                         <button
-                                          onClick={() => window.open(candidate.githubProfileUrl, '_blank')}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            window.open(candidate.githubProfileUrl, '_blank');
+                                          }}
                                           style={{
                                             background: 'none',
                                             border: 'none',
@@ -2449,7 +2410,8 @@ export default function CompanyDashboard() {
                                             <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.95 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85.004 1.71.115 2.51.337 1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.85-2.34 4.7-4.57 4.95.36.31.68.92.68 1.85 0 1.33-.01 2.4-.01 2.73 0 .27.16.58.67.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
                                         </button>
                                         <button
-                                          onClick={() => {
+                                          onClick={(e) => {
+                                            e.stopPropagation();
                                             setSelectedCandidate(candidate);
                                             setModalOpen(true);
                                           }}
@@ -2481,7 +2443,8 @@ export default function CompanyDashboard() {
                                         </button>
                                         {candidate.aiAnalysis && (
                                           <button
-                                            onClick={() => {
+                                            onClick={(e) => {
+                                              e.stopPropagation();
                                               setCurrentAiAnalysis(candidate.aiAnalysis);
                                               setShowAiAnalysisModal(true);
                                             }}
@@ -2557,7 +2520,6 @@ export default function CompanyDashboard() {
                                     </div>
                                   </div>
                                     </motion.div>
-                                  </div>
                                 );
                               })}
                           </motion.div>

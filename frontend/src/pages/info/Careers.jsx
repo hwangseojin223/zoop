@@ -32,13 +32,13 @@ function Careers() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [currentPage, setCurrentPage] = useState(1); // 페이지네이션 추가
   const videoRef = useRef(null);
-  const { authState, isInitialized } = useAuth();
+  const { authState, isInitialized, bookmarkedPostIds, toggleBookmark, fetchBookmarks } = useAuth();
   const navigate = useNavigate();
 
   const POSTS_PER_PAGE = 12; // 페이지당 공고 수
 
   // Fetch postings once
-  useEffect(() => { fetchPublicPostings(); }, []);
+  useEffect(() => { fetchPublicPostings(); fetchBookmarks(); }, []);
 
   // Set video playback rate when video loads
   useEffect(() => {
@@ -110,6 +110,12 @@ function Careers() {
 
   const handleJobClick = post => {
     navigate(`/job/${post.postId}`);
+  };
+
+  // 북마크 토글 함수 (전역 상태 사용)
+  const handleBookmarkToggle = async (post) => {
+    await toggleBookmark(post.postId);
+    await fetchBookmarks();
   };
 
   // Filter logic
@@ -265,7 +271,13 @@ function Careers() {
             ) : currentPosts.length === 0 ? (
               <div className="no-jobs">조건에 맞는 채용 공고가 없습니다.</div>
             ) : currentPosts.map(post => (
-              <CompactJobCard key={post.postId} post={post} onClick={() => handleJobClick(post)} />
+              <CompactJobCard
+                key={post.postId}
+                post={post}
+                onClick={() => handleJobClick(post)}
+                isBookmarked={bookmarkedPostIds.includes(post.postId)}
+                onBookmarkToggle={handleBookmarkToggle}
+              />
             ))}
           </div>
           

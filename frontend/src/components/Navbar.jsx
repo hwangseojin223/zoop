@@ -103,10 +103,11 @@ const Navbar = ({ onLangChange, hideAuth }) => {
 
   const handleLogoClick = () => {
     setMenuOpen(false);
-    if (authState.token) {
-      if (authState.userType === 'candidate') navigate('/candidate/dashboard');
-      else if (authState.userType === 'company') navigate('/company/dashboard');
-      else navigate('/');
+    // 로고 클릭 플래그 설정
+    sessionStorage.setItem('logoClick', 'true');
+    // 현재 위치가 홈페이지여도 확실히 홈페이지로 이동
+    if (window.location.pathname === '/') {
+      window.location.href = '/';
     } else {
       navigate('/');
     }
@@ -115,9 +116,17 @@ const Navbar = ({ onLangChange, hideAuth }) => {
   const handleLogout = () => {
     localStorage.clear();
     setAuthState({ token: null, userType: null, userId: null, loginId: null });
-    navigate('/auth/login');
     setMenuOpen(false);
     setIsDropdownOpen(false);
+
+    // 알림 관련 상태도 초기화
+    setIsNotificationOpen(false);
+    setNotifications([]);
+    setUnreadCount(0);
+    setLoadingNotifications(false);
+    setExpiringPosts([]);
+
+    navigate('/auth/login');
   };
 
   const toggleDropdown = () => {
@@ -619,8 +628,7 @@ const Navbar = ({ onLangChange, hideAuth }) => {
         </AccessibleLink>
         <AccessibleLink
           onClick={() => handleMenuItemClick('/support')}
-          ariaLabel="고객센터 (새 창에서 열림)"
-          external={true}
+          ariaLabel="고객센터"
           role="menuitem"
         >
           고객센터
@@ -708,7 +716,7 @@ const Navbar = ({ onLangChange, hideAuth }) => {
               </div>
               
               <AccessibleButton
-                onClick={() => handleMenuItemClick('/mypage')}
+                onClick={() => handleMenuItemClick('/candidate/dashboard')}
                 ariaLabel="마이페이지"
                 role="menuitem"
                 tabIndex="0"

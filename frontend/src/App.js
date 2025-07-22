@@ -10,7 +10,7 @@ import './components/Chatbot.css';
 import Index from './pages/Index';
 
 // incident report
-import IncidentReportPage from './pages/IncidentReportPage';
+import IncidentReportPage from './pages/info/IncidentReportPage';
 
 // signup - lazy loading으로 변경
 const Signup = lazy(() => import('./pages/signup/Signup'));
@@ -43,6 +43,7 @@ const PortfolioSubmissionPage = lazy(() => import('./pages/candidate/Portfolio/P
 const InterviewPage = lazy(() => import('./pages/candidate/Interview/InterviewPage'));
 const InterviewSession = lazy(() => import('./pages/candidate/Interview/InterviewSession'));
 const ResumeSubmissionPage = lazy(() => import('./pages/candidate/resume/ResumeSubmissionPage'));
+const BookmarksPage = lazy(() => import('./pages/candidate/BookmarksPage'));
 
 // info - lazy loading으로 변경
 const About = lazy(() => import('./pages/info/About'));
@@ -222,6 +223,15 @@ function AppContent() {
           element={
             <PrivateRoute allowedUserType='candidate'>
               <ResumeSubmissionPage />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/candidate/bookmarks"
+          element={
+            <PrivateRoute allowedUserType='candidate'>
+              <BookmarksPage />
             </PrivateRoute>
           }
         />
