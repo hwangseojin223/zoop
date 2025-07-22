@@ -322,6 +322,11 @@
   font-weight: 600;
   box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
 }
+/* 선택된 날짜에 마우스 오버 시에도 색상 유지 */
+.calendar-day.selected:hover {
+  background-color: #4CAF50 !important;
+  color: white !important;
+}
 
 .calendar-day.today {
   background-color: #e3f2fd;
