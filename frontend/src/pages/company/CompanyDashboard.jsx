@@ -2237,33 +2237,39 @@ export default function CompanyDashboard() {
                                           window.location.href = `/company/interview-evaluation/${selectedPostId}/${candidate.jobCandidateId}`;
                                         }}
                                         style={{
-                                          background: 'linear-gradient(135deg, #805ad5 0%, #6b46c1 100%)',
+                                          background: 'linear-gradient(135deg, #30C59B 0%, #2563eb 100%)',
                                           color: 'white',
                                           border: 'none',
-                                          borderRadius: '50%',
-                                          width: '40px',
+                                          borderRadius: '999px',
                                           height: '40px',
-                                          cursor: 'pointer',
-                                          transition: 'all 0.2s',
+                                          padding: '0 1.3rem',
                                           display: 'flex',
                                           alignItems: 'center',
-                                          justifyContent: 'center',
-                                          boxShadow: '0 2px 8px rgba(128, 90, 213, 0.3)'
+                                          gap: '0.6rem',
+                                          fontWeight: 700,
+                                          fontSize: '1.01rem',
+                                          boxShadow: '0 2px 8px rgba(48,197,155,0.18)',
+                                          cursor: 'pointer',
+                                          transition: 'all 0.2s',
                                         }}
-                                        onMouseEnter={(e) => {
-                                          e.currentTarget.style.transform = 'translateY(-2px) scale(1.1)';
-                                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(128, 90, 213, 0.4)';
+                                        onMouseEnter={e => {
+                                          e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)';
+                                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(48,197,155,0.22)';
                                         }}
-                                        onMouseLeave={(e) => {
+                                        onMouseLeave={e => {
                                           e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(128, 90, 213, 0.3)';
+                                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(48,197,155,0.18)';
                                         }}
                                         title="면접 평가"
                                       >
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                          <path d="M9 12l2 2 4-4"/>
-                                          <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"/>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                          <rect x="4" y="3" width="16" height="18" rx="2" />
+                                          <path d="M9 7h6" />
+                                          <path d="M9 11h6" />
+                                          <path d="M9 15h2" />
+                                          <path d="M15 19l2 2 4-4" stroke="#30C59B" strokeWidth="2" fill="none"/>
                                         </svg>
+                                        면접 평가
                                       </button>
                                     </div>
                                   )}

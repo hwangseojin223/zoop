@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import styled, { css, keyframes } from 'styled-components';
 import Navbar from '../../components/Navbar';
 import { FaGithub, FaExpandAlt, FaTimes, FaStar, FaCode, FaEnvelope, FaEdit } from 'react-icons/fa';
@@ -14,7 +14,7 @@ const fadeIn = keyframes`
 
 const Wrapper = styled.div`
   font-family: 'SUIT', sans-serif;
-  background: #f6f8fa;
+  background: #fff;
   min-height: 100vh;
 `;
 
@@ -98,8 +98,10 @@ const SectionTitle = styled.h2`
   font-size: 1.35rem;
   font-weight: 800;
   color: #263249;
-  letter-spacing: -0.6px;
-  line-height: 1.15;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
 `;
 
 const MailButton = styled.button`
@@ -125,9 +127,14 @@ const MailButton = styled.button`
 
 const PosterScrollWrap = styled.div`
   overflow-x: auto;
+  overflow-y: visible;
+  padding: 2.5rem 3.5rem 2.5rem 2.5rem;
+  display: flex;
+  gap: 2.3rem;
+  scroll-snap-type: x mandatory;
   scrollbar-width: thin;
   scrollbar-color: #ddeeff #fff;
-  padding-bottom: 2.5rem;
+  scroll-behavior: smooth;
   &::-webkit-scrollbar { height: 10px; background: #fff;}
   &::-webkit-scrollbar-thumb { background: #e5edf7; border-radius: 8px;}
 `;
@@ -135,65 +142,130 @@ const PosterScrollWrap = styled.div`
 const PostersRow = styled.div`
   display: flex;
   gap: 2.3rem;
-  min-width: 800px;
+  /* Remove min-width so flex children can shrink */
 `;
 
-const CandidateCard = styled.div`
-  background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 8px 26px rgba(20,40,60,0.12);
-  width: 320px;
-  min-width: 320px;
-  padding: 2.6rem 1.4rem 1.8rem 1.4rem;
+// Card: more minimal, modern, and never cut off
+const TossCard = styled.div`
+  background: rgba(255,255,255,0.72);
+  border: 2.5px solid rgba(255,255,255,0.85);
+  border-radius: 28px;
+  box-shadow: 0 4px 24px 0 rgba(48,197,155,0.10), 0 1.5px 8px 0 rgba(107,232,200,0.08);
+  width: 340px;
+  min-width: 340px;
+  min-height: 470px;
+  height: auto;
+  padding: 1.7rem 1.3rem 1.7rem 1.3rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  cursor: pointer;
-  border: ${props => props.selected ? '2.6px solid #30c59b' : '1.3px solid #e3e9ef'};
-  transition: box-shadow 0.18s, border 0.21s, transform 0.23s;
+  justify-content: space-between;
   position: relative;
-  animation: ${fadeIn} 0.6s cubic-bezier(.18,1.12,.33,1.05);
-  ${props => props.selected && css`transform: scale(1.045);`}
+  overflow: visible;
+  scroll-snap-align: start;
+  cursor: pointer;
+  transition:
+    box-shadow 0.55s cubic-bezier(.19,1,.22,1),
+    border 0.38s cubic-bezier(.19,1,.22,1),
+    transform 0.65s cubic-bezier(.19,1,.22,1);
+  border: ${props => props.selected ? '2.6px solid #30c59b' : '2.5px solid rgba(255,255,255,0.85)'};
   &:hover {
-    box-shadow: 0 18px 36px rgba(80,180,180,0.15);
-    transform: translateY(-9px) scale(1.05);
+    box-shadow: 0 12px 32px 0 rgba(48,197,155,0.13), 0 1.5px 8px 0 rgba(107,232,200,0.10);
     z-index: 2;
+    transform: translateY(-6px) scale(1.025) perspective(600px) rotateY(var(--hover-rotateY,0deg)) rotateX(var(--hover-rotateX,0deg));
   }
 `;
 
-const Avatar = styled.div`
-  width: 88px; height: 88px;
+// Animated glow behind avatar
+const AnimatedGlow = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 140px;
+  height: 140px;
+  transform: translate(-50%, -60%) scale(${props => props.scale || 1});
+  filter: blur(${props => props.blur || 18}px) brightness(${props => props.brightness || 1.1});
+  background: radial-gradient(circle at 50% 50%, #aeefff 0%, #30c59b 60%, #6be8c8 100%, transparent 100%);
+  opacity: 0.85;
+  z-index: 1;
+  pointer-events: none;
+  transition: transform 0.45s cubic-bezier(.22,1.04,.38,1.01), filter 0.45s, background 0.45s;
+`;
+
+const Avatar = styled.img`
+  width: 92px;
+  height: 92px;
   border-radius: 50%;
-  background: linear-gradient(130deg, #37dfa7 0%, #3bb2f8 90%);
-  display: flex; align-items: center; justify-content: center;
-  margin-bottom: 1.22rem;
-  box-shadow: 0 2px 10px #e9f9f3;
+  border: 4px solid #fff;
+  box-shadow: 0 4px 24px #30c59b44, 0 1.5px 8px #6be8c844;
+  object-fit: cover;
+  position: relative;
+  z-index: 2;
+  background: #fff;
+  transition: box-shadow 0.3s;
 `;
 
-const Username = styled.div`
+const SmallAvatar = styled.img`
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  box-shadow: 0 4px 16px #30c59b55;
+  object-fit: cover;
+  display: block;
+  background: #fff;
+`;
+
+const TossCardInfo = styled.div`
+  width: 100%;
+  padding: 0 1.6rem 2.2rem 1.6rem;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  /* align-items: flex-start; */
+`;
+
+const TossCardName = styled.div`
+  font-size: 1.35rem;
   font-weight: 800;
-  font-size: 1.18rem;
-  margin-bottom: 0.55rem;
-  color: #21282f;
-  letter-spacing: -0.3px;
+  color: #fff;
+  margin-bottom: 0.3rem;
 `;
-
-const CardMeta = styled.div`
-  margin-bottom: 1.1rem;
-  text-align: center;
+const TossCardSub = styled.div`
+  font-size: 1.01rem;
+  color: #c7c7e6;
+  font-weight: 500;
+  margin-bottom: 0.7rem;
 `;
-
-const MetaTag = styled.span`
-  display: inline-block;
-  background: #e7f5ee;
-  color: #13b483;
+const TossCardMeta = styled.div`
+  display: flex;
+  gap: 0.7rem;
+  margin-bottom: 0.7rem;
+`;
+const TossMetaTag = styled.span`
+  background: rgba(255,255,255,0.13);
+  color: #aeefff;
   font-weight: 600;
   font-size: 0.97rem;
   padding: 0.24rem 1.1rem;
   border-radius: 14px;
-  margin-bottom: 0.4rem;
-  margin-right: 0.3rem;
 `;
+
+// Placeholder for Toss-style glassy 3D object
+const Toss3DObject = ({ style }) => (
+  <svg width="180" height="180" viewBox="0 0 180 180" style={style}>
+    <defs>
+      <radialGradient id="g1" cx="50%" cy="50%" r="80%">
+        <stop offset="0%" stopColor="#aeefff" stopOpacity="0.7"/>
+        <stop offset="100%" stopColor="#1a1446" stopOpacity="0.1"/>
+      </radialGradient>
+    </defs>
+    <ellipse cx="90" cy="90" rx="80" ry="80" fill="url(#g1)" filter="blur(1.5px)"/>
+    <ellipse cx="90" cy="90" rx="55" ry="55" fill="#3bb2f8" fillOpacity="0.18"/>
+    <ellipse cx="90" cy="90" rx="35" ry="35" fill="#fff" fillOpacity="0.08"/>
+    <ellipse cx="90" cy="90" rx="25" ry="25" fill="#30c59b" fillOpacity="0.13"/>
+  </svg>
+);
 
 const ScoreBarWrap = styled.div`
   width: 94%;
@@ -265,6 +337,30 @@ const ShowAnalysisBtn = styled.button`
   &:hover { background: #299c7e;}
 `;
 
+// Add styled-component for Toss-style button
+
+const TossAnalysisButton = styled.button`
+  width: 100%;
+  display: block;
+  margin-top: auto;
+  margin-bottom: 0;
+  background: linear-gradient(90deg, #e0f7ef 0%, #b2f2e5 100%);
+  color: #30c59b;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.08rem;
+  font-weight: 600;
+  padding: 0.58rem 0;
+  box-shadow: 0 1.5px 8px #30c59b11;
+  transition: background 0.16s, filter 0.16s;
+  cursor: pointer;
+  outline: none;
+  filter: none;
+  &:hover {
+    filter: brightness(1.04);
+  }
+`;
+
 // ============ 분석 모달 ============
 
 const ModalOverlay = styled.div`
@@ -279,16 +375,17 @@ const ModalOverlay = styled.div`
 const ModalCard = styled.div`
   background: #fff;
   border-radius: 24px;
-  max-width: 600px;
+  max-width: 800px;
   width: 95vw;
-  min-width: 400px;
-  padding: 0;
+  min-width: 520px;
+  padding: 3rem 2.5rem;
   box-shadow: 0 25px 100px rgba(0, 0, 0, 0.25);
   position: relative;
   display: flex; flex-direction: column;
   animation: ${fadeIn} 0.4s cubic-bezier(.22,1.04,.38,1.01);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  max-height: 90vh;
 `;
 
 const ModalCloseBtn = styled.button`
@@ -367,30 +464,288 @@ const ModalFooter = styled.div`
 
 // 모달 액션 버튼 (Toss 스타일)
 const ModalActionBtn = styled.button`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #30c59b;
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 12px 32px;
-  font-size: 1.08rem;
-  font-weight: 700;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1.01rem;
+  padding: 0.5rem 1.6rem;
+  box-shadow: none;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.18);
-  transition: all 0.18s;
-  min-width: 120px;
+  transition: background 0.16s, filter 0.16s;
   &:hover {
-    background: linear-gradient(135deg, #5a67d8 0%, #6b21a8 100%);
-    transform: translateY(-2px) scale(1.04);
-    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.22);
+    filter: brightness(1.08);
   }
 `;
 
 // ==========================================
 
+// Feather Target SVG as React component
+const TargetIcon = (props) => (
+  <svg
+    width="1.7em"
+    height="1.7em"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="#30c59b"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ verticalAlign: 'middle', marginRight: '0.5rem', ...props.style }}
+    {...props}
+  >
+    <circle cx="12" cy="12" r="10" />
+    <circle cx="12" cy="12" r="6" />
+    <circle cx="12" cy="12" r="2" />
+  </svg>
+);
+
+// Radar chart SVG for 6 component scores
+const radarLabels = ['팔로워 수','공개 저장소 수','언어 다양성','최근 활동성','프로젝트 품질','기술적 깊이'];
+const radarMax = [10, 15, 15, 20, 20, 20]; // 각 항목별 만점
+const radarTotal = 100;
+function RadarChartSVG({ scores = {}, size = 90, totalScore, showLabels = false, showScores = false }) {
+  const cx = size / 2, cy = size / 2, r = size * 0.41;
+  const radarShortLabels = ['팔로워', '저장소', '언어', '활동', '품질', '깊이'];
+  // 각 축의 각도
+  const angles = radarLabels.map((_, i) => (Math.PI * 2 * i) / radarLabels.length - Math.PI/2);
+  // 점수값(0~1)
+  const values = radarLabels.map((label, i) => Math.max(0, Math.min(1, (scores[label] || 0) / radarMax[i])));
+  // 폴리곤 좌표
+  const points = values.map((v, i) => {
+    const angle = angles[i];
+    const rr = r * v;
+    return [cx + rr * Math.cos(angle), cy + rr * Math.sin(angle)];
+  });
+  // 축 끝 좌표
+  const axisPoints = angles.map(a => [cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+  // 축 라벨 좌표 (축 끝에서 바깥쪽으로 28px)
+  const labelPoints = angles.map((a, i) => [
+    cx + (r + 28) * Math.cos(a),
+    cy + (r + 28) * Math.sin(a)
+  ]);
+  // 축 점수 좌표 (축 끝에서 바깥쪽으로 14px)
+  const scorePoints = angles.map((a, i) => [
+    cx + (r + 14) * Math.cos(a),
+    cy + (r + 14) * Math.sin(a)
+  ]);
+  const allZero = radarLabels.every(label => (scores[label] || 0) === 0);
+  return (
+    <svg width={size} height={size} style={{display:'block',margin:'0 auto',position:'relative',zIndex:2}}>
+      <defs>
+        <radialGradient id="glassBg" cx="50%" cy="50%" r="80%">
+          <stop offset="0%" stopColor="#fff" stopOpacity="0.8"/>
+          <stop offset="100%" stopColor="#e0f7ef" stopOpacity="0.18"/>
+        </radialGradient>
+        <linearGradient id="mintGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#43e97b"/>
+          <stop offset="100%" stopColor="#30c59b"/>
+        </linearGradient>
+      </defs>
+      {/* Glassy gradient background */}
+      <circle cx={cx} cy={cy} r={size/2-2} fill="url(#glassBg)" />
+      {/* 그리드 */}
+      {[0.33,0.66,1].map((f,idx) => (
+        <polygon
+          key={idx}
+          points={angles.map(a => [cx + r*f*Math.cos(a), cy + r*f*Math.sin(a)].join(",")).join(" ")}
+          fill={idx===2?"#fff":'none'}
+          stroke="#e0f7ef"
+          strokeWidth={idx===2?1.5:1}
+          opacity={idx===2?0.13:0.09}
+        />
+      ))}
+      {/* 축 */}
+      {axisPoints.map(([x,y],i) => (
+        <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="#e0f7ef" strokeWidth="1.2" opacity="0.18" />
+      ))}
+      {/* 점수 폴리곤만, 노드 없음 */}
+      {allZero ? (
+        <text x={cx} y={cy+5} textAnchor="middle" fontSize="15" fill="#30c59b" opacity="0.7" fontWeight="600">분석 데이터 없음</text>
+      ) : (
+        <polygon
+          points={points.map(([x,y])=>x+","+y).join(" ")}
+          fill="#fff"
+          fillOpacity="0.22"
+          stroke="#e0f7ef"
+          strokeWidth="3.5"
+        />
+      )}
+      {/* 축 라벨 */}
+      {showLabels && labelPoints.map(([x, y], i) => (
+        <text key={i} x={x} y={y} textAnchor="middle" alignmentBaseline="middle" fontSize={size > 120 ? 18 : 14} fill="#30c59b" fontWeight="700" opacity="0.98">
+          {radarShortLabels[i]}
+        </text>
+      ))}
+      {/* 축 점수 */}
+      {showScores && scorePoints.map(([x, y], i) => (
+        <text key={i} x={x} y={y} textAnchor="middle" alignmentBaseline="middle" fontSize={size > 120 ? 16 : 13} fill="#222" fontWeight="600" opacity="0.98">
+          {scores[radarLabels[i]] !== undefined ? scores[radarLabels[i]] : 0}점
+        </text>
+      ))}
+      {/* 중앙 점수 */}
+      {typeof totalScore === 'number' && (
+        <g className="score-badge">
+          <circle
+            cx={cx}
+            cy={cy}
+            r={size > 120 ? 22 : 15}
+            fill="url(#glassBg)"
+            opacity={0.98}
+          />
+          <text
+            x={cx}
+            y={cy + (size > 120 ? 10 : 7)}
+            textAnchor="middle"
+            fontSize={size > 120 ? 32 : 26}
+            fontWeight="500"
+            fontFamily="SUIT, Apple SD Gothic Neo, Pretendard, sans-serif"
+            fill="url(#mintGrad)"
+            stroke="#fff"
+            strokeWidth="1.2"
+            paintOrder="stroke"
+            style={{letterSpacing:'-1px'}}
+          >
+            {totalScore}
+          </text>
+        </g>
+      )}
+    </svg>
+  );
+}
+
+// Add TopRow and NameText styled components for avatar+name row
+const TopRow = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 48px; /* 아바타+이름 높이 고정 */
+  margin-bottom: 0.2rem;
+  position: relative;
+`;
+const NameText = styled.span`
+  font-size: 1.18rem;
+  font-weight: 800;
+  color: #fff;
+  margin-left: 0.7rem;
+  min-height: 1.5em;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+`;
+
+// Move these utility functions above TossCandidateCard so they are in scope
+const extractSummary = (analysisText) => {
+  if (!analysisText) return '';
+  const summaryMatch = analysisText.match(/종합요약:\s*([^\n]+(?:\n[^\n]+)*)/);
+  if (summaryMatch) return summaryMatch[1].trim();
+  return analysisText.length > 85 ? analysisText.substring(0, 85) + '...' : analysisText;
+};
+const extractScore = (analysisText) => {
+  if (!analysisText) return 0;
+  const scoreMatch = analysisText.match(/\(점수:\s*(\d+)점\)/);
+  return scoreMatch ? parseInt(scoreMatch[1]) : 0;
+};
+function getStackArray(langs) {
+  if (!langs) return [];
+  if (Array.isArray(langs)) return langs;
+  if (typeof langs === 'string') {
+    return langs.split(/[\s,/]+/).filter(Boolean);
+  }
+  return [];
+}
+function formatTechStack(langs) {
+  const arr = getStackArray(langs);
+  if (arr.length <= 5) return arr.join(' · ');
+  return arr.slice(0, 5).join(' · ') + <span style={{color:'#b8b8b8', fontSize:'0.92rem', fontWeight:600, marginLeft:'0.4rem'}}>+외 {arr.length - 5}개</span>;
+}
+
+// Improved parseComponentScores: more flexible patterns
+function parseComponentScores(analysisText, candidate) {
+  // Prefer direct fields if available
+  if (candidate && candidate.followerScore && candidate.repoScore) {
+    return {
+      '팔로워 수': candidate.followerScore,
+      '공개 저장소 수': candidate.repoScore,
+      '언어 다양성': candidate.languageScore,
+      '최근 활동성': candidate.activityScore,
+      '프로젝트 품질': candidate.projectQualityScore,
+      '기술적 깊이': candidate.technicalDepthScore,
+    };
+  }
+  if (!analysisText) return {};
+  const result = {};
+  // Flexible regex: allow optional :, space, etc
+  const regex = /(팔로워 ?수|공개 ?저장소 ?수|언어 ?다양성|최근 ?활동성|프로젝트 ?품질|기술적 ?깊이)[:\s]*([0-9]+)점/g;
+  let match;
+  while ((match = regex.exec(analysisText)) !== null) {
+    result[match[1].replace(/ /g,"")] = parseInt(match[2], 10);
+  }
+  return result;
+}
+
+// Parse scores from natural language ai_analysis_data.analysis_data
+function parseNaturalLanguageScores(text) {
+  if (!text) return null;
+  let scoreSection = text;
+  // Extract only the '점수 부여' section
+  const scoreStart = text.indexOf('점수 부여');
+  if (scoreStart !== -1) {
+    // Find next numbered section (e.g., '\n5.') or end
+    const after = text.slice(scoreStart);
+    const nextSection = after.search(/\n\d+\./);
+    scoreSection = after.slice(0, nextSection !== -1 ? nextSection : undefined);
+  }
+  const result = {};
+  const lines = scoreSection.split('\n');
+  const patterns = [
+    { key: '팔로워 수', label: '팔로워 수' },
+    { key: '공개 저장소 수', label: '공개 저장소 수' },
+    { key: '언어 다양성', label: '언어 다양성' },
+    { key: '최근 활동성', label: '최근 활동성' },
+    { key: '프로젝트 품질', label: '프로젝트 품질' },
+    { key: '기술적 깊이', label: '기술적 깊이' }
+  ];
+  patterns.forEach(({key, label}) => {
+    let found = 0;
+    for (const line of lines) {
+      if (line.includes(label)) {
+        // 1. Try to match '→ 숫자점'
+        const arrowMatch = line.match(/→\s*(\d+)점/);
+        if (arrowMatch) {
+          found = parseInt(arrowMatch[1], 10);
+          break;
+        }
+        // 2. Fallback: last number before '점'
+        const matches = [...line.matchAll(/([0-9]+)\s*점/g)];
+        if (matches.length > 0) {
+          found = parseInt(matches[matches.length - 1][1], 10);
+          break;
+        }
+      }
+    }
+    result[key] = found;
+  });
+  // 총점
+  const totalMatch = scoreSection.match(/총점[^\n]*?(?:[=\-→])?\s*([0-9]+)점/g);
+  if (totalMatch) {
+    const last = totalMatch[totalMatch.length - 1];
+    const num = last.match(/([0-9]+)점/);
+    result.totalScore = num ? parseInt(num[1], 10) : null;
+  }
+  return result;
+}
+
 export default function CandidateList() {
   const { postId } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const [candidates, setCandidates] = useState(location.state?.candidates || []);
+  const [aiAnalysisResults, setAiAnalysisResults] = useState([]);
   const [selected, setSelected] = useState([]);
   const [postInfo, setPostInfo] = useState(null);
   const [loading, setLoading] = useState(!location.state?.candidates);
@@ -401,7 +756,144 @@ export default function CandidateList() {
   // ============ [CURRENT 버전에서 추가된 기능] ============
   // 개별 이메일 전송을 위한 로딩 상태 관리
   const [loadingId, setLoadingId] = useState(null);
+  // 1. Add state for companyAdminId (assume it's available from postInfo or a prop, fallback to 1)
+  const [companyAdminId, setCompanyAdminId] = useState(1);
   // ============ [CURRENT 버전에서 추가된 기능 끝] ============
+
+  // 1. 이메일 템플릿 정의 (CompanyDashboard에서 복사)
+  const emailTemplates = {
+    professional: {
+      name: "프로페셔널",
+      description: "깔끔하고 전문적인 스타일",
+      preview: "🏢 정중하고 격식있는 톤",
+      defaultGreeting: "안녕하세요",
+      defaultMessage: "저희 회사에서 귀하의 뛰어난 개발 역량을 높이 평가하여 특별히 연락드립니다.",
+      color: "#2563eb",
+      bgColor: "#eff6ff"
+    },
+    friendly: {
+      name: "친근한",
+      description: "따뜻하고 친근한 스타일",
+      preview: "😊 편안하고 친근한 톤",
+      defaultGreeting: "안녕하세요",
+      defaultMessage: "안녕하세요! 귀하의 GitHub 프로필을 보고 정말 인상깊었습니다. 저희와 함께 성장해보지 않으실까요?",
+      color: "#059669",
+      bgColor: "#ecfdf5"
+    },
+    modern: {
+      name: "모던",
+      description: "세련되고 혁신적인 스타일",
+      preview: "🚀 트렌디하고 혁신적인 톤",
+      defaultGreeting: "Hello",
+      defaultMessage: "We're building the future of technology and would love to have you join our journey. Your skills perfectly match what we're looking for.",
+      color: "#7c3aed",
+      bgColor: "#f3e8ff"
+    }
+  };
+
+  // 2. 템플릿 HTML 생성 함수 (CompanyDashboard에서 복사, postInfo 사용)
+  const generateTemplateHtml = (candidate, templateKey, greeting, message) => {
+    if (!candidate) {
+      candidate = { githubLogin: '후보자', candidateEmail: '' };
+    }
+    const template = emailTemplates[templateKey];
+    const postTitle = postInfo?.postTitle || '채용 공고';
+    const postDescription = postInfo?.postDescription || '';
+    const githubLogin = candidate.githubLogin || '후보자';
+    const companyName = postInfo?.companyName || '저희 회사';
+    const postLocation = postInfo?.postLocation || '서울';
+    const postProgrammingLanguage = postInfo?.postProgrammingLanguage || 'Java';
+    const postSalaryStart = postInfo?.postSalaryStart || '5000';
+    const postSalaryEnd = postInfo?.postSalaryEnd || '6000';
+    const postStartDate = postInfo?.postPostedDate ? formatDate(postInfo.postPostedDate) : '';
+    const postEndDate = postInfo?.postExpiryDate ? formatDate(postInfo.postExpiryDate) : '';
+    const recruitmentPeriod = postStartDate && postEndDate ? `${postStartDate} ~ ${postEndDate}` : '상시모집';
+    if (templateKey === 'professional') {
+      return `<div style="font-family:Arial, sans-serif; background-color:#f8fafc; padding:20px;"><div style="max-width:600px; margin:0 auto; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1);"><div style="background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); padding:30px; text-align:center;"><h1 style="color:white; margin:0; font-size:28px; font-weight:bold;">${companyName}</h1><p style="color:#e0e7ff; margin:10px 0 0 0; font-size:14px;">개발자 채용 공고</p></div><div style="padding:30px;"><h2 style="color:#1e293b; margin:0 0 20px 0; font-size:24px;">${greeting} ${githubLogin}님,</h2><p style="color:#475569; font-size:16px; line-height:1.6; margin:0 0 25px 0;">${message}</p><div style="background:#f1f5f9; border-radius:8px; padding:20px; margin:25px 0;"><h3 style="color:#2563eb; margin:0 0 15px 0; font-size:20px;">📋 ${postTitle}</h3><p style="color:#475569; margin:0 0 15px 0; line-height:1.6;">${postDescription}</p><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:14px;"><div><strong>기술스택:</strong> ${postProgrammingLanguage}</div><div><strong>위치:</strong> ${postLocation}</div><div><strong>급여:</strong> ${postSalaryStart} ~ ${postSalaryEnd}만원</div><div><strong>공고기간:</strong> ${recruitmentPeriod}</div></div></div><div style="text-align:center; margin:30px 0;"><a href="{{invitationLink}}" style="background:#2563eb; color:white; text-decoration:none; padding:15px 30px; border-radius:8px; font-weight:bold; display:inline-block; font-size:16px;">지원하기</a></div><p style="color:#64748b; font-size:14px; margin:0;">감사합니다.<br/>${companyName} 인사팀</p></div></div></div>`;
+    } else if (templateKey === 'friendly') {
+      return `<div style="font-family:'Malgun Gothic', '맑은 고딕', sans-serif; background-color:#f0fdf4; padding:20px;"><div style="max-width:600px; margin:0 auto; background:#fff; border-radius:16px; overflow:hidden; border:3px solid #22c55e;"><div style="background:linear-gradient(135deg, #22c55e 0%, #16a34a 100%); padding:25px; text-align:center;"><h1 style="color:white; margin:0; font-size:26px;">🌟 ${companyName} 🌟</h1><p style="color:#bbf7d0; margin:10px 0 0 0;">함께 성장할 동료를 찾습니다!</p></div><div style="padding:25px;"><h2 style="color:#166534; margin:0 0 20px 0; font-size:22px;">😊 ${greeting} ${githubLogin}님!</h2><p style="color:#374151; font-size:16px; line-height:1.7; margin:0 0 20px 0;">${message}</p><div style="background:linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-radius:12px; padding:20px; margin:20px 0; border-left:4px solid #22c55e;"><h3 style="color:#22c55e; margin:0 0 15px 0; font-size:18px;">🎯 ${postTitle}</h3><p style="color:#374151; margin:0 0 15px 0; line-height:1.6;">${postDescription}</p><div style="background:white; border-radius:8px; padding:15px; margin:15px 0;"><p style="margin:5px 0; color:#059669;"><strong>💻 기술스택:</strong> ${postProgrammingLanguage}</p><p style="margin:5px 0; color:#059669;"><strong>📍 위치:</strong> ${postLocation}</p><p style="margin:5px 0; color:#059669;"><strong>💰 급여:</strong> ${postSalaryStart} ~ ${postSalaryEnd}만원</p><p style="margin:5px 0; color:#059669;"><strong>📅 공고기간:</strong> ${recruitmentPeriod}</p></div></div><div style="text-align:center; margin:25px 0;"><a href="{{invitationLink}}" style="background:#22c55e; color:white; text-decoration:none; padding:12px 25px; border-radius:25px; font-weight:bold; display:inline-block; font-size:16px;">🚀 함께하기</a></div><p style="color:#6b7280; font-size:14px; margin:0; text-align:center;">💝 ${companyName} 팀 일동</p></div></div></div>`;
+    } else { // modern
+      return `<div style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#0f0f0f; padding:20px;"><div style="max-width:600px; margin:0 auto; background:linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius:20px; overflow:hidden; border:1px solid #7c3aed;"><div style="background:linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); padding:30px; text-align:center; position:relative;"><div style="position:absolute; top:0; left:0; right:0; bottom:0; background:url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><defs><pattern id=\"grain\" width=\"100\" height=\"100\" patternUnits=\"userSpaceOnUse\"><circle cx=\"50\" cy=\"50\" r=\"1\" fill=\"%23ffffff\" opacity=\"0.1\"/></pattern></defs><rect width=\"100\" height=\"100\" fill=\"url(%23grain)\"/></svg>');"></div><h1 style="color:white; margin:0; font-size:24px; font-weight:300; position:relative; z-index:1;">${companyName}</h1><p style="color:#c4b5fd; margin:10px 0 0 0; font-size:12px; position:relative; z-index:1; text-transform:uppercase; letter-spacing:2px;">NEXT GENERATION TECH</p></div><div style="padding:30px; color:#e5e7eb;"><h2 style="color:#f3f4f6; margin:0 0 20px 0; font-size:20px; font-weight:300;">${greeting} ${githubLogin},</h2><p style="color:#d1d5db; font-size:15px; line-height:1.8; margin:0 0 25px 0; font-weight:300;">${message}</p><div style="background:rgba(124, 58, 237, 0.1); border:1px solid #7c3aed; border-radius:12px; padding:20px; margin:25px 0;"><h3 style="color:#a855f7; margin:0 0 15px 0; font-size:18px; font-weight:400;">${postTitle}</h3><p style="color:#d1d5db; margin:0 0 15px 0; line-height:1.7; font-weight:300;">${postDescription}</p><div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:15px; margin:15px 0;"><div style="background:rgba(168, 85, 247, 0.1); border-radius:8px; padding:10px; text-align:center;"><div style="color:#a855f7; font-size:12px; margin-bottom:5px;">STACK</div><div style="color:#f3f4f6; font-weight:500; font-size:14px;">${postProgrammingLanguage}</div></div><div style="background:rgba(168, 85, 247, 0.1); border-radius:8px; padding:10px; text-align:center;"><div style="color:#a855f7; font-size:12px; margin-bottom:5px;">LOCATION</div><div style="color:#f3f4f6; font-weight:500; font-size:14px;">${postLocation}</div></div><div style="background:rgba(168, 85, 247, 0.1); border-radius:8px; padding:10px; text-align:center;"><div style="color:#a855f7; font-size:12px; margin-bottom:5px;">SALARY</div><div style="color:#f3f4f6; font-weight:500; font-size:14px;">${postSalaryStart}~${postSalaryEnd}</div></div><div style="background:rgba(168, 85, 247, 0.1); border-radius:8px; padding:10px; text-align:center;"><div style="color:#a855f7; font-size:12px; margin-bottom:5px;">PERIOD</div><div style="color:#f3f4f6; font-weight:500; font-size:14px;">${recruitmentPeriod}</div></div></div></div><div style="text-align:center; margin:30px 0;"><a href="{{invitationLink}}" style="background:linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); color:white; text-decoration:none; padding:15px 35px; border-radius:30px; font-weight:500; display:inline-block; font-size:14px; text-transform:uppercase; letter-spacing:1px; border:1px solid #7c3aed;">JOIN US</a></div><div style="text-align:center; color:#9ca3af; font-size:12px; margin:0; opacity:0.8;">${companyName} • Engineering Team</div></div></div></div>`;
+    }
+  };
+
+  // 3. 모달 상태 추가
+  const [showBulkEmailModal, setShowBulkEmailModal] = useState(false);
+  const [bulkEmailSubject, setBulkEmailSubject] = useState('');
+  const [bulkCustomGreeting, setBulkCustomGreeting] = useState('');
+  const [bulkCustomMessage, setBulkCustomMessage] = useState('');
+  const [bulkSelectedTemplate, setBulkSelectedTemplate] = useState('professional');
+  const [bulkEmailSending, setBulkEmailSending] = useState(false);
+
+  // 4. 모달 열기 함수
+  const openBulkEmailModal = () => {
+    const postTitle = postInfo?.postTitle || '채용 공고';
+    const companyName = postInfo?.companyName || '저희 회사';
+    setBulkSelectedTemplate('professional');
+    setBulkCustomGreeting(emailTemplates.professional.defaultGreeting);
+    setBulkCustomMessage(emailTemplates.professional.defaultMessage);
+    setBulkEmailSubject(`[${companyName}] ${postTitle} - 특별 초대`);
+    setShowBulkEmailModal(true);
+  };
+
+  // 5. 템플릿 변경 핸들러
+  const handleBulkTemplateChange = (templateKey) => {
+    setBulkSelectedTemplate(templateKey);
+    const template = emailTemplates[templateKey];
+    setBulkCustomGreeting(template.defaultGreeting);
+    setBulkCustomMessage(template.defaultMessage);
+  };
+
+  // 6. 메일 전송 함수 (템플릿 기반)
+  const handleBulkMailSend = async () => {
+    if (!bulkEmailSubject.trim() || !bulkCustomGreeting.trim() || !bulkCustomMessage.trim()) {
+      alert('제목, 인사말, 메시지를 모두 입력해주세요.');
+      return;
+    }
+    if (selected.length === 0) return;
+    const candidatesToSend = candidates.filter(c => selected.includes(c.githubLogin || c.login) && c.candidateEmail);
+    if (candidatesToSend.length === 0) {
+      alert('이메일이 있는 후보자를 선택하세요.');
+      return;
+    }
+    setBulkEmailSending(true);
+    try {
+      // 템플릿 HTML 생성 (플레이스홀더)
+      const htmlTemplate = generateTemplateHtml(
+        { githubLogin: "{{githubLogin}}", candidateEmail: "{{candidateEmail}}" },
+        bulkSelectedTemplate,
+        bulkCustomGreeting,
+        bulkCustomMessage
+      );
+      const res = await fetch('http://localhost:8081/api/invitations/send-bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postId: postId,
+          companyAdminId: companyAdminId,
+          candidates: candidatesToSend.map(c => ({ githubLogin: c.githubLogin || c.login, candidateEmail: c.candidateEmail })),
+          customEmailSubject: bulkEmailSubject,
+          customEmailContent: htmlTemplate
+        })
+      });
+      if (res.ok) {
+        alert(`📨 ${candidatesToSend.length}명에게 메일을 전송했습니다!`);
+        setShowBulkEmailModal(false);
+        setBulkEmailSubject('');
+        setBulkCustomGreeting('');
+        setBulkCustomMessage('');
+        setBulkSelectedTemplate('professional');
+        setBulkEmailSending(false);
+        navigate('/company/dashboard');
+      } else {
+        alert('❌ 메일 전송 실패');
+        setBulkEmailSending(false);
+      }
+    } catch (err) {
+      alert('⚠️ 서버 오류로 전송에 실패했습니다.');
+      setBulkEmailSending(false);
+    }
+  };
 
   // 실제 데이터 fetch (네가 쓰던 코드 그대로!)
   useEffect(() => {
@@ -425,6 +917,7 @@ export default function CandidateList() {
         const aiResponse = await fetch(`http://localhost:8081/api/ai-analysis-results/post/${postId}`);
         let aiAnalysisData = [];
         if (aiResponse.ok) aiAnalysisData = await aiResponse.json();
+        setAiAnalysisResults(aiAnalysisData);
 
         const aiAnalysisMap = {};
         aiAnalysisData.forEach(ai => {
@@ -435,16 +928,11 @@ export default function CandidateList() {
           const aiAnalysis = aiAnalysisMap[candidate.githubSearchResultId];
           let portfolioAnalysis = '';
           let candidateLanguages = '';
-          console.log(`후보자 ${candidate.githubLogin}의 AI 분석:`, aiAnalysis);
           if (aiAnalysis && aiAnalysis.analysisData) {
-            // AI 분석 데이터는 일반 텍스트로 저장되어 있으므로 JSON.parse 하지 않음
             portfolioAnalysis = aiAnalysis.analysisData;
-            // GitHub 분석의 경우 언어 정보는 별도로 저장되지 않으므로 빈 문자열로 설정
             candidateLanguages = '';
-            console.log(`후보자 ${candidate.githubLogin}의 분석 데이터:`, portfolioAnalysis.substring(0, 100) + '...');
           } else {
             portfolioAnalysis = 'AI 분석 결과 없음';
-            console.log(`후보자 ${candidate.githubLogin}의 AI 분석 결과 없음`);
           }
           return {
             githubLogin: candidate.githubLogin,
@@ -453,20 +941,15 @@ export default function CandidateList() {
             portfolioAnalysis: portfolioAnalysis,
             candidateLanguages: candidateLanguages,
             profileUrl: candidate.githubProfileUrl,
-            // ============ [CURRENT 버전에서 추가된 기능] ============
-            // 검색일 정보 추가
-            githubSearchDate: candidate.githubSearchDate,
-            // ============ [CURRENT 버전에서 추가된 기능 끝] ============
+            githubSearchResultId: candidate.githubSearchResultId,
             ...candidate
           };
         });
 
-        // ============ [CURRENT 버전에서 추가된 기능] ============
         // 이메일 있는 사람을 먼저, 없는 사람을 나중에 정렬
         const emailFirst = mappedCandidates.filter(c => c.candidateEmail !== 'not_found@example.com');
         const noEmail = mappedCandidates.filter(c => c.candidateEmail === 'not_found@example.com');
         setCandidates([...emailFirst, ...noEmail]);
-        // ============ [CURRENT 버전에서 추가된 기능 끝] ============
         setLoading(false);
       } catch (error) {
         setCandidates([]);
@@ -483,6 +966,11 @@ export default function CandidateList() {
     fetchCandidates();
   }, [postId, location.state]);
 
+  // 2. Add useEffect to update companyAdminId when postInfo changes
+  useEffect(() => {
+    if (postInfo && postInfo.companyAdminId) setCompanyAdminId(postInfo.companyAdminId);
+  }, [postInfo]);
+
   const toggleSelect = (login) => {
     setSelected(prev =>
       prev.includes(login) ? prev.filter(l => l !== login) : [...prev, login]
@@ -496,33 +984,6 @@ export default function CandidateList() {
       year: 'numeric', month: 'long', day: 'numeric'
     });
   };
-
-  const extractSummary = (analysisText) => {
-    if (!analysisText) return '';
-    const summaryMatch = analysisText.match(/종합요약:\s*([^\n]+(?:\n[^\n]+)*)/);
-    if (summaryMatch) return summaryMatch[1].trim();
-    return analysisText.length > 85 ? analysisText.substring(0, 85) + '...' : analysisText;
-  };
-  const extractScore = (analysisText) => {
-    if (!analysisText) return 0;
-    const scoreMatch = analysisText.match(/\(점수:\s*(\d+)점\)/);
-    return scoreMatch ? parseInt(scoreMatch[1]) : 0;
-  };
-
-  // 기술스택 가독성 보정
-  function getStackArray(langs) {
-    if (!langs) return [];
-    if (Array.isArray(langs)) return langs;
-    if (typeof langs === 'string') {
-      return langs.split(/[\s,/]+/).filter(Boolean);
-    }
-    return [];
-  }
-  function formatTechStack(langs) {
-    const arr = getStackArray(langs);
-    if (arr.length <= 5) return arr.join(' · ');
-    return arr.slice(0, 5).join(' · ') + <MoreStack>+외 {arr.length - 5}개</MoreStack>;
-  }
 
   const openAnalysisModal = (analysis, score) => {
     console.log('openAnalysisModal 호출됨:', { analysis, score });
@@ -567,7 +1028,7 @@ export default function CandidateList() {
       console.error("메일 전송 오류:", err);
       alert("⚠️ 서버 오류로 전송에 실패했습니다.");
     } finally {
-      setLoadingId(null); // 👉 로딩 종료
+      setLoadingId(null); // �� 로딩 종료
     }
   };
   // ============ [CURRENT 버전에서 추가된 기능 끝] ============
@@ -609,17 +1070,21 @@ export default function CandidateList() {
           </PostInfoCard>
         )}
 
-        {/* 메일 보내기 버튼 */}
-        {selected.length > 0 && (
-          <MailButton onClick={handleSendMail}>
-            <FaEnvelope />
-            {selected.length}명에게 메일 보내기
-          </MailButton>
-        )}
-
         {/* 후보자 헤더 */}
-        <CandidatesHeader>
-          <SectionTitle>🎯 추천 후보자 <b style={{ color: "#30c59b" }}>{candidates.length}</b>명</SectionTitle>
+        <CandidatesHeader style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1.2rem' }}>
+          <SectionTitle style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap', margin: 0 }}>
+            <TargetIcon />추천 후보자
+            <b style={{ color: '#30c59b', fontWeight: 800, fontSize: '1.18em', margin: '0 0.1em' }}>{candidates.length}</b>명
+          </SectionTitle>
+          {candidates.length > 0 && (
+            <TossAnalysisButton
+              onClick={openBulkEmailModal}
+              disabled={selected.length === 0}
+              style={{ width: 220, minWidth: 180 }}
+            >
+              {selected.length > 0 ? `메일 보내기 (${selected.length}명)` : '메일 보내기'}
+            </TossAnalysisButton>
+          )}
         </CandidatesHeader>
 
         {/* 포스터 가로 스크롤 */}
@@ -629,107 +1094,28 @@ export default function CandidateList() {
           <PosterScrollWrap>
             <PostersRow>
               {candidates.map((candidate, idx) => {
-                const analysisText = candidate.portfolioAnalysis || candidate.analysis || '';
-                const summary = extractSummary(analysisText);
-                const score = extractScore(analysisText) || candidate.score || candidate.parsed_score || 0;
-                const langsArr = getStackArray(candidate.candidateLanguages || candidate.languages);
-                const email = candidate.candidateEmail || candidate.email;
-                const login = candidate.githubLogin || candidate.login;
-
+                // Find matching aiAnalysisResult by githubSearchResultId
+                const analysisResult = aiAnalysisResults.find(
+                  ai => ai.githubSearchResultId === candidate.githubSearchResultId
+                );
                 return (
-                  <CandidateCard
-                    key={login || idx}
-                    selected={selected.includes(login)}
-                    onClick={() => toggleSelect(login)}
-                  >
-                    {/* 점수 ProgressBar */}
-                    <ScoreBarWrap>
-                      <ScoreLabel>
-                        <FaStar style={{ color: '#fabb3b', marginRight: '2px' }} /> 
-                        <span style={{fontWeight:'800'}}>{score}점</span>
-                      </ScoreLabel>
-                      <ScoreBar>
-                        <ScoreFill score={score} />
-                      </ScoreBar>
-                    </ScoreBarWrap>
-                    {/* 프로필 */}
-                    <Avatar>
-                      <FaGithub style={{ color: 'white', fontSize: '2.5rem' }} />
-                    </Avatar>
-                    <Username>{login}</Username>
-                    <CardMeta>
-                      {email && <MetaTag>이메일 있음</MetaTag>}
-                      {candidate.candidateLocation &&
-                        <MetaTag style={{ background: '#eaf1fd', color: '#4575d5' }}>
-                          {candidate.candidateLocation}
-                        </MetaTag>}
-                    </CardMeta>
-                    {/* 기술스택/언어 */}
-                    {langsArr.length > 0 &&
-                      <TechStack>
-                        <b>기술스택:</b> {formatTechStack(langsArr)}
-                      </TechStack>
-                    }
-                    {/* 분석 요약 */}
-                    <AnalysisPreview>{summary}</AnalysisPreview>
-                    <ShowAnalysisBtn
-                      onClick={e => { e.stopPropagation(); openAnalysisModal(analysisText, score); }}>
-                      <FaExpandAlt /> 전체 분석 보기
-                    </ShowAnalysisBtn>
-                    {/* ============ [CURRENT 버전에서 추가된 기능] ============ */}
-                    {/* 개별 이메일 전송 버튼 */}
-                    {email && email !== 'not_found@example.com' && (
-                      <button
-                        onClick={e => { 
-                          e.stopPropagation(); 
-                          sendInvitation(postId, login, 42, email);
-                        }}
-                        disabled={loadingId === login}
-                        style={{
-                          backgroundColor: loadingId === login ? '#ccc' : '#30c59b',
-                          color: 'white',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '999px',
-                          fontWeight: 500,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: '160px',
-                          height: '42px',
-                          border: 'none',
-                          cursor: loadingId === login ? 'not-allowed' : 'pointer',
-                          position: 'relative',
-                          opacity: loadingId === login ? 0.6 : 1,
-                          filter: loadingId === login ? 'blur(0.5px)' : 'none',
-                          marginTop: '0.5rem'
-                        }}
-                      >
-                        {loadingId === login ? (
-                          <div
-                            style={{
-                              width: '20px',
-                              height: '20px',
-                              border: '3px solid #fff',
-                              borderTop: '3px solid transparent',
-                              borderRadius: '50%',
-                              animation: 'spin 1s linear infinite'
-                            }}
-                          />
-                        ) : (
-                          <>
-                            <FaEnvelope />
-                            <span>이메일 보내기</span>
-                          </>
-                        )}
-                      </button>
-                    )}
-                    {/* ============ [CURRENT 버전에서 추가된 기능 끝] ============ */}
-                  </CandidateCard>
+                  <TossCandidateCard
+                    key={candidate.githubLogin || idx}
+                    candidate={candidate}
+                    analysisResult={analysisResult}
+                    selected={selected.includes(candidate.githubLogin || candidate.login)}
+                    onClick={() => toggleSelect(candidate.githubLogin || candidate.login)}
+                    openAnalysisModal={openAnalysisModal}
+                    toggleSelect={toggleSelect}
+                  />
                 );
               })}
             </PostersRow>
           </PosterScrollWrap>
         )}
+
+        {/* 메일 보내기 버튼 */}
+        {/* The mail button is now moved to CandidatesHeader */}
       </Container>
 
       {/* --- AI 분석 모달 --- */}
@@ -739,8 +1125,7 @@ export default function CandidateList() {
             <ModalCloseBtn onClick={closeAnalysisModal}>
               <FaTimes />
             </ModalCloseBtn>
-            
-            {/* 헤더 섹션 */}
+            {/* Simple header */}
             <ModalHeader>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{
@@ -778,7 +1163,6 @@ export default function CandidateList() {
                 </div>
               </div>
             </ModalHeader>
-
             {/* 점수 섹션 */}
             <div style={{
               background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
@@ -789,7 +1173,7 @@ export default function CandidateList() {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FaStar style={{ color: '#fbbf24', fontSize: '20px' }} />
+                  <FaStar style={{ color: '#fabb3b', fontSize: '20px' }} />
                   <span style={{ 
                     fontSize: '18px', 
                     fontWeight: '700',
@@ -825,7 +1209,6 @@ export default function CandidateList() {
                 <span>100점</span>
               </div>
             </div>
-
             {/* 분석 내용 섹션 */}
             <div style={{ marginBottom: '24px' }}>
               <h3 style={{
@@ -858,16 +1241,12 @@ export default function CandidateList() {
                 boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.06)'
               }}>
                 {selectedAnalysis.split('\n').map((line, index) => (
-                  <p key={index} style={{ 
-                    margin: line.trim() ? '0 0 12px 0' : '0 0 8px 0',
-                    whiteSpace: 'pre-wrap'
-                  }}>
+                  <p key={index} style={{ margin: line.trim() ? '0 0 12px 0' : '0 0 8px 0', whiteSpace: 'pre-wrap' }}>
                     {line}
                   </p>
                 ))}
               </div>
             </div>
-
             {/* 푸터 */}
             <ModalFooter>
               <ModalActionBtn onClick={closeAnalysisModal}>
@@ -877,6 +1256,370 @@ export default function CandidateList() {
           </ModalCard>
         </ModalOverlay>
       )}
+
+      {/* --- 대량 메일 보내기 모달 --- */}
+      {showBulkEmailModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          background: 'rgba(0,0,0,0.25)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          paddingTop: '32px', paddingBottom: '32px'
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: '16px', boxShadow: '0 0 30px rgba(66, 153, 225, 0.3)', width: '800px', maxWidth: '98vw', minWidth: '500px', overflow: 'hidden', position: 'relative'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #4299e1 0%, #3182ce 100%)',
+              margin: '0',
+              padding: '2rem',
+              borderRadius: '16px 16px 0 0',
+              position: 'relative',
+              overflow: 'hidden',
+              boxShadow: '0 0 30px rgba(66, 153, 225, 0.3)'
+            }}>
+              <h2 style={{
+                fontSize: '1.5rem', fontWeight: 700, color: 'white', margin: 0,
+                display: 'flex', alignItems: 'center', gap: '0.75rem', textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 2L11 13"/>
+                  <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
+                </svg>
+                일괄 이메일 전송 ({selected.length}명)
+              </h2>
+            </div>
+            <div style={{ maxHeight: '70vh', overflowY: 'auto', padding: '0 2rem 2rem 2rem' }}>
+              {/* 안내 메시지 */}
+              <div style={{
+                background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+                padding: '1.2rem', borderRadius: '12px', marginBottom: '1.5rem', border: '1px solid #f59e0b', marginTop: '1.5rem'
+              }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: 600, color: '#92400e', margin: '0 0 0.8rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth="2">
+                    <path d="M22 2L11 13"/>
+                    <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
+                  </svg>
+                  ✨ 템플릿 기반 일괄 메일 전송
+                </h4>
+                <div style={{ fontSize: '0.85rem', color: '#a16207', lineHeight: '1.5' }}>
+                  • <strong>선택된 후보자</strong>: {selected.length}명에게 동시 전송<br/>
+                  • <strong>개인화</strong>: 각 후보자의 이름이 자동으로 삽입됩니다<br/>
+                  • <strong>전문적 디자인</strong>: 3가지 템플릿 중 선택하여 브랜드에 맞는 디자인 적용
+                </div>
+              </div>
+              {/* 선택된 후보자 목록 미리보기 */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ fontWeight: 600, color: '#2d3748', fontSize: '1rem', display: 'block', marginBottom: '0.5rem' }}>
+                  📋 전송 대상 ({selected.length}명)
+                </label>
+                <div style={{ border: '2px solid #e5e7eb', borderRadius: '8px', padding: '1rem', backgroundColor: '#f9fafb', maxHeight: '100px', overflowY: 'auto' }}>
+                  {candidates.filter(c => selected.includes(c.githubLogin || c.login)).map(candidate => (
+                    <div key={candidate.githubLogin || candidate.login} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.85rem' }}>
+                      <span style={{ color: '#22c55e', fontWeight: 'bold' }}>✓</span>
+                      <span style={{ fontWeight: '600' }}>{candidate.githubLogin || candidate.login}</span>
+                      <span style={{ color: '#6b7280' }}>({candidate.candidateEmail || candidate.email || '이메일 없음'})</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* 템플릿 선택 */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ fontWeight: 600, color: '#2d3748', fontSize: '1rem', display: 'block', marginBottom: '1rem' }}>
+                  📧 이메일 템플릿 선택
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.8rem' }}>
+                  {Object.entries(emailTemplates).map(([key, template]) => (
+                    <div
+                      key={key}
+                      onClick={() => handleBulkTemplateChange(key)}
+                      style={{
+                        border: bulkSelectedTemplate === key ? `2px solid ${template.color}` : '2px solid #e5e7eb',
+                        borderRadius: '10px', padding: '0.8rem', cursor: 'pointer', transition: 'all 0.2s',
+                        backgroundColor: bulkSelectedTemplate === key ? template.bgColor : '#f9fafb', textAlign: 'center'
+                      }}
+                    >
+                      <div style={{ fontSize: '0.9rem', fontWeight: 600, color: bulkSelectedTemplate === key ? template.color : '#374151', marginBottom: '0.3rem' }}>{template.name}</div>
+                      <div style={{ fontSize: '0.75rem', color: bulkSelectedTemplate === key ? template.color : '#6b7280', marginBottom: '0.4rem' }}>{template.preview}</div>
+                      <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>{template.description}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* 제목 입력 */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ fontWeight: 600, color: '#2d3748', fontSize: '1rem', display: 'block', marginBottom: '0.5rem' }}>
+                  📝 메일 제목
+                </label>
+                <input
+                  type="text"
+                  value={bulkEmailSubject}
+                  onChange={(e) => setBulkEmailSubject(e.target.value)}
+                  placeholder="메일 제목을 입력하세요"
+                  style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '8px', border: '2px solid #e2e8f0', fontSize: '1rem', transition: 'border-color 0.2s', outline: 'none' }}
+                  onFocus={e => e.target.style.borderColor = emailTemplates[bulkSelectedTemplate].color}
+                  onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+                />
+              </div>
+              {/* 인사말 입력 */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ fontWeight: 600, color: '#2d3748', fontSize: '1rem', display: 'block', marginBottom: '0.5rem' }}>
+                  👋 인사말
+                </label>
+                <input
+                  type="text"
+                  value={bulkCustomGreeting}
+                  onChange={(e) => setBulkCustomGreeting(e.target.value)}
+                  placeholder="인사말을 입력하세요 (예: 안녕하세요, Hello)"
+                  style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '8px', border: '2px solid #e2e8f0', fontSize: '1rem', transition: 'border-color 0.2s', outline: 'none' }}
+                  onFocus={e => e.target.style.borderColor = emailTemplates[bulkSelectedTemplate].color}
+                  onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+                />
+              </div>
+              {/* 메시지 입력 */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ fontWeight: 600, color: '#2d3748', fontSize: '1rem', display: 'block', marginBottom: '0.5rem' }}>
+                  💬 메시지 내용
+                </label>
+                <textarea
+                  value={bulkCustomMessage}
+                  onChange={(e) => setBulkCustomMessage(e.target.value)}
+                  placeholder="개인화된 메시지를 입력하세요"
+                  rows={4}
+                  style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '8px', border: '2px solid #e2e8f0', fontSize: '1rem', resize: 'vertical', transition: 'border-color 0.2s', outline: 'none', fontFamily: 'inherit', lineHeight: '1.5' }}
+                  onFocus={e => e.target.style.borderColor = emailTemplates[bulkSelectedTemplate].color}
+                  onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+                />
+              </div>
+              {/* 미리보기 */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ fontWeight: 600, color: '#2d3748', fontSize: '1rem', display: 'block', marginBottom: '0.5rem' }}>
+                  👀 미리보기 (첫 번째 후보자 기준)
+                </label>
+                <div style={{ border: '2px solid #e5e7eb', borderRadius: '8px', padding: '1rem', backgroundColor: '#f9fafb', minHeight: '250px', maxHeight: '300px', overflowY: 'auto' }}>
+                  {selected.length > 0 && (() => {
+                    const firstSelected = candidates.find(c => selected[0] === (c.githubLogin || c.login));
+                    return firstSelected && (
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: generateTemplateHtml(
+                            firstSelected,
+                            bulkSelectedTemplate,
+                            bulkCustomGreeting,
+                            bulkCustomMessage
+                          )
+                        }}
+                        style={{ transform: 'scale(0.65)', transformOrigin: 'top left', width: '153.85%', fontSize: '11px' }}
+                      />
+                    );
+                  })()}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.5rem', textAlign: 'center' }}>
+                  각 후보자에게는 개별 이름이 삽입되어 전송됩니다
+                </div>
+              </div>
+            </div>
+            <div style={{
+              display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #e2e8f0', position: 'sticky', bottom: '0', backgroundColor: 'white', zIndex: 10,
+              paddingBottom: '2rem',
+              paddingRight: '2rem'
+            }}>
+              <button
+                onClick={() => {
+                  setShowBulkEmailModal(false);
+                  setBulkEmailSubject('');
+                  setBulkCustomGreeting('');
+                  setBulkCustomMessage('');
+                  setBulkSelectedTemplate('professional');
+                }}
+                style={{ background: '#e2e8f0', color: '#4a5568', padding: '0.8rem 1.5rem', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
+              >
+                취소
+              </button>
+              <button
+                onClick={handleBulkMailSend}
+                disabled={bulkEmailSending || !bulkEmailSubject.trim() || !bulkCustomGreeting.trim() || !bulkCustomMessage.trim()}
+                style={{
+                  background: (bulkEmailSending || !bulkEmailSubject.trim() || !bulkCustomGreeting.trim() || !bulkCustomMessage.trim()) ? '#cbd5e0' : `linear-gradient(135deg, ${emailTemplates[bulkSelectedTemplate].color} 0%, ${emailTemplates[bulkSelectedTemplate].color}dd 100%)`,
+                  color: (bulkEmailSending || !bulkEmailSubject.trim() || !bulkCustomGreeting.trim() || !bulkCustomMessage.trim()) ? '#a0aec0' : 'white',
+                  padding: '0.8rem 2rem', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: '600', cursor: (bulkEmailSending || !bulkEmailSubject.trim() || !bulkCustomGreeting.trim() || !bulkCustomMessage.trim()) ? 'not-allowed' : 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: (bulkEmailSending || !bulkEmailSubject.trim() || !bulkCustomGreeting.trim() || !bulkCustomMessage.trim()) ? 'none' : `0 4px 12px ${emailTemplates[bulkSelectedTemplate].color}40`
+                }}
+                onMouseEnter={e => {
+                  if (!bulkEmailSending && bulkEmailSubject.trim() && bulkCustomGreeting.trim() && bulkCustomMessage.trim()) {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = `0 6px 20px ${emailTemplates[bulkSelectedTemplate].color}60`;
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!bulkEmailSending && bulkEmailSubject.trim() && bulkCustomGreeting.trim() && bulkCustomMessage.trim()) {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = `0 4px 12px ${emailTemplates[bulkSelectedTemplate].color}40`;
+                  }
+                }}
+              >
+                {bulkEmailSending ? (
+                  <>
+                    <div style={{ width: '16px', height: '16px', border: '2px solid transparent', borderTop: '2px solid currentColor', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                    전송 중...
+                  </>
+                ) : (
+                  <>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M22 2L11 13"/>
+                      <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
+                    </svg>
+                    {emailTemplates[bulkSelectedTemplate].name} 템플릿으로 일괄 전송 ({selected.length}명)
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Wrapper>
   );
 }
+
+// Toss-style Candidate Card (with hover state)
+const TossCandidateCard = ({ candidate, analysisResult, selected, onClick, openAnalysisModal, toggleSelect }) => {
+  const analysisText = candidate.portfolioAnalysis || candidate.analysis || '';
+  const summary = extractSummary(analysisText);
+  const score = extractScore(analysisText) || candidate.score || candidate.parsed_score || 0;
+  const langsArr = getStackArray(candidate.candidateLanguages || candidate.languages);
+  const email = candidate.candidateEmail || candidate.email;
+  const login = candidate.githubLogin || candidate.login;
+  const avatarUrl = login ? `https://github.com/${login}.png?size=160` : undefined;
+  const componentScores = parseComponentScores(analysisText, candidate);
+
+  // 3D hover + animated graph
+  const [hoverTransform, setHoverTransform] = React.useState('');
+  const [graphTransform, setGraphTransform] = React.useState('');
+  const handleMouseMove = e => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const rotateY = ((x / rect.width) - 0.5) * 18; // -9deg ~ +9deg
+    const rotateX = ((y / rect.height) - 0.5) * -14; // -7deg ~ +7deg
+    setHoverTransform(`rotateY(${rotateY}deg) rotateX(${rotateX}deg)`);
+    setGraphTransform(`perspective(400px) rotateY(${rotateY * 1.2}deg) rotateX(${rotateX * 1.2}deg) scale(1.08)`);
+    card.style.setProperty('--hover-rotateY', `${rotateY}deg`);
+    card.style.setProperty('--hover-rotateX', `${rotateX}deg`);
+  };
+  const handleMouseLeave = e => {
+    setHoverTransform('');
+    setGraphTransform('');
+    e.currentTarget.style.setProperty('--hover-rotateY', '0deg');
+    e.currentTarget.style.setProperty('--hover-rotateX', '0deg');
+  };
+
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  // Use analysisResult.analysisData if present
+  let radarScores, realScore;
+  if (analysisResult && analysisResult.analysisData) {
+    const parsed = parseNaturalLanguageScores(analysisResult.analysisData);
+    radarScores = {
+      '팔로워 수': parsed['팔로워 수'] || 0,
+      '공개 저장소 수': parsed['공개 저장소 수'] || 0,
+      '언어 다양성': parsed['언어 다양성'] || 0,
+      '최근 활동성': parsed['최근 활동성'] || 0,
+      '프로젝트 품질': parsed['프로젝트 품질'] || 0,
+      '기술적 깊이': parsed['기술적 깊이'] || 0,
+    };
+    realScore = parsed.totalScore !== null ? parsed.totalScore : 0;
+  } else {
+    realScore = (candidate.aiAnalysis && typeof candidate.aiAnalysis.analysisScore === 'number')
+      ? candidate.aiAnalysis.analysisScore
+      : (typeof candidate.analysisScore === 'number' ? candidate.analysisScore : 0);
+    radarScores = {
+      '팔로워 수': candidate.followerScore || 0,
+      '공개 저장소 수': candidate.repoScore || 0,
+      '언어 다양성': candidate.languageScore || 0,
+      '최근 활동성': candidate.activityScore || 0,
+      '프로젝트 품질': candidate.projectQualityScore || 0,
+      '기술적 깊이': candidate.technicalDepthScore || 0,
+    };
+  }
+
+  // For debugging: print score data
+  console.log('TossCard', { login, radarScores, realScore, analysisResult });
+  // If all scores are zero, show demo chart for visual check
+  const isAllZero = radarLabels.every(label => (radarScores[label] || 0) === 0);
+  const demoScores = { '팔로워 수': 8, '공개 저장소 수': 12, '언어 다양성': 10, '최근 활동성': 15, '프로젝트 품질': 13, '기술적 깊이': 9 };
+  // realScore가 undefined면 radarScores의 합산으로 대체
+  let displayScore = realScore;
+  if (typeof displayScore !== 'number' || isNaN(displayScore)) {
+    displayScore = Object.values(radarScores).reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0);
+    if (isAllZero) displayScore = 88; // demo
+  }
+  return (
+    <TossCard
+      key={login}
+      selected={selected}
+      onClick={() => toggleSelect(login)}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={e => { handleMouseLeave(e); setIsHovered(false); }}
+      onMouseEnter={() => setIsHovered(true)}
+      style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start',
+        paddingTop: '1.5rem', paddingBottom: '1.2rem',
+        width: 340, minWidth: 340, /* height: 470,  <-- removed! */
+        overflow: 'visible',
+      }}
+    >
+      {/* Stronger, taller white highlight at the top */}
+      <div style={{
+        position: 'absolute',
+        top: 0, left: 0, right: 0, height: '62px',
+        borderTopLeftRadius: '28px', borderTopRightRadius: '28px',
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.08) 100%)',
+        pointerEvents: 'none',
+        zIndex: 2
+      }} />
+      {/* Larger inner curved white reflection */}
+      <div style={{
+        position: 'absolute',
+        top: 44, left: 14, right: 14, height: '44px',
+        borderRadius: '50%',
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.01) 100%)',
+        pointerEvents: 'none',
+        zIndex: 2
+      }} />
+      {/* Soft green glow at the bottom */}
+      <div style={{
+        position: 'absolute',
+        left: 0, right: 0, bottom: 0, height: '38px',
+        borderBottomLeftRadius: '28px', borderBottomRightRadius: '28px',
+        background: 'radial-gradient(ellipse at 50% 100%, rgba(48,197,155,0.13) 0%, transparent 80%)',
+        pointerEvents: 'none',
+        zIndex: 2
+      }} />
+      {/* Radar chart at top center, never cut off */}
+      <div style={{ width: 90, margin: '0 auto 1.1rem auto', display: 'block', position: 'relative' }}>
+        <RadarChartSVG scores={isAllZero ? demoScores : radarScores} size={90} totalScore={isAllZero ? 88 : displayScore} showLabels={false} showScores={false} />
+      </div>
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', flex: '1 1 0%', minHeight: 0 }}>
+        <TopRow style={{ marginBottom: '0.5rem', width: '100%' }}>
+          {avatarUrl && <SmallAvatar src={avatarUrl} alt={login} />}
+          <NameText style={{ color: '#263249', fontSize: '1.18rem', fontWeight: 800 }}>{login || <span>&nbsp;</span>}</NameText>
+        </TopRow>
+        <div style={{ display: 'flex', gap: '0.7rem', marginBottom: '0.5rem', minHeight: '1.2em', width: '100%' }}>
+          <TossMetaTag style={{ color: '#30c59b', background: 'rgba(48,197,155,0.08)', fontSize: '0.99rem', fontWeight: 600 }}>{email ? '이메일 있음' : <span style={{opacity:0.4}}>이메일 없음</span>}</TossMetaTag>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.18rem 0.7rem', margin: '0.3rem 0 0.5rem 0', width: '100%' }}>
+          {radarLabels.map(label => (
+            componentScores[label] !== undefined ? (
+              <div key={label} style={{ color: '#49505c', fontSize: '0.97rem', fontWeight: 500, opacity: 0.92 }}>
+                <span style={{ color: '#30c59b', fontWeight: 700 }}>{label}</span>: {componentScores[label]}점
+              </div>
+            ) : null
+          ))}
+        </div>
+        {langsArr.length > 0 && <TossCardSub style={{ color: '#49505c', fontWeight: 500, textAlign: 'left', marginBottom: '0.7rem', width: '100%' }}>기술스택: {formatTechStack(langsArr)}</TossCardSub>}
+        <TossCardSub style={{ fontStyle: 'italic', color: '#49505c', marginBottom: '0.7rem', fontWeight: 400, textAlign: 'left', width: '100%' }}>{summary}</TossCardSub>
+        <TossAnalysisButton style={{ width: '100%', marginTop: 'auto', marginBottom: 0 }} onClick={e => { e.stopPropagation(); openAnalysisModal((analysisResult && analysisResult.analysisData) ? analysisResult.analysisData : analysisText, score); }}>
+          전체 분석보기
+        </TossAnalysisButton>
+      </div>
+    </TossCard>
+  );
+};
