@@ -211,6 +211,8 @@ function JobDetailPage() {
       formData.append('agreeOptionalPersonal', 'false');
       formData.append('agreeFutureProposals', 'false');
       formData.append('agreeReceiveRecruitmentInfo', 'false');
+      // source 파라미터 추가
+      formData.append('source', 'apply');
 
       const pfRes = await fetch('http://localhost:8081/api/portfolios', {
         method: 'POST',
@@ -1271,6 +1273,14 @@ function JobDetailPage() {
                 {uploading ? '업로드 중...' : '입사지원'}
               </button>
             )}
+          </div>
+        </div>
+      )}
+      {uploading && (
+        <div className="modal-backdrop" style={{ position: 'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.3)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <div className="modal-content" style={{ background:'#fff', borderRadius: '16px', padding:'2.5rem 3.5rem', boxShadow:'0 8px 32px rgba(0,0,0,0.15)', textAlign:'center', fontSize:'1.2rem', fontWeight:600, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
+            <div className="loading-spinner" style={{ marginBottom:'1.5rem', width:'48px', height:'48px', border:'6px solid #e2e8f0', borderTop:'6px solid #38a169', borderRadius:'50%', animation:'spin 1s linear infinite' }} />
+            <div>분석 중입니다. 잠시만 기다려주세요...</div>
           </div>
         </div>
       )}

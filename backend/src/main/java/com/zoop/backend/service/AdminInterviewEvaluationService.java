@@ -17,12 +17,15 @@ public class AdminInterviewEvaluationService {
     
     private final AdminInterviewEvaluationRepository adminInterviewEvaluationRepository;
     private final JobCandProgressRepository jobCandProgressRepository;
+    private final JobCandProgressService jobCandProgressService;
     
     @Autowired
     public AdminInterviewEvaluationService(AdminInterviewEvaluationRepository adminInterviewEvaluationRepository,
-                                         JobCandProgressRepository jobCandProgressRepository) {
+                                         JobCandProgressRepository jobCandProgressRepository,
+                                         JobCandProgressService jobCandProgressService) {
         this.adminInterviewEvaluationRepository = adminInterviewEvaluationRepository;
         this.jobCandProgressRepository = jobCandProgressRepository;
+        this.jobCandProgressService = jobCandProgressService;
     }
     
     @Transactional
@@ -38,7 +41,7 @@ public class AdminInterviewEvaluationService {
         
         AdminInterviewEvaluation savedEvaluation = adminInterviewEvaluationRepository.save(evaluation);
         
-        // JobCandProgress의 stage 업데이트
+        // JobCandProgress의 stage 업데이트 (알림 생성 포함)
         Optional<JobCandProgress> progressOpt = jobCandProgressRepository.findById(evaluationDto.getJobCandidateId());
         if (progressOpt.isPresent()) {
             JobCandProgress progress = progressOpt.get();
@@ -51,11 +54,14 @@ public class AdminInterviewEvaluationService {
             System.out.println("  - 새로운 Stage: " + newStage);
             System.out.println("  - 선정 상태: " + evaluationDto.getAdminIntrvwSlctStatus());
             
-            progress.setJobCandCurrStage(newStage);
-            progress.setAdminIntrvwEvalId(savedEvaluation.getAdminIntrvwEvalId());
-            JobCandProgress savedProgress = jobCandProgressRepository.save(progress);
+            // 알림 생성과 함께 stage 업데이트
+            jobCandProgressService.updateStageWithNotification(progress.getJobCandidateId(), newStage);
             
-            System.out.println("[AdminInterviewEvaluation] Stage 업데이트 완료: " + savedProgress.getJobCandCurrStage());
+            // adminIntrvwEvalId 업데이트
+            progress.setAdminIntrvwEvalId(savedEvaluation.getAdminIntrvwEvalId());
+            jobCandProgressRepository.save(progress);
+            
+            System.out.println("[AdminInterviewEvaluation] Stage 업데이트 완료: " + newStage);
         } else {
             System.out.println("[AdminInterviewEvaluation] JobCandProgress를 찾을 수 없음: " + evaluationDto.getJobCandidateId());
         }

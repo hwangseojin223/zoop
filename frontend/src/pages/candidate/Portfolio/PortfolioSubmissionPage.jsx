@@ -210,6 +210,9 @@ function PortfolioSubmissionPage() {
       formData.append('veteranProofFile', veteranProofFile);
     }
 
+    // source 파라미터 추가
+    formData.append('source', 'dashboard');
+
     console.log("workExperiences to submit:", workExperiences);
 
     try {

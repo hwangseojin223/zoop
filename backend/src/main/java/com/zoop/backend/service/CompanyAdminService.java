@@ -29,7 +29,22 @@ public class CompanyAdminService {
     }
 
     public CompanyAdmin getAdminById(Long id) {
-        return adminRepository.findById(id)
+        try {
+            System.out.println("🔍 [Service] getAdminById 호출됨: " + id);
+            CompanyAdmin admin = adminRepository.findByIdWithCompany(id)
+                    .orElseThrow(() -> new RuntimeException("해당 관리자 없음"));
+            System.out.println("✅ [Service] 관리자 조회 성공: " + admin.getCompanyAdminId());
+            System.out.println("✅ [Service] 회사 정보: " + (admin.getCompany() != null ? admin.getCompany().getCompanyId() : "null"));
+            return admin;
+        } catch (Exception e) {
+            System.out.println("❌ [Service] getAdminById 에러: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+    }
+    
+    public CompanyAdmin getAdminByLoginId(String loginId) {
+        return adminRepository.findByCompanyAdminLogin(loginId)
                 .orElseThrow(() -> new RuntimeException("해당 관리자 없음"));
     }
     
@@ -63,6 +78,37 @@ public class CompanyAdminService {
     System.out.println("✅ 저장 완료: ID = " + saved.getCompanyAdminId());
 
     return saved;
+}
+
+@Transactional
+public CompanyAdmin updateAdmin(Long adminId, CompanyAdmin adminUpdate) {
+    CompanyAdmin admin = adminRepository.findByIdWithCompany(adminId)
+            .orElseThrow(() -> new RuntimeException("관리자를 찾을 수 없습니다."));
+    
+    admin.setName(adminUpdate.getName());
+    admin.setEmail(adminUpdate.getEmail());
+    
+    CompanyAdmin saved = adminRepository.save(admin);
+    
+    // Company 정보를 명시적으로 로드하여 프록시 문제 해결
+    saved.getCompany().getCompanyId();
+    
+    return saved;
+}
+
+@Transactional
+public void changePassword(String loginId, String currentPassword, String newPassword) {
+    CompanyAdmin admin = adminRepository.findByCompanyAdminLogin(loginId)
+            .orElseThrow(() -> new RuntimeException("관리자를 찾을 수 없습니다."));
+    
+    // 현재 비밀번호 확인
+    if (!passwordEncoder.matches(currentPassword, admin.getPassword())) {
+        throw new RuntimeException("현재 비밀번호가 일치하지 않습니다.");
+    }
+    
+    // 새 비밀번호로 변경
+    admin.setPassword(passwordEncoder.encode(newPassword));
+    adminRepository.save(admin);
 }
 
 }

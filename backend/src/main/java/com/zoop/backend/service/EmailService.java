@@ -6,6 +6,8 @@ import java.net.URLEncoder;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.zoop.backend.domain.entity.EmailVerification;
 import com.zoop.backend.domain.entity.Post;
@@ -54,6 +56,7 @@ public class EmailService {
         return repository.findTopByEmailOrderByCreatedAtDesc(email)
                 .filter(v -> !v.isVerified())
                 .filter(v -> v.getCode().equals(code))
+                .filter(v -> v.getCreatedAt() != null && v.getCreatedAt().isAfter(java.time.LocalDateTime.now().minusMinutes(5))) // 5분 이내만 유효
                 .map(v -> {
                     v.setVerified(true);
                     repository.save(v);
@@ -255,5 +258,15 @@ public class EmailService {
         helper.setText(body, true); // HTML 전송
 
         mailSender.send(message);
+    }
+
+    /**
+     * 5분이 지난 이메일 인증 데이터 삭제 (매 1분마다 실행)
+     */
+    @Scheduled(cron = "0 * * * * *") // 매 1분마다
+    @Transactional
+    public void deleteExpiredEmailVerifications() {
+        java.time.LocalDateTime threshold = java.time.LocalDateTime.now().minusMinutes(5);
+        repository.deleteByCreatedAtBefore(threshold);
     }
 }

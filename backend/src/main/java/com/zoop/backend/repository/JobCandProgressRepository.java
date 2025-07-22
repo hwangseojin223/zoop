@@ -68,6 +68,30 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
     """, nativeQuery = true)
     List<ResponderDto> findCandidatesAtStage3nByPost(@Param("postId") Long postId);
 
+    @Query(value = """
+        SELECT 
+            c.candidate_email AS email,
+            c.candidate_name AS name,
+            p.post_location AS location,
+            p.post_programming_language AS languages,
+            ar.analysis_score AS score,
+            TO_CHAR(ar.analysis_data) AS portfolioAnalysis
+        FROM 
+            job_cand_progress jcp
+        JOIN 
+            candidates c ON jcp.candidate_id = c.candidate_id
+        JOIN 
+            post p ON jcp.post_id = p.post_id
+        LEFT JOIN 
+            ai_analysis_results ar 
+            ON jcp.job_candidate_id = ar.job_candidate_id 
+            AND ar.analysis_type = 'portfolio'
+        WHERE 
+            jcp.job_cand_curr_stage = '0'
+            AND jcp.post_id = :postId
+    """, nativeQuery = true)
+    List<ResponderDto> findCandidatesAtStage0ByPost(@Param("postId") Long postId);
+
     // post와 githubLogin으로 JobCandProgress 조회
     Optional<JobCandProgress> findByPost_PostIdAndGithubLogin(Long postId, String githubLogin);
 
