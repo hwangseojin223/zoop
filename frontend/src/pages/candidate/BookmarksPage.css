@@ -1,0 +1,259 @@
+/* Bookmarks Page Styles */
+.bookmarks-page {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f7f9fc;
+}
+
+.main-content-area {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 30px;
+}
+
+/* Page Title */
+.page-title {
+  font-size: 26px;
+  color: #333;
+  margin-bottom: 25px;
+  font-weight: bold;
+}
+
+/* Info Box */
+.info-box {
+  background-color: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 16px;
+  padding: 24px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.1);
+}
+
+.info-box p {
+  margin: 0;
+  font-size: 17px;
+  color: #166534;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+}
+
+.info-box .icon {
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-box .icon img {
+  width: 24px;
+  height: 24px;
+  filter: brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%);
+}
+
+/* Loading and Error States */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #30c59b;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #ef4444;
+  font-size: 1.1rem;
+}
+
+/* Filter Bar */
+.bookmarks-filter-bar {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+}
+
+.bookmarks-filter-bar.sticky {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+}
+
+.filter-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1f2937;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 120px;
+  flex-shrink: 0;
+  outline: none;
+}
+
+.filter-select:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.filter-select:focus {
+  border-color: #30c59b;
+  box-shadow: 0 0 0 3px rgba(48, 197, 155, 0.1);
+  outline: none;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+  border: 1px solid #e8eaed;
+  background: #ffffff;
+  padding: 0.5rem 0.75rem;
+  width: 200px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.search-box:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.search-box:focus-within {
+  border-color: #30c59b;
+  box-shadow: 0 0 0 3px rgba(48, 197, 155, 0.1);
+}
+
+.search-box input {
+  border: none;
+  background: transparent;
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1f2937;
+  outline: none;
+  padding: 0;
+}
+
+.search-box input::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.search-icon {
+  margin-left: 0.5rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+  transition: color 0.2s ease;
+}
+
+.search-box:focus-within .search-icon {
+  color: #30c59b;
+}
+
+/* Job Listings Grid */
+.bookmarks-job-listings-grid {
+  background: #f7f9fc;
+  padding: 0;
+}
+
+.bookmarks-job-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+}
+
+.no-jobs {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #64748b;
+  font-size: 1.1rem;
+  grid-column: 1 / -1;
+}
+
+/* Responsive Design */
+@media (max-width: 900px) {
+  .main-content-area {
+    padding: 20px;
+  }
+  
+  .page-title {
+    font-size: 22px;
+  }
+  
+  .filter-group {
+    padding: 0 1rem;
+  }
+  
+  .bookmarks-job-grid {
+    gap: 16px;
+    padding: 0 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .bookmarks-header {
+    padding: 2rem 1rem;
+  }
+  
+  .bookmarks-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .filter-select,
+  .search-box {
+    flex: 1 1 100%;
+    min-width: auto;
+  }
+  
+  .filter-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .bookmarks-job-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+} 

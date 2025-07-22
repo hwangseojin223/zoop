@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../../components/Navbar';
 import { motion } from 'framer-motion';
+import { useAuth } from '../../../context/AuthContext';
 
 export default function CandidateSettings() {
   const navigate = useNavigate();
@@ -34,13 +35,36 @@ export default function CandidateSettings() {
     marketingEmails: false
   });
 
+  const { authState } = useAuth();
+
   useEffect(() => {
-    // TODO: 실제 데이터 로드 구현
-    // setLoading(true);
-    // setProfileForm(...)
-    // setNotificationSettings(...)
-    // setLoading(false);
-  }, []);
+    // userId가 있으면 사용자 정보 불러오기
+    const fetchProfile = async () => {
+      if (!authState.userId) return;
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/candidates/${authState.userId}`);
+        console.log('profile res:', res);
+        if (res.ok) {
+          const data = await res.json();
+          console.log('profile data:', data);
+          setProfileForm({
+            candidateName: data.candidateName || '',
+            candidateEmail: data.candidateEmail || '',
+            nickname: data.githubLogin || ''
+          });
+        } else {
+          console.log('profile fetch failed:', res.status);
+        }
+      } catch (e) {
+        console.error('profile fetch error:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+    // eslint-disable-next-line
+  }, [authState.userId]);
 
   // 입력 필드 참조를 위한 ref
   const formRef = useRef(null);
@@ -372,10 +396,10 @@ export default function CandidateSettings() {
                   required
                 />
                 <InputField
-                  label="닉네임"
+                  label="아이디"
                   value={profileForm.nickname}
                   onChange={handleNicknameChange}
-                  placeholder="닉네임을 입력하세요"
+                  placeholder="아이디를 입력하세요"
                 />
                 <div style={{ marginTop: '2rem' }}>
                   <SaveButton onClick={handleProfileSave}>내 정보 저장</SaveButton>

@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './IncidentReportPage.css';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from '../api/axios';
-import { useAuth } from '../context/AuthContext';
-import '../pages/info/FaqPage.css';
+import axios from '../../api/axios';
+import { useAuth } from '../../context/AuthContext';
+import './FaqPage.css';
 
 // SVG 아이콘 컴포넌트들
 const MoneyIcon = ({ size = 20, color = '#30C59B' }) => (
@@ -55,15 +55,6 @@ const EditIcon = ({ size = 16, color = '#30C59B' }) => (
   </svg>
 );
 
-const RocketIcon = ({ size = 16, color = '#30C59B' }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
-    <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
-    <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
-    <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
-  </svg>
-);
-
 const ClockIcon = ({ size = 16, color = '#30C59B' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="10"/>
@@ -71,12 +62,8 @@ const ClockIcon = ({ size = 16, color = '#30C59B' }) => (
   </svg>
 );
 
-const CheckIcon = ({ size = 16, color = '#30C59B' }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="20,6 9,17 4,12"/>
-  </svg>
-);
-
+// CheckIcon 컴포넌트 삭제
+// LockKeyIcon 컴포넌트 수정
 const LockKeyIcon = ({ size = 16, color = '#30C59B' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -268,7 +255,7 @@ export default function IncidentReportPage() {
       return (
         <div className="login-status">
           <span className="login-badge">
-            <CheckIcon size={16} color="#30C59B" style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+            <LockKeyIcon size={16} color="#30C59B" style={{ marginRight: '4px', verticalAlign: 'middle' }} />
             로그인됨 ({userTypeText})
           </span>
           <span className="user-email">{authState.loginId}</span>
@@ -365,11 +352,11 @@ export default function IncidentReportPage() {
   // 사용자 유형에 따른 도움말 텍스트
   const getHelpText = () => {
     if (authState.userType === 'candidate') {
-      return <span><CheckIcon size={16} color="#30C59B" style={{ marginRight: '4px', verticalAlign: 'middle' }} />지원자 신고 내용은 검토 후 처리되며, 개인정보는 안전하게 보호됩니다.</span>;
+      return <span>지원자 신고 내용은 검토 후 처리되며, 개인정보는 안전하게 보호됩니다.</span>;
     } else if (authState.userType === 'company') {
-      return <span><CheckIcon size={16} color="#30C59B" style={{ marginRight: '4px', verticalAlign: 'middle' }} />회사 관리자 신고 내용은 검토 후 처리되며, 개인정보는 안전하게 보호됩니다.</span>;
+      return <span>회사 관리자 신고 내용은 검토 후 처리되며, 개인정보는 안전하게 보호됩니다.</span>;
     } else {
-      return <span><CheckIcon size={16} color="#30C59B" style={{ marginRight: '4px', verticalAlign: 'middle' }} />신고 내용은 검토 후 처리되며, 개인정보는 안전하게 보호됩니다.</span>;
+      return <span>신고 내용은 검토 후 처리되며, 개인정보는 안전하게 보호됩니다.</span>;
     }
   };
 
@@ -378,23 +365,32 @@ export default function IncidentReportPage() {
     if (isSubmitting) {
       return <span style={{ display: 'inline-flex', alignItems: 'center' }}><ClockIcon size={16} color="#30C59B" style={{ marginRight: '8px' }} />신고 접수 중...</span>;
     }
-    
     if (authState.userType === 'candidate') {
-      return <span style={{ display: 'inline-flex', alignItems: 'center' }}><RocketIcon size={16} color="#FF5722" style={{ marginRight: '8px' }} />지원자 신고하기</span>;
+      return <span style={{ display: 'inline-flex', alignItems: 'center' }}>지원자 신고하기</span>;
     } else if (authState.userType === 'company') {
-      return <span style={{ display: 'inline-flex', alignItems: 'center' }}><RocketIcon size={16} color="#FF5722" style={{ marginRight: '8px' }} />회사 관리자 신고하기</span>;
+      return <span style={{ display: 'inline-flex', alignItems: 'center' }}>회사 관리자 신고하기</span>;
     } else {
-      return <span style={{ display: 'inline-flex', alignItems: 'center' }}><RocketIcon size={16} color="#FF5722" style={{ marginRight: '8px' }} />신고하기</span>;
+      return <span style={{ display: 'inline-flex', alignItems: 'center' }}>신고하기</span>;
     }
   };
+
+  // navLinks 배열 추가 (FaqPage와 동일)
+  const navLinks = [
+    { label: '자주 묻는 질문', href: '/faq', active: window.location.pathname === '/faq' },
+    { label: '피해사건 신고', href: '/report', active: window.location.pathname === '/report' },
+  ];
 
   return (
     <div className="customer-main-bg">
       <nav className="customer-nav">
-        <div className="customer-nav-logo">피해사건신고</div>
+        <div className="customer-nav-logo" style={{ color: '#30C59B', cursor: 'pointer' }} onClick={() => window.location.href = '/support'}>고객센터</div>
         <ul className="customer-nav-links">
-          <li><a href="/support">고객센터</a></li>
-          <li><a href="/faq">자주묻는질문</a></li>
+          {navLinks.map(link => (
+            <li key={link.label} className={link.active ? 'active' : ''}>
+              <a href={link.href}>{link.label}</a>
+            </li>
+          ))}
+          <li><a href="/">HOME</a></li>
         </ul>
       </nav>
       <main className="faq-main-content">

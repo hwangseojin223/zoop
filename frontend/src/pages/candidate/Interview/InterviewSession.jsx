@@ -13,6 +13,7 @@ const InterviewSession = () => {
   const streamRef = useRef(null);
   const recorderRef = useRef(null);
   const chunksRef = useRef([]);
+  const speechRef = useRef(null);
 
   const [questions, setQuestions] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -21,6 +22,41 @@ const InterviewSession = () => {
   const [recording, setRecording] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  // TTS 초기화
+  useEffect(() => {
+    if ('speechSynthesis' in window) {
+      speechRef.current = window.speechSynthesis;
+    }
+  }, []);
+
+  // TTS로 질문 읽기
+  const speakQuestion = (text) => {
+    if (!speechRef.current || !text) return;
+    
+    // 이전 음성 중지
+    speechRef.current.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ko-KR';
+    utterance.rate = 0.9; // 속도 조절 (0.1 ~ 10)
+    utterance.pitch = 1; // 음높이 조절 (0 ~ 2)
+    utterance.volume = 1; // 볼륨 (0 ~ 1)
+    
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    
+    speechRef.current.speak(utterance);
+  };
+
+  // 질문 다시 듣기
+  const replayQuestion = () => {
+    if (questions[currentIdx]) {
+      speakQuestion(questions[currentIdx]);
+    }
+  };
 
   // 질문 가져오기
   useEffect(() => {
@@ -43,6 +79,18 @@ const InterviewSession = () => {
       })
       .catch(e => setError(e.message));
   }, [scheduleId]);
+
+  // 질문 변경 시 TTS 재생
+  useEffect(() => {
+    if (questions[currentIdx] && phase === 'think') {
+      // 1초 후에 질문 읽기 (사용자가 준비할 시간)
+      const timer = setTimeout(() => {
+        speakQuestion(questions[currentIdx]);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [currentIdx, phase, questions]);
 
   // 카메라 프리뷰 연결
   useEffect(() => {
@@ -170,10 +218,45 @@ const InterviewSession = () => {
             </div>
             <div style={{ fontSize: 14, color: '#888', textAlign: 'right' }}>{questions.length ? `${currentIdx+1} / ${questions.length}` : ''}</div>
           </div>
+          
           {/* 질문 */}
           <div style={{ fontWeight: 700, fontSize: 22, marginBottom: 18, color: '#222', textAlign: 'center', minHeight: 48 }}>
             {questions[currentIdx] || '질문을 불러오는 중...'}
           </div>
+          
+          {/* TTS 컨트롤 */}
+          {phase === 'think' && questions[currentIdx] && (
+            <div style={{ marginBottom: 18 }}>
+              <button
+                onClick={replayQuestion}
+                disabled={isSpeaking}
+                style={{
+                  background: isSpeaking ? '#ccc' : '#30C59B',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '20px',
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: isSpeaking ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                {isSpeaking ? (
+                  <>
+                    <span>🔊</span> 읽는 중...
+                  </>
+                ) : (
+                  <>
+                    <span>🔊</span> 질문 다시 듣기
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+          
           {/* 타이머/상태 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 18 }}>
             {phase !== 'done' && (
