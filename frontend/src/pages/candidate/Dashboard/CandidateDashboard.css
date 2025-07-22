@@ -21,13 +21,15 @@
 
 /* --- Styles previously from MainContent.css start here --- */
 
-.page-title {
-  font-size: 26px;
-  color: #333;
-  margin-bottom: 25px;
-  font-weight: bold;
+.dashboard-page .page-title {
+  font-size: 24px !important;
+  color: #222 !important;
+  margin-bottom: 25px !important;
+  font-weight: 700 !important;
   margin-left: 0 !important;
   text-align: left !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.5px !important;
 }
 
 /* Info Box */

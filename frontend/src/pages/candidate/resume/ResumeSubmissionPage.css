@@ -8,7 +8,7 @@
   display: flex;
 }
 
-.main-content-area {
+.resume-submission-page .main-content-area {
   flex: 1;
   margin-left: 260px;
   padding: 8px 20px 20px 8px;
@@ -17,7 +17,7 @@
   display: block;
 }
 
-.page-title {
+.resume-submission-page .page-title {
   font-size: 2rem !important;
   font-weight: 700 !important;
   color: #1e293b !important;
