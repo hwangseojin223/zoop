@@ -48,19 +48,52 @@ export default function Index() {
     }
   }, []);
 
-  // subtitle fade-in
+  // subtitle fade-in - 확실한 스크롤 효과
   useEffect(() => {
-    const handleScroll = () => {
+    const checkVisibility = () => {
       const subtitle = document.getElementById('subtitle-section');
       if (!subtitle) return;
-      const top = subtitle.getBoundingClientRect().top;
+      
+      const rect = subtitle.getBoundingClientRect();
       const windowHeight = window.innerHeight;
-      if (top < windowHeight - 100) {
+      
+      // 화면의 80% 지점에 도달하면 나타남
+      const triggerPoint = windowHeight * 0.8;
+      const isVisible = rect.top < triggerPoint;
+      
+      console.log('서브타이틀 체크:', {
+        top: rect.top,
+        windowHeight,
+        triggerPoint,
+        isVisible
+      });
+      
+      if (isVisible) {
         subtitle.classList.add('visible');
+        console.log('✅ 서브타이틀 visible 클래스 추가됨');
       }
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    // 스크롤 이벤트 리스너
+    const handleScroll = () => {
+      requestAnimationFrame(checkVisibility);
+    };
+
+    // 이벤트 리스너 등록
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // 초기 체크 (페이지 로드 후)
+    const initialCheck = () => {
+      setTimeout(checkVisibility, 100);
+      setTimeout(checkVisibility, 500);
+      setTimeout(checkVisibility, 1000);
+    };
+    
+    initialCheck();
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
   // 항상 일정 간격/개수로 파장 렌더링
