@@ -377,8 +377,11 @@ function InterviewSchedulerModal({ isOpen, onClose, onSchedule, postId, candidat
   return (
     <div className="modal-overlay" onClick={handleClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <img src={process.env.PUBLIC_URL + '/icons/interview.svg'} alt="interview" style={{ width: 28, height: 28, marginRight: 8 }} />
+        <div className="modal-header" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }}>
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <path d="M16 2v4M8 2v4M3 10h18"/>
+          </svg>
           <span style={{ fontWeight: 600, fontSize: 20, color: '#333' }}>면접 일정 정하기</span>
           <button 
             className="close-button" 
@@ -393,30 +396,32 @@ function InterviewSchedulerModal({ isOpen, onClose, onSchedule, postId, candidat
         <form onSubmit={handleSubmit} className="scheduler-form">
           {/* 공고 정보 및 면접 가능 기간 표시 */}
           {jobPosting && (
-            <div className="job-info-section">
-              <div className="job-info-card">
-                <h4 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <img src={process.env.PUBLIC_URL + '/icons/interview.svg'} alt="interview" style={{ width: 20, height: 20, verticalAlign: 'middle' }} />
-                  {jobPosting.postTitle}
-                </h4>
-                <p className="company-name">{jobPosting.companyName}</p>
-                <div className="interview-period-info">
-                  <p>
-                    <svg className="info-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M8 2V5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M16 2V5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    면접 가능 기간: 오늘 ~ {maxInterviewDate ? maxInterviewDate.toLocaleDateString('ko-KR') : '공고 마감일 + 1주일'}
-                  </p>
-                  <p>
-                    <svg className="info-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                      <polyline points="12,6 12,12 16,14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    공고 마감일: {jobPosting.postExpiryDate ? new Date(jobPosting.postExpiryDate).toLocaleDateString('ko-KR') : '정보 없음'}
-                  </p>
+            <div className="job-info-section" style={{ marginTop: 0, marginBottom: 10 }}>
+              <div className="job-info-card" style={{ background: '#f8fafc', border: '1.5px solid #e0e7ef', borderRadius: 12, padding: 16, marginBottom: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                  <img src={process.env.PUBLIC_URL + '/icons/interview.svg'} alt="interview" style={{ width: 24, height: 24 }} />
+                  <span style={{ fontWeight: 700, fontSize: 18, color: '#222' }}>{jobPosting.postTitle}</span>
+                  <span style={{ fontWeight: 500, fontSize: 15, color: '#222', marginLeft: 8 }}>{jobPosting.companyName}</span>
+                </div>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 6 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#e0f2fe', color: '#0284c7', borderRadius: 6, padding: '2px 10px', fontSize: 14, fontWeight: 600 }}>
+                    <svg width="16" height="16" fill="none" stroke="#0284c7" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zm0 13v7m0 0H7m5 0h5"/></svg>
+                    {jobPosting.postProgrammingLanguage || '기술스택 미지정'}
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#e0fbe6', color: '#22c55e', borderRadius: 6, padding: '2px 10px', fontSize: 14, fontWeight: 600 }}>
+                    <svg width="16" height="16" fill="none" stroke="#22c55e" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 7-8 12-8 12S4 17 4 10a8 8 0 0 1 8-8z"/></svg>
+                    {jobPosting.postLocation || '위치 미지정'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 4 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#388e3c', fontWeight: 600, fontSize: 15 }}>
+                    <svg width="18" height="18" fill="none" stroke="#388e3c" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                    면접 가능 기간: <span style={{ color: '#222', fontWeight: 700, marginLeft: 2 }}>오늘 ~ {maxInterviewDate ? maxInterviewDate.toLocaleDateString('ko-KR') : '공고 마감일 + 1주일'}</span>
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#b91c1c', fontWeight: 600, fontSize: 15 }}>
+                    <svg width="18" height="18" fill="none" stroke="#b91c1c" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+                    공고 마감일: <span style={{ color: '#222', fontWeight: 700, marginLeft: 2 }}>{jobPosting.postExpiryDate ? new Date(jobPosting.postExpiryDate).toLocaleDateString('ko-KR') : '정보 없음'}</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -426,6 +431,9 @@ function InterviewSchedulerModal({ isOpen, onClose, onSchedule, postId, candidat
             {/* 왼쪽: 달력 */}
             <div className="calendar-section">
               <h3>날짜 선택</h3>
+              <div style={{ margin: '8px 0 16px 0', color: '#388e3c', fontSize: '15px', fontWeight: 500 }}>
+                면접은 선택하신 날짜로부터 1주일 이내에 진행하실 수 있습니다.
+              </div>
               <div className="calendar-container">
                 <div className="calendar-header">
                   <button 
@@ -471,8 +479,7 @@ function InterviewSchedulerModal({ isOpen, onClose, onSchedule, postId, candidat
               <h3>시간 선택</h3>
               <div className="time-slots-scroll">
                 {timeSlots.map((time) => {
-                  const isDisabled = isTimeDisabled(time);
-                  
+                  const isDisabled = !selectedDate || isTimeDisabled(time);
                   return (
                     <button
                       key={`${time}-${currentDate.getTime()}`}
@@ -521,15 +528,6 @@ function InterviewSchedulerModal({ isOpen, onClose, onSchedule, postId, candidat
           )}
           
           <div className="modal-actions" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '20px' }}>
-            <button 
-              type="button" 
-              onClick={handleClose}
-              className="cancel-button"
-              disabled={isSubmitting}
-              style={{ height: '48px', fontSize: '16px', fontWeight: 600, minWidth: '140px' }}
-            >
-              취소
-            </button>
             <button 
               type="submit" 
               className="submit-button"

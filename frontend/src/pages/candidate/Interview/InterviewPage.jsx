@@ -188,6 +188,29 @@ function InterviewPage() {
             <button
               onClick={handleStartInterview}
               className="go-to-interview-button"
+              style={{
+                borderRadius: '999px',
+                padding: '16px 40px',
+                fontSize: 18,
+                fontWeight: 700,
+                background: '#30C59B',
+                color: 'white',
+                border: 'none',
+                boxShadow: '0 4px 16px #30c59b22',
+                cursor: 'pointer',
+                transition: 'background 0.18s, box-shadow 0.18s, transform 0.14s',
+                marginTop: 8
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = '#22c55e';
+                e.currentTarget.style.boxShadow = '0 8px 24px #22c55e33';
+                e.currentTarget.style.transform = 'translateY(-2px) scale(1.04)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = '#30C59B';
+                e.currentTarget.style.boxShadow = '0 4px 16px #30c59b22';
+                e.currentTarget.style.transform = 'none';
+              }}
             >
               AI 면접 시작하기
             </button>

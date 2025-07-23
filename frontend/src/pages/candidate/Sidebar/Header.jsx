@@ -62,7 +62,16 @@ function Header() {
 
   // 마이페이지, 설정 등 클릭 핸들러 (예시)
   const handleMenuItemClick = (path) => {
-    navigate(path);
+    if (path === '/mypage') {
+      console.log('DEBUG userType:', authState?.userType); // TEMP DEBUG
+      if (authState?.userType === 'candidate') {
+        navigate('/candidate/dashboard');
+      } else {
+        navigate('/mypage');
+      }
+    } else {
+      navigate(path);
+    }
     setIsDropdownOpen(false); // 메뉴 클릭 후 드롭다운 닫기
   };
 
@@ -89,7 +98,7 @@ function Header() {
           {/* 드롭다운 메뉴 (isDropdownOpen 상태에 따라 표시) */}
           {isDropdownOpen && (
             <div className="dropdown-menu">
-              <div className="dropdown-item" onClick={() => handleMenuItemClick('/candidate/dashboard')}>마이페이지</div>
+              <div className="dropdown-item" onClick={() => handleMenuItemClick('/mypage')}>마이페이지</div>
               <div className="dropdown-item" onClick={() => handleMenuItemClick('/settings')}>설정</div>
               {authState?.token && (
                 <div className="dropdown-item logout-dropdown-item" onClick={handleLogout}>

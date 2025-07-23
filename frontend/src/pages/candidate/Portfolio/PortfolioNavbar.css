@@ -11,6 +11,7 @@
 .portfolio-navbar-right {
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
 .portfolio-navbar-icon {
@@ -39,7 +40,7 @@
 /* 알림 컨테이너 스타일 */
 .notification-container {
   position: relative;
-  margin-right: 20px;
+  margin-right: 0;
 }
 
 .notification-icon {
