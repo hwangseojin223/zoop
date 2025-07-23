@@ -1562,49 +1562,19 @@ const TossCandidateCard = ({ candidate, analysisResult, selected, onClick, openA
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start',
         paddingTop: '1.5rem', paddingBottom: '1.2rem',
-        width: 340, minWidth: 340, /* height: 470,  <-- removed! */
+        width: 340, minWidth: 340,
         overflow: 'visible',
       }}
     >
-      {/* Stronger, taller white highlight at the top */}
-      <div style={{
-        position: 'absolute',
-        top: 0, left: 0, right: 0, height: '62px',
-        borderTopLeftRadius: '28px', borderTopRightRadius: '28px',
-        background: 'linear-gradient(180deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.08) 100%)',
-        pointerEvents: 'none',
-        zIndex: 2
-      }} />
-      {/* Larger inner curved white reflection */}
-      <div style={{
-        position: 'absolute',
-        top: 44, left: 14, right: 14, height: '44px',
-        borderRadius: '50%',
-        background: 'linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.01) 100%)',
-        pointerEvents: 'none',
-        zIndex: 2
-      }} />
-      {/* Soft green glow at the bottom */}
-      <div style={{
-        position: 'absolute',
-        left: 0, right: 0, bottom: 0, height: '38px',
-        borderBottomLeftRadius: '28px', borderBottomRightRadius: '28px',
-        background: 'radial-gradient(ellipse at 50% 100%, rgba(48,197,155,0.13) 0%, transparent 80%)',
-        pointerEvents: 'none',
-        zIndex: 2
-      }} />
-      {/* Radar chart at top center, never cut off */}
-      <div style={{ width: 90, margin: '0 auto 1.1rem auto', display: 'block', position: 'relative' }}>
-        <RadarChartSVG scores={isAllZero ? demoScores : radarScores} size={90} totalScore={isAllZero ? 88 : displayScore} showLabels={false} showScores={false} />
-      </div>
+      {/* 프로필 사진을 카드 맨 위 중앙에 크게 배치 */}
+      {avatarUrl && <Avatar src={avatarUrl} alt={login} style={{ margin: '0 auto 1.1rem auto', display: 'block' }} />}
+      {/* 이름(깃허브ID) 중앙 정렬로 표시 */}
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', flex: '1 1 0%', minHeight: 0 }}>
-        <TopRow style={{ marginBottom: '0.5rem', width: '100%' }}>
-          {avatarUrl && <SmallAvatar src={avatarUrl} alt={login} />}
-          <NameText style={{ color: '#263249', fontSize: '1.18rem', fontWeight: 800 }}>{login || <span>&nbsp;</span>}</NameText>
-        </TopRow>
-        <div style={{ display: 'flex', gap: '0.7rem', marginBottom: '0.5rem', minHeight: '1.2em', width: '100%' }}>
-          <TossMetaTag style={{ color: '#30c59b', background: 'rgba(48,197,155,0.08)', fontSize: '0.99rem', fontWeight: 600 }}>{email ? '이메일 있음' : <span style={{opacity:0.4}}>이메일 없음</span>}</TossMetaTag>
+        <div style={{ marginBottom: '0.7rem', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <span style={{ color: '#263249', fontSize: '1.18rem', fontWeight: 800, textAlign: 'center' }}>{login || <span>&nbsp;</span>}</span>
         </div>
+        {/* TossMetaTag(이메일 있음/없음)는 완전히 제거 */}
+        {/* ... 이하 기존 정보(점수, 기술스택 등) ... */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.18rem 0.7rem', margin: '0.3rem 0 0.5rem 0', width: '100%' }}>
           {radarLabels.map(label => (
             componentScores[label] !== undefined ? (
