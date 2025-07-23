@@ -214,24 +214,25 @@ const Navbar = ({ onLangChange, hideAuth }) => {
     }
   };
 
-  // 주기적으로 알림 개수 새로고침 (30초마다)
+  // 알림 개수 주기적 업데이트 (로그인한 모든 회원)
   useEffect(() => {
-    if (!authState.userId) return;
-    
-    // 초기 로드
-    fetchUnreadCount();
-    
-    // 30초마다 새로고침
-    const interval = setInterval(() => {
+    if (authState.token && authState.userId) {
       fetchUnreadCount();
-    }, 30000);
-    
-    return () => clearInterval(interval);
-  }, [authState.userId, authState.userType]);
+      
+      // 30초마다 읽지 않은 알림 개수 업데이트
+      const interval = setInterval(fetchUnreadCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [authState.token, authState.userId]);
 
-  // CSS 애니메이션 스타일 추가
+  // CSS 애니메이션 스타일 추가 (한 번만)
   useEffect(() => {
+    // 이미 스타일이 있는지 확인
+    const existingStyle = document.getElementById('navbar-pulse-animation');
+    if (existingStyle) return;
+    
     const style = document.createElement('style');
+    style.id = 'navbar-pulse-animation';
     style.textContent = `
       @keyframes pulse {
         0%, 100% {
@@ -247,7 +248,10 @@ const Navbar = ({ onLangChange, hideAuth }) => {
     document.head.appendChild(style);
     
     return () => {
-      document.head.removeChild(style);
+      const styleToRemove = document.getElementById('navbar-pulse-animation');
+      if (styleToRemove) {
+        document.head.removeChild(styleToRemove);
+      }
     };
   }, []);
 
@@ -532,6 +536,13 @@ const Navbar = ({ onLangChange, hideAuth }) => {
       console.error('모든 알림 읽음 처리 실패:', error);
     }
   };
+
+  // 페이지 이동 시 알림 상태 초기화
+  useEffect(() => {
+    setIsNotificationOpen(false);
+    setNotifications([]);
+    setLoadingNotifications(false);
+  }, [location.pathname]);
 
   // 알림 개수 주기적 업데이트 (로그인한 모든 회원)
   useEffect(() => {
