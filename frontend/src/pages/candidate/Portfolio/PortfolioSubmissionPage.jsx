@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import Header from '../Sidebar/Header';
+import PortfolioNavbar from './PortfolioNavbar';
 import { Sidebar } from '../Sidebar';
 import './PortfolioSubmissionPage.css';
 
@@ -315,7 +315,7 @@ function PortfolioSubmissionPage() {
   // 4. 정상 UI
   return (
     <div className="portfolio-submission-page">
-      <Header />
+      <PortfolioNavbar />
       <div className="content-row">
         <Sidebar />
         <div className="main-content-area">

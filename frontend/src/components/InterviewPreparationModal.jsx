@@ -53,6 +53,40 @@ const InterviewPreparationModal = ({ isOpen, onClose, postId, candidateId }) => 
   // 모달이 닫혀있으면 렌더링하지 않음
   if (!isOpen) return null;
 
+  // SVG ICONS
+  const LightbulbIcon = () => (
+    <svg width="22" height="22" fill="none" stroke="#fbbf24" strokeWidth="2" viewBox="0 0 24 24" style={{ display: 'block' }}>
+      <path d="M9 18h6" />
+      <path d="M10 22h4" />
+      <path d="M12 2a7 7 0 0 0-4 12c.3.3.5.7.5 1.1V17a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1v-1.9c0-.4.2-.8.5-1.1A7 7 0 0 0 12 2z" />
+    </svg>
+  );
+  const AlertIcon = () => (
+    <svg width="20" height="20" fill="none" stroke="#fbbf24" strokeWidth="2" viewBox="0 0 24 24" style={{ display: 'block' }}>
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+  );
+  const CheckCircleIcon = () => (
+    <svg width="20" height="20" fill="none" stroke="#22c55e" strokeWidth="2" viewBox="0 0 24 24" style={{ display: 'block' }}>
+      <circle cx="12" cy="12" r="10"/>
+      <polyline points="9 12 12 15 17 10"/>
+    </svg>
+  );
+  const ThumbsUpIcon = () => (
+    <svg width="20" height="20" fill="none" stroke="#fbbf24" strokeWidth="2" viewBox="0 0 24 24" style={{ display: 'block' }}>
+      <path d="M14 9V5a3 3 0 0 0-6 0v4"/>
+      <path d="M5 15h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2z"/>
+    </svg>
+  );
+  const CloseIcon = () => (
+    <svg width="22" height="22" fill="none" stroke="#fff" strokeWidth="2.5" viewBox="0 0 24 24" style={{ display: 'block' }}>
+      <line x1="6" y1="6" x2="18" y2="18" />
+      <line x1="18" y1="6" x2="6" y2="18" />
+    </svg>
+  );
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* 배경 오버레이 */}
@@ -61,33 +95,36 @@ const InterviewPreparationModal = ({ isOpen, onClose, postId, candidateId }) => 
         onClick={onClose}
       ></div>
       
-      {/* 모달 컨테이너 */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all">
+      {/* Modal container */}
+      <div className="flex min-h-full items-center justify-center p-4" style={{ animation: 'fadeIn 0.3s', borderRadius: 28 }}>
+        <div className="relative w-full max-w-2xl transform overflow-hidden rounded-3xl bg-white shadow-2xl transition-all" style={{ border: '1.5px solid #fbbf24', boxShadow: '0 8px 32px #fbbf2422', borderRadius: 28, padding: 0 }}>
           
           {/* 헤더 */}
-          <div className="bg-gradient-to-r from-yellow-500 to-amber-500 px-6 py-4">
+          <div className="bg-gradient-to-r from-yellow-400 to-amber-400 px-8 py-5" style={{ borderTopLeftRadius: 28, borderTopRightRadius: 28 }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
+                {/* 헤더 아이콘 */}
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white bg-opacity-20">
-                  <span className="text-xl">💡</span>
+                  <LightbulbIcon />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white">면접 예상질문</h3>
                   <p className="text-yellow-100 text-sm">면접 준비를 위한 맞춤형 질문들</p>
                 </div>
               </div>
+              {/* 닫기 버튼 */}
               <button
                 onClick={onClose}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white bg-opacity-20 text-white hover:bg-opacity-30 transition-colors"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white bg-opacity-30 text-white hover:bg-opacity-50 transition-colors"
+                style={{ fontWeight: 700, fontSize: 22 }}
               >
-                <span className="text-lg">×</span>
+                <CloseIcon />
               </button>
             </div>
           </div>
 
           {/* 컨텐츠 */}
-          <div className="max-h-96 overflow-y-auto px-6 py-4">
+          <div className="max-h-96 overflow-y-auto px-8 py-6" style={{ background: '#fff', borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
             {loading ? (
               // 로딩 상태
               <div className="flex flex-col items-center justify-center py-12">
@@ -101,7 +138,8 @@ const InterviewPreparationModal = ({ isOpen, onClose, postId, candidateId }) => 
               // 에러 상태 (기본 질문 표시)
               <div className="space-y-4">
                 <div className="flex items-center space-x-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                  <span className="text-amber-500">⚠️</span>
+                  {/* 에러 상태 아이콘 */}
+                  <span><AlertIcon /></span>
                   <p className="text-amber-700 text-sm">
                     맞춤 질문 생성에 실패했습니다. 일반적인 면접 질문을 제공합니다.
                   </p>
@@ -110,9 +148,10 @@ const InterviewPreparationModal = ({ isOpen, onClose, postId, candidateId }) => 
                   {questions.map((question, index) => (
                     <div
                       key={index}
-                      className="flex items-start space-x-3 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors"
+                      className="flex items-start space-x-3 p-4 bg-yellow-50 rounded-2xl border border-yellow-100 hover:bg-yellow-100 transition-all duration-200"
+                      style={{ boxShadow: '0 2px 8px #fbbf2411', cursor: 'pointer' }}
                     >
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-500 text-white font-bold text-sm flex-shrink-0">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-400 text-white font-bold text-sm flex-shrink-0">
                         {index + 1}
                       </div>
                       <p className="text-gray-800 leading-relaxed flex-1">{question}</p>
@@ -124,7 +163,8 @@ const InterviewPreparationModal = ({ isOpen, onClose, postId, candidateId }) => 
               // 정상 상태
               <div className="space-y-4">
                 <div className="flex items-center space-x-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <span className="text-yellow-500">✅</span>
+                  {/* 정상 상태 아이콘 */}
+                  <span><CheckCircleIcon /></span>
                   <p className="text-yellow-700 text-sm">
                     포지션과 경력에 맞는 맞춤형 질문이 생성되었습니다.
                   </p>
@@ -133,9 +173,10 @@ const InterviewPreparationModal = ({ isOpen, onClose, postId, candidateId }) => 
                   {questions.map((question, index) => (
                     <div
                       key={index}
-                      className="flex items-start space-x-3 p-4 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl border border-yellow-200 hover:from-yellow-100 hover:to-amber-100 transition-all duration-200"
+                      className="flex items-start space-x-3 p-4 bg-yellow-50 rounded-2xl border border-yellow-100 hover:bg-yellow-100 transition-all duration-200"
+                      style={{ boxShadow: '0 2px 8px #fbbf2411', cursor: 'pointer' }}
                     >
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-yellow-500 to-amber-500 text-white font-bold text-sm flex-shrink-0">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-400 text-white font-bold text-sm flex-shrink-0">
                         {index + 1}
                       </div>
                       <p className="text-gray-800 leading-relaxed flex-1">{question}</p>
@@ -147,15 +188,16 @@ const InterviewPreparationModal = ({ isOpen, onClose, postId, candidateId }) => 
           </div>
 
           {/* 푸터 */}
-          <div className="bg-gray-50 px-6 py-4">
+          <div className="bg-gray-50 px-8 py-5" style={{ borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <span>💪</span>
+                {/* 푸터 아이콘 */}
+                <span><ThumbsUpIcon /></span>
                 <span>면접 준비 화이팅!</span>
               </div>
               <button
                 onClick={onClose}
-                className="rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 px-6 py-2 text-sm font-medium text-white hover:from-yellow-600 hover:to-amber-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition-all duration-200"
+                className="rounded-full bg-gradient-to-r from-yellow-400 to-amber-400 px-7 py-2 text-sm font-bold text-white hover:from-yellow-500 hover:to-amber-500 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 transition-all duration-200"
               >
                 닫기
               </button>
