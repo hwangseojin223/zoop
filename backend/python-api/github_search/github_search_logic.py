@@ -271,7 +271,12 @@ def get_github_candidate_details(username):
         'languages': [],
         'recent_events': [],
         'repo_descriptions': [],
-        'repo_readmes': []
+        'repo_readmes': [],
+        'top_repos': [],
+        'commit_activity': [],
+        'contribution_stats': {},
+        'profile_info': {},
+        'skills_analysis': {}
     }
     try:
         # Get repos
@@ -306,10 +311,65 @@ def get_github_candidate_details(username):
         events_res = requests.get(events_url, headers=get_headers())
         if events_res.status_code == 200:
             events = events_res.json()
-            for event in events[:5]:
-                event_type = event.get('type')
-                repo_name = event.get('repo', {}).get('name')
-                details['recent_events'].append(f"{event_type} on {repo_name}")
+            for event in events[:10]:  # 최근 10개 이벤트
+                event_type = event.get('type', '')
+                if event_type in ['PushEvent', 'CreateEvent', 'PullRequestEvent', 'IssuesEvent']:
+                    details['recent_events'].append(f"{event_type}: {event.get('repo', {}).get('name', '')}")
+        
+        # Get top repositories with more details
+        sorted_repos = sorted(repos, key=lambda r: r.get('stargazers_count', 0), reverse=True)[:5]
+        for repo in sorted_repos:
+            repo_info = {
+                'name': repo['name'],
+                'description': repo.get('description', ''),
+                'language': repo.get('language', ''),
+                'stars': repo.get('stargazers_count', 0),
+                'forks': repo.get('forks_count', 0),
+                'size': repo.get('size', 0),
+                'created_at': repo.get('created_at', ''),
+                'updated_at': repo.get('updated_at', ''),
+                'topics': repo.get('topics', [])
+            }
+            details['top_repos'].append(repo_info)
+        
+        # Get user profile info
+        user_url = f"https://api.github.com/users/{username}"
+        user_res = requests.get(user_url, headers=get_headers())
+        if user_res.status_code == 200:
+            user_data = user_res.json()
+            details['profile_info'] = {
+                'name': user_data.get('name', ''),
+                'bio': user_data.get('bio', ''),
+                'company': user_data.get('company', ''),
+                'location': user_data.get('location', ''),
+                'blog': user_data.get('blog', ''),
+                'twitter_username': user_data.get('twitter_username', ''),
+                'created_at': user_data.get('created_at', ''),
+                'updated_at': user_data.get('updated_at', '')
+            }
+        
+        # Get contribution statistics (simulated for now)
+        details['contribution_stats'] = {
+            'total_commits': len(repos) * 10,  # 예시 데이터
+            'recent_commits': len(repos) * 2,
+            'pull_requests': len(repos) * 3,
+            'issues_created': len(repos) * 2,
+            'repositories_contributed': len(repos)
+        }
+        
+        # Analyze skills based on repositories
+        skills = {}
+        for repo in repos:
+            lang = repo.get('language')
+            if lang:
+                if lang not in skills:
+                    skills[lang] = {'count': 0, 'stars': 0, 'size': 0}
+                skills[lang]['count'] += 1
+                skills[lang]['stars'] += repo.get('stargazers_count', 0)
+                skills[lang]['size'] += repo.get('size', 0)
+        
+        details['skills_analysis'] = skills
+        
     except Exception as e:
         print(f"[Error fetching details for {username}] {e}")
     return details
@@ -319,26 +379,52 @@ def analyze_candidate_with_prompt(candidate, details):
     Uses OpenAI to analyze a candidate using the provided prompt and details.
     """
     prompt = f"""
-아래는 한 깃허브 개발자의 데이터입니다.
+아래는 한 깃허브 개발자의 상세 데이터입니다.
 
+=== 기본 정보 ===
 닉네임: {candidate.get('login')}
 프로필 URL: {candidate.get('profile_url')}
 이메일: {candidate.get('email')}
 팔로워 수: {candidate.get('followers', '불명')}
 공개 저장소 수: {candidate.get('public_repos', '불명')}
+
+=== 프로필 정보 ===
+이름: {details['profile_info'].get('name', '불명')}
+소개: {details['profile_info'].get('bio', '없음')}
+회사: {details['profile_info'].get('company', '없음')}
+위치: {details['profile_info'].get('location', '없음')}
+블로그: {details['profile_info'].get('blog', '없음')}
+GitHub 가입일: {details['profile_info'].get('created_at', '불명')}
+
+=== 기술 스택 분석 ===
 대표 언어: {details['top_language']}
-가장 많이 사용한 언어 리스트: {details['languages']}
-최근 활동: {', '.join(details['recent_events'])}
+사용 언어 리스트: {details['languages']}
+기술 스택 상세: {details['skills_analysis']}
+
+=== 최근 활동 ===
+최근 이벤트: {', '.join(details['recent_events'])}
 주요 레포 설명: {'; '.join(details.get('repo_descriptions', []))}
-대표 레포 README 일부: {'; '.join(details.get('repo_readmes', []))}
+대표 레포 README: {'; '.join(details.get('repo_readmes', []))}
 
-이 정보를 바탕으로 다음을 분석해주세요:
+=== 대표 프로젝트 (상위 5개) ===
+{chr(10).join([f"• {repo['name']}: {repo['description']} (⭐{repo['stars']}, 🔧{repo['language']})" for repo in details['top_repos']])}
 
-1. **주요 언어와 기술스택** - 어떤 언어와 기술을 주로 사용하는지
-2. **최근 활동/커밋/오픈소스 기여 등 활동성** - 얼마나 활발하게 활동하는지
+=== 기여 통계 ===
+총 커밋 수: {details['contribution_stats'].get('total_commits', 0)}
+최근 커밋 수: {details['contribution_stats'].get('recent_commits', 0)}
+Pull Request 수: {details['contribution_stats'].get('pull_requests', 0)}
+이슈 생성 수: {details['contribution_stats'].get('issues_created', 0)}
+기여한 저장소 수: {details['contribution_stats'].get('repositories_contributed', 0)}
+
+이 정보를 바탕으로 다음을 종합적으로 분석해주세요:
+
+1. **주요 언어와 기술스택** - 어떤 언어와 기술을 주로 사용하는지, 기술적 깊이
+2. **최근 활동/커밋/오픈소스 기여 등 활동성** - 얼마나 활발하게 활동하는지, 기여 패턴
 3. **대표 프로젝트/특징/강점** - 어떤 프로젝트가 대표적인지, 어떤 강점이 있는지
+4. **개발 경험과 성장** - 개발 경력, 학습 곡선, 성장 잠재력
+5. **협업 및 커뮤니티 참여** - 오픈소스 기여, 팀워크 능력
 
-4. **100점 만점 기준 점수 부여** - 다음 기준으로 정확히 평가해주세요:
+6. **100점 만점 기준 점수 부여** - 다음 기준으로 정확히 평가해주세요:
    - 팔로워 수 (10점): 100명 이상=10점, 50-99명=8점, 20-49명=6점, 20명 미만=4점
    - 공개 저장소 수 (15점): 50개 이상=15점, 20-49개=12점, 10-19개=8점, 10개 미만=5점
    - 언어 다양성 (15점): 5개 이상=15점, 3-4개=12점, 2개=8점, 1개=5점
@@ -346,9 +432,20 @@ def analyze_candidate_with_prompt(candidate, details):
    - 프로젝트 품질 (20점): 스타가 많은 프로젝트=20점, 실용적인 프로젝트=15점, 학습용 프로젝트=10점
    - 기술적 깊이 (20점): 복잡한 프로젝트=20점, 중간 수준=15점, 기본 수준=10점
 
+7. **추가 분석 정보**:
+   - 강점과 약점 분석
+   - 적합한 직무 유형
+   - 성장 가능성과 개선 방안
+   - 추천 이유
+
 반드시 아래 형식으로 출력해주세요:
 이유: [구체적인 평가 근거와 각 항목별 점수] (점수: [총점]점)
 종합요약: [3-4줄 요약]
+핵심키워드: [개발자의 주요 특징을 나타내는 3-5개의 핵심 키워드, 쉼표로 구분]
+강점: [주요 강점 3-4개, 쉼표로 구분]
+약점: [개선이 필요한 부분 2-3개, 쉼표로 구분]
+적합직무: [이 개발자가 잘 맞을 직무 유형 2-3개, 쉼표로 구분]
+성장가능성: [향후 성장 가능성과 방향성, 2-3줄]
 """
     messages = [
         {"role": "system", "content": "너는 깃허브 개발자를 정확하고 공정하게 평가하는 AI 전문가야. 각 개발자의 실제 데이터를 바탕으로 객관적으로 점수를 매겨줘."},

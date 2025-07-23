@@ -105,11 +105,19 @@ const Navbar = ({ onLangChange, hideAuth }) => {
     setMenuOpen(false);
     // 로고 클릭 플래그 설정
     sessionStorage.setItem('logoClick', 'true');
-    // 현재 위치가 홈페이지여도 확실히 홈페이지로 이동
-    if (window.location.pathname === '/') {
-      window.location.href = '/';
+    // 기업 계정이면 기업 대시보드로, 아니면 기존대로 이동
+    if (authState.userType === 'company') {
+      if (window.location.pathname === '/company/dashboard') {
+        window.location.href = '/company/dashboard';
+      } else {
+        navigate('/company/dashboard');
+      }
     } else {
-      navigate('/');
+      if (window.location.pathname === '/') {
+        window.location.href = '/';
+      } else {
+        navigate('/');
+      }
     }
   };
 
@@ -206,24 +214,25 @@ const Navbar = ({ onLangChange, hideAuth }) => {
     }
   };
 
-  // 주기적으로 알림 개수 새로고침 (30초마다)
+  // 알림 개수 주기적 업데이트 (로그인한 모든 회원)
   useEffect(() => {
-    if (!authState.userId) return;
-    
-    // 초기 로드
-    fetchUnreadCount();
-    
-    // 30초마다 새로고침
-    const interval = setInterval(() => {
+    if (authState.token && authState.userId) {
       fetchUnreadCount();
-    }, 30000);
-    
-    return () => clearInterval(interval);
-  }, [authState.userId, authState.userType]);
+      
+      // 30초마다 읽지 않은 알림 개수 업데이트
+      const interval = setInterval(fetchUnreadCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [authState.token, authState.userId]);
 
-  // CSS 애니메이션 스타일 추가
+  // CSS 애니메이션 스타일 추가 (한 번만)
   useEffect(() => {
+    // 이미 스타일이 있는지 확인
+    const existingStyle = document.getElementById('navbar-pulse-animation');
+    if (existingStyle) return;
+    
     const style = document.createElement('style');
+    style.id = 'navbar-pulse-animation';
     style.textContent = `
       @keyframes pulse {
         0%, 100% {
@@ -239,7 +248,10 @@ const Navbar = ({ onLangChange, hideAuth }) => {
     document.head.appendChild(style);
     
     return () => {
-      document.head.removeChild(style);
+      const styleToRemove = document.getElementById('navbar-pulse-animation');
+      if (styleToRemove) {
+        document.head.removeChild(styleToRemove);
+      }
     };
   }, []);
 
@@ -525,6 +537,13 @@ const Navbar = ({ onLangChange, hideAuth }) => {
     }
   };
 
+  // 페이지 이동 시 알림 상태 초기화
+  useEffect(() => {
+    setIsNotificationOpen(false);
+    setNotifications([]);
+    setLoadingNotifications(false);
+  }, [location.pathname]);
+
   // 알림 개수 주기적 업데이트 (로그인한 모든 회원)
   useEffect(() => {
     if (authState.token && authState.userId) {
@@ -543,6 +562,15 @@ const Navbar = ({ onLangChange, hideAuth }) => {
       // 고객센터와 자주 묻는 질문은 새탭에서 열기
       if (path === '/support') {
         window.open(path, '_blank');
+      } else if (path === '/mypage') {
+        // 사용자 타입에 따라 다른 마이페이지로 이동
+        if (authState.userType === 'company') {
+          navigate('/company/dashboard');
+        } else if (authState.userType === 'candidate') {
+          navigate('/candidate/dashboard');
+        } else {
+          navigate('/');
+        }
       } else if (path === '/settings') {
         // 사용자 타입에 따라 다른 설정 페이지로 이동
         if (authState.userType === 'company') {
