@@ -260,33 +260,25 @@ function PortfolioNavbar() {
               className="notification-badge" 
               style={{
                 position: 'absolute',
-                top: '-4px',
-                right: '-4px',
-                width: '16px',
-                height: '16px',
+                top: '-45px',
+                right: '-25px',
+                width: '10px',
+                height: '10px',
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '0.6rem',
-                fontWeight: '600',
+                fontSize: '0.45rem',
+                fontWeight: '700',
                 zIndex: 10,
-                border: 'none',
+                border: '2px solid #ffffff',
                 padding: 0,
-                minWidth: '16px',
-                minHeight: '16px',
+                minWidth: '10px',
+                minHeight: '10px',
                 lineHeight: 1,
                 backgroundColor: '#dc2626',
-                background: '#dc2626',
-                backgroundImage: 'none',
-                backgroundSize: 'auto',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center',
                 color: '#ffffff',
-                filter: 'none',
-                mixBlendMode: 'normal',
-                opacity: 1,
-                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)'
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
               }}
             >
               {unreadCount > 99 ? '99+' : unreadCount}
