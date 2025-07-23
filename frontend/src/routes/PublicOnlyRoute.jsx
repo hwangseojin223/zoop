@@ -1,14 +1,40 @@
 // src/routes/PublicOnlyRoute.jsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function PublicOnlyRoute({ children }) {
   const { authState, isInitialized } = useAuth();
   const location = useLocation();
+  const [chatbotOpen, setChatbotOpen] = useState(false);
 
   // 로고 클릭으로 인한 홈페이지 접근인지 확인
   const isLogoClick = sessionStorage.getItem('logoClick') === 'true';
+  
+  // 챗봇이 열리는 중인지 확인
+  const isChatbotOpening = sessionStorage.getItem('chatbotOpening') === 'true';
+  
+  // 챗봇 상태 확인
+  useEffect(() => {
+    const checkChatbotState = () => {
+      const chatbotBtn = document.querySelector('.chatbot-mint-btn');
+      if (chatbotBtn) {
+        setChatbotOpen(chatbotBtn.classList.contains('open'));
+      }
+    };
+
+    // 초기 상태 확인
+    checkChatbotState();
+
+    // 챗봇 상태 변화 감지
+    const observer = new MutationObserver(checkChatbotState);
+    const chatbotBtn = document.querySelector('.chatbot-mint-btn');
+    if (chatbotBtn) {
+      observer.observe(chatbotBtn, { attributes: true, attributeFilter: ['class'] });
+    }
+
+    return () => observer.disconnect();
+  }, []);
   
   // useEffect를 항상 호출하도록 수정
   useEffect(() => {
@@ -24,6 +50,11 @@ export default function PublicOnlyRoute({ children }) {
 
   // 로고 클릭으로 접근한 경우 항상 홈페이지 표시
   if (isLogoClick) {
+    return children;
+  }
+
+  // 챗봇이 열려있거나 열리는 중이면 리다이렉트하지 않음
+  if (chatbotOpen || isChatbotOpening) {
     return children;
   }
 

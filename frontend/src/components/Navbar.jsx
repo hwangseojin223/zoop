@@ -105,11 +105,19 @@ const Navbar = ({ onLangChange, hideAuth }) => {
     setMenuOpen(false);
     // 로고 클릭 플래그 설정
     sessionStorage.setItem('logoClick', 'true');
-    // 현재 위치가 홈페이지여도 확실히 홈페이지로 이동
-    if (window.location.pathname === '/') {
-      window.location.href = '/';
+    // 기업 계정이면 기업 대시보드로, 아니면 기존대로 이동
+    if (authState.userType === 'company') {
+      if (window.location.pathname === '/company/dashboard') {
+        window.location.href = '/company/dashboard';
+      } else {
+        navigate('/company/dashboard');
+      }
     } else {
-      navigate('/');
+      if (window.location.pathname === '/') {
+        window.location.href = '/';
+      } else {
+        navigate('/');
+      }
     }
   };
 
@@ -543,6 +551,15 @@ const Navbar = ({ onLangChange, hideAuth }) => {
       // 고객센터와 자주 묻는 질문은 새탭에서 열기
       if (path === '/support') {
         window.open(path, '_blank');
+      } else if (path === '/mypage') {
+        // 사용자 타입에 따라 다른 마이페이지로 이동
+        if (authState.userType === 'company') {
+          navigate('/company/dashboard');
+        } else if (authState.userType === 'candidate') {
+          navigate('/candidate/dashboard');
+        } else {
+          navigate('/');
+        }
       } else if (path === '/settings') {
         // 사용자 타입에 따라 다른 설정 페이지로 이동
         if (authState.userType === 'company') {

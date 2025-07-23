@@ -115,8 +115,8 @@ html, body {
 .subtitle-section {
   padding: 5rem 1rem 6rem;
   background-color: white;
-  opacity: 0;
-  transform: translateY(40px);
+  opacity: 0; /* 기본적으로 숨김 */
+  transform: translateY(40px); /* 아래쪽에서 시작 */
   transition: all 1s ease;
   text-align: center;
 }
