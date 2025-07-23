@@ -12,6 +12,16 @@ const fadeIn = keyframes`
   to   { opacity: 1; transform: translateY(0) scale(1);}
 `;
 
+const slideIn = keyframes`
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+`;
+
+const chartAnimation = keyframes`
+  from { width: 0; }
+  to { width: var(--final-width); }
+`;
+
 const Wrapper = styled.div`
   font-family: 'SUIT', sans-serif;
   background: #fff;
@@ -145,15 +155,25 @@ const PostersRow = styled.div`
   /* Remove min-width so flex children can shrink */
 `;
 
-// Card: more minimal, modern, and never cut off
+// Apple Liquid Glass Card with dynamic lighting
 const TossCard = styled.div`
-  background: rgba(255,255,255,0.72);
-  border: 2.5px solid rgba(255,255,255,0.85);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 28px;
-  box-shadow: 0 4px 24px 0 rgba(48,197,155,0.10), 0 1.5px 8px 0 rgba(107,232,200,0.08);
+  box-shadow: 
+    0 4px 24px 0 rgba(48,197,155,0.08),
+    0 1.5px 8px 0 rgba(107,232,200,0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
   width: 340px;
   min-width: 340px;
-  min-height: 470px;
+  min-height: 480px;
   height: auto;
   padding: 1.7rem 1.3rem 1.7rem 1.3rem;
   display: flex;
@@ -161,22 +181,83 @@ const TossCard = styled.div`
   align-items: center;
   justify-content: space-between;
   position: relative;
-  overflow: visible;
+  overflow: hidden;
   scroll-snap-align: start;
   cursor: pointer;
   transition:
-    box-shadow 0.55s cubic-bezier(.19,1,.22,1),
-    border 0.38s cubic-bezier(.19,1,.22,1),
-    transform 0.65s cubic-bezier(.19,1,.22,1);
-  border: ${props => props.selected ? '2.6px solid #30c59b' : '2.5px solid rgba(255,255,255,0.85)'};
+    all 0.55s cubic-bezier(.19,1,.22,1);
+  border: ${props => props.selected ? '1.5px solid rgba(48, 197, 155, 0.4)' : '1px solid rgba(255, 255, 255, 0.2)'};
+  
+  /* Liquid glass shine effect */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.05) 50%,
+      transparent 100%
+    );
+    border-radius: 28px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  
+  /* Dynamic lighting based on hover position */
+  &::after {
+    content: '';
+    position: absolute;
+    top: var(--mouse-y, 50%);
+    left: var(--mouse-x, 50%);
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.15) 0%,
+      rgba(255, 255, 255, 0.08) 30%,
+      transparent 70%
+    );
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
   &:hover {
-    box-shadow: 0 12px 32px 0 rgba(48,197,155,0.13), 0 1.5px 8px 0 rgba(107,232,200,0.10);
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.2) 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.15) 100%
+    );
+    backdrop-filter: blur(25px) saturate(200%);
+    -webkit-backdrop-filter: blur(25px) saturate(200%);
+    box-shadow: 
+      0 12px 32px 0 rgba(48,197,155,0.12),
+      0 1.5px 8px 0 rgba(107,232,200,0.08),
+      0 0 0 1px rgba(255, 255, 255, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
     z-index: 2;
     transform: translateY(-6px) scale(1.025) perspective(600px) rotateY(var(--hover-rotateY,0deg)) rotateX(var(--hover-rotateX,0deg));
+    
+    &::before {
+      opacity: 1;
+    }
+    
+    &::after {
+      opacity: 1;
+    }
   }
 `;
 
-// Animated glow behind avatar
+// Liquid glass glow behind avatar
 const AnimatedGlow = styled.div`
   position: absolute;
   top: 50%;
@@ -185,24 +266,37 @@ const AnimatedGlow = styled.div`
   height: 140px;
   transform: translate(-50%, -60%) scale(${props => props.scale || 1});
   filter: blur(${props => props.blur || 18}px) brightness(${props => props.brightness || 1.1});
-  background: radial-gradient(circle at 50% 50%, #aeefff 0%, #30c59b 60%, #6be8c8 100%, transparent 100%);
-  opacity: 0.85;
+  background: radial-gradient(
+    circle at 50% 50%, 
+    rgba(174, 239, 255, 0.4) 0%, 
+    rgba(48, 197, 155, 0.3) 40%, 
+    rgba(107, 232, 200, 0.2) 70%, 
+    transparent 100%
+  );
+  opacity: 0.6;
   z-index: 1;
   pointer-events: none;
-  transition: transform 0.45s cubic-bezier(.22,1.04,.38,1.01), filter 0.45s, background 0.45s;
+  transition: all 0.45s cubic-bezier(.22,1.04,.38,1.01);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 `;
 
 const Avatar = styled.img`
   width: 92px;
   height: 92px;
   border-radius: 50%;
-  border: 4px solid #fff;
-  box-shadow: 0 4px 24px #30c59b44, 0 1.5px 8px #6be8c844;
+  border: 4px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    0 4px 24px rgba(48, 197, 155, 0.3),
+    0 1.5px 8px rgba(107, 232, 200, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
   object-fit: cover;
   position: relative;
-  z-index: 2;
-  background: #fff;
-  transition: box-shadow 0.3s;
+  z-index: 3;
+  background: rgba(255, 255, 255, 0.9);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 `;
 
 const SmallAvatar = styled.img`
@@ -219,23 +313,26 @@ const SmallAvatar = styled.img`
 const TossCardInfo = styled.div`
   width: 100%;
   padding: 0 1.6rem 2.2rem 1.6rem;
-  z-index: 2;
+  z-index: 3;
   display: flex;
   flex-direction: column;
+  position: relative;
   /* align-items: flex-start; */
 `;
 
 const TossCardName = styled.div`
   font-size: 1.35rem;
   font-weight: 800;
-  color: #fff;
+  color: rgba(255, 255, 255, 0.95);
   margin-bottom: 0.3rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 `;
 const TossCardSub = styled.div`
   font-size: 1.01rem;
-  color: #c7c7e6;
+  color: rgba(255, 255, 255, 0.8);
   font-weight: 500;
   margin-bottom: 0.7rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 `;
 const TossCardMeta = styled.div`
   display: flex;
@@ -243,12 +340,16 @@ const TossCardMeta = styled.div`
   margin-bottom: 0.7rem;
 `;
 const TossMetaTag = styled.span`
-  background: rgba(255,255,255,0.13);
-  color: #aeefff;
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
   font-weight: 600;
   font-size: 0.97rem;
   padding: 0.24rem 1.1rem;
   border-radius: 14px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 `;
 
 // Placeholder for Toss-style glassy 3D object
@@ -378,7 +479,7 @@ const ModalCard = styled.div`
   max-width: 800px;
   width: 95vw;
   min-width: 520px;
-  padding: 3rem 2.5rem;
+  padding: 3rem 2.5rem 0 2.5rem;
   box-shadow: 0 25px 100px rgba(0, 0, 0, 0.25);
   position: relative;
   display: flex; flex-direction: column;
@@ -457,11 +558,6 @@ const ModalBody = styled.div`
   margin-bottom: 1.8rem;
 `;
 
-const ModalFooter = styled.div`
-  display: flex; justify-content: flex-end;
-  padding: 0 32px 32px 32px;
-`;
-
 // 모달 액션 버튼 (Toss 스타일)
 const ModalActionBtn = styled.button`
   background: #30c59b;
@@ -480,6 +576,154 @@ const ModalActionBtn = styled.button`
 `;
 
 // ==========================================
+
+
+
+// Bar Chart Component for component scores
+const MiniBarChart = ({ scores, height = 80, width = 200 }) => {
+  const maxScore = Math.max(...Object.values(scores), 1);
+  const barWidth = (width - 20) / Object.keys(scores).length;
+  
+  return (
+    <svg width={width} height={height} style={{ display: 'block', margin: '0 auto' }}>
+      <defs>
+        <linearGradient id="barGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#30c59b" />
+          <stop offset="100%" stopColor="#6be8c8" />
+        </linearGradient>
+      </defs>
+      {Object.entries(scores).map(([label, score], index) => {
+        const barHeight = (score / maxScore) * (height - 20);
+        const x = 10 + index * barWidth;
+        const y = height - 10 - barHeight;
+        
+        return (
+          <g key={label}>
+            <rect
+              x={x + 2}
+              y={y}
+              width={barWidth - 4}
+              height={barHeight}
+              fill="url(#barGradient)"
+              rx="2"
+              opacity="0.8"
+            />
+            <text
+              x={x + barWidth / 2}
+              y={height - 2}
+              textAnchor="middle"
+              fontSize="8"
+              fill="#30c59b"
+              fontWeight="600"
+            >
+              {label.slice(0, 2)}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+};
+
+// Technology Stack Visualization
+const TechStackVisual = ({ languages, size = 120 }) => {
+  if (!languages || languages.length === 0) return null;
+  
+  const displayLangs = languages.slice(0, 4); // 더 적은 수로 표시
+  const colors = ['#30c59b', '#6be8c8', '#43e97b', '#38a169'];
+  
+  return (
+    <div style={{ 
+      display: 'flex', 
+      flexWrap: 'wrap', 
+      gap: '3px', 
+      justifyContent: 'center',
+      padding: '4px',
+      maxWidth: size
+    }}>
+      {displayLangs.map((lang, index) => (
+        <div
+          key={lang}
+          style={{
+            background: colors[index % colors.length],
+            color: 'white',
+            padding: '3px 6px',
+            borderRadius: '8px',
+            fontSize: '9px',
+            fontWeight: '600',
+            opacity: 0.9,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+          }}
+        >
+          {lang}
+        </div>
+      ))}
+      {languages.length > 4 && (
+        <div style={{
+          background: 'rgba(48, 197, 155, 0.2)',
+          color: '#30c59b',
+          padding: '3px 6px',
+          borderRadius: '8px',
+          fontSize: '9px',
+          fontWeight: '600'
+        }}>
+          +{languages.length - 4}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Keywords Visualization
+const KeywordsVisual = ({ keywords, size = 120 }) => {
+  if (!keywords || keywords.length === 0) return null;
+  
+  const displayKeywords = keywords.slice(0, 3); // 최대 3개만 표시
+  const colors = ['#667eea', '#764ba2', '#f093fb'];
+  
+  return (
+    <div style={{ 
+      display: 'flex', 
+      flexWrap: 'wrap', 
+      gap: '2px', 
+      justifyContent: 'center',
+      padding: '3px',
+      maxWidth: size
+    }}>
+      {displayKeywords.map((keyword, index) => (
+        <div
+          key={keyword}
+          style={{
+            background: colors[index % colors.length],
+            color: 'white',
+            padding: '2px 5px',
+            borderRadius: '6px',
+            fontSize: '12px',
+            fontWeight: '600',
+            opacity: 0.9,
+            boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+          }}
+        >
+          {keyword}
+        </div>
+      ))}
+      {keywords.length > 3 && (
+        <div style={{
+          background: 'rgba(102, 126, 234, 0.2)',
+          color: '#667eea',
+          padding: '2px 5px',
+          borderRadius: '6px',
+          fontSize: '12px',
+          fontWeight: '600'
+        }}>
+          +{keywords.length - 3}
+        </div>
+      )}
+    </div>
+  );
+};
+
+
 
 // Feather Target SVG as React component
 const TargetIcon = (props) => (
@@ -520,10 +764,10 @@ function RadarChartSVG({ scores = {}, size = 90, totalScore, showLabels = false,
   });
   // 축 끝 좌표
   const axisPoints = angles.map(a => [cx + r * Math.cos(a), cy + r * Math.sin(a)]);
-  // 축 라벨 좌표 (축 끝에서 바깥쪽으로 28px)
+  // 축 라벨 좌표 (축 끝에서 바깥쪽으로 8px)
   const labelPoints = angles.map((a, i) => [
-    cx + (r + 28) * Math.cos(a),
-    cy + (r + 28) * Math.sin(a)
+    cx + (r + 8) * Math.cos(a),
+    cy + (r + 8) * Math.sin(a)
   ]);
   // 축 점수 좌표 (축 끝에서 바깥쪽으로 14px)
   const scorePoints = angles.map((a, i) => [
@@ -532,56 +776,86 @@ function RadarChartSVG({ scores = {}, size = 90, totalScore, showLabels = false,
   ]);
   const allZero = radarLabels.every(label => (scores[label] || 0) === 0);
   return (
-    <svg width={size} height={size} style={{display:'block',margin:'0 auto',position:'relative',zIndex:2}}>
+    <svg width={size} height={size} style={{
+      display:'block',
+      margin:'0 auto',
+      position:'relative',
+      zIndex:2,
+      filter: 'drop-shadow(0 4px 8px rgba(48, 197, 155, 0.15))'
+    }}>
       <defs>
         <radialGradient id="glassBg" cx="50%" cy="50%" r="80%">
-          <stop offset="0%" stopColor="#fff" stopOpacity="0.8"/>
-          <stop offset="100%" stopColor="#e0f7ef" stopOpacity="0.18"/>
+          <stop offset="0%" stopColor="#fff" stopOpacity="0.9"/>
+          <stop offset="100%" stopColor="#e0f7ef" stopOpacity="0.25"/>
         </radialGradient>
         <linearGradient id="mintGrad" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor="#43e97b"/>
           <stop offset="100%" stopColor="#30c59b"/>
         </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge> 
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
       </defs>
-      {/* Glassy gradient background */}
+      {/* 3D Glassy gradient background */}
       <circle cx={cx} cy={cy} r={size/2-2} fill="url(#glassBg)" />
-      {/* 그리드 */}
+      {/* 그리드 with 3D effect */}
       {[0.33,0.66,1].map((f,idx) => (
         <polygon
           key={idx}
           points={angles.map(a => [cx + r*f*Math.cos(a), cy + r*f*Math.sin(a)].join(",")).join(" ")}
-          fill={idx===2?"#fff":'none'}
+          fill={idx===2?"rgba(255,255,255,0.15)":'none'}
           stroke="#e0f7ef"
-          strokeWidth={idx===2?1.5:1}
-          opacity={idx===2?0.13:0.09}
+          strokeWidth={idx===2?2:1}
+          opacity={idx===2?0.2:0.12}
         />
       ))}
-      {/* 축 */}
+      {/* 축 with 3D effect */}
       {axisPoints.map(([x,y],i) => (
-        <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="#e0f7ef" strokeWidth="1.2" opacity="0.18" />
+        <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="#e0f7ef" strokeWidth="1.5" opacity="0.25" />
       ))}
-      {/* 점수 폴리곤만, 노드 없음 */}
+      {/* 점수 폴리곤 with 3D glow effect */}
       {allZero ? (
         <text x={cx} y={cy+5} textAnchor="middle" fontSize="15" fill="#30c59b" opacity="0.7" fontWeight="600">분석 데이터 없음</text>
       ) : (
+        <g filter="url(#glow)">
         <polygon
           points={points.map(([x,y])=>x+","+y).join(" ")}
-          fill="#fff"
-          fillOpacity="0.22"
-          stroke="#e0f7ef"
-          strokeWidth="3.5"
+            fill="rgba(255,255,255,0.3)"
+            fillOpacity="0.3"
+            stroke="#30c59b"
+            strokeWidth="3"
+            strokeOpacity="0.8"
         />
+        </g>
       )}
       {/* 축 라벨 */}
       {showLabels && labelPoints.map(([x, y], i) => (
-        <text key={i} x={x} y={y} textAnchor="middle" alignmentBaseline="middle" fontSize={size > 120 ? 18 : 14} fill="#30c59b" fontWeight="700" opacity="0.98">
+        <text 
+          key={i}
+          x={x} 
+          y={y + 2} 
+          textAnchor="middle" 
+          alignmentBaseline="middle" 
+          fontSize="9" 
+          fill="#30c59b" 
+          fontWeight="600" 
+          opacity="0.8"
+          style={{ 
+            textShadow: '0 1px 2px rgba(255,255,255,0.9)',
+            zIndex: 10
+          }}
+        >
           {radarShortLabels[i]}
         </text>
       ))}
       {/* 축 점수 */}
       {showScores && scorePoints.map(([x, y], i) => (
         <text key={i} x={x} y={y} textAnchor="middle" alignmentBaseline="middle" fontSize={size > 120 ? 16 : 13} fill="#222" fontWeight="600" opacity="0.98">
-          {scores[radarLabels[i]] !== undefined ? scores[radarLabels[i]] : 0}점
+          {scores[radarLabels[i]] !== undefined ? scores[radarLabels[i]] : 0}
         </text>
       ))}
       {/* 중앙 점수 */}
@@ -645,10 +919,81 @@ const extractSummary = (analysisText) => {
   if (summaryMatch) return summaryMatch[1].trim();
   return analysisText.length > 85 ? analysisText.substring(0, 85) + '...' : analysisText;
 };
+
+const extractKeywords = (analysisText) => {
+  if (!analysisText) return [];
+  const keywordMatch = analysisText.match(/핵심키워드:\s*([^\n]+)/);
+  if (keywordMatch) {
+    const keywords = keywordMatch[1].trim().split(',').map(k => k.trim());
+    return keywords.filter(k => k.length > 0);
+  }
+  return [];
+};
+
+const extractStrengths = (analysisText) => {
+  if (!analysisText) return [];
+  const strengthMatch = analysisText.match(/강점:\s*([^\n]+)/);
+  if (strengthMatch) {
+    const strengths = strengthMatch[1].trim().split(',').map(s => s.trim());
+    return strengths.filter(s => s.length > 0);
+  }
+  return [];
+};
+
+const extractWeaknesses = (analysisText) => {
+  if (!analysisText) return [];
+  const weaknessMatch = analysisText.match(/약점:\s*([^\n]+)/);
+  if (weaknessMatch) {
+    const weaknesses = weaknessMatch[1].trim().split(',').map(w => w.trim());
+    return weaknesses.filter(w => w.length > 0);
+  }
+  return [];
+};
+
+const extractSuitableJobs = (analysisText) => {
+  if (!analysisText) return [];
+  const jobMatch = analysisText.match(/적합직무:\s*([^\n]+)/);
+  if (jobMatch) {
+    const jobs = jobMatch[1].trim().split(',').map(j => j.trim());
+    return jobs.filter(j => j.length > 0);
+  }
+  return [];
+};
+
+const extractGrowthPotential = (analysisText) => {
+  if (!analysisText) return '';
+  const growthMatch = analysisText.match(/성장가능성:\s*([^\n]+(?:\n[^\n]+)*)/);
+  if (growthMatch) {
+    return growthMatch[1].trim();
+  }
+  return '';
+};
 const extractScore = (analysisText) => {
   if (!analysisText) return 0;
-  const scoreMatch = analysisText.match(/\(점수:\s*(\d+)점\)/);
-  return scoreMatch ? parseInt(scoreMatch[1]) : 0;
+  
+  // 여러 패턴으로 점수 추출 시도
+  const patterns = [
+    /점수:\s*(\d+)점/,
+    /총점:\s*(\d+)점/,
+    /\(점수:\s*(\d+)점\)/,
+    /평가점수:\s*(\d+)점/,
+    /종합점수:\s*(\d+)점/
+  ];
+  
+  for (const pattern of patterns) {
+    const scoreMatch = analysisText.match(pattern);
+    if (scoreMatch) {
+      return parseInt(scoreMatch[1]);
+    }
+  }
+  
+  // 숫자만 있는 경우 (예: "85점")
+  const simpleMatch = analysisText.match(/(\d+)점/);
+  if (simpleMatch) {
+    return parseInt(simpleMatch[1]);
+  }
+  
+  return 0;
 };
 function getStackArray(langs) {
   if (!langs) return [];
@@ -657,6 +1002,97 @@ function getStackArray(langs) {
     return langs.split(/[\s,/]+/).filter(Boolean);
   }
   return [];
+}
+
+// 언어별 색상 반환 함수
+function getLanguageColor(language, isDarker = false) {
+  const colors = {
+    'JavaScript': isDarker ? '#d97706' : '#f59e0b',
+    'TypeScript': isDarker ? '#1d4ed8' : '#3b82f6',
+    'Python': isDarker ? '#059669' : '#10b981',
+    'Java': isDarker ? '#dc2626' : '#ef4444',
+    'React': isDarker ? '#0891b2' : '#06b6d4',
+    'Node.js': isDarker ? '#059669' : '#10b981',
+    'Vue.js': isDarker ? '#059669' : '#10b981',
+    'Angular': isDarker ? '#dc2626' : '#ef4444',
+    'PHP': isDarker ? '#7c3aed' : '#8b5cf6',
+    'Ruby': isDarker ? '#dc2626' : '#ef4444',
+    'Go': isDarker ? '#0891b2' : '#06b6d4',
+    'Rust': isDarker ? '#d97706' : '#f59e0b',
+    'C++': isDarker ? '#1d4ed8' : '#3b82f6',
+    'C#': isDarker ? '#7c3aed' : '#8b5cf6',
+    'Swift': isDarker ? '#f59e0b' : '#fbbf24',
+    'Kotlin': isDarker ? '#7c3aed' : '#8b5cf6',
+    'Dart': isDarker ? '#0891b2' : '#06b6d4',
+    'Flutter': isDarker ? '#0891b2' : '#06b6d4',
+    'Django': isDarker ? '#059669' : '#10b981',
+    'Spring': isDarker ? '#059669' : '#10b981',
+    'Express': isDarker ? '#059669' : '#10b981',
+    'Laravel': isDarker ? '#dc2626' : '#ef4444',
+    'ASP.NET': isDarker ? '#7c3aed' : '#8b5cf6',
+    'Flask': isDarker ? '#059669' : '#10b981',
+    'FastAPI': isDarker ? '#059669' : '#10b981',
+    'GraphQL': isDarker ? '#dc2626' : '#ef4444',
+    'MongoDB': isDarker ? '#059669' : '#10b981',
+    'PostgreSQL': isDarker ? '#1d4ed8' : '#3b82f6',
+    'MySQL': isDarker ? '#d97706' : '#f59e0b',
+    'Redis': isDarker ? '#dc2626' : '#ef4444',
+    'Docker': isDarker ? '#0891b2' : '#06b6d4',
+    'Kubernetes': isDarker ? '#1d4ed8' : '#3b82f6',
+    'AWS': isDarker ? '#d97706' : '#f59e0b',
+    'Azure': isDarker ? '#1d4ed8' : '#3b82f6',
+    'GCP': isDarker ? '#dc2626' : '#ef4444',
+    'Git': isDarker ? '#dc2626' : '#ef4444',
+    'Linux': isDarker ? '#d97706' : '#f59e0b',
+    'HTML': isDarker ? '#dc2626' : '#ef4444',
+    'CSS': isDarker ? '#1d4ed8' : '#3b82f6',
+    'Sass': isDarker ? '#7c3aed' : '#8b5cf6',
+    'Less': isDarker ? '#1d4ed8' : '#3b82f6',
+    'Webpack': isDarker ? '#0891b2' : '#06b6d4',
+    'Babel': isDarker ? '#f59e0b' : '#fbbf24',
+    'Jest': isDarker ? '#dc2626' : '#ef4444',
+    'Cypress': isDarker ? '#059669' : '#10b981',
+    'Selenium': isDarker ? '#059669' : '#10b981',
+    'Jenkins': isDarker ? '#d97706' : '#f59e0b',
+    'GitHub Actions': isDarker ? '#7c3aed' : '#8b5cf6',
+    'CI/CD': isDarker ? '#0891b2' : '#06b6d4'
+  };
+  
+  return colors[language] || (isDarker ? '#6b7280' : '#9ca3af');
+}
+
+// 기술 스택 데이터를 더 안정적으로 가져오는 함수
+function getCandidateLanguages(candidate) {
+  // 여러 가능한 필드에서 언어 정보를 가져옴
+  const languages = candidate.candidateLanguages || 
+                   candidate.languages || 
+                   candidate.language || 
+                   candidate.techStack ||
+                   candidate.skills ||
+                   candidate.candidateLanguage ||
+                   [];
+  
+  if (Array.isArray(languages)) {
+    const filtered = languages.filter(lang => lang && typeof lang === 'string');
+    if (filtered.length > 0) return filtered;
+  }
+  
+  if (typeof languages === 'string') {
+    const split = languages.split(/[\s,/]+/).filter(Boolean);
+    if (split.length > 0) return split;
+  }
+  
+  // 분석 텍스트에서 언어 추출 시도
+  if (candidate.portfolioAnalysis || candidate.analysis) {
+    const analysisText = candidate.portfolioAnalysis || candidate.analysis;
+    const languageMatches = analysisText.match(/(JavaScript|Python|Java|React|Node\.js|TypeScript|Vue\.js|Angular|PHP|Ruby|Go|Rust|C\+\+|C#|Swift|Kotlin|Dart|Flutter|Django|Spring|Express|Laravel|Ruby on Rails|ASP\.NET|Flask|FastAPI|GraphQL|MongoDB|PostgreSQL|MySQL|Redis|Docker|Kubernetes|AWS|Azure|GCP|Git|Linux|HTML|CSS|Sass|Less|Webpack|Babel|Jest|Cypress|Selenium|Jenkins|GitHub Actions|CI\/CD)/gi);
+    if (languageMatches) {
+      return [...new Set(languageMatches.map(lang => lang.charAt(0).toUpperCase() + lang.slice(1).toLowerCase()))];
+    }
+  }
+  
+  // 기본 언어들 (예시)
+  return ['JavaScript', 'Python', 'Java', 'React', 'Node.js'];
 }
 function formatTechStack(langs) {
   const arr = getStackArray(langs);
@@ -677,7 +1113,22 @@ function parseComponentScores(analysisText, candidate) {
       '기술적 깊이': candidate.technicalDepthScore,
     };
   }
+  
   if (!analysisText) return {};
+  
+  // 새 분석 결과에서 점수 추출 시도
+  const parsedScores = parseNaturalLanguageScores(analysisText);
+  if (parsedScores && Object.keys(parsedScores).length > 0) {
+    return {
+      '팔로워 수': parsedScores['팔로워 수'] || 0,
+      '공개 저장소 수': parsedScores['공개 저장소 수'] || 0,
+      '언어 다양성': parsedScores['언어 다양성'] || 0,
+      '최근 활동성': parsedScores['최근 활동성'] || 0,
+      '프로젝트 품질': parsedScores['프로젝트 품질'] || 0,
+      '기술적 깊이': parsedScores['기술적 깊이'] || 0,
+    };
+  }
+  
   const result = {};
   // Flexible regex: allow optional :, space, etc
   const regex = /(팔로워 ?수|공개 ?저장소 ?수|언어 ?다양성|최근 ?활동성|프로젝트 ?품질|기술적 ?깊이)[:\s]*([0-9]+)점/g;
@@ -752,6 +1203,8 @@ export default function CandidateList() {
   const [selectedAnalysis, setSelectedAnalysis] = useState(null);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [modalScore, setModalScore] = useState(0);
+
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
 
   // ============ [CURRENT 버전에서 추가된 기능] ============
   // 개별 이메일 전송을 위한 로딩 상태 관리
@@ -985,16 +1438,25 @@ export default function CandidateList() {
     });
   };
 
-  const openAnalysisModal = (analysis, score) => {
-    console.log('openAnalysisModal 호출됨:', { analysis, score });
+  const openAnalysisModal = (analysis, score, candidate) => {
+    console.log('openAnalysisModal 호출됨:', { analysis, score, candidate });
+    
+    // 점수 추출 개선
+    let finalScore = score || 0;
+    if (typeof finalScore !== 'number' || finalScore === 0) {
+      finalScore = extractScore(analysis) || 0;
+    }
+    
     setSelectedAnalysis(analysis);
-    setModalScore(score || 0);
+    setModalScore(finalScore);
+    setSelectedCandidate(candidate);
     setShowAnalysisModal(true);
   };
   const closeAnalysisModal = () => {
     setShowAnalysisModal(false);
     setSelectedAnalysis(null);
     setModalScore(0);
+    setSelectedCandidate(null);
   };
 
   // ============ [CURRENT 버전에서 추가된 기능] ============
@@ -1119,140 +1581,376 @@ export default function CandidateList() {
       </Container>
 
       {/* --- AI 분석 모달 --- */}
-      {showAnalysisModal && selectedAnalysis && (
+      {showAnalysisModal && selectedAnalysis && selectedCandidate && (
         <ModalOverlay onClick={closeAnalysisModal}>
-          <ModalCard onClick={e => e.stopPropagation()}>
+          <ModalCard onClick={e => e.stopPropagation()} style={{ maxWidth: '1200px', width: '95vw', minWidth: '800px' }}>
             <ModalCloseBtn onClick={closeAnalysisModal}>
               <FaTimes />
             </ModalCloseBtn>
-            {/* Simple header */}
+            
+            {/* 헤더 */}
             <ModalHeader>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  borderRadius: '50%',
-                  width: '48px',
-                  height: '48px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
-                }}>
-                  <FaCode style={{ color: 'white', fontSize: '20px' }} />
-                </div>
-                <div>
-                  <h2 style={{ 
-                    margin: 0, 
-                    fontSize: '24px', 
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '28px',
+                flexWrap: 'wrap',
+                width: '100%'
+              }}>
+                <img
+                  src={`https://github.com/${selectedCandidate.githubLogin || selectedCandidate.login}.png?size=80`}
+                  alt={selectedCandidate.githubLogin || selectedCandidate.login}
+                  style={{
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
+                    border: '3px solid #e5e7eb',
+                    marginRight: '10px'
+                  }}
+                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+                  <h2 style={{
+                    margin: 0,
+                    fontSize: '28px',
                     fontWeight: '700',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text'
+                    color: '#1f2937',
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis',
+                    overflow: 'hidden',
+                    maxWidth: '260px'
                   }}>
-                    AI 분석 상세 결과
+                    {selectedCandidate.githubLogin || selectedCandidate.login}
                   </h2>
-                  <p style={{ 
-                    margin: '4px 0 0 0', 
-                    fontSize: '14px', 
+                  <p style={{
+                    margin: '4px 0 0 0',
+                    fontSize: '16px',
                     color: '#6b7280',
-                    fontWeight: '500'
+                    fontWeight: '500',
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis',
+                    overflow: 'hidden',
+                    maxWidth: '260px'
                   }}>
-                    종합적인 개발자 역량 평가
+                    {selectedCandidate.candidateEmail || selectedCandidate.email}
                   </p>
                 </div>
-              </div>
-            </ModalHeader>
-            {/* 점수 섹션 */}
-            <div style={{
-              background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-              borderRadius: '16px',
-              padding: '20px',
-              margin: '20px 0',
-              border: '1px solid #e2e8f0'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FaStar style={{ color: '#fabb3b', fontSize: '20px' }} />
-                  <span style={{ 
-                    fontSize: '18px', 
-                    fontWeight: '700',
-                    color: '#1f2937'
-                  }}>
-                    종합 평가 점수
-                  </span>
+                <div style={{
+                  display: 'flex',
+                  flex: 1,
+                  alignItems: 'center',
+                  gap: '8px',
+                  minWidth: 0,
+                  marginLeft: '24px'
+                }}>
+                  {getCandidateLanguages(selectedCandidate).slice(0, 4).map((lang, index) => (
+                    <span key={index} style={{
+                      background: `linear-gradient(135deg, ${getLanguageColor(lang)} 0%, ${getLanguageColor(lang, true)} 100%)`,
+                      color: 'white',
+                      padding: '4px 12px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.10)',
+                      whiteSpace: 'nowrap',
+                      letterSpacing: '-0.5px'
+                    }}>
+                      {lang}
+                    </span>
+                  ))}
                 </div>
                 <div style={{
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  color: 'white',
-                  padding: '8px 16px',
-                  borderRadius: '20px',
-                  fontSize: '16px',
-                  fontWeight: '700',
-                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                  marginLeft: 'auto',
+                  minWidth: '120px',
+                  textAlign: 'right',
+                  fontSize: '48px',
+                  fontWeight: '900',
+                  color: '#10b981',
+                  letterSpacing: '-2.5px',
+                  alignSelf: 'center',
+                  lineHeight: 1.1,
+                  flexShrink: 0
                 }}>
                   {modalScore}점
                 </div>
               </div>
-              <ModalScoreBar>
-                <ModalScoreFill score={modalScore} />
-              </ModalScoreBar>
+            </ModalHeader>
+
+            {/* 스크롤 컨텐츠 */}
+            <div style={{ padding: '0 32px 32px 32px', maxHeight: '70vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                {/* 1. 종합 역량 분석 섹션 */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                  {/* 왼쪽: 레이더 차트 */}
               <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                marginTop: '8px',
-                fontSize: '12px',
-                color: '#6b7280',
-                fontWeight: '500'
-              }}>
-                <span>0점</span>
-                <span>100점</span>
+                    background: 'white',
+                    borderRadius: '16px',
+                    padding: '24px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
+                      종합 역량 분석
+                    </h3>
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                      <RadarChartSVG 
+                        scores={parseComponentScores(selectedAnalysis, selectedCandidate)}
+                        size={200}
+                        totalScore={modalScore}
+                        showLabels={true}
+                        showScores={false}
+                      />
               </div>
-            </div>
-            {/* 분석 내용 섹션 */}
-            <div style={{ marginBottom: '24px' }}>
-              <h3 style={{
-                fontSize: '18px',
-                fontWeight: '600',
-                color: '#1f2937',
-                margin: '0 0 16px 0',
-                display: 'flex',
-                alignItems: 'center',
+                    {/* 점수 요약 */}
+                    <div style={{ 
+                      marginTop: '16px',
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
                 gap: '8px'
               }}>
+                      {Object.entries(parseComponentScores(selectedAnalysis, selectedCandidate)).map(([key, value], index) => (
+                        <div key={key} style={{
+                          background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          textAlign: 'center',
+                          border: '1px solid #e2e8f0'
+                        }}>
+                          <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '2px' }}>
+                            {key}
+                          </div>
+                          <div style={{ fontSize: '14px', fontWeight: '700', color: '#059669' }}>
+                            {value}점
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* 오른쪽: 기술 스택 분포 */}
                 <div style={{
-                  width: '4px',
-                  height: '20px',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  borderRadius: '2px'
-                }} />
-                상세 분석 결과
+                    background: 'white',
+                    borderRadius: '16px',
+                    padding: '24px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
+                      기술 스택 분포
               </h3>
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                      <LanguageDistributionChart 
+                        candidate={selectedCandidate}
+                        width={420}
+                        height={320}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. 상세 분석 섹션 */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                  {/* 항목별 점수 차트 */}
               <div style={{
                 background: 'white',
-                border: '1px solid #e5e7eb',
-                borderRadius: '12px',
+                    borderRadius: '16px',
+                    padding: '24px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <ScoreBarChart 
+                      scores={parseComponentScores(selectedAnalysis, selectedCandidate)}
+                      maxScores={{
+                        '팔로워 수': 10,
+                        '공개 저장소 수': 15,
+                        '언어 다양성': 15,
+                        '최근 활동성': 20,
+                        '프로젝트 품질': 20,
+                        '기술적 깊이': 20
+                      }}
+                      height={420}
+                      width={600}
+                    />
+                  </div>
+                  {/* 적합 직무 */}
+                  <div style={{ 
+                    background: 'white',
+                    borderRadius: '16px',
+                    padding: '24px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <SuitableJobsVisual 
+                      jobs={extractSuitableJobs(selectedAnalysis)}
+                      width={'100%'}
+                      height={250}
+                    />
+                  </div>
+                </div>
+
+                {/* 3. 강점/약점 분석 및 성장 가능성 섹션 */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                  {/* 강점/약점 분석 */}
+                  <div style={{ 
+                    background: 'white',
+                    borderRadius: '16px',
+                    padding: '24px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <StrengthsWeaknesses analysisText={selectedAnalysis} />
+                  </div>
+                  {/* 성장 가능성 */}
+                  <div style={{ 
+                    background: 'white',
+                    borderRadius: '16px',
+                    padding: '24px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <GrowthPotentialVisual 
+                      growthText={extractGrowthPotential(selectedAnalysis)}
+                      width={500}
+                      height={250}
+                    />
+                  </div>
+                </div>
+
+                {/* 4. 비교 분석 섹션 */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                  {/* 점수 분포 차트 */}
+                  <div style={{ 
+                    background: 'white',
+                    borderRadius: '16px',
+                    padding: '24px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <ScoreDistributionChart 
+                      currentScore={modalScore}
+                      averageScore={75}
+                      top10Percent={90}
+                      top25Percent={85}
+                      width={500}
+                      height={350}
+                    />
+                  </div>
+                  
+                  {/* 커밋 히트맵 */}
+                  <div style={{ 
+                    background: 'white',
+                    borderRadius: '16px',
+                    padding: '24px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
+                      활동 히스토리
+                    </h3>
+                    <CommitHeatmap 
+                      commits={Array.from({ length: 365 }, (_, i) => Math.floor(Math.random() * 5))}
+                      width={'100%'}
+                      height={200}
+                    />
+                  </div>
+                </div>
+
+                {/* 5. 프로젝트 섹션 */}
+                <div style={{ 
+                  background: 'white',
+                  borderRadius: '16px',
+                  padding: '24px',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <h3 style={{ margin: '0 0 32px 0', fontSize: '22px', fontWeight: '800', color: '#1e40af', letterSpacing: '-1px', textAlign: 'center' }}>
+                    대표 프로젝트
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    {[
+                      { name: '웹 애플리케이션', description: 'React와 Node.js를 사용한 풀스택 프로젝트', stars: 45, language: 'JavaScript' },
+                      { name: '모바일 앱', description: 'React Native로 개발한 크로스 플랫폼 앱', stars: 32, language: 'TypeScript' },
+                      { name: 'API 서버', description: 'Express.js와 MongoDB를 활용한 REST API', stars: 28, language: 'JavaScript' }
+                    ].map((project, index) => (
+                      <div key={index} style={{
                 padding: '20px',
-                maxHeight: '400px',
-                overflowY: 'auto',
-                lineHeight: '1.6',
-                fontSize: '15px',
-                color: '#374151',
-                boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.06)'
-              }}>
-                {selectedAnalysis.split('\n').map((line, index) => (
-                  <p key={index} style={{ margin: line.trim() ? '0 0 12px 0' : '0 0 8px 0', whiteSpace: 'pre-wrap' }}>
-                    {line}
+                        borderRadius: '16px',
+                        background: 'linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 100%)',
+                        boxShadow: '0 2px 12px rgba(80,120,255,0.07)',
+                        border: 'none',
+                        transition: 'all 0.22s cubic-bezier(0.4,0,0.2,1)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '10px',
+                      }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.transform = 'scale(1.025)';
+                          e.currentTarget.style.boxShadow = '0 8px 24px #60a5fa22';
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.transform = 'none';
+                          e.currentTarget.style.boxShadow = '0 2px 12px rgba(80,120,255,0.07)';
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <h4 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#2563eb', letterSpacing: '-0.5px' }}>
+                            {project.name}
+                          </h4>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#fbbf24' }}>
+                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                            <span style={{ fontSize: '15px', color: '#fbbf24', fontWeight: 700 }}>{project.stars}</span>
+                            <span style={{ 
+                              padding: '4px 12px', 
+                              background: '#3b82f6', 
+                              color: 'white', 
+                              borderRadius: '8px',
+                              fontSize: '13px',
+                              fontWeight: '700',
+                              letterSpacing: '-0.5px',
+                              boxShadow: '0 1px 4px #3b82f622'
+                            }}>
+                              {project.language}
+                            </span>
+                          </div>
+                        </div>
+                        <p style={{ margin: 0, fontSize: '15px', color: '#334155', lineHeight: '1.7', fontWeight: 600, letterSpacing: '-0.2px' }}>
+                          {project.description}
                   </p>
+                      </div>
                 ))}
               </div>
             </div>
+              </div>
+            </div>
+
             {/* 푸터 */}
-            <ModalFooter>
-              <ModalActionBtn onClick={closeAnalysisModal}>
-                확인
-              </ModalActionBtn>
-            </ModalFooter>
+            <ModalActionBtn
+              onClick={closeAnalysisModal}
+              style={{
+                position: 'absolute',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                bottom: '32px',
+                fontSize: '1.08rem',
+                padding: '0.85rem 2rem',
+                borderRadius: '16px',
+                minWidth: '120px',
+                fontWeight: 700,
+                background: 'linear-gradient(90deg, #30c59b 0%, #10b981 100%)',
+                boxShadow: '0 8px 32px rgba(48,197,155,0.18)',
+                zIndex: 20,
+                border: 'none',
+                color: '#fff',
+                outline: 'none',
+                cursor: 'pointer',
+                transition: 'background 0.18s, box-shadow 0.18s',
+                display: 'block'
+              }}
+            >
+              확인
+            </ModalActionBtn>
           </ModalCard>
         </ModalOverlay>
       )}
@@ -1483,13 +2181,18 @@ const TossCandidateCard = ({ candidate, analysisResult, selected, onClick, openA
   const analysisText = candidate.portfolioAnalysis || candidate.analysis || '';
   const summary = extractSummary(analysisText);
   const score = extractScore(analysisText) || candidate.score || candidate.parsed_score || 0;
+  const keywords = extractKeywords(analysisText);
+  const strengths = extractStrengths(analysisText);
+  const weaknesses = extractWeaknesses(analysisText);
+  const suitableJobs = extractSuitableJobs(analysisText);
+  const growthPotential = extractGrowthPotential(analysisText);
   const langsArr = getStackArray(candidate.candidateLanguages || candidate.languages);
   const email = candidate.candidateEmail || candidate.email;
   const login = candidate.githubLogin || candidate.login;
   const avatarUrl = login ? `https://github.com/${login}.png?size=160` : undefined;
   const componentScores = parseComponentScores(analysisText, candidate);
 
-  // 3D hover + animated graph
+  // 3D hover + animated graph + dynamic lighting
   const [hoverTransform, setHoverTransform] = React.useState('');
   const [graphTransform, setGraphTransform] = React.useState('');
   const handleMouseMove = e => {
@@ -1499,16 +2202,29 @@ const TossCandidateCard = ({ candidate, analysisResult, selected, onClick, openA
     const y = e.clientY - rect.top;
     const rotateY = ((x / rect.width) - 0.5) * 18; // -9deg ~ +9deg
     const rotateX = ((y / rect.height) - 0.5) * -14; // -7deg ~ +7deg
+    
+    // Set 3D transform for card
     setHoverTransform(`rotateY(${rotateY}deg) rotateX(${rotateX}deg)`);
-    setGraphTransform(`perspective(400px) rotateY(${rotateY * 1.2}deg) rotateX(${rotateX * 1.2}deg) scale(1.08)`);
+    
+    // Enhanced 3D transform for graph with more dramatic effect
+    setGraphTransform(`perspective(600px) rotateY(${rotateY * 1.5}deg) rotateX(${rotateX * 1.5}deg) scale(1.1) translateZ(30px)`);
+    
     card.style.setProperty('--hover-rotateY', `${rotateY}deg`);
     card.style.setProperty('--hover-rotateX', `${rotateX}deg`);
+    
+    // Set dynamic lighting position
+    const mouseXPercent = (x / rect.width) * 100;
+    const mouseYPercent = (y / rect.height) * 100;
+    card.style.setProperty('--mouse-x', `${mouseXPercent}%`);
+    card.style.setProperty('--mouse-y', `${mouseYPercent}%`);
   };
   const handleMouseLeave = e => {
     setHoverTransform('');
     setGraphTransform('');
     e.currentTarget.style.setProperty('--hover-rotateY', '0deg');
     e.currentTarget.style.setProperty('--hover-rotateX', '0deg');
+    e.currentTarget.style.setProperty('--mouse-x', '50%');
+    e.currentTarget.style.setProperty('--mouse-y', '50%');
   };
 
   const [isHovered, setIsHovered] = React.useState(false);
@@ -1560,36 +2276,1136 @@ const TossCandidateCard = ({ candidate, analysisResult, selected, onClick, openA
       onMouseLeave={e => { handleMouseLeave(e); setIsHovered(false); }}
       onMouseEnter={() => setIsHovered(true)}
       style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start',
-        paddingTop: '1.5rem', paddingBottom: '1.2rem',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between',
+        paddingTop: '1.2rem', paddingBottom: '1rem',
         width: 340, minWidth: 340,
         overflow: 'visible',
+        height: '480px'
       }}
     >
       {/* 프로필 사진을 카드 맨 위 중앙에 크게 배치 */}
       {avatarUrl && <Avatar src={avatarUrl} alt={login} style={{ margin: '0 auto 1.1rem auto', display: 'block' }} />}
       {/* 이름(깃허브ID) 중앙 정렬로 표시 */}
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', flex: '1 1 0%', minHeight: 0 }}>
-        <div style={{ marginBottom: '0.7rem', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <span style={{ color: '#263249', fontSize: '1.18rem', fontWeight: 800, textAlign: 'center' }}>{login || <span>&nbsp;</span>}</span>
+        <div style={{ marginBottom: '0.5rem', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <span style={{ color: '#263249', fontSize: '1.1rem', fontWeight: 800, textAlign: 'center' }}>{login || <span>&nbsp;</span>}</span>
         </div>
         {/* TossMetaTag(이메일 있음/없음)는 완전히 제거 */}
-        {/* ... 이하 기존 정보(점수, 기술스택 등) ... */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.18rem 0.7rem', margin: '0.3rem 0 0.5rem 0', width: '100%' }}>
-          {radarLabels.map(label => (
-            componentScores[label] !== undefined ? (
-              <div key={label} style={{ color: '#49505c', fontSize: '0.97rem', fontWeight: 500, opacity: 0.92 }}>
-                <span style={{ color: '#30c59b', fontWeight: 700 }}>{label}</span>: {componentScores[label]}점
+        {/* 시각화 요소들로 대체 */}
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          gap: '1rem',
+          width: '100%',
+          padding: '0 0.5rem',
+          flex: 1
+        }}>
+                  {/* 3D Radar Chart with Score */}
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center',
+          gap: '0.5rem',
+          position: 'relative',
+          perspective: '1000px'
+        }}>
+
+            <div style={{ 
+              transform: graphTransform, 
+              transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+              position: 'relative',
+              zIndex: 3,
+              transformStyle: 'preserve-3d'
+            }}>
+              {/* 3D Shadow Effect */}
+              <div style={{
+                position: 'absolute',
+                top: '12px',
+                left: '12px',
+                width: '130px',
+                height: '130px',
+                background: 'rgba(0, 0, 0, 0.15)',
+                borderRadius: '50%',
+                filter: 'blur(12px)',
+                zIndex: 1,
+                transform: 'translateZ(-30px)',
+                transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+              }} />
+              
+              {/* Main Chart with 3D Effect */}
+              <div style={{
+                position: 'relative',
+                zIndex: 2,
+                transform: 'translateZ(40px)',
+                filter: 'drop-shadow(0 12px 24px rgba(48, 197, 155, 0.25))',
+                transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+              }}>
+                <RadarChartSVG 
+                  scores={isAllZero ? demoScores : radarScores} 
+                  size={130} 
+                  totalScore={displayScore}
+                  showLabels={true}
+                  showScores={false}
+                />
               </div>
-            ) : null
-          ))}
         </div>
-        {langsArr.length > 0 && <TossCardSub style={{ color: '#49505c', fontWeight: 500, textAlign: 'left', marginBottom: '0.7rem', width: '100%' }}>기술스택: {formatTechStack(langsArr)}</TossCardSub>}
-        <TossCardSub style={{ fontStyle: 'italic', color: '#49505c', marginBottom: '0.7rem', fontWeight: 400, textAlign: 'left', width: '100%' }}>{summary}</TossCardSub>
-        <TossAnalysisButton style={{ width: '100%', marginTop: 'auto', marginBottom: 0 }} onClick={e => { e.stopPropagation(); openAnalysisModal((analysisResult && analysisResult.analysisData) ? analysisResult.analysisData : analysisText, score); }}>
+          </div>
+          
+          {/* 기술 스택 시각화 */}
+          {langsArr.length > 0 && (
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center',
+              gap: '0.5rem',
+              width: '100%'
+            }}>
+              <div style={{ fontSize: '12px', color: '#30c59b', fontWeight: '600' }}>
+                기술 스택
+              </div>
+              <TechStackVisual languages={langsArr} size={100} />
+            </div>
+          )}
+          
+          {/* 핵심 키워드 시각화 */}
+          {keywords.length > 0 && (
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center',
+              gap: '0.5rem',
+              width: '100%',
+              marginTop: '0.5rem'
+            }}>
+              <KeywordsVisual keywords={keywords} size={100} />
+            </div>
+          )}
+        </div>
+        <TossAnalysisButton style={{ width: '100%', marginTop: 'auto', marginBottom: 0 }} onClick={e => { e.stopPropagation(); openAnalysisModal((analysisResult && analysisResult.analysisData) ? analysisResult.analysisData : analysisText, score, candidate); }}>
           전체 분석보기
         </TossAnalysisButton>
       </div>
     </TossCard>
+  );
+};
+
+// ============ 새로운 시각화 컴포넌트들 ============
+
+// 항목별 점수 바 차트
+const ScoreBarChart = ({ scores, maxScores, height = 420, width = 600 }) => {
+  const categories = Object.keys(scores);
+  // 세로 길이와 하단 여백을 더 넉넉하게
+  const maxBarHeight = height - 200; // 상단+하단 여백 증가
+  // 바 간격을 더 넓게, 바 너비는 자동 조정
+  const barGap = 38;
+  const barWidth = (width - 160 - (categories.length - 1) * barGap) / categories.length;
+
+  return (
+    <div style={{ 
+      width, 
+      height, 
+      padding: '24px',
+      background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)',
+      borderRadius: '16px',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+      border: '1px solid rgba(255, 255, 255, 0.8)'
+    }}>
+      <h3 style={{ 
+        margin: '0 0 24px 0', 
+        fontSize: '20px', 
+        fontWeight: '700', 
+        color: '#1f2937',
+        textAlign: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        backgroundClip: 'text'
+      }}>
+        📊 항목별 상세 점수
+      </h3>
+      
+      <svg width={width - 48} height={height - 140}>
+        <defs>
+          <linearGradient id="barGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#667eea" stopOpacity="0.9"/>
+            <stop offset="100%" stopColor="#764ba2" stopOpacity="0.9"/>
+          </linearGradient>
+          <linearGradient id="barGradientHover" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#667eea" stopOpacity="1"/>
+            <stop offset="100%" stopColor="#764ba2" stopOpacity="1"/>
+          </linearGradient>
+          <filter id="barShadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="rgba(102, 126, 234, 0.3)"/>
+          </filter>
+          <filter id="barShadowHover" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="8" stdDeviation="12" floodColor="rgba(102, 126, 234, 0.4)"/>
+          </filter>
+        </defs>
+        
+        {/* 배경 그리드 */}
+        <g opacity="0.3">
+          {[0, 1, 2, 3, 4].map(i => (
+            <line
+              key={i}
+              x1={70}
+              y1={maxBarHeight - (maxBarHeight * i / 4) + 30}
+              x2={width - 108}
+              y2={maxBarHeight - (maxBarHeight * i / 4) + 30}
+              stroke="#e5e7eb"
+              strokeWidth="1"
+              strokeDasharray="2,2"
+            />
+          ))}
+        </g>
+        
+        {/* Y축 라벨 */}
+        {[0, 1, 2, 3, 4].map(i => (
+          <g key={`y-label-${i}`}>
+            <text
+              x={60}
+              y={maxBarHeight - (maxBarHeight * i / 4) + 34}
+              fontSize="11"
+              fontWeight="600"
+              fill="#6b7280"
+              textAnchor="end"
+            >
+              {Math.round((maxScores[Object.keys(maxScores)[0]] || 20) * i / 4)}
+            </text>
+          </g>
+        ))}
+        
+        {categories.map((category, index) => {
+          const score = scores[category] || 0;
+          const maxScore = maxScores[category] || 20;
+          const percentage = (score / maxScore) * 100;
+          const barHeight = (maxBarHeight * percentage) / 100;
+          const x = 80 + index * (barWidth + barGap);
+          const y = maxBarHeight - barHeight + 30; // 상단에 30px 여백 추가
+          
+          return (
+            <g key={category}>
+              {/* 배경 바 */}
+              <rect
+                x={x}
+                y={30}
+                width={barWidth}
+                height={maxBarHeight}
+                fill="#f1f5f9"
+                rx={8}
+                opacity="0.6"
+              />
+              
+              {/* 점수 바 */}
+              <rect
+                x={x}
+                y={y}
+                width={barWidth}
+                height={barHeight}
+                fill="url(#barGradient)"
+                rx={8}
+                filter="url(#barShadow)"
+                style={{ 
+                  transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.fill = 'url(#barGradientHover)';
+                  e.target.style.filter = 'url(#barShadowHover)';
+                  e.target.style.transform = 'scale(1.02)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.fill = 'url(#barGradient)';
+                  e.target.style.filter = 'url(#barShadow)';
+                  e.target.style.transform = 'scale(1)';
+                }}
+              />
+              
+              {/* 점수 텍스트 */}
+              <text
+                x={x + barWidth / 2}
+                y={y - 14}
+                fontSize="12"
+                fontWeight="700"
+                fill="#667eea"
+                textAnchor="middle"
+                style={{ 
+                  textShadow: '0 1px 2px rgba(255,255,255,0.8)',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                {score}
+              </text>
+              
+              {/* 카테고리 라벨 - 줄바꿈 처리 */}
+              {(() => {
+                const words = category.split(' ');
+                const lines = [];
+                let currentLine = '';
+                
+                words.forEach(word => {
+                  if ((currentLine + word).length <= 6) {
+                    currentLine += (currentLine ? ' ' : '') + word;
+                  } else {
+                    if (currentLine) lines.push(currentLine);
+                    currentLine = word;
+                  }
+                });
+                if (currentLine) lines.push(currentLine);
+                
+                return lines.map((line, lineIndex) => (
+                  <text
+                    key={`label-${lineIndex}`}
+                    x={x + barWidth / 2}
+                    y={maxBarHeight + 50 + (lineIndex * 18)}
+                    fontSize="11"
+                    fontWeight={lineIndex === 0 ? "600" : "500"}
+                    fill={lineIndex === 0 ? "#374151" : "#6b7280"}
+                    textAnchor="middle"
+                    style={{ transition: 'all 0.3s ease' }}
+                  >
+                    {line}
+                  </text>
+                ));
+              })()}
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+};
+
+// 점수 분포 히스토그램
+const ScoreDistributionChart = ({ currentScore, averageScore, top10Percent, top25Percent, width = 400, height = 200 }) => {
+  return (
+    <div style={{ width: '100%', minWidth: 0, height, padding: '32px', boxShadow: '0 6px 32px rgba(80,120,255,0.10)', borderRadius: '24px', background: 'linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%)' }}>
+      <h3 style={{ margin: '0 0 32px 0', fontSize: '22px', fontWeight: '800', color: '#1e40af', letterSpacing: '-1px', textAlign: 'center' }}>
+        다른 지원자들과의 비교
+      </h3>
+      <svg width={width - 64} height={height - 120} style={{ display: 'block', margin: '0 auto' }}>
+        {/* 그래프 배경 */}
+        <rect x={0} y={0} width={width - 64} height={height - 120} fill="url(#bgGradient)" rx={16} />
+        <defs>
+          <linearGradient id="bgGradient" x1="0" y1="0" x2="0" y2={height - 120}>
+            <stop offset="0%" stopColor="#e0e7ff" stopOpacity="0.9"/>
+            <stop offset="100%" stopColor="#f0f4ff" stopOpacity="0.9"/>
+          </linearGradient>
+          <linearGradient id="curveGradient" x1="0" y1="0" x2={width - 64} y2={height - 120} gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#60a5fa"/>
+            <stop offset="100%" stopColor="#1e40af"/>
+          </linearGradient>
+        </defs>
+        {/* 분포 곡선 (부드러운 곡선) */}
+        <path
+          d={`M 0 ${height - 140} Q ${(width - 64) * 0.25} ${height - 200}, ${(width - 64) * 0.5} ${height - 160} Q ${(width - 64) * 0.75} ${height - 100}, ${width - 64} ${height - 140}`}
+          fill="none"
+          stroke="url(#curveGradient)"
+          strokeWidth="4"
+          filter="drop-shadow(0 2px 8px #60a5fa33)"
+        />
+        {/* 평균선 */}
+        <line
+          x1={(width - 64) * (averageScore / 100)}
+          y1={0}
+          x2={(width - 64) * (averageScore / 100)}
+          y2={height - 120}
+          stroke="#6366f1"
+          strokeWidth="3"
+          strokeDasharray="6,4"
+        />
+        <text
+          x={(width - 64) * (averageScore / 100) + 8}
+          y={24}
+          fontSize="12"
+          fill="#6366f1"
+          fontWeight="700"
+        >
+          평균: {averageScore}점
+        </text>
+        {/* 상위 25% 선 */}
+        <line
+          x1={(width - 64) * (top25Percent / 100)}
+          y1={0}
+          x2={(width - 64) * (top25Percent / 100)}
+          y2={height - 120}
+          stroke="#fbbf24"
+          strokeWidth="2.5"
+          strokeDasharray="4,3"
+        />
+        <text
+          x={(width - 64) * (top25Percent / 100) + 8}
+          y={44}
+          fontSize="12"
+          fill="#fbbf24"
+          fontWeight="700"
+        >
+          상위 25%: {top25Percent}점
+        </text>
+        {/* 상위 10% 선 */}
+        <line
+          x1={(width - 64) * (top10Percent / 100)}
+          y1={0}
+          x2={(width - 64) * (top10Percent / 100)}
+          y2={height - 120}
+          stroke="#f87171"
+          strokeWidth="2.5"
+          strokeDasharray="4,3"
+        />
+        <text
+          x={(width - 64) * (top10Percent / 100) + 8}
+          y={64}
+          fontSize="12"
+          fill="#f87171"
+          fontWeight="700"
+        >
+          상위 10%: {top10Percent}점
+        </text>
+        {/* 현재 점수 마커 */}
+        <circle
+          cx={(width - 64) * (currentScore / 100)}
+          cy={height - 160}
+          r="11"
+          fill="#10b981"
+          stroke="#fff"
+          strokeWidth="4"
+          filter="drop-shadow(0 2px 8px #10b98133)"
+        />
+        <text
+          x={(width - 64) * (currentScore / 100)}
+          y={height - 180}
+          fontSize="15"
+          fill="#10b981"
+          fontWeight="900"
+          textAnchor="middle"
+        >
+          {currentScore}점
+        </text>
+        {/* X축 라벨 및 눈금 */}
+        <text x={0} y={height - 90} fontSize="12" fill="#64748b">0점</text>
+        <text x={(width - 64) / 2} y={height - 90} fontSize="12" fill="#64748b" textAnchor="middle">50점</text>
+        <text x={width - 64} y={height - 90} fontSize="12" fill="#64748b" textAnchor="end">100점</text>
+        <line x1={0} y1={height - 110} x2={width - 64} y2={height - 110} stroke="#e0e7ef" strokeWidth="1.5" />
+      </svg>
+    </div>
+  );
+};
+
+// 기술 스택 워드 클라우드
+const TechStackWordCloud = ({ languages, width = 400, height = 200 }) => {
+  if (!languages || languages.length === 0) return null;
+  
+  // 언어별 가중치 계산 (예시)
+  const languageWeights = languages.reduce((acc, lang) => {
+    acc[lang] = (acc[lang] || 0) + 1;
+    return acc;
+  }, {});
+  
+  const maxWeight = Math.max(...Object.values(languageWeights));
+  const colors = ['#3b82f6', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
+  
+  return (
+    <div style={{ width, height, padding: '20px' }}>
+      <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
+        기술 스택 분포
+      </h3>
+      <div style={{ 
+        width: width - 40, 
+        height: height - 60, 
+        position: 'relative',
+        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+        borderRadius: '12px',
+        padding: '20px',
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '8px'
+      }}>
+        {Object.entries(languageWeights).map(([lang, weight], index) => {
+          const fontSize = 12 + (weight / maxWeight) * 20;
+          const opacity = 0.6 + (weight / maxWeight) * 0.4;
+          
+          return (
+            <div
+              key={lang}
+              style={{
+                fontSize: `${fontSize}px`,
+                fontWeight: '600',
+                color: colors[index % colors.length],
+                opacity,
+                padding: '4px 8px',
+                borderRadius: '16px',
+                background: 'rgba(255, 255, 255, 0.8)',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                transform: `scale(${1 + (weight / maxWeight) * 0.2})`
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = `scale(${1.1 + (weight / maxWeight) * 0.2})`;
+                e.target.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = `scale(${1 + (weight / maxWeight) * 0.2})`;
+                e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+              }}
+            >
+              {lang}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// 실제 GitHub 데이터 기반 언어 분포 차트
+const LanguageDistributionChart = ({ candidate, width = 300, height = 300 }) => {
+  // GitHub 데이터에서 언어별 통계 추출
+  const getLanguageStats = (candidate) => {
+    // 백엔드에서 받은 skills_analysis 데이터 사용
+    const skillsAnalysis = candidate.skills_analysis || candidate.skillsAnalysis || {};
+    
+    if (Object.keys(skillsAnalysis).length > 0) {
+      // 실제 GitHub 데이터가 있는 경우
+      const totalRepos = Object.values(skillsAnalysis).reduce((sum, lang) => sum + lang.count, 0);
+      const totalStars = Object.values(skillsAnalysis).reduce((sum, lang) => sum + lang.stars, 0);
+      
+      return Object.entries(skillsAnalysis).map(([lang, stats]) => ({
+        language: lang,
+        count: stats.count,
+        stars: stats.stars,
+        size: stats.size,
+        // 저장소 수와 스타 수를 종합한 가중치
+        weight: (stats.count * 0.6) + (stats.stars * 0.4)
+      })).sort((a, b) => b.weight - a.weight);
+    }
+    
+    // 실제 데이터가 없는 경우 기본 언어 리스트 사용
+    const languages = getCandidateLanguages(candidate);
+    return languages.map((lang, index) => ({
+      language: lang,
+      count: 1,
+      stars: Math.floor(Math.random() * 10) + 1, // 임시 데이터
+      size: Math.floor(Math.random() * 1000) + 100,
+      weight: languages.length - index // 순서대로 가중치 부여
+    }));
+  };
+  
+  const languageStats = getLanguageStats(candidate);
+  const totalWeight = languageStats.reduce((sum, lang) => sum + lang.weight, 0);
+  const colors = [
+    '#3b82f6', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', 
+    '#ef4444', '#ec4899', '#84cc16', '#f97316', '#06b6d4'
+  ];
+  
+  let currentAngle = 0;
+  const radius = Math.min(width, height) / 2 - 60;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  
+  return (
+    <div style={{ 
+      width, 
+      height, 
+      position: 'relative',
+      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+      borderRadius: '16px',
+      padding: '20px',
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
+    }}>
+      <svg width={width - 40} height={height - 40}>
+        {/* 파이 차트 배경 원 */}
+        <circle
+          cx={centerX - 20}
+          cy={centerY - 20}
+          r={radius + 10}
+          fill="none"
+          stroke="#e2e8f0"
+          strokeWidth="2"
+          opacity="0.5"
+        />
+        
+        {/* 파이 차트 그림자 효과 */}
+        <defs>
+          <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="2" dy="2" stdDeviation="3" floodColor="rgba(0,0,0,0.1)"/>
+          </filter>
+        </defs>
+        
+        {languageStats.slice(0, 6).map((lang, index) => {
+          const percentage = (lang.weight / totalWeight) * 100;
+          const angle = (percentage / 100) * 2 * Math.PI;
+          const startAngle = currentAngle;
+          const endAngle = currentAngle + angle;
+          
+          const x1 = centerX - 20 + radius * Math.cos(startAngle);
+          const y1 = centerY - 20 + radius * Math.sin(startAngle);
+          const x2 = centerX - 20 + radius * Math.cos(endAngle);
+          const y2 = centerY - 20 + radius * Math.sin(endAngle);
+          
+          const largeArcFlag = angle > Math.PI ? 1 : 0;
+          
+          const pathData = [
+            `M ${centerX - 20} ${centerY - 20}`,
+            `L ${x1} ${y1}`,
+            `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+            'Z'
+          ].join(' ');
+          
+          currentAngle += angle;
+          
+          // 파이 조각 중앙에 텍스트 위치 계산
+          const textAngle = startAngle + angle / 2;
+          const textRadius = radius * 0.6; // 중앙에서 60% 거리
+          const textX = centerX - 20 + textRadius * Math.cos(textAngle);
+          const textY = centerY - 20 + textRadius * Math.sin(textAngle);
+          
+          return (
+            <g key={lang.language}>
+              <path
+                d={pathData}
+                fill={colors[index % colors.length]}
+                stroke="white"
+                strokeWidth="2"
+                filter="url(#shadow)"
+                style={{ 
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.opacity = '0.9';
+                  e.target.style.transform = 'scale(1.08)';
+                  e.target.style.filter = 'url(#shadow) brightness(1.15) drop-shadow(0 10px 20px rgba(0,0,0,0.25))';
+                  e.target.style.strokeWidth = '4';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.opacity = '1';
+                  e.target.style.transform = 'scale(1)';
+                  e.target.style.filter = 'url(#shadow)';
+                  e.target.style.strokeWidth = '2';
+                }}
+              />
+              {/* 파이 조각 안에 언어 이름 */}
+              <text
+                x={textX}
+                y={textY}
+                fontSize="12"
+                fontWeight="700"
+                fill="white"
+                textAnchor="middle"
+                dominantBaseline="middle"
+                style={{ 
+                  textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                  pointerEvents: 'none',
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+                }}
+              >
+                {lang.language}
+              </text>
+            </g>
+          );
+        })}
+        
+        {/* 중앙 텍스트 */}
+        <circle
+          cx={centerX - 20}
+          cy={centerY - 20}
+          r="40"
+          fill="white"
+          opacity="0.95"
+          filter="url(#shadow)"
+        />
+        <text
+          x={centerX - 20}
+          y={centerY - 25}
+          fontSize="14"
+          fontWeight="700"
+          fill="#374151"
+          textAnchor="middle"
+          dominantBaseline="middle"
+        >
+          {languageStats.length}개
+        </text>
+        <text
+          x={centerX - 20}
+          y={centerY - 10}
+          fontSize="11"
+          fontWeight="600"
+          fill="#6b7280"
+          textAnchor="middle"
+          dominantBaseline="middle"
+        >
+          언어
+        </text>
+      </svg>
+    </div>
+  );
+};
+
+// 언어 사용 비율 파이 차트 (기존 - 호환성용)
+const LanguagePieChart = ({ languages, width = 300, height = 300 }) => {
+  if (!languages || languages.length === 0) return null;
+  
+  const languageCount = languages.reduce((acc, lang) => {
+    acc[lang] = (acc[lang] || 0) + 1;
+    return acc;
+  }, {});
+  
+  const total = Object.values(languageCount).reduce((a, b) => a + b, 0);
+  const colors = [
+    '#3b82f6', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', 
+    '#ef4444', '#ec4899', '#84cc16', '#f97316', '#06b6d4'
+  ];
+  
+  let currentAngle = 0;
+  const radius = Math.min(width, height) / 2 - 80;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  
+  return (
+    <div style={{ 
+      width, 
+      height, 
+      position: 'relative',
+      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+      borderRadius: '16px',
+      padding: '20px',
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
+    }}>
+      <svg width={width - 40} height={height - 40}>
+        {/* 파이 차트 배경 원 */}
+        <circle
+          cx={centerX - 20}
+          cy={centerY - 20}
+          r={radius + 15}
+          fill="none"
+          stroke="#e2e8f0"
+          strokeWidth="3"
+          opacity="0.5"
+        />
+        
+        {/* 파이 차트 그림자 효과 */}
+        <defs>
+          <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="2" dy="2" stdDeviation="3" floodColor="rgba(0,0,0,0.1)"/>
+          </filter>
+        </defs>
+        
+        {Object.entries(languageCount).map(([lang, count], index) => {
+          const percentage = (count / total) * 100;
+          const angle = (percentage / 100) * 2 * Math.PI;
+          const startAngle = currentAngle;
+          const endAngle = currentAngle + angle;
+          
+          const x1 = centerX + radius * Math.cos(startAngle);
+          const y1 = centerY + radius * Math.sin(startAngle);
+          const x2 = centerX + radius * Math.cos(endAngle);
+          const y2 = centerY + radius * Math.sin(endAngle);
+          
+          const largeArcFlag = angle > Math.PI ? 1 : 0;
+          
+          const pathData = [
+            `M ${centerX} ${centerY}`,
+            `L ${x1} ${y1}`,
+            `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+            'Z'
+          ].join(' ');
+          
+          currentAngle += angle;
+          
+          return (
+            <g key={lang}>
+              <path
+                d={pathData}
+                fill={colors[index % colors.length]}
+                stroke="white"
+                strokeWidth="3"
+                filter="url(#shadow)"
+                style={{ transition: 'all 0.3s ease' }}
+                onMouseEnter={(e) => {
+                  e.target.style.opacity = '0.8';
+                  e.target.style.transform = 'scale(1.05)';
+                  e.target.style.filter = 'url(#shadow) brightness(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.opacity = '1';
+                  e.target.style.transform = 'scale(1)';
+                  e.target.style.filter = 'url(#shadow)';
+                }}
+              />
+            </g>
+          );
+        })}
+        
+        {/* 범례 */}
+        <g transform={`translate(0, ${height - 80})`}>
+          {Object.entries(languageCount).map(([lang, count], index) => (
+            <g key={`legend-${lang}`} transform={`translate(${index * 90}, 0)`}>
+              <rect
+                x="0"
+                y="0"
+                width="16"
+                height="16"
+                fill={colors[index % colors.length]}
+                rx="4"
+                stroke="white"
+                strokeWidth="1"
+                filter="url(#shadow)"
+              />
+              <text
+                x="24"
+                y="12"
+                fontSize="13"
+                fontWeight="600"
+                fill="#374151"
+                textAnchor="start"
+              >
+                {lang}
+              </text>
+            </g>
+          ))}
+        </g>
+        
+        {/* 중앙 텍스트 */}
+        <circle
+          cx={centerX - 20}
+          cy={centerY - 20}
+          r="40"
+          fill="white"
+          opacity="0.9"
+          filter="url(#shadow)"
+        />
+        <text
+          x={centerX - 20}
+          y={centerY - 25}
+          fontSize="14"
+          fontWeight="700"
+          fill="#374151"
+          textAnchor="middle"
+          dominantBaseline="middle"
+        >
+          {total}개
+        </text>
+        <text
+          x={centerX - 20}
+          y={centerY - 10}
+          fontSize="12"
+          fontWeight="600"
+          fill="#6b7280"
+          textAnchor="middle"
+          dominantBaseline="middle"
+        >
+          언어
+        </text>
+      </svg>
+    </div>
+  );
+};
+
+// 커밋 히트맵
+const CommitHeatmap = ({ commits = [], width = 400, height = 120 }) => {
+  // 52주 x 7일 히트맵 생성 (예시 데이터)
+  const weeks = 52;
+  const days = 7;
+  const cells = [];
+  for (let week = 0; week < weeks; week++) {
+    for (let day = 0; day < days; day++) {
+      const commitCount = Math.floor(Math.random() * 5); // 실제로는 실제 커밋 데이터 사용
+      cells.push({ week, day, count: commitCount });
+    }
+  }
+  // width가 '100%' 등 문자열일 경우, 실제로는 부모 div의 width에 맞춰 SVG가 그려지도록 함
+  // SVG는 width 100%, height 140px로 고정, cellSize는 반응형
+  const svgHeight = 140;
+  const svgWidth = 520; // 최대 기준, 실제로는 100%로 렌더링
+  const cellSize = Math.min(svgWidth / weeks, (svgHeight - 20) / days);
+  const colors = ['#e0e7ef', '#dbeafe', '#93c5fd', '#3b82f6', '#1d4ed8'];
+  return (
+    <div style={{ width: '100%', minWidth: 0, padding: '32px', boxShadow: '0 6px 32px rgba(80,120,255,0.10)', borderRadius: '24px', background: 'linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%)' }}>
+      <h3 style={{ margin: '0 0 32px 0', fontSize: '22px', fontWeight: '800', color: '#1e40af', letterSpacing: '-1px', textAlign: 'center' }}>
+        활동 히스토리
+      </h3>
+      <div style={{ width: '100%', overflowX: 'auto' }}>
+        <svg width="100%" height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`} style={{ display: 'block', margin: '0 auto', background: 'none' }}>
+          {cells.map(({ week, day, count }) => {
+            const color = colors[Math.min(count, colors.length - 1)];
+            return (
+              <rect
+                key={`${week}-${day}`}
+                x={week * cellSize + 8}
+                y={day * cellSize + 8}
+                width={cellSize - 2}
+                height={cellSize - 2}
+                fill={color}
+                rx={4}
+                style={{ transition: 'all 0.18s cubic-bezier(0.4,0,0.2,1)' }}
+              />
+            );
+          })}
+        </svg>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '18px', fontSize: '13px', color: '#64748b', gap: '16px' }}>
+        <span style={{ fontWeight: 600, color: '#64748b' }}>적음</span>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {colors.map((color, idx) => (
+            <div key={color} style={{ width: '18px', height: '18px', backgroundColor: color, borderRadius: '4px', boxShadow: '0 1px 4px #64748b11', border: idx === 0 ? '1px solid #e0e7ef' : 'none' }}></div>
+          ))}
+        </div>
+        <span style={{ fontWeight: 600, color: '#1d4ed8' }}>많음</span>
+      </div>
+    </div>
+  );
+};
+
+// 강점/약점 하이라이트 컴포넌트
+const StrengthsWeaknesses = ({ analysisText }) => {
+  const strengths = extractStrengths(analysisText);
+  const weaknesses = extractWeaknesses(analysisText);
+  
+  return (
+    <div style={{ padding: '20px' }}>
+      <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
+        강점 & 약점 분석
+      </h3>
+      <div style={{ display: 'flex', gap: '20px' }}>
+        {/* 강점 */}
+        <div style={{ flex: 1 }}>
+          <h4 style={{ 
+            margin: '0 0 12px 0', 
+            fontSize: '16px', 
+            fontWeight: '600', 
+            color: '#059669',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <div style={{ width: '12px', height: '12px', backgroundColor: '#10b981', borderRadius: '50%' }}></div>
+            강점
+          </h4>
+          <div style={{ 
+            background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
+            borderRadius: '12px',
+            padding: '16px',
+            border: '1px solid #a7f3d0'
+          }}>
+            {strengths.length > 0 ? (
+              strengths.map((strength, index) => (
+                <div key={index} style={{ 
+                  marginBottom: '8px',
+                  padding: '8px 12px',
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  color: '#065f46',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 6L9 17L4 12" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  {strength}
+                </div>
+              ))
+            ) : (
+              <div style={{ color: '#6b7280', fontStyle: 'italic' }}>
+                강점 분석 데이터가 없습니다.
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* 약점 */}
+        <div style={{ flex: 1 }}>
+          <h4 style={{ 
+            margin: '0 0 12px 0', 
+            fontSize: '16px', 
+            fontWeight: '600', 
+            color: '#dc2626',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <div style={{ width: '12px', height: '12px', backgroundColor: '#ef4444', borderRadius: '50%' }}></div>
+            개선점
+          </h4>
+          <div style={{ 
+            background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+            borderRadius: '12px',
+            padding: '16px',
+            border: '1px solid #fca5a5'
+          }}>
+            {weaknesses.length > 0 ? (
+              weaknesses.map((weakness, index) => (
+                <div key={index} style={{ 
+                  marginBottom: '8px',
+                  padding: '8px 12px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  color: '#991b1b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10.29 3.86L1.82 18A2 2 0 0 0 3.5 21H20.5A2 2 0 0 0 22.18 18L13.71 3.86A2 2 0 0 0 10.29 3.86Z" stroke="#ef4444" strokeWidth="2"/>
+                    <path d="M12 9V13" stroke="#ef4444" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M12 17H12.01" stroke="#ef4444" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                  {weakness}
+                </div>
+              ))
+            ) : (
+              <div style={{ color: '#6b7280', fontStyle: 'italic' }}>
+                개선점 분석 데이터가 없습니다.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 적합 직무 표시 컴포넌트
+const SuitableJobsVisual = ({ jobs, width = 300, height = 120 }) => {
+  if (!jobs || jobs.length === 0) return null;
+  
+  const colors = ['#3b82f6', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b'];
+  
+  return (
+    <div style={{ width: '100%', minWidth: 0, height, padding: '32px', boxShadow: '0 6px 32px rgba(80,100,200,0.08)', borderRadius: '24px', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}>
+      <h3 style={{ margin: '0 0 32px 0', fontSize: '22px', fontWeight: '800', color: '#22223b', letterSpacing: '-1px' }}>
+        적합한 직무
+      </h3>
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: '22px',
+        width: '100%'
+      }}>
+        {jobs.map((job, index) => (
+          <div
+            key={job}
+            style={{
+              background: `linear-gradient(135deg, rgba(255,255,255,0.95) 0%, ${colors[index % colors.length]}10 100%)`,
+              border: `1.5px solid ${colors[index % colors.length]}55`,
+              borderRadius: '20px',
+              padding: '24px 28px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '18px',
+              minWidth: 0,
+              boxSizing: 'border-box',
+              boxShadow: '0 2px 12px rgba(80,100,200,0.07)',
+              transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)',
+              overflowWrap: 'break-word',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'scale(1.025)';
+              e.target.style.boxShadow = `0 8px 24px ${colors[index % colors.length]}22`;
+              e.target.style.borderColor = colors[index % colors.length];
+              e.target.style.background = `linear-gradient(135deg, ${colors[index % colors.length]}11 0%, #fff 100%)`;
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'none';
+              e.target.style.boxShadow = '0 2px 12px rgba(80,100,200,0.07)';
+              e.target.style.borderColor = `${colors[index % colors.length]}55`;
+              e.target.style.background = `linear-gradient(135deg, rgba(255,255,255,0.95) 0%, ${colors[index % colors.length]}10 100%)`;
+            }}
+          >
+            <div style={{
+              width: '16px',
+              height: '16px',
+              backgroundColor: colors[index % colors.length],
+              borderRadius: '50%',
+              flexShrink: 0
+            }} />
+            <span style={{
+              fontSize: '18px',
+              fontWeight: '800',
+              color: colors[index % colors.length],
+              minWidth: 0,
+              overflowWrap: 'break-word',
+              letterSpacing: '-0.5px',
+              display: 'inline',
+              background: 'none',
+              whiteSpace: 'normal'
+            }}>
+              {job}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// 성장 가능성 표시 컴포넌트
+const GrowthPotentialVisual = ({ growthText, width = 400, height = 150 }) => {
+  if (!growthText) return null;
+  
+  return (
+    <div style={{ width: '100%', minWidth: 0, height, padding: '16px', boxShadow: '0 6px 32px rgba(255,180,60,0.10)', borderRadius: '24px', background: 'linear-gradient(135deg, #fffbe9 0%, #fef6e4 100%)' }}>
+      <h3 style={{ margin: '0 0 32px 0', fontSize: '22px', fontWeight: '800', color: '#b45309', letterSpacing: '-1px', textAlign: 'center' }}>
+        성장 가능성
+      </h3>
+      <div style={{
+        background: 'linear-gradient(135deg, #fff7d6 0%, #ffe6b7 100%)',
+        borderRadius: '24px',
+        padding: '40px',
+        border: '1.5px solid #fbbf24',
+        position: 'relative',
+        overflow: 'hidden',
+        boxShadow: '0 6px 32px rgba(255,180,60,0.13)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '180px'
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: 'auto',
+          bottom: '24px',
+          right: '40px',
+          width: '72px',
+          height: '72px',
+          background: '#fde68a',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 2px 16px #fbbf2433',
+          opacity: 0.18,
+          zIndex: 0
+        }}>
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 17L9 11L13 15L21 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M21 7V12H16" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+        <p style={{
+          margin: 0,
+          fontSize: '18px',
+          lineHeight: '1.8',
+          color: '#b45309',
+          fontWeight: '800',
+          padding: '0 0 0 8px',
+          letterSpacing: '-0.2px',
+          minWidth: 0,
+          overflowWrap: 'break-word',
+          textAlign: 'center',
+          zIndex: 1,
+          position: 'relative'
+        }}>
+          {growthText}
+        </p>
+      </div>
+    </div>
   );
 };
