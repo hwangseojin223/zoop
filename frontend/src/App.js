@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import PrivateRoute from './routes/PrivateRoute';
 import PublicOnlyRoute from './routes/PublicOnlyRoute';
 import Chatbot from './components/Chatbot';
+import { MainLoadingSkeleton } from './components/LoadingSkeleton';
 import './components/Chatbot.css';
 
 // index
@@ -54,52 +55,7 @@ const FaqPage = lazy(() => import('./pages/info/FaqPage'));
 const Careers = lazy(() => import('./pages/info/Careers'));
 const JobDetailPage = lazy(() => import('./pages/info/JobDetailPage'));
 
-// 로딩 스켈레톤 컴포넌트
-const LoadingSkeleton = () => (
-  <div style={{
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #eafff7 0%, #b2f5ea 60%, #30c59b 100%)',
-    color: '#185f44',
-    fontSize: '1.18rem',
-    fontWeight: 500,
-    fontFamily: 'SUIT, Pretendard, Montserrat, sans-serif',
-    letterSpacing: '-0.5px',
-    transition: 'background 0.3s',
-  }}>
-    <div style={{ textAlign: 'center' }}>
-      <div style={{
-        width: '56px',
-        height: '56px',
-        border: '5px solid #b2f5ea',
-        borderTop: '5px solid #30c59b',
-        borderRadius: '50%',
-        animation: 'spin 1s linear infinite',
-        margin: '0 auto 24px',
-        boxShadow: '0 4px 24px 0 #30c59b22',
-        background: 'rgba(255,255,255,0.2)'
-      }}></div>
-      <div style={{
-        fontWeight: 700,
-        fontSize: '1.25rem',
-        color: '#19b47a',
-        marginBottom: 8
-      }}>
-        ZOOP
-      </div>
-      <div style={{
-        color: '#185f44',
-        fontWeight: 500,
-        fontSize: '1.08rem',
-        opacity: 0.85
-      }}>
-        페이지를 불러오는 중입니다...
-      </div>
-    </div>
-  </div>
-);
+
 
 function AppContent() {
   const { setAuthState } = useAuth();
@@ -117,7 +73,7 @@ function AppContent() {
   }, [setAuthState]);
 
   return (
-    <Suspense fallback={<LoadingSkeleton />}>
+    <Suspense fallback={<MainLoadingSkeleton />}>
       <Routes>
         <Route
           path="/"
