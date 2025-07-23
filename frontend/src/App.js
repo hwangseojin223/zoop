@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import PrivateRoute from './routes/PrivateRoute';
 import PublicOnlyRoute from './routes/PublicOnlyRoute';
 import Chatbot from './components/Chatbot';
+import { MainLoadingSkeleton } from './components/LoadingSkeleton';
 import './components/Chatbot.css';
 
 // index
@@ -54,52 +55,7 @@ const FaqPage = lazy(() => import('./pages/info/FaqPage'));
 const Careers = lazy(() => import('./pages/info/Careers'));
 const JobDetailPage = lazy(() => import('./pages/info/JobDetailPage'));
 
-// 로딩 스켈레톤 컴포넌트
-const LoadingSkeleton = () => (
-  <div style={{
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #eafff7 0%, #b2f5ea 60%, #30c59b 100%)',
-    color: '#185f44',
-    fontSize: '1.18rem',
-    fontWeight: 500,
-    fontFamily: 'SUIT, Pretendard, Montserrat, sans-serif',
-    letterSpacing: '-0.5px',
-    transition: 'background 0.3s',
-  }}>
-    <div style={{ textAlign: 'center' }}>
-      <div style={{
-        width: '56px',
-        height: '56px',
-        border: '5px solid #b2f5ea',
-        borderTop: '5px solid #30c59b',
-        borderRadius: '50%',
-        animation: 'spin 1s linear infinite',
-        margin: '0 auto 24px',
-        boxShadow: '0 4px 24px 0 #30c59b22',
-        background: 'rgba(255,255,255,0.2)'
-      }}></div>
-      <div style={{
-        fontWeight: 700,
-        fontSize: '1.25rem',
-        color: '#19b47a',
-        marginBottom: 8
-      }}>
-        ZOOP
-      </div>
-      <div style={{
-        color: '#185f44',
-        fontWeight: 500,
-        fontSize: '1.08rem',
-        opacity: 0.85
-      }}>
-        페이지를 불러오는 중입니다...
-      </div>
-    </div>
-  </div>
-);
+
 
 function AppContent() {
   const { setAuthState } = useAuth();
@@ -117,7 +73,7 @@ function AppContent() {
   }, [setAuthState]);
 
   return (
-    <Suspense fallback={<LoadingSkeleton />}>
+    <Suspense fallback={<MainLoadingSkeleton />}>
       <Routes>
         <Route
           path="/"
@@ -306,7 +262,13 @@ function AppContent() {
         <button
           ref={btnRef}
           className={`chatbot-mint-btn${chatbotOpen ? ' open' : ''}`}
-          onClick={() => setChatbotOpen(open => !open)}
+          onClick={() => {
+            // 챗봇을 열 때 페이지 이동 방지 플래그 설정
+            if (!chatbotOpen) {
+              sessionStorage.setItem('chatbotOpening', 'true');
+            }
+            setChatbotOpen(open => !open);
+          }}
           aria-label={chatbotOpen ? "챗봇 닫기" : "챗봇 열기"}
         >
           {chatbotOpen ? (
@@ -341,7 +303,11 @@ function AppContent() {
       {/* 챗봇 창 */}
       <Chatbot
         open={chatbotOpen}
-        onClose={() => setChatbotOpen(false)}
+        onClose={() => {
+          setChatbotOpen(false);
+          // 챗봇이 닫힐 때 플래그 제거
+          sessionStorage.removeItem('chatbotOpening');
+        }}
         anchorRef={btnRef}
       />
     </Suspense>
