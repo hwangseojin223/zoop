@@ -64,7 +64,7 @@
   }
   
   .nav-links a:hover {
-    color: #007bff;
+    color: #19b47a;
   }
   
   .auth-buttons {
@@ -97,6 +97,19 @@
     display: flex;
     gap: 0.8rem;
     align-items: center;
+  }
+
+  .auth-buttons a {
+    color: #333;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    border-radius: 999px;
+    padding: 0.3rem 1rem;
+    transition: color 0.2s;
+  }
+  .auth-buttons a:hover {
+    color: #19b47a;
   }
 
   /* 알림 버튼 스타일 */
