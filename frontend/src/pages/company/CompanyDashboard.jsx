@@ -3,8 +3,10 @@ import { useLocation } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import CompanySidebar from './CompanySidebar';
 import CandidateModal from '../../components/CandidateModal';
+import MatchingDetailModal from './MatchingDetailModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../../components/SEO';
+
 
 export default function CompanyDashboard() {
   const location = useLocation();
@@ -41,6 +43,11 @@ export default function CompanyDashboard() {
   // 모달 상태 (팀 버전에서 추가된 기능)
   const [isModalOpen, setModalOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
+  
+  // MatchingDetailModal 상태
+  const [showMatchingDetailModal, setShowMatchingDetailModal] = useState(false);
+  const [selectedMatchingCandidate, setSelectedMatchingCandidate] = useState(null);
+
 
   //-----------------------------------------------------------------------------------------------
 
@@ -428,10 +435,11 @@ export default function CompanyDashboard() {
       const mapped = data.map(item => ({
         ...item.candidate,
         jobCandCurrStage: item.jobCandCurrStage || item.candidate.jobCandCurrStage,
-        jobCandidateId: item.jobCandidateId,
+        jobCandidateId: item.jobCandidateId || item.candidate.jobCandidateId,
         aiAnalysis: item.aiAnalysis || null,
-        isMatched: item.jobCandCurrStage === '2y' && (item.candPortfolioId || item.candidate.candPortfolioId),
-        candPortfolioId: item.candPortfolioId || item.candidate.candPortfolioId // <-- 추가
+        analysisId: (item.aiAnalysis && item.aiAnalysis.analysisId) || item.analysisId, // 추가
+        candPortfolioId: item.candPortfolioId || item.candidate.candPortfolioId,
+        postId: item.postId || item.candidate.postId,
       }));
       console.log('매핑된 후보자:', mapped);
       setGithubCandidates(mapped);
@@ -2413,15 +2421,26 @@ export default function CompanyDashboard() {
                                         >
                                           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#4a5568' }}>
                                             <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.09.66-.261.66-.48 0-.24-.01-.87-.01-1.7-2.78.6-3.37-1.34-3.37-1.34-.45-1.15-1.1-1.46-1.1-1.46-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.95 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85.004 1.71.115 2.51.337 1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.85-2.34 4.7-4.57 4.95.36.31.68.92.68 1.85 0 1.33-.01 2.4-.01 2.73 0 .27.16.58.67.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
-                                        </button>
+                                                                                  </button>
+
                                         <button
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            setSelectedCandidate(candidate);
-                                            setModalOpen(true);
+                                            if (candidateFilter === '매칭') {
+                                              // 매칭 탭에서는 MatchingDetailModal 열기
+                                              setSelectedMatchingCandidate({
+                                                candPortfolioId: candidate.candPortfolioId,
+                                                postId: selectedPostId
+                                              });
+                                              setShowMatchingDetailModal(true);
+                                            } else {
+                                              // 다른 탭에서는 기존 CandidateModal 열기
+                                              setSelectedCandidate(candidate);
+                                              setModalOpen(true);
+                                            }
                                           }}
                                           style={{
-                                            background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                                            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
                                             color: 'white',
                                             border: 'none',
                                             padding: '0.3rem 0.6rem',
@@ -2442,44 +2461,10 @@ export default function CompanyDashboard() {
                                             e.currentTarget.style.transform = 'translateY(0)';
                                             e.currentTarget.style.boxShadow = 'none';
                                           }}
-                                          title="상세보기"
+                                          title={candidateFilter === '매칭' ? '매칭 상세보기' : '상세보기'}
                                         >
-                                          상세보기
+                                          {candidateFilter === '매칭' ? '매칭 상세보기' : '상세보기'}
                                         </button>
-                                        {candidate.aiAnalysis && (
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setCurrentAiAnalysis(candidate.aiAnalysis);
-                                              setShowAiAnalysisModal(true);
-                                            }}
-                                            style={{
-                                              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                                              color: 'white',
-                                              border: 'none',
-                                              padding: '0.3rem 0.6rem',
-                                              borderRadius: '6px',
-                                              cursor: 'pointer',
-                                              fontSize: '0.8rem',
-                                              fontWeight: '500',
-                                              transition: 'all 0.2s',
-                                              display: 'flex',
-                                              alignItems: 'center',
-                                              justifyContent: 'center'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                              e.currentTarget.style.transform = 'translateY(-1px)';
-                                              e.currentTarget.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.3)';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                              e.currentTarget.style.transform = 'translateY(0)';
-                                              e.currentTarget.style.boxShadow = 'none';
-                                            }}
-                                            title="AI 분석 결과"
-                                          >
-                                            AI 분석
-                                          </button>
-                                        )}
                                       </div>
                                       <div style={{ marginBottom: '0.8rem' }}>
                                         <span style={{
@@ -2524,8 +2509,10 @@ export default function CompanyDashboard() {
                                       </div>
                                     </div>
                                   </div>
-                                    </motion.div>
-                                );
+                                  
+
+                                </motion.div>
+                              );
                               })}
                           </motion.div>
                         )}
@@ -3558,6 +3545,20 @@ export default function CompanyDashboard() {
           avatarUrl={getGithubAvatarUrl(selectedCandidate.githubLogin)}
         />
       )}
+
+      {/* MatchingDetailModal */}
+      {showMatchingDetailModal && selectedMatchingCandidate && (
+        <MatchingDetailModal
+          open={showMatchingDetailModal}
+          onClose={() => {
+            setShowMatchingDetailModal(false);
+            setSelectedMatchingCandidate(null);
+          }}
+          candPortfolioId={selectedMatchingCandidate.candPortfolioId}
+          postId={selectedMatchingCandidate.postId}
+        />
+      )}
+
     </div>
   );
 }

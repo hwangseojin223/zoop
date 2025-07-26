@@ -31,6 +31,7 @@ const ResumeSubmissionPage = () => {
     file: null,
   });
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
   const [saving, setSaving] = useState(false);
   const [agreementChecked, setAgreementChecked] = useState(false);
   const [offerOption, setOfferOption] = useState('active');
@@ -110,18 +111,17 @@ const ResumeSubmissionPage = () => {
       return;
     }
     setLoading(true);
+    setLoadingMessage('제출 중...');
     try {
       // 1. 이력서+학력+경력 한 번에 등록
       // education의 school -> schoolName 변환 및 빈 값 처리
       const educations = (form.education || []).map(edu => {
         const e = { ...edu, schoolName: edu.school };
-        // undefined/null → '' 처리
         Object.keys(e).forEach(k => { if (e[k] === undefined || e[k] === null) e[k] = ''; });
         return e;
       });
-      // experiences 변환: 필수값 없는 항목 제외, 필드명 매핑, Y/N 변환, 빈 값 처리
       const experiences = (form.career || [])
-        .filter(exp => exp.company && (exp.jobTitle || exp.job)) // 회사명, 직무 필수
+        .filter(exp => exp.company && (exp.jobTitle || exp.job))
         .map(exp => {
           const ex = {
             ...exp,
@@ -182,13 +182,25 @@ const ResumeSubmissionPage = () => {
           } catch (e) {}
           throw new Error(errorMsg);
         }
+        const uploadResult = await portRes.json();
+        console.log('포트폴리오 업로드 응답:', uploadResult);
+        // 다양한 필드명에 대응
+        const cand_portfolio_id = uploadResult.cand_portfolio_id || uploadResult.portfolioId || uploadResult.id;
+        const file_url = uploadResult.file_url || uploadResult.portfolioFilePath || uploadResult.url;
+        if (!cand_portfolio_id || !file_url) {
+          throw new Error('포트폴리오 업로드 응답에 cand_portfolio_id 또는 file_url이 없습니다.');
+        }
+        // 분석 API 호출 및 폴링 부분 제거
+        alert('이력서 및 포트폴리오가 성공적으로 등록되었습니다!\n분석은 잠시 후 자동으로 진행됩니다.');
+        navigate('/candidate/dashboard');
+        setLoading(false);
+        setLoadingMessage('');
+        return;
       }
-      alert('이력서 및 포트폴리오가 성공적으로 등록되었습니다!');
-      navigate('/candidate/dashboard');
     } catch (err) {
       alert('등록 중 오류 발생: ' + err.message);
-    } finally {
       setLoading(false);
+      setLoadingMessage('');
     }
   };
 
@@ -211,6 +223,18 @@ const ResumeSubmissionPage = () => {
       navigate(-1); // 이전 페이지로 이동
     }
   };
+
+  // 2. 로딩 중에는 로딩 UI만
+  if (loading) {
+    return (
+      <div className="portfolio-submission-container">
+        <div className="loading-container">
+          <div className="loading-spinner" style={{ marginBottom:'1.5rem', width:'48px', height:'48px', border:'6px solid #e2e8f0', borderTop:'6px solid #38a169', borderRadius:'50%', animation:'spin 1s linear infinite' }}></div>
+          <p>{loadingMessage || '공고 정보를 불러오는 중입니다...'}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="resume-submission-page">

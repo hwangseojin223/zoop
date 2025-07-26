@@ -215,9 +215,67 @@ def enhanced_search_github_candidates(filters, post_id=None):
                         # LLM 점수 파싱 (예: (점수: 92점))
                         llm_score = 0
                         analysis_str = str(analysis) if analysis is not None else ""
-                        m = re.search(r"\(점수: (\d+)점\)", analysis_str)
-                        if m:
-                            llm_score = int(m.group(1))
+                        
+                        # 먼저 총점 패턴으로 시도
+                        total_score_patterns = [
+                            r"\(점수: (\d+)점\)",  # (점수: 85점)
+                            r"점수: (\d+)점",      # 점수: 85점
+                            r"총점: (\d+)점",      # 총점: 85점
+                            r"종합 점수: (\d+)점", # 종합 점수: 85점
+                            r"총 점수: (\d+)점",   # 총 점수: 85점
+                        ]
+                        
+                        # 총점 패턴으로 먼저 시도
+                        for pattern in total_score_patterns:
+                            m = re.search(pattern, analysis_str)
+                            if m:
+                                try:
+                                    llm_score = int(m.group(1))
+                                    print(f"[DEBUG] 총점 추출 성공: {llm_score} (패턴: {pattern})")
+                                    break
+                                except ValueError:
+                                    continue
+                        
+                        # 총점을 찾지 못했다면 각 항목별 점수를 더해서 계산
+                        if llm_score == 0:
+                            print(f"[DEBUG] 총점 패턴 실패, 항목별 점수 계산 시작")
+                            # 각 항목별 점수 추출
+                            item_scores = {
+                                '팔로워': 0,
+                                '공개 저장소': 0,
+                                '언어 다양성': 0,
+                                '최근 활동성': 0,
+                                '프로젝트 품질': 0,
+                                '기술적 깊이': 0
+                            }
+                            
+                            # 각 항목별 점수 패턴
+                            item_patterns = [
+                                (r'팔로워.*?(\d+)점', '팔로워'),
+                                (r'공개 저장소.*?(\d+)점', '공개 저장소'),
+                                (r'언어 다양성.*?(\d+)점', '언어 다양성'),
+                                (r'최근 활동성.*?(\d+)점', '최근 활동성'),
+                                (r'프로젝트 품질.*?(\d+)점', '프로젝트 품질'),
+                                (r'기술적 깊이.*?(\d+)점', '기술적 깊이')
+                            ]
+                            
+                            for pattern, item_name in item_patterns:
+                                matches = re.findall(pattern, analysis_str)
+                                if matches:
+                                    try:
+                                        score = int(matches[0])
+                                        item_scores[item_name] = score
+                                        print(f"[DEBUG] {item_name} 점수: {score}")
+                                    except ValueError:
+                                        continue
+                            
+                            # 총점 계산
+                            llm_score = sum(item_scores.values())
+                            print(f"[DEBUG] 항목별 점수 합계: {item_scores} = 총점 {llm_score}")
+                        
+                        if llm_score == 0:
+                            print(f"[WARNING] 점수 추출 실패. 분석 텍스트: {analysis_str[:200]}...")
+                        
                         candidate_result = {
                             **candidate_obj,
                             "details": details,

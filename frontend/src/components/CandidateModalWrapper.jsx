@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import CandidateModal from './CandidateModal';
 
-const CandidateModalWrapper = ({ children, postId }) => {
+const CandidateModalWrapper = ({ children, postId, fromMatchingTab }) => {
   const [isModalOpen, setModalOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
 
@@ -40,6 +40,7 @@ const CandidateModalWrapper = ({ children, postId }) => {
           candidate={selectedCandidate}
           onClose={closeModal}
           postId={postId}
+          fromMatchingTab={fromMatchingTab}
         />
       )}
     </>
