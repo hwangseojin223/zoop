@@ -300,11 +300,13 @@ def save_portfolio_job_matches_to_spring(portfolio_id: int, matches: List[Dict[s
     try:
         for match in matches:
             payload = {
-                "portfolioId": portfolio_id,
+                "candPortfolioId": portfolio_id,  # portfolioId -> candPortfolioId로 변경
                 "jobPostingId": match.get("jobPostingId", 0),
                 "matchingScore": match.get("matching_score", 0.0),
                 "matchingReason": match.get("matching_analysis", "")
             }
+            
+            print(f"[DEBUG] 매칭 저장 시도: candPortfolioId={portfolio_id}, jobPostingId={match.get('jobPostingId')}, score={match.get('matching_score')}")
             
             response = requests.post(
                 f"{SPRING_API_URL}/api/portfolio-job-matches",
@@ -316,6 +318,8 @@ def save_portfolio_job_matches_to_spring(portfolio_id: int, matches: List[Dict[s
             if response.status_code != 201:
                 print(f"Failed to save match: {response.status_code} - {response.text}")
                 return False
+            else:
+                print(f"[DEBUG] 매칭 저장 성공: {response.status_code}")
         
         return True
         
