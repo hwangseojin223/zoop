@@ -18,13 +18,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.zoop.backend.domain.entity.AiAnalysisResult;
+import com.zoop.backend.domain.entity.Candidate;
+import com.zoop.backend.domain.entity.CandidatePortfolio;
 import com.zoop.backend.domain.entity.JobCandProgress;
 import com.zoop.backend.domain.entity.PortfolioJobMatch;
+import com.zoop.backend.domain.entity.Post;
 import com.zoop.backend.repository.AiAnalysisResultRepository;
+import com.zoop.backend.repository.CandidatePortfolioRepository;
+import com.zoop.backend.repository.CandidateRepository;
 import com.zoop.backend.repository.JobCandProgressRepository;
 import com.zoop.backend.repository.PortfolioJobMatchRepository;
-import com.zoop.backend.service.CompanyNotificationService;
+import com.zoop.backend.repository.PostRepository;
 import com.zoop.backend.service.CandidateNotificationService;
+import com.zoop.backend.service.CompanyNotificationService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,6 +54,13 @@ public class PortfolioJobMatchController {
 
     @Autowired
     private CandidateNotificationService candidateNotificationService;
+    
+    @Autowired
+    private CandidatePortfolioRepository candidatePortfolioRepository;
+    @Autowired
+    private PostRepository postRepository;
+    @Autowired
+    private CandidateRepository candidateRepository;
     
     @PostMapping
     public ResponseEntity<?> savePortfolioJobMatch(@RequestBody Map<String, Object> request) {
@@ -96,6 +109,31 @@ public class PortfolioJobMatchController {
                 );
                 System.out.println("개인 알림 생성 완료");
             } else {
+                // progress가 없으면 새로 생성
+                // candPortfolioId로 candidateId 조회
+                CandidatePortfolio candidatePortfolio = candidatePortfolioRepository.findById(portfolioId).orElse(null);
+                if (candidatePortfolio != null) {
+                    Long candidateId = candidatePortfolio.getCandidateId();
+                    // Post 엔티티 조회
+                    Post post = postRepository.findById(jobPostingId).orElse(null);
+                    if (post != null) {
+                        Candidate candidate = candidateRepository.findById(candidateId).orElse(null);
+                        if (candidate != null) {
+                            JobCandProgress newProgress = JobCandProgress.builder()
+                                .post(post)
+                                .candidate(candidate)
+                                .candPortfolioId(portfolioId)
+                                .jobCandCurrStage("2y")
+                                .jobCandPortfolioSubDate(java.time.LocalDateTime.now())
+                                .jobCandCreatedAt(java.time.LocalDateTime.now())
+                                .jobCandUpdatedAt(java.time.LocalDateTime.now())
+                                .githubLogin(candidate.getGithubLogin())
+                                .build();
+                            jobCandProgressRepository.save(newProgress);
+                            System.out.println("[AUTO] JobCandProgress 새로 생성: portfolioId=" + portfolioId + ", postId=" + jobPostingId);
+                        }
+                    }
+                }
                 System.out.println("progressOpt가 비어 있음: portfolioId=" + portfolioId + ", jobPostingId=" + jobPostingId);
             }
             
@@ -239,6 +277,22 @@ public class PortfolioJobMatchController {
             log.error("후보자 매칭 정보 조회 중 오류: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("매칭 정보 조회 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    // === [프론트엔드 요청에 맞는 단일 매칭 조회 엔드포인트 추가] ===
+    @GetMapping("/portfolio/{candPortfolioId}/post/{postId}")
+    public ResponseEntity<?> getMatchByPortfolioIdAndPostId(@PathVariable Long candPortfolioId, @PathVariable Long postId) {
+        try {
+            Optional<PortfolioJobMatch> matchOpt = portfolioJobMatchRepository.findByCandPortfolioIdAndPostId(candPortfolioId, postId);
+            if (matchOpt.isPresent()) {
+                return ResponseEntity.ok(matchOpt.get());
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("매칭 정보를 찾을 수 없습니다.");
+            }
+        } catch (Exception e) {
+            log.error("포트폴리오+공고 매칭 단일 조회 오류: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("매칭 단일 조회 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 } 

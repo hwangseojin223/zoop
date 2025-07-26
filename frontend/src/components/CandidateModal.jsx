@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
+import { useNavigate } from 'react-router-dom';
 pdfjs.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.mjs`;
 
 /** */
-export default function CandidateModal({ candidate, isOpen, onClose, postId, avatarUrl }) {
+export default function CandidateModal({ candidate, isOpen, onClose, postId, avatarUrl, fromMatchingTab }) {
   const [zoom, setZoom] = useState(1.1); // 초기값 110%
   const [containerWidth, setContainerWidth] = useState(0);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -65,9 +66,9 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId, ava
   );
 
 
-  // jobCandidateId 조회
+  // jobCandidateId 조회 (fromMatchingTab이 아닐 때만)
   useEffect(() => {
-    if (!isOpen || !candidate || !postId) return;
+    if (!isOpen || !candidate || !postId || fromMatchingTab) return;
 
     fetch(`http://localhost:8081/api/progress/${postId}/${candidate.githubLogin}/job-candidate-id`)
       .then(res => {
@@ -84,18 +85,11 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId, ava
         console.error('jobCandidateId 조회 오류:', err);
         setJobCandidateId(null);
       });
-  }, [isOpen, candidate, postId]);
+  }, [isOpen, candidate, postId, fromMatchingTab]);
 
-  // 모달이 열릴 때 stage에 따라 API 호출
+  // 모달이 열릴 때 stage에 따라 API 호출 (fromMatchingTab이 아닐 때만)
   useEffect(() => {
-    if (!isOpen || !candidate || !jobCandidateId) {
-      console.log("--------------------------------");
-      console.log("isOpen: ", isOpen);
-      console.log("candidate: ", candidate);
-      console.log("jobCandidateId: ", jobCandidateId);
-      console.log("--------------------------------");
-      return;
-    }
+    if (!isOpen || !candidate || !jobCandidateId || fromMatchingTab) return;
 
     const stage = candidate.jobCandCurrStage;
     const githubLogin = candidate.githubLogin;
@@ -235,7 +229,7 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId, ava
         });
     }
     
-  }, [isOpen, candidate, jobCandidateId]);
+  }, [isOpen, candidate, jobCandidateId, fromMatchingTab]);
 
   // useEffect(() => {
   //   console.log("📩 invitationTimes 상태 업데이트:", invitationTimes);
@@ -437,6 +431,39 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId, ava
 
     // 최종 닫기
     onClose();
+  };
+
+  const navigate = useNavigate();
+  // 매칭탭에서만 새로운 상세페이지로 이동하는 함수
+  const handleGoToMatchingDetail = () => {
+    if (fromMatchingTab) {
+      const portfolioId = candidate.candPortfolioId;
+      const jobCandidateId = candidate.jobCandidateId;
+      const analysisId = candidate.aiAnalysis?.analysisId || null;
+      navigate('/matching-detail', {
+        state: {
+          candPortfolioId: portfolioId,
+          jobCandidateId,
+          analysisId,
+          candidateId: candidate.candidateId,
+          postId,
+        }
+      });
+      return;
+    }
+    // 예시: portfolioId, analysisId를 백엔드에서 받아와야 함 (여기선 임시로 jobCandidateId 사용)
+    // 실제로는 분석ID 등도 받아와야 함
+    const portfolioId = jobCandidateId; // 실제 portfolioId로 대체 필요
+    const analysisId = portfolioAnalysis?.analysisId || null; // 실제 분석ID로 대체 필요
+    navigate(`/job/${postId}`, {
+      state: {
+        fromMatchingTab: true,
+        portfolioId,
+        analysisId,
+        candidateId: candidate.candidateId,
+        jobCandidateId,
+      }
+    });
   };
 
   // 진행률 스타일 카드 컴포넌트
@@ -679,6 +706,14 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId, ava
 
         {/* 하단 버튼 */}
         <div className="mt-10 flex justify-end gap-3">
+          {fromMatchingTab && (
+            <button
+              onClick={handleGoToMatchingDetail}
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+            >
+              매칭 상세보기
+            </button>
+          )}
           { ["2y"].includes(localStage) && (
             <button
               onClick={handleInterviewInvitation}
