@@ -134,18 +134,38 @@ export default function CompanySignupProcess() {
                   {uploading && <p style={{ color: '#888' }}>분석 중입니다...</p>}
                   {ocrMessage && <p style={{ color: 'red', marginTop: '0.5rem' }}>{ocrMessage}</p>}
                   {isValidCert && (
-                    <div
-                      className="checkmark-overlay"
-                      style={{
-                        backgroundImage: `url(${process.env.PUBLIC_URL}/check.svg)`,
-                        backgroundSize: 'contain',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'center',
-                        width: '60px',
-                        height: '60px',
-                        margin: '1rem auto 0',
-                      }}
-                    />
+                    <div className="checkmark-overlay">
+                      <svg 
+                        width="80" 
+                        height="80" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        xmlns="http://www.w3.org/2000/svg"
+                        style={{
+                          margin: '1rem auto 0',
+                          display: 'block',
+                          filter: 'drop-shadow(0 4px 8px rgba(48, 197, 155, 0.3))'
+                        }}
+                      >
+                        <defs>
+                          <linearGradient id="checkGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#30c59b" />
+                            <stop offset="100%" stopColor="#2ab78d" />
+                          </linearGradient>
+                        </defs>
+                        <circle cx="12" cy="12" r="10" fill="url(#checkGradient)" stroke="url(#checkGradient)" strokeWidth="2"/>
+                        <path 
+                          d="M9 12l2 2 4-4" 
+                          stroke="white" 
+                          strokeWidth="2.5" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                          style={{
+                            animation: 'checkmarkDraw 0.6s ease-in-out forwards'
+                          }}
+                        />
+                      </svg>
+                    </div>
                   )}
                   {!isValidCert && (
                     <div className="checkbox-wrap">

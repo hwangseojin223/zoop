@@ -1,0 +1,23 @@
+# 환경 변수 파일 무시
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.env
+**/.env
+**/.env.*
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+
+# 로그 파일
+*.log
+
+# 임시 파일
+*.tmp
+*.temp 
