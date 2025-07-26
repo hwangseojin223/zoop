@@ -56,15 +56,16 @@ public class PortfolioMatchingService {
                     AiAnalysisResultDto dto = AiAnalysisResultDto.builder()
                         .analysisType("standalone_portfolio")
                         .jobCandidateId(null) // 나중에 업데이트할 예정
+                        .candPortfolioId(portfolio.getCandPortfolioId())
                         .analysisData(analysisResult)
                         .analysisScore(extractScore(analysisResult))
                         .build();
                     
                     AiAnalysisResult savedAnalysis = aiAnalysisResultService.saveAiAnalysisResult(dto);
                     
-                    // 포트폴리오 상태를 COMPLETED로 변경
-                    portfolio.setPortfolioAnalysisStatus("COMPLETED");
-                    candidatePortfolioRepository.save(portfolio);
+                    // 포트폴리오 상태를 COMPLETED로 명시적으로 업데이트
+                    candidatePortfolioRepository.updatePortfolioStatus(portfolio.getCandPortfolioId(), "COMPLETED");
+                    // candidatePortfolioRepository.save(portfolio); // 기존 코드 주석 처리
                     
                     log.info("포트폴리오 분석 완료: candPortfolioId={}, analysisId={}", 
                             portfolio.getCandPortfolioId(), savedAnalysis.getAnalysisId());
@@ -73,9 +74,9 @@ public class PortfolioMatchingService {
             } catch (Exception e) {
                 log.error("포트폴리오 분석 실패: candPortfolioId={}", portfolio.getCandPortfolioId(), e);
                 
-                // 분석 실패 시 상태를 FAILED로 변경
-                portfolio.setPortfolioAnalysisStatus("FAILED");
-                candidatePortfolioRepository.save(portfolio);
+                // 분석 실패 시 상태를 FAILED로 명시적으로 업데이트
+                candidatePortfolioRepository.updatePortfolioStatus(portfolio.getCandPortfolioId(), "FAILED");
+                // candidatePortfolioRepository.save(portfolio); // 기존 코드 주석 처리
             }
         }
     }

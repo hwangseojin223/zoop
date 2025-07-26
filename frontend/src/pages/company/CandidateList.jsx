@@ -4,6 +4,7 @@ import styled, { css, keyframes } from 'styled-components';
 import Navbar from '../../components/Navbar';
 import { FaGithub, FaExpandAlt, FaTimes, FaStar, FaCode, FaEnvelope, FaEdit } from 'react-icons/fa';
 import SEO from '../../components/SEO';
+import MatchingDetailModal from './MatchingDetailModal';
 
 // =========== Styled Components ===========
 
@@ -1191,7 +1192,7 @@ function parseNaturalLanguageScores(text) {
   return result;
 }
 
-export default function CandidateList() {
+export default function CandidateList({ activeTab = 'all' }) {
   const { postId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -1500,6 +1501,9 @@ export default function CandidateList() {
     alert(`${selectedEmails.length}명에게 메일을 보냅니다:\n` + selectedEmails.join(', '));
   };
 
+  const [showMatchingDetailModal, setShowMatchingDetailModal] = useState(false);
+  const [selectedMatchingCandidate, setSelectedMatchingCandidate] = useState(null);
+
   if (loading) {
     return <Wrapper><Navbar /><Container>후보자 목록을 불러오는 중...</Container></Wrapper>;
   }
@@ -1560,16 +1564,23 @@ export default function CandidateList() {
                 const analysisResult = aiAnalysisResults.find(
                   ai => ai.githubSearchResultId === candidate.githubSearchResultId
                 );
+                // 보장: candPortfolioId, jobCandidateId, analysisId
+                const candPortfolioId = candidate.candPortfolioId || candidate.portfolioId;
+                const jobCandidateId = candidate.jobCandidateId;
+                const analysisId = (candidate.aiAnalysis && candidate.aiAnalysis.analysisId) || (analysisResult && analysisResult.analysisId);
                 return (
-                  <TossCandidateCard
-                    key={candidate.githubLogin || idx}
-                    candidate={candidate}
-                    analysisResult={analysisResult}
-                    selected={selected.includes(candidate.githubLogin || candidate.login)}
-                    onClick={() => toggleSelect(candidate.githubLogin || candidate.login)}
-                    openAnalysisModal={openAnalysisModal}
-                    toggleSelect={toggleSelect}
-                  />
+                  <div key={candidate.githubLogin || idx} style={{ marginBottom: 24, background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px #e0f7ef44', padding: 24, display: 'flex', alignItems: 'center', gap: 24 }}>
+                    {/* TossCandidateCard 등 기존 후보자 정보 렌더링 */}
+                    <TossCandidateCard
+                      candidate={candidate}
+                      analysisResult={analysisResult}
+                      selected={selected.includes(candidate.githubLogin || candidate.login)}
+                      onClick={() => toggleSelect(candidate.githubLogin || candidate.login)}
+                      openAnalysisModal={openAnalysisModal}
+                      toggleSelect={toggleSelect}
+                    />
+
+                  </div>
                 );
               })}
             </PostersRow>
@@ -2171,6 +2182,15 @@ export default function CandidateList() {
             </div>
           </div>
         </div>
+      )}
+      {showMatchingDetailModal && selectedMatchingCandidate && (
+        <MatchingDetailModal
+          open={showMatchingDetailModal}
+          onClose={() => setShowMatchingDetailModal(false)}
+          candPortfolioId={selectedMatchingCandidate.candPortfolioId}
+          jobCandidateId={selectedMatchingCandidate.jobCandidateId}
+          analysisId={selectedMatchingCandidate.aiAnalysis?.analysisId}
+        />
       )}
     </Wrapper>
   );
