@@ -28,6 +28,7 @@ public class AiAnalysisResultService {
                 .analysisType(dto.getAnalysisType())
                 .githubSearchResultId(dto.getGithubSearchResultId())
                 .jobCandidateId(dto.getJobCandidateId())
+                .candPortfolioId(dto.getCandPortfolioId())
                 .analysisData(dto.getAnalysisData())
                 .analysisScore(dto.getAnalysisScore())
                 .analysisDate(dto.getAnalysisDate() != null ? dto.getAnalysisDate() : LocalDateTime.now())
