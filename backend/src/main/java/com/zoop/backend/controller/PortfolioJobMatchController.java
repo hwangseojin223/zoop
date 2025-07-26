@@ -67,19 +67,22 @@ public class PortfolioJobMatchController {
         try {
             log.info("포트폴리오-채용공고 매칭 결과 저장 시작: {}", request);
             
-            Long portfolioId = Long.valueOf(request.get("portfolioId").toString());
+            Long candPortfolioId = Long.valueOf(request.get("candPortfolioId").toString());  // portfolioId -> candPortfolioId로 변경
             Long jobPostingId = Long.valueOf(request.get("jobPostingId").toString());
             Double matchingScore = Double.valueOf(request.get("matchingScore").toString());
             String matchingReason = (String) request.get("matchingReason");
+            
+            log.info("매칭 저장 요청: candPortfolioId={}, jobPostingId={}, score={}", candPortfolioId, jobPostingId, matchingScore);
             
             // 80점 미만은 저장하지 않음
             if (matchingScore < 80.0) {
                 log.info("매칭 점수 {}점: 80점 미만이므로 저장하지 않음", matchingScore);
                 return ResponseEntity.noContent().build();
             }
+            
             // PortfolioJobMatch 엔티티 생성 및 저장
             PortfolioJobMatch match = PortfolioJobMatch.builder()
-                    .candPortfolioId(portfolioId)
+                    .candPortfolioId(candPortfolioId)
                     .postId(jobPostingId)
                     .matchingScore(matchingScore)
                     .matchingReason(matchingReason)
@@ -89,7 +92,7 @@ public class PortfolioJobMatchController {
             System.out.println("매칭 저장 완료: " + savedMatch.getMatchId());
 
             // --- 매칭 알림 생성 ---
-            Optional<JobCandProgress> progressOpt = jobCandProgressRepository.findByCandPortfolioIdAndPost_PostId(portfolioId, jobPostingId);
+            Optional<JobCandProgress> progressOpt = jobCandProgressRepository.findByCandPortfolioIdAndPost_PostId(candPortfolioId, jobPostingId);
             if (progressOpt.isPresent()) {
                 JobCandProgress progress = progressOpt.get();
                 Long candidateId = progress.getCandidate().getCandidateId();
@@ -111,7 +114,7 @@ public class PortfolioJobMatchController {
             } else {
                 // progress가 없으면 새로 생성
                 // candPortfolioId로 candidateId 조회
-                CandidatePortfolio candidatePortfolio = candidatePortfolioRepository.findById(portfolioId).orElse(null);
+                CandidatePortfolio candidatePortfolio = candidatePortfolioRepository.findById(candPortfolioId).orElse(null);
                 if (candidatePortfolio != null) {
                     Long candidateId = candidatePortfolio.getCandidateId();
                     // Post 엔티티 조회
@@ -122,7 +125,7 @@ public class PortfolioJobMatchController {
                             JobCandProgress newProgress = JobCandProgress.builder()
                                 .post(post)
                                 .candidate(candidate)
-                                .candPortfolioId(portfolioId)
+                                .candPortfolioId(candPortfolioId)
                                 .jobCandCurrStage("2y")
                                 .jobCandPortfolioSubDate(java.time.LocalDateTime.now())
                                 .jobCandCreatedAt(java.time.LocalDateTime.now())
@@ -130,15 +133,15 @@ public class PortfolioJobMatchController {
                                 .githubLogin(candidate.getGithubLogin())
                                 .build();
                             jobCandProgressRepository.save(newProgress);
-                            System.out.println("[AUTO] JobCandProgress 새로 생성: portfolioId=" + portfolioId + ", postId=" + jobPostingId);
+                            System.out.println("[AUTO] JobCandProgress 새로 생성: portfolioId=" + candPortfolioId + ", postId=" + jobPostingId);
                         }
                     }
                 }
-                System.out.println("progressOpt가 비어 있음: portfolioId=" + portfolioId + ", jobPostingId=" + jobPostingId);
+                System.out.println("progressOpt가 비어 있음: portfolioId=" + candPortfolioId + ", jobPostingId=" + jobPostingId);
             }
             
             // job_cand_progress 테이블의 job_cand_curr_stage를 '2y'로 업데이트
-            updateJobCandProgressStage(portfolioId, jobPostingId);
+            updateJobCandProgressStage(candPortfolioId, jobPostingId);
             
             return ResponseEntity.status(HttpStatus.CREATED).body(savedMatch);
             
