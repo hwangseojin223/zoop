@@ -230,35 +230,71 @@ public class JobCandProgressService {
         int updatedCount = 0;
         
         for (Map<String, Object> data : candidateData) {
-            Integer candidateId = (Integer) data.get("candidateId");
-            Long postId = Long.valueOf(data.get("postId").toString());
-            
-            // candidateId null 체크 추가
-            if (candidateId == null) {
-                log.warn("candidateId가 null입니다. 데이터: {}", data);
-                continue; // null인 경우 건너뛰기
-            }
-            
-            // 특정 공고와 지원자 조합으로 JobCandProgress 찾기
-            var progressOpt = jobCandProgressRepository.findByPost_PostIdAndCandidate_CandidateId(postId, Long.valueOf(candidateId));
-            
-            if (progressOpt.isPresent()) {
-                JobCandProgress progress = progressOpt.get();
-                // stage가 "0" 또는 "1y"인 경우 업데이트 (직접 지원자 또는 메일 회신자)
-                if ("0".equals(progress.getJobCandCurrStage()) || "1y".equals(progress.getJobCandCurrStage())) {
-                    String oldStage = progress.getJobCandCurrStage();
-                    progress.setJobCandCurrStage(newStage);
-                    progress.setJobCandUpdatedAt(LocalDateTime.now());
-                    jobCandProgressRepository.save(progress);
-                    
-                    // 알림 생성
-                    createNotificationOnStageChange(progress, oldStage, newStage);
-                    
-                    updatedCount++;
+            try {
+                // candidateId와 postId를 안전하게 추출
+                Object candidateIdObj = data.get("candidateId");
+                Object postIdObj = data.get("postId");
+                
+                if (candidateIdObj == null || postIdObj == null) {
+                    log.warn("candidateId 또는 postId가 null입니다. 데이터: {}", data);
+                    continue;
                 }
+                
+                // 타입 변환을 안전하게 처리
+                Integer candidateId;
+                Long postId;
+                
+                if (candidateIdObj instanceof Integer) {
+                    candidateId = (Integer) candidateIdObj;
+                } else if (candidateIdObj instanceof Long) {
+                    candidateId = ((Long) candidateIdObj).intValue();
+                } else {
+                    candidateId = Integer.valueOf(candidateIdObj.toString());
+                }
+                
+                if (postIdObj instanceof Long) {
+                    postId = (Long) postIdObj;
+                } else if (postIdObj instanceof Integer) {
+                    postId = ((Integer) postIdObj).longValue();
+                } else {
+                    postId = Long.valueOf(postIdObj.toString());
+                }
+                
+                log.info("처리 중인 데이터: candidateId={}, postId={}, newStage={}", candidateId, postId, newStage);
+                
+                // 특정 공고와 지원자 조합으로 JobCandProgress 찾기
+                var progressOpt = jobCandProgressRepository.findByPost_PostIdAndCandidate_CandidateId(postId, Long.valueOf(candidateId));
+                
+                if (progressOpt.isPresent()) {
+                    JobCandProgress progress = progressOpt.get();
+                    log.info("기존 stage: {}", progress.getJobCandCurrStage());
+                    
+                    // stage가 "0"인 경우 업데이트 (직접 지원자)
+                    if ("0".equals(progress.getJobCandCurrStage())) {
+                        String oldStage = progress.getJobCandCurrStage();
+                        progress.setJobCandCurrStage(newStage);
+                        progress.setJobCandUpdatedAt(LocalDateTime.now());
+                        jobCandProgressRepository.save(progress);
+                        
+                        // 알림 생성
+                        createNotificationOnStageChange(progress, oldStage, newStage);
+                        
+                        updatedCount++;
+                        log.info("성공적으로 업데이트됨: candidateId={}, postId={}, oldStage={}, newStage={}", 
+                                candidateId, postId, oldStage, newStage);
+                    } else {
+                        log.warn("현재 stage가 '0'이 아닙니다: candidateId={}, postId={}, currentStage={}", 
+                                candidateId, postId, progress.getJobCandCurrStage());
+                    }
+                } else {
+                    log.warn("JobCandProgress를 찾을 수 없습니다: candidateId={}, postId={}", candidateId, postId);
+                }
+            } catch (Exception e) {
+                log.error("데이터 처리 중 오류 발생: data={}, error={}", data, e.getMessage(), e);
             }
         }
         
+        log.info("총 {}개의 레코드가 업데이트되었습니다.", updatedCount);
         return updatedCount;
     }
 

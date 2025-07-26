@@ -477,10 +477,15 @@ public class PortfolioService {
                 ResponseEntity<java.util.Map> resp = restTemplate.postForEntity(PYTHON_API_URL, entity, java.util.Map.class);
                 String result = resp.getBody() != null ? (String) resp.getBody().get("result") : null;
                 if (result != null && !result.isBlank()) {
-                    // 분석 결과 저장
+                    // 분석 결과 저장 전 jobCandidateId 체크
+                    Long jobCandidateId = pf.getJobCandidateId() != null ? Long.valueOf(pf.getJobCandidateId()) : null;
+                    if (jobCandidateId == null || jobCandidateId == 0) {
+                        System.err.println("[PortfolioService] 분석 결과 저장 SKIP: jobCandidateId가 null 또는 0입니다. portfolioId=" + pf.getPortfolioId());
+                        continue;
+                    }
                     AiAnalysisResultDto dto = AiAnalysisResultDto.builder()
                         .analysisType("portfolio")
-                        .jobCandidateId(Long.valueOf(pf.getJobCandidateId()))
+                        .jobCandidateId(jobCandidateId)
                         .analysisData(result)
                         .analysisScore(extractScore(result))
                         .build();
