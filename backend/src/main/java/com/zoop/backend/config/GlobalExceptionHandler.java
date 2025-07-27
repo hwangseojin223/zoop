@@ -2,10 +2,10 @@ package com.zoop.backend.config;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
@@ -17,7 +17,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<String> handleMaxSizeException(MaxUploadSizeExceededException exc) {
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
-                .body("파일 크기가 너무 큽니다. 5MB 이하의 파일을 업로드해주세요.");
+                .body("파일 크기가 너무 큽니다. 50MB 이하의 파일을 업로드해주세요.");
     }
 
     // JWT 토큰 만료 예외 처리
