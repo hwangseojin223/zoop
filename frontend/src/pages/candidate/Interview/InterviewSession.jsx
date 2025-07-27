@@ -3,8 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 // InterviewSession.jsx: 2-column layout (left: question/timer, right: video), auto think/answer phase with timer and recording
 
-const THINK_TIME = 3;
-const ANSWER_TIME = 2;
+const THINK_TIME = 30;  // 생각시간: 30초
+const ANSWER_TIME = 60; // 답변시간: 2분 (120초)
 
 const InterviewSession = () => {
   const { scheduleId } = useParams();
@@ -95,7 +95,18 @@ const InterviewSession = () => {
   // 카메라 프리뷰 연결
   useEffect(() => {
     let isMounted = true;
-    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+    navigator.mediaDevices.getUserMedia({ 
+      video: { 
+        width: { ideal: 1280 }, 
+        height: { ideal: 720 },
+        facingMode: 'user'
+      }, 
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      }
+    })
       .then((stream) => {
         if (isMounted && videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -103,7 +114,14 @@ const InterviewSession = () => {
         }
       })
       .catch((err) => {
-        setError('카메라 접근에 실패했습니다: ' + err.message);
+        console.error('미디어 접근 오류:', err);
+        if (err.name === 'NotAllowedError') {
+          setError('카메라와 마이크 접근이 거부되었습니다. 브라우저에서 권한을 허용해주세요.');
+        } else if (err.name === 'NotFoundError') {
+          setError('카메라나 마이크를 찾을 수 없습니다. 장치가 연결되어 있는지 확인해주세요.');
+        } else {
+          setError('미디어 접근에 실패했습니다: ' + err.message);
+        }
       });
     return () => {
       isMounted = false;

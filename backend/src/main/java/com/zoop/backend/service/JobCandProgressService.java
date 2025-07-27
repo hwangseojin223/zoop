@@ -161,6 +161,15 @@ public class JobCandProgressService {
             .getJobCandidateId();
     }
 
+    // candPortfolioId로 jobCandidateId 조회 (매칭 상세보기용)
+    @Transactional(readOnly = true)
+    public Long getJobCandidateIdByPortfolio(Long postId, Long candPortfolioId) {
+        log.info("jobCandidateId 조회: postId={}, candPortfolioId={}", postId, candPortfolioId);
+        return jobCandProgressRepository.findByCandPortfolioIdAndPost_PostId(candPortfolioId, postId)
+            .orElseThrow(() -> new RuntimeException("해당 후보자를 찾을 수 없습니다."))
+            .getJobCandidateId();
+    }
+
     @Transactional
     public void updateCandidateId(String invitationToken, Long candidateId) {
         log.info("job_cand_progress candidate_id 업데이트: invitationToken={}, candidateId={}", invitationToken, candidateId);
@@ -317,8 +326,28 @@ public class JobCandProgressService {
     }
 
     public Optional<JobCandProgressWithCandidateDto> getJobCandProgressWithCandidateById(Long jobCandidateId) {
-        // 이 메서드는 DTO 변환이 필요하므로 추후 구현
-        return Optional.empty();
+        try {
+            Optional<JobCandProgress> progressOpt = jobCandProgressRepository.findById(jobCandidateId);
+            if (progressOpt.isPresent()) {
+                JobCandProgress progress = progressOpt.get();
+                JobCandProgressWithCandidateDto dto = JobCandProgressWithCandidateDto.builder()
+                    .jobCandidateId(progress.getJobCandidateId())
+                    .githubLogin(progress.getGithubLogin())
+                    .jobCandCurrStage(progress.getJobCandCurrStage())
+                    .candidateEmail(progress.getCandidate().getCandidateEmail())
+                    .candidateName(progress.getCandidate().getCandidateName())
+                    .candidatePhoneNumber(progress.getCandidate().getCandidatePhoneNumber())
+                    .postId(progress.getPost().getPostId())
+                    .postTitle(progress.getPost().getPostTitle())
+                    .candidateId(progress.getCandidate().getCandidateId())
+                    .build();
+                return Optional.of(dto);
+            }
+            return Optional.empty();
+        } catch (Exception e) {
+            log.error("JobCandProgressWithCandidate 조회 실패: {}", e.getMessage());
+            return Optional.empty();
+        }
     }
 
     /**
