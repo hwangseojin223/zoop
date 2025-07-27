@@ -1,0 +1,19 @@
+{
+  "name": "zoop-backend",
+  "type": "java",
+  "build": {
+    "command": "./mvnw clean package -DskipTests",
+    "output": "target/backend-0.0.1-SNAPSHOT.jar"
+  },
+  "run": {
+    "command": "java -jar target/backend-0.0.1-SNAPSHOT.jar"
+  },
+  "env": {
+    "SPRING_PROFILES_ACTIVE": "prod",
+    "DATABASE_URL": "your-database-url",
+    "JWT_SECRET": "your-jwt-secret"
+  },
+  "ports": [
+    8080
+  ]
+} 
