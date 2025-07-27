@@ -1,0 +1,21 @@
+{
+  "name": "zoop-frontend",
+  "type": "static",
+  "build": {
+    "command": "npm run build",
+    "output": "build"
+  },
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "env": {
+    "REACT_APP_API_URL": "https://your-backend-url.cloudtype.app"
+  }
+} 
