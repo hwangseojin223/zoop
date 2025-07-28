@@ -3,8 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 // InterviewSession.jsx: 2-column layout (left: question/timer, right: video), auto think/answer phase with timer and recording
 
-const THINK_TIME = 30;  // 생각시간: 30초
-const ANSWER_TIME = 60; // 답변시간: 2분 (120초)
+const THINK_TIME = 5;  // 생각시간: 30초
+const ANSWER_TIME = 7; // 답변시간: 2분 (120초)
 
 const InterviewSession = () => {
   const { scheduleId } = useParams();
