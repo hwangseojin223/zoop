@@ -29,7 +29,7 @@ export default function CompanySignupProcess() {
     formData.append('file', file);
 
     try {
-      const res = await fetch('http://localhost:8001/ocr', {
+      const res = await fetch('http://localhost:8005/ocr', {
         method: 'POST',
         body: formData,
       });
