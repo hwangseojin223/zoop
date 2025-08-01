@@ -71,12 +71,21 @@ def extract_audio_from_video(video_path: str) -> str:
                 result = whisper_model.transcribe(video_file, language="ko")
                 return result["text"]
         else:
-            # 로컬 파일인 경우
+            # 로컬 파일인 경우 - FFmpeg 없이 직접 Whisper 사용
+            print(f"Direct Whisper processing for: {video_path}")
             result = whisper_model.transcribe(video_path, language="ko")
             return result["text"]
     except Exception as e:
         print(f"Audio extraction error: {e}")
-        return ""
+        # FFmpeg 오류인 경우 대체 방법 시도
+        try:
+            print("FFmpeg 오류 발생, 대체 방법으로 시도...")
+            # 직접 Whisper로 비디오 파일 처리 (오디오 추출 없이)
+            result = whisper_model.transcribe(video_path, language="ko")
+            return result["text"]
+        except Exception as e2:
+            print(f"대체 방법도 실패: {e2}")
+            return ""
 
 def analyze_interview_responses(transcripts: List[str], questions: List[str], post_title: str = "", post_description: str = "", ideal_candidate: str = "") -> dict:
     """OpenAI를 사용하여 면접 답변 분석 (공고/인재상 정보 포함, 구조화된 JSON 반환)"""
@@ -284,14 +293,11 @@ async def analyze_interview(
         
         # 4. Spring 백엔드에 결과 저장
         print("Saving analysis result to Spring...")
-        analysis_id = save_analysis_to_spring(
-            job_candidate_id,
-            json.dumps(analysis_result, ensure_ascii=False),
-            analysis_result["score"]
-        )
+        # 분석 결과를 Spring 백엔드에 저장
+        analysis_id = save_analysis_to_spring(job_candidate_id, json.dumps(analysis_result), analysis_result["score"])
         
         if analysis_id:
-            # 5. job_cand_progress 테이블 업데이트
+            # job_cand_progress 테이블 업데이트
             update_response = requests.put(
                 f"{SPRING_API_URL}/api/job-cand-progress/{job_candidate_id}/interview-analysis",
                 json={"aiInterviewAnalysisId": analysis_id},
@@ -302,14 +308,14 @@ async def analyze_interview(
             if update_response.status_code != 200:
                 print(f"Warning: Failed to update job_cand_progress: {update_response.status_code}")
             
-            # 6. 분석 상태를 'done'으로 업데이트
+            # 분석 상태를 'done'으로 업데이트
             update_analysis_status(schedule_id, "done")
         
         return InterviewAnalysisResponse(
             success=True,
             analysis_id=analysis_id,
             score=analysis_result["score"],
-            analysis_data=analysis_result["analysis"]
+            analysis_data=json.dumps(analysis_result)  # dict를 JSON 문자열로 변환
         )
         
     except Exception as e:
@@ -374,7 +380,7 @@ async def analyze_single_video(video_id: int = Form(...)):
         print("Saving video analysis result to Spring...")
         analysis_id = save_analysis_to_spring(
             video.get("jobCandidateId", 0),  # job_candidate_id가 없으면 0
-            json.dumps(analysis_result, ensure_ascii=False),
+            json.dumps(analysis_result),
             analysis_result["score"],
             "interview_video",
             video_id
@@ -384,7 +390,7 @@ async def analyze_single_video(video_id: int = Form(...)):
             success=True,
             analysis_id=analysis_id,
             score=analysis_result["score"],
-            analysis_data=analysis_result["analysis"]
+            analysis_data=json.dumps(analysis_result)  # dict를 JSON 문자열로 변환
         )
         
     except Exception as e:
@@ -477,10 +483,24 @@ def analyze_single_video_response(transcript: str, question: str) -> dict:
 def auto_analyze_pending():
     while True:
         try:
-            schedules = requests.get(f"{SPRING_API_URL}/api/interview-schedules/pending").json()
+            print(f"[AUTO] PENDING 면접 스케줄 확인 중... (URL: {SPRING_API_URL}/api/interview-schedules/pending)")
+            response = requests.get(f"{SPRING_API_URL}/api/interview-schedules/pending")
+            print(f"[AUTO] 응답 상태 코드: {response.status_code}")
+            
+            if response.status_code != 200:
+                print(f"[AUTO] API 호출 실패: {response.text}")
+                time.sleep(60)
+                continue
+                
+            schedules = response.json()
+            print(f"[AUTO] PENDING 면접 스케줄 발견: {len(schedules)}개")
+            
             for schedule in schedules:
+                print(f"[AUTO] 스케줄 데이터: {schedule}")
                 schedule_id = schedule.get('aiInterviewScheduleId')
                 job_candidate_id = schedule.get('jobCandidateId')
+                
+                print(f"[AUTO] 추출된 ID - schedule_id: {schedule_id}, job_candidate_id: {job_candidate_id}")
                 
                 if schedule_id and job_candidate_id:
                     # 이미 분석이 완료되었는지 확인

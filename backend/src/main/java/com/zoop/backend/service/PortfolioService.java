@@ -123,15 +123,17 @@ public class PortfolioService {
         
         // --- 핵심 변경 부분 ---
         // 1. postId와 사용자 candidateId를 사용하여 JobCandProgress 레코드를 찾거나 생성합니다.
+        Candidate candidate = candidateRepository.findById(Long.valueOf(candidateId))
+            .orElseThrow(() -> new RuntimeException("해당 후보자를 찾을 수 없습니다."));
+        var post = postRepository.findById(Long.valueOf(postId))
+            .orElseThrow(() -> new RuntimeException("해당 공고를 찾을 수 없습니다."));
+            
+        // post_id와 github_login으로 기존 레코드 조회 (유니크 제약조건 기준)
         JobCandProgress jobCandProgress = jobCandProgressRepository
-            .findByPost_PostIdAndCandidate_CandidateId(postId.longValue(), candidateId.longValue())
+            .findByPost_PostIdAndGithubLogin(postId.longValue(), candidate.getGithubLogin())
             .orElseGet(() -> {
                 // 신규 생성
                 System.out.println("[PortfolioService] JobCandProgress 레코드가 없어서 새로 생성합니다.");
-                Candidate candidate = candidateRepository.findById(Long.valueOf(candidateId))
-                    .orElseThrow(() -> new RuntimeException("해당 후보자를 찾을 수 없습니다."));
-                var post = postRepository.findById(Long.valueOf(postId))
-                    .orElseThrow(() -> new RuntimeException("해당 공고를 찾을 수 없습니다."));
                 JobCandProgress newProgress = new JobCandProgress();
                 newProgress.setPost(post);
                 newProgress.setCandidate(candidate);
@@ -218,8 +220,6 @@ public class PortfolioService {
         jobCandProgressRepository.save(jobCandProgress); // 업데이트된 JobCandProgress 저장
         
         // --- 후보자 경력구분/총경력기간 저장 ---
-        Candidate candidate = candidateRepository.findById(Long.valueOf(candidateId))
-            .orElseThrow(() -> new RuntimeException("해당 후보자를 찾을 수 없습니다."));
         System.out.println("[PortfolioService] careerData (full object): " + careerData);
         if (careerData != null) {
             System.out.println("[PortfolioService] careerData fields: isExperienced=" + careerData.getIsExperienced() + ", totalYearsOfExperience=" + careerData.getTotalYearsOfExperience() + ", workExperiences=" + careerData.getWorkExperiences());
@@ -327,9 +327,17 @@ public class PortfolioService {
     }
     
     private List<Portfolio> getPortfoliosByPost(Integer candidateId, Integer postId) {
-        // JobCandProgress를 찾아서 해당 job_candidate_id로 포트폴리오 조회
+        // Candidate 정보를 먼저 조회하여 github_login을 가져옴
+        Candidate candidate = candidateRepository.findById(Long.valueOf(candidateId))
+            .orElse(null);
+        
+        if (candidate == null) {
+            return List.of();
+        }
+        
+        // post_id와 github_login으로 JobCandProgress 조회 (유니크 제약조건 기준)
         Optional<JobCandProgress> progress = jobCandProgressRepository
-            .findByPost_PostIdAndCandidate_CandidateId(postId.longValue(), candidateId.longValue());
+            .findByPost_PostIdAndGithubLogin(postId.longValue(), candidate.getGithubLogin());
         
         if (progress.isPresent()) {
             Integer jobCandProgressPk = progress.get().getJobCandidateId().intValue();
@@ -477,10 +485,15 @@ public class PortfolioService {
                 ResponseEntity<java.util.Map> resp = restTemplate.postForEntity(PYTHON_API_URL, entity, java.util.Map.class);
                 String result = resp.getBody() != null ? (String) resp.getBody().get("result") : null;
                 if (result != null && !result.isBlank()) {
-                    // 분석 결과 저장
+                    // 분석 결과 저장 전 jobCandidateId 체크
+                    Long jobCandidateId = pf.getJobCandidateId() != null ? Long.valueOf(pf.getJobCandidateId()) : null;
+                    if (jobCandidateId == null || jobCandidateId == 0) {
+                        System.err.println("[PortfolioService] 분석 결과 저장 SKIP: jobCandidateId가 null 또는 0입니다. portfolioId=" + pf.getPortfolioId());
+                        continue;
+                    }
                     AiAnalysisResultDto dto = AiAnalysisResultDto.builder()
                         .analysisType("portfolio")
-                        .jobCandidateId(Long.valueOf(pf.getJobCandidateId()))
+                        .jobCandidateId(jobCandidateId)
                         .analysisData(result)
                         .analysisScore(extractScore(result))
                         .build();

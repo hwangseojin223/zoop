@@ -48,7 +48,7 @@ export default function InterviewEvaluation() {
 
   const fetchCandidateData = async () => {
     try {
-      const response = await fetch(`http://localhost:8081/api/job-cand-progress/${candidateId}/with-candidate`, {
+      const response = await fetch(`http://localhost:8081/api/progress/job-cand-progress/${candidateId}/with-candidate`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
         },
@@ -82,20 +82,18 @@ export default function InterviewEvaluation() {
 
   const fetchAnalysisResult = async () => {
     try {
-      const response = await fetch(`http://localhost:8081/api/ai-analysis-results/type/interview`, {
+      // jobCandidateId로 직접 면접 분석 결과 조회
+      const response = await fetch(`http://localhost:8081/api/analysis/${candidateId}/interview`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
         },
       });
       if (response.ok) {
         const data = await response.json();
-        console.log('전체 분석 결과:', data);
-        // 현재 jobCandidateId에 해당하는 분석 결과 찾기
-        const result = data.find(item => item.jobCandidateId === parseInt(candidateId));
-        console.log('찾은 분석 결과:', result);
-        if (result) {
-          setAnalysisResult(result);
-        }
+        console.log('면접 분석 결과:', data);
+        setAnalysisResult(data);
+      } else {
+        console.log('면접 분석 결과가 없습니다.');
       }
     } catch (error) {
       console.error('면접 분석 결과 조회 실패:', error);
@@ -128,23 +126,35 @@ export default function InterviewEvaluation() {
   const parseAnalysisData = (analysisData) => {
     if (!analysisData) return null;
     try {
+      console.log('파싱할 분석 데이터:', analysisData);
+      
       // JSON 형태인 경우 파싱 (새 구조)
       if (typeof analysisData === 'string' && analysisData.trim().startsWith('{')) {
         const parsed = JSON.parse(analysisData);
-        // 새 구조: categories, total_feedback, visualization
+        console.log('파싱된 JSON:', parsed);
+        
+        // 새 구조: analysis.categories, analysis.total_feedback, analysis.visualization
+        if (parsed.analysis && parsed.analysis.categories && Array.isArray(parsed.analysis.categories)) {
+          return {
+            categories: parsed.analysis.categories,
+            totalScore: parsed.analysis.visualization?.score_distribution?.current || parsed.score || null,
+            totalFeedback: parsed.analysis.total_feedback || null,
+            visualization: parsed.analysis.visualization || null
+          };
+        }
+        
+        // 직접 categories가 있는 경우
         if (parsed.categories && Array.isArray(parsed.categories)) {
           return {
             categories: parsed.categories,
-            totalScore: parsed.visualization?.score_distribution?.current || null,
+            totalScore: parsed.visualization?.score_distribution?.current || parsed.score || null,
             totalFeedback: parsed.total_feedback || null,
             visualization: parsed.visualization || null
           };
         }
-        // 구버전 호환
-        const actualAnalysis = parsed.analysis || analysisData;
-        // 이하 구버전 파싱 로직...
       }
-      // 이하 구버전 파싱 로직...
+      
+      // 구버전 파싱 로직 (텍스트 기반)
       const lines = analysisData.split('\n');
       const categories = [];
       let totalScore = 0;

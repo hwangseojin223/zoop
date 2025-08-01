@@ -194,7 +194,7 @@ public class PortfolioController {
             CandidatePortfolio portfolio = CandidatePortfolio.builder()
                     .candidateId(candidateId)
                     .portfolioFilePath(portfolioFilePath)
-                    .portfolioAnalysisStatus("PENDING")
+                    .portfolioAnalysisStatus("COMPLETED")
                     .portfolioCreatedAt(new Date())
                     .portfolioUpdatedAt(new Date())
                     .build();
@@ -279,35 +279,16 @@ public class PortfolioController {
             CandidatePortfolio savedPortfolio = candidatePortfolioRepository.save(portfolio);
             System.out.println("[PortfolioController] 저장된 포트폴리오 ID: " + savedPortfolio.getCandPortfolioId());
 
-            // 3. JobCandProgress에서 해당 candidate의 stage를 2y로 업데이트
-            try {
-                List<JobCandProgress> progressList = jobCandProgressRepository.findByCandidate_CandidateId(candidateId.intValue());
-                for (JobCandProgress progress : progressList) {
-                    String currentStage = progress.getJobCandCurrStage();
-                    if ("0".equals(currentStage) || "1n".equals(currentStage) || "2n".equals(currentStage)) {
-                        System.out.println("[PortfolioController] 이력서 포트폴리오 제출 - Stage 업데이트: " + currentStage + " → 2y");
-                        progress.setJobCandCurrStage("2y");
-                        jobCandProgressRepository.save(progress);
-                    }
-                }
-            } catch (Exception e) {
-                System.err.println("[PortfolioController] Stage 업데이트 중 오류: " + e.getMessage());
-            }
-
-            // 2. AI 분석 및 매칭 실행 (비동기)
-            portfolioMatchingService.processPortfolioMatching(savedPortfolio.getCandPortfolioId());
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("portfolioId", savedPortfolio.getCandPortfolioId());
-            response.put("message", "이력서 포트폴리오가 성공적으로 업로드되었습니다.");
-            response.put("success", true);
-
+            // 응답 DTO에 S3 URL 포함
+            PortfolioSubmissionResponseDto response = new PortfolioSubmissionResponseDto();
+            response.setPortfolioId(savedPortfolio.getCandPortfolioId().intValue());
+            response.setPortfolioFilePath(savedPortfolio.getPortfolioFilePath());
+            response.setSuccess(true);
+            response.setMessage("이력서 포트폴리오가 성공적으로 업로드되었습니다.");
             return ResponseEntity.ok(response);
-
         } catch (Exception e) {
-            System.err.println("[PortfolioController] 이력서 포트폴리오 업로드 오류: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.status(500).body(Map.of("error", "이력서 포트폴리오 업로드 중 오류가 발생했습니다."));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("포트폴리오 제출 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
     
@@ -523,5 +504,68 @@ public class PortfolioController {
             result.put("originalFileName", fileName);
         }
         return ResponseEntity.ok(result);
+    }
+
+    @Operation(summary = "포트폴리오 분석 상태 조회", description = "포트폴리오 ID로 분석 상태만 반환")
+    @GetMapping("/status/{portfolioId}")
+    public ResponseEntity<?> getPortfolioAnalysisStatus(@PathVariable Long portfolioId) {
+        try {
+            Optional<CandidatePortfolio> portfolioOpt = candidatePortfolioRepository.findById(portfolioId);
+            if (portfolioOpt.isPresent()) {
+                String status = portfolioOpt.get().getPortfolioAnalysisStatus();
+                return ResponseEntity.ok(Map.of("status", status));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("status", "NOT_FOUND", "message", "해당 포트폴리오가 존재하지 않습니다."));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("status", "ERROR", "message", e.getMessage()));
+        }
+    }
+
+    @Operation(summary = "분석 완료 후 포트폴리오 등록", description = "분석이 끝난 후에만 candidate_portfolios에 COMPLETED로 저장")
+    @PostMapping("/complete-upload")
+    public ResponseEntity<?> completePortfolioUpload(
+            @RequestParam("candidateId") Long candidateId,
+            @RequestParam("portfolioFilePath") String portfolioFilePath,
+            @RequestParam("analysisData") String analysisData
+    ) {
+        try {
+            if (analysisData == null || analysisData.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("분석 결과(analysisData)가 없습니다. 분석이 완료된 후에만 저장할 수 있습니다.");
+            }
+            // (선택) 분석 결과를 로그로 남기거나, 별도 테이블/필드에 저장 가능
+            System.out.println("[complete-upload] 분석 결과 요약: " + analysisData.substring(0, Math.min(200, analysisData.length())));
+            CandidatePortfolio portfolio = CandidatePortfolio.builder()
+                    .candidateId(candidateId)
+                    .portfolioFilePath(portfolioFilePath)
+                    .portfolioAnalysisStatus("COMPLETED")
+                    .portfolioCreatedAt(new Date())
+                    .portfolioUpdatedAt(new Date())
+                    .build();
+            CandidatePortfolio savedPortfolio = candidatePortfolioRepository.save(portfolio);
+            Map<String, Object> response = new HashMap<>();
+            response.put("portfolioId", savedPortfolio.getCandPortfolioId());
+            response.put("message", "분석 완료 후 포트폴리오가 성공적으로 등록되었습니다.");
+            response.put("success", true);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("분석 완료 후 포트폴리오 등록 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/candidate-portfolio/{candPortfolioId}/analysis-status")
+    public ResponseEntity<?> updateCandidatePortfolioAnalysisStatus(
+            @PathVariable Long candPortfolioId,
+            @RequestParam String status
+    ) {
+        int updated = candidatePortfolioRepository.updatePortfolioStatus(candPortfolioId, status);
+        if (updated == 1) {
+            return ResponseEntity.ok("candidate_portfolios 상태가 업데이트되었습니다.");
+        } else {
+            return ResponseEntity.status(404).body("해당 candPortfolioId를 찾을 수 없습니다.");
+        }
     }
 }

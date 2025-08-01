@@ -12,30 +12,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.zoop.backend.domain.dto.FilterRequestDto;
 import com.zoop.backend.domain.dto.GithubSearchResultDto;
 import com.zoop.backend.domain.dto.GithubSearchResultWithStageDto;
-import com.zoop.backend.domain.entity.GithubSearchResult;
 import com.zoop.backend.domain.entity.AiAnalysisResult;
+import com.zoop.backend.domain.entity.Candidate;
+import com.zoop.backend.domain.entity.GithubSearchResult;
 import com.zoop.backend.domain.entity.JobCandProgress;
 import com.zoop.backend.domain.entity.Portfolio;
+import com.zoop.backend.repository.AiAnalysisResultRepository;
 import com.zoop.backend.repository.GithubSearchResultRepository;
 import com.zoop.backend.repository.JobCandProgressRepository;
-import com.zoop.backend.repository.AiAnalysisResultRepository;
 import com.zoop.backend.repository.PortfolioRepository;
 import com.zoop.backend.service.GithubBridgeService;
 import com.zoop.backend.service.GithubSearchResultService;
-import com.zoop.backend.domain.entity.Candidate;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -185,37 +175,47 @@ public class GithubSearchController {
     })
     @GetMapping("/by-post/{postId}/all")
     public ResponseEntity<?> getAllCandidatesByPost(@PathVariable Long postId) {
-        // 1. 전체 githubLogin 리스트 조회
-        List<String> githubLogins = jobCandProgressRepository.findGithubLoginsByPostId(postId);
-        if (githubLogins.isEmpty()) return ResponseEntity.ok(List.of());
-        // 2. github_search_results에서 후보자 정보 조회
-        List<GithubSearchResult> candidates = resultRepo.findByPostIdAndGithubLoginIn(postId, githubLogins);
-        // 3. AI 분석 결과 조회
-        List<Long> searchResultIds = candidates.stream().map(GithubSearchResult::getGithubSearchResultId).collect(Collectors.toList());
-        List<AiAnalysisResult> aiResults = aiAnalysisResultRepository.findByGithubSearchResultIds(searchResultIds);
-        // 4. JobCandProgress 정보 조회
-        List<JobCandProgress> progressList = jobCandProgressRepository.findByPostIdAndGithubLoginIn(postId, githubLogins);
-        // 5. 후보자 + 분석결과 + 진행상태 매핑
-        List<Map<String, Object>> result = candidates.stream().map(c -> {
+        // 1. 전체 JobCandProgress 조회 (github_search_results에 없는 매칭된 후보자도 포함)
+        List<JobCandProgress> allProgresses = jobCandProgressRepository.findByPost_PostId(postId);
+        if (allProgresses.isEmpty()) return ResponseEntity.ok(List.of());
+        
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        
+        for (JobCandProgress progress : allProgresses) {
             Map<String, Object> map = new java.util.HashMap<>();
-            map.put("candidate", c);
-            // githubName이 없고 candidateEmail이 있으면 candidate 테이블에서 이름을 찾아서 추가
-            // if (c.getGithubName() == null || c.getGithubName().isEmpty()) {
-            //     try {
-            //         var candidateOpt = jobCandProgressRepository
-            //             .findByPost_PostIdAndGithubLogin(postId, c.getGithubLogin());
-            //         if (candidateOpt.isPresent() && candidateOpt.get().getCandidate() != null) {
-            //             c.setGithubName(candidateOpt.get().getCandidate().getCandidateName());
-            //         }
-            //     } catch (Exception ignore) {}
-            // }
-            aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
-            progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
-                c.setJobCandCurrStage(p.getJobCandCurrStage());
-                map.put("jobCandidateId", p.getJobCandidateId());
-            });
-            return map;
-        }).collect(Collectors.toList());
+            
+            // github_search_results에 있으면 정보 가져오기
+            GithubSearchResult gsr = null;
+            if (progress.getGithubLogin() != null) {
+                gsr = resultRepo.findByPostIdAndGithubLogin(postId, progress.getGithubLogin()).orElse(null);
+            }
+            
+            if (gsr != null) {
+                // github_search_results에 있는 경우
+                map.put("candidate", gsr);
+                
+                // AI 분석 결과 조회
+                java.util.Optional<AiAnalysisResult> aiResult = aiAnalysisResultRepository.findByGithubSearchResultId(gsr.getGithubSearchResultId());
+                aiResult.ifPresent(analysisResult -> map.put("aiAnalysis", analysisResult));
+            } else {
+                // github_search_results에 없는 경우 (매칭된 후보자 등)
+                Candidate c = progress.getCandidate();
+                Map<String, Object> candidateInfo = new java.util.HashMap<>();
+                candidateInfo.put("candidateId", c.getCandidateId());
+                candidateInfo.put("candidateName", c.getCandidateName());
+                candidateInfo.put("candidateEmail", c.getCandidateEmail());
+                candidateInfo.put("candidatePhoneNumber", c.getCandidatePhoneNumber());
+                candidateInfo.put("githubLogin", progress.getGithubLogin());
+                candidateInfo.put("githubSearchResultId", null);
+                map.put("candidate", candidateInfo);
+            }
+            
+            map.put("jobCandidateId", progress.getJobCandidateId());
+            map.put("jobCandCurrStage", progress.getJobCandCurrStage());
+            map.put("candPortfolioId", progress.getCandPortfolioId());
+            result.add(map);
+        }
+        
         return ResponseEntity.ok(result);
     }
 
@@ -228,27 +228,50 @@ public class GithubSearchController {
     })
     @GetMapping("/by-post/{postId}/no-response")
     public ResponseEntity<?> getNoResponseCandidatesByPost(@PathVariable Long postId) {
-        // 1. 미회신자(1n, 2n) githubLogin 리스트 조회
-        List<String> githubLogins = jobCandProgressRepository.findGithubLoginsByPostIdAndNoResponseStage(postId);
-        if (githubLogins.isEmpty()) return ResponseEntity.ok(List.of());
-        // 2. github_search_results에서 후보자 정보 조회
-        List<GithubSearchResult> candidates = resultRepo.findByPostIdAndGithubLoginIn(postId, githubLogins);
-        // 3. AI 분석 결과 조회
-        List<Long> searchResultIds = candidates.stream().map(GithubSearchResult::getGithubSearchResultId).collect(Collectors.toList());
-        List<AiAnalysisResult> aiResults = aiAnalysisResultRepository.findByGithubSearchResultIds(searchResultIds);
-        // 4. JobCandProgress 정보 조회
-        List<JobCandProgress> progressList = jobCandProgressRepository.findByPostIdAndGithubLoginIn(postId, githubLogins);
-        // 5. 후보자 + 분석결과 + 진행상태 매핑
-        List<Map<String, Object>> result = candidates.stream().map(c -> {
+        // 1. 미회신자(1n, 2n) JobCandProgress 조회
+        List<JobCandProgress> noResponseProgresses = jobCandProgressRepository.findByPost_PostId(postId)
+            .stream()
+            .filter(p -> "1n".equals(p.getJobCandCurrStage()) || "2n".equals(p.getJobCandCurrStage()))
+            .collect(Collectors.toList());
+        if (noResponseProgresses.isEmpty()) return ResponseEntity.ok(List.of());
+        
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        
+        for (JobCandProgress progress : noResponseProgresses) {
             Map<String, Object> map = new java.util.HashMap<>();
-            map.put("candidate", c);
-            aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
-            progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
-                c.setJobCandCurrStage(p.getJobCandCurrStage());
-                map.put("jobCandidateId", p.getJobCandidateId());
-            });
-            return map;
-        }).collect(Collectors.toList());
+            
+            // github_search_results에 있으면 정보 가져오기
+            GithubSearchResult gsr = null;
+            if (progress.getGithubLogin() != null) {
+                gsr = resultRepo.findByPostIdAndGithubLogin(postId, progress.getGithubLogin()).orElse(null);
+            }
+            
+            if (gsr != null) {
+                // github_search_results에 있는 경우
+                map.put("candidate", gsr);
+                
+                // AI 분석 결과 조회
+                java.util.Optional<AiAnalysisResult> aiResult = aiAnalysisResultRepository.findByGithubSearchResultId(gsr.getGithubSearchResultId());
+                aiResult.ifPresent(analysisResult -> map.put("aiAnalysis", analysisResult));
+            } else {
+                // github_search_results에 없는 경우
+                Candidate c = progress.getCandidate();
+                Map<String, Object> candidateInfo = new java.util.HashMap<>();
+                candidateInfo.put("candidateId", c.getCandidateId());
+                candidateInfo.put("candidateName", c.getCandidateName());
+                candidateInfo.put("candidateEmail", c.getCandidateEmail());
+                candidateInfo.put("candidatePhoneNumber", c.getCandidatePhoneNumber());
+                candidateInfo.put("githubLogin", progress.getGithubLogin());
+                candidateInfo.put("githubSearchResultId", null);
+                map.put("candidate", candidateInfo);
+            }
+            
+            map.put("jobCandidateId", progress.getJobCandidateId());
+            map.put("jobCandCurrStage", progress.getJobCandCurrStage());
+            map.put("candPortfolioId", progress.getCandPortfolioId());
+            result.add(map);
+        }
+        
         return ResponseEntity.ok(result);
     }
 
@@ -261,27 +284,50 @@ public class GithubSearchController {
     })
     @GetMapping("/by-post/{postId}/response")
     public ResponseEntity<?> getResponseCandidatesByPost(@PathVariable Long postId) {
-        // 1. 회신자(2y) githubLogin 리스트 조회
-        List<String> githubLogins = jobCandProgressRepository.findGithubLoginsByPostIdAndResponseStage(postId);
-        if (githubLogins.isEmpty()) return ResponseEntity.ok(List.of());
-        // 2. github_search_results에서 후보자 정보 조회
-        List<GithubSearchResult> candidates = resultRepo.findByPostIdAndGithubLoginIn(postId, githubLogins);
-        // 3. AI 분석 결과 조회
-        List<Long> searchResultIds = candidates.stream().map(GithubSearchResult::getGithubSearchResultId).collect(Collectors.toList());
-        List<AiAnalysisResult> aiResults = aiAnalysisResultRepository.findByGithubSearchResultIds(searchResultIds);
-        // 4. JobCandProgress 정보 조회
-        List<JobCandProgress> progressList = jobCandProgressRepository.findByPostIdAndGithubLoginIn(postId, githubLogins);
-        // 5. 후보자 + 분석결과 + 진행상태 매핑
-        List<Map<String, Object>> result = candidates.stream().map(c -> {
+        // 1. 회신자(2y) JobCandProgress 조회
+        List<JobCandProgress> responseProgresses = jobCandProgressRepository.findByPost_PostId(postId)
+            .stream()
+            .filter(p -> "2y".equals(p.getJobCandCurrStage()))
+            .collect(Collectors.toList());
+        if (responseProgresses.isEmpty()) return ResponseEntity.ok(List.of());
+        
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        
+        for (JobCandProgress progress : responseProgresses) {
             Map<String, Object> map = new java.util.HashMap<>();
-            map.put("candidate", c);
-            aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
-            progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
-                c.setJobCandCurrStage(p.getJobCandCurrStage());
-                map.put("jobCandidateId", p.getJobCandidateId());
-            });
-            return map;
-        }).collect(Collectors.toList());
+            
+            // github_search_results에 있으면 정보 가져오기
+            GithubSearchResult gsr = null;
+            if (progress.getGithubLogin() != null) {
+                gsr = resultRepo.findByPostIdAndGithubLogin(postId, progress.getGithubLogin()).orElse(null);
+            }
+            
+            if (gsr != null) {
+                // github_search_results에 있는 경우
+                map.put("candidate", gsr);
+                
+                // AI 분석 결과 조회
+                java.util.Optional<AiAnalysisResult> aiResult = aiAnalysisResultRepository.findByGithubSearchResultId(gsr.getGithubSearchResultId());
+                aiResult.ifPresent(analysisResult -> map.put("aiAnalysis", analysisResult));
+            } else {
+                // github_search_results에 없는 경우
+                Candidate c = progress.getCandidate();
+                Map<String, Object> candidateInfo = new java.util.HashMap<>();
+                candidateInfo.put("candidateId", c.getCandidateId());
+                candidateInfo.put("candidateName", c.getCandidateName());
+                candidateInfo.put("candidateEmail", c.getCandidateEmail());
+                candidateInfo.put("candidatePhoneNumber", c.getCandidatePhoneNumber());
+                candidateInfo.put("githubLogin", progress.getGithubLogin());
+                candidateInfo.put("githubSearchResultId", null);
+                map.put("candidate", candidateInfo);
+            }
+            
+            map.put("jobCandidateId", progress.getJobCandidateId());
+            map.put("jobCandCurrStage", progress.getJobCandCurrStage());
+            map.put("candPortfolioId", progress.getCandPortfolioId());
+            result.add(map);
+        }
+        
         return ResponseEntity.ok(result);
     }
 
@@ -294,27 +340,50 @@ public class GithubSearchController {
     })
     @GetMapping("/by-post/{postId}/interview-scheduled")
     public ResponseEntity<?> getInterviewScheduledCandidatesByPost(@PathVariable Long postId) {
-        // 1. 면접 예정자(3n) githubLogin 리스트 조회
-        List<String> githubLogins = jobCandProgressRepository.findGithubLoginsByPostIdAndInterviewScheduledStage(postId);
-        if (githubLogins.isEmpty()) return ResponseEntity.ok(List.of());
-        // 2. github_search_results에서 후보자 정보 조회
-        List<GithubSearchResult> candidates = resultRepo.findByPostIdAndGithubLoginIn(postId, githubLogins);
-        // 3. AI 분석 결과 조회
-        List<Long> searchResultIds = candidates.stream().map(GithubSearchResult::getGithubSearchResultId).collect(Collectors.toList());
-        List<AiAnalysisResult> aiResults = aiAnalysisResultRepository.findByGithubSearchResultIds(searchResultIds);
-        // 4. JobCandProgress 정보 조회
-        List<JobCandProgress> progressList = jobCandProgressRepository.findByPostIdAndGithubLoginIn(postId, githubLogins);
-        // 5. 후보자 + 분석결과 + 진행상태 매핑
-        List<Map<String, Object>> result = candidates.stream().map(c -> {
+        // 1. 면접 예정자(3n) JobCandProgress 조회
+        List<JobCandProgress> interviewScheduledProgresses = jobCandProgressRepository.findByPost_PostId(postId)
+            .stream()
+            .filter(p -> "3n".equals(p.getJobCandCurrStage()))
+            .collect(Collectors.toList());
+        if (interviewScheduledProgresses.isEmpty()) return ResponseEntity.ok(List.of());
+        
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        
+        for (JobCandProgress progress : interviewScheduledProgresses) {
             Map<String, Object> map = new java.util.HashMap<>();
-            map.put("candidate", c);
-            aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
-            progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
-                c.setJobCandCurrStage(p.getJobCandCurrStage());
-                map.put("jobCandidateId", p.getJobCandidateId());
-            });
-            return map;
-        }).collect(Collectors.toList());
+            
+            // github_search_results에 있으면 정보 가져오기
+            GithubSearchResult gsr = null;
+            if (progress.getGithubLogin() != null) {
+                gsr = resultRepo.findByPostIdAndGithubLogin(postId, progress.getGithubLogin()).orElse(null);
+            }
+            
+            if (gsr != null) {
+                // github_search_results에 있는 경우
+                map.put("candidate", gsr);
+                
+                // AI 분석 결과 조회
+                java.util.Optional<AiAnalysisResult> aiResult = aiAnalysisResultRepository.findByGithubSearchResultId(gsr.getGithubSearchResultId());
+                aiResult.ifPresent(analysisResult -> map.put("aiAnalysis", analysisResult));
+            } else {
+                // github_search_results에 없는 경우
+                Candidate c = progress.getCandidate();
+                Map<String, Object> candidateInfo = new java.util.HashMap<>();
+                candidateInfo.put("candidateId", c.getCandidateId());
+                candidateInfo.put("candidateName", c.getCandidateName());
+                candidateInfo.put("candidateEmail", c.getCandidateEmail());
+                candidateInfo.put("candidatePhoneNumber", c.getCandidatePhoneNumber());
+                candidateInfo.put("githubLogin", progress.getGithubLogin());
+                candidateInfo.put("githubSearchResultId", null);
+                map.put("candidate", candidateInfo);
+            }
+            
+            map.put("jobCandidateId", progress.getJobCandidateId());
+            map.put("jobCandCurrStage", progress.getJobCandCurrStage());
+            map.put("candPortfolioId", progress.getCandPortfolioId());
+            result.add(map);
+        }
+        
         return ResponseEntity.ok(result);
     }
 
@@ -327,27 +396,50 @@ public class GithubSearchController {
     })
     @GetMapping("/by-post/{postId}/interview-completed")
     public ResponseEntity<?> getInterviewCompletedCandidatesByPost(@PathVariable Long postId) {
-        // 1. 면접 완료자(3y) githubLogin 리스트 조회
-        List<String> githubLogins = jobCandProgressRepository.findGithubLoginsByPostIdAndInterviewCompletedStage(postId);
-        if (githubLogins.isEmpty()) return ResponseEntity.ok(List.of());
-        // 2. github_search_results에서 후보자 정보 조회
-        List<GithubSearchResult> candidates = resultRepo.findByPostIdAndGithubLoginIn(postId, githubLogins);
-        // 3. AI 분석 결과 조회
-        List<Long> searchResultIds = candidates.stream().map(GithubSearchResult::getGithubSearchResultId).collect(Collectors.toList());
-        List<AiAnalysisResult> aiResults = aiAnalysisResultRepository.findByGithubSearchResultIds(searchResultIds);
-        // 4. JobCandProgress 정보 조회
-        List<JobCandProgress> progressList = jobCandProgressRepository.findByPostIdAndGithubLoginIn(postId, githubLogins);
-        // 5. 후보자 + 분석결과 + 진행상태 매핑
-        List<Map<String, Object>> result = candidates.stream().map(c -> {
+        // 1. 면접 완료자(3y, 4n, 4y) JobCandProgress 조회
+        List<JobCandProgress> interviewCompletedProgresses = jobCandProgressRepository.findByPost_PostId(postId)
+            .stream()
+            .filter(p -> "3y".equals(p.getJobCandCurrStage()) || "4n".equals(p.getJobCandCurrStage()) || "4y".equals(p.getJobCandCurrStage()))
+            .collect(Collectors.toList());
+        if (interviewCompletedProgresses.isEmpty()) return ResponseEntity.ok(List.of());
+        
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        
+        for (JobCandProgress progress : interviewCompletedProgresses) {
             Map<String, Object> map = new java.util.HashMap<>();
-            map.put("candidate", c);
-            aiResults.stream().filter(a -> a.getGithubSearchResultId().equals(c.getGithubSearchResultId())).findFirst().ifPresent(a -> map.put("aiAnalysis", a));
-            progressList.stream().filter(p -> p.getGithubLogin().equals(c.getGithubLogin())).findFirst().ifPresent(p -> {
-                c.setJobCandCurrStage(p.getJobCandCurrStage());
-                map.put("jobCandidateId", p.getJobCandidateId());
-            });
-            return map;
-        }).collect(Collectors.toList());
+            
+            // github_search_results에 있으면 정보 가져오기
+            GithubSearchResult gsr = null;
+            if (progress.getGithubLogin() != null) {
+                gsr = resultRepo.findByPostIdAndGithubLogin(postId, progress.getGithubLogin()).orElse(null);
+            }
+            
+            if (gsr != null) {
+                // github_search_results에 있는 경우
+                map.put("candidate", gsr);
+                
+                // AI 분석 결과 조회
+                java.util.Optional<AiAnalysisResult> aiResult = aiAnalysisResultRepository.findByGithubSearchResultId(gsr.getGithubSearchResultId());
+                aiResult.ifPresent(analysisResult -> map.put("aiAnalysis", analysisResult));
+            } else {
+                // github_search_results에 없는 경우
+                Candidate c = progress.getCandidate();
+                Map<String, Object> candidateInfo = new java.util.HashMap<>();
+                candidateInfo.put("candidateId", c.getCandidateId());
+                candidateInfo.put("candidateName", c.getCandidateName());
+                candidateInfo.put("candidateEmail", c.getCandidateEmail());
+                candidateInfo.put("candidatePhoneNumber", c.getCandidatePhoneNumber());
+                candidateInfo.put("githubLogin", progress.getGithubLogin());
+                candidateInfo.put("githubSearchResultId", null);
+                map.put("candidate", candidateInfo);
+            }
+            
+            map.put("jobCandidateId", progress.getJobCandidateId());
+            map.put("jobCandCurrStage", progress.getJobCandCurrStage());
+            map.put("candPortfolioId", progress.getCandPortfolioId());
+            result.add(map);
+        }
+        
         return ResponseEntity.ok(result);
     }
 

@@ -1,0 +1,17 @@
+{
+  "name": "zoop-python-api",
+  "type": "python",
+  "build": {
+    "command": "pip install -r requirements.txt"
+  },
+  "run": {
+    "command": "python main.py"
+  },
+  "env": {
+    "OPENAI_API_KEY": "your-openai-api-key",
+    "GITHUB_TOKEN": "your-github-token"
+  },
+  "ports": [
+    8000
+  ]
+} 
