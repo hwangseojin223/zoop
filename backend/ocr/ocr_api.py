@@ -60,3 +60,12 @@ async def extract_ocr_data(file: UploadFile = File(...)):
         "is_cert_doc": is_cert_doc,  # ✅ 증명서 여부 반환
         "raw_text": lines             # ✅ 전체 텍스트 반환 (디버깅용)
     }
+
+@app.get("/health")
+async def health_check():
+    """헬스 체크"""
+    return {"status": "healthy", "service": "ocr"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8005)

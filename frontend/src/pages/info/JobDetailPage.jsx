@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import CompanyInfoCard from './CompanyInfoCard';
 import { useAuth } from '../../context/AuthContext';
@@ -34,6 +34,19 @@ function JobDetailPage() {
   });
   const [loginError, setLoginError] = useState('');
   const [loggingIn, setLoggingIn] = useState(false);
+
+  const location = useLocation();
+  const fromMatchingTab = location.state?.fromMatchingTab;
+  // 매칭탭에서 전달된 정보 (예: portfolioId, analysisId)
+  const matchingPortfolioId = location.state?.portfolioId;
+  const matchingAnalysisId = location.state?.analysisId;
+
+  // 매칭탭에서만 보여줄 상태
+  const [matchingAnalysis, setMatchingAnalysis] = useState(null);
+  const [matchingScore, setMatchingScore] = useState(null);
+  const [matchingReason, setMatchingReason] = useState('');
+  const [matchingLoading, setMatchingLoading] = useState(false);
+  const [matchingError, setMatchingError] = useState('');
 
   // Fetch post, company, portfolios
   useEffect(() => {
@@ -364,6 +377,39 @@ function JobDetailPage() {
     await toggleBookmark(Number(postId));
     setBookmarkLoading(false);
   };
+
+  useEffect(() => {
+    if (fromMatchingTab && matchingPortfolioId && matchingAnalysisId) {
+      setMatchingLoading(true);
+      setMatchingError('');
+      // 1. 분석 결과 가져오기 (Spring)
+      fetch(`http://localhost:8081/api/ai-analysis-results/${matchingAnalysisId}`)
+        .then(res => res.ok ? res.json() : Promise.reject('분석 결과 조회 실패'))
+        .then(data => {
+          setMatchingAnalysis(data);
+        })
+        .catch(e => setMatchingError('분석 결과를 불러오지 못했습니다.'));
+      // 2. 매칭 점수/이유 가져오기 (FastAPI)
+      const formData = new FormData();
+      formData.append('portfolio_id', matchingPortfolioId);
+      formData.append('analysis_id', matchingAnalysisId);
+      fetch('http://localhost:8003/match-portfolio-jobs', {
+        method: 'POST',
+        body: formData
+      })
+        .then(res => res.ok ? res.json() : Promise.reject('매칭 점수 조회 실패'))
+        .then(data => {
+          if (data.success && data.matches && data.matches.length > 0) {
+            setMatchingScore(data.matches[0].match_score);
+            setMatchingReason(data.matches[0].match_reason || '');
+          } else {
+            setMatchingError('매칭 점수/이유를 불러오지 못했습니다.');
+          }
+        })
+        .catch(e => setMatchingError('매칭 점수/이유를 불러오지 못했습니다.'))
+        .finally(() => setMatchingLoading(false));
+    }
+  }, [fromMatchingTab, matchingPortfolioId, matchingAnalysisId]);
 
   if (loading) return <div style={{ padding: '2rem' }}>불러오는 중...</div>;
   if (error)   return <div style={{ padding: '2rem', color: 'red' }}>오류: {error}</div>;
@@ -1334,6 +1380,54 @@ function JobDetailPage() {
             <div className="loading-spinner" style={{ marginBottom:'1.5rem', width:'48px', height:'48px', border:'6px solid #e2e8f0', borderTop:'6px solid #38a169', borderRadius:'50%', animation:'spin 1s linear infinite' }} />
             <div>분석 중입니다. 잠시만 기다려주세요...</div>
           </div>
+        </div>
+      )}
+      {/* 매칭탭에서 진입한 경우에만 이력서/분석/매칭 점수/이유 섹션 노출 */}
+      {fromMatchingTab && (
+        <div style={{
+          margin: '2rem 0',
+          padding: '2rem',
+          background: '#f8fafd',
+          borderRadius: '16px',
+          boxShadow: '0 2px 8px rgba(48,197,155,0.07)',
+          maxWidth: 950,
+          marginLeft: 'auto',
+          marginRight: 'auto',
+        }}>
+          <h2 style={{ color: '#30c59b', fontWeight: 800, fontSize: '1.4rem', marginBottom: '1.2rem' }}>매칭 상세 정보</h2>
+          {matchingLoading ? (
+            <div>불러오는 중...</div>
+          ) : matchingError ? (
+            <div style={{ color: 'red' }}>{matchingError}</div>
+          ) : (
+            <>
+              {/* 이력서/포트폴리오 정보 */}
+              <div style={{ marginBottom: '1.2rem' }}>
+                <strong>이력서/포트폴리오:</strong><br />
+                {existingPortfolio && existingPortfolio.portfolioFilePath ? (
+                  <a href={existingPortfolio.portfolioFilePath} target="_blank" rel="noopener noreferrer">
+                    {existingPortfolio.originalFileName || '포트폴리오 파일 다운로드'}
+                  </a>
+                ) : (
+                  <span>포트폴리오 파일 정보 없음</span>
+                )}
+              </div>
+              {/* 분석 결과 */}
+              <div style={{ marginBottom: '1.2rem' }}>
+                <strong>분석 결과:</strong><br />
+                {matchingAnalysis && matchingAnalysis.analysisData ? (
+                  <pre style={{ background: '#fff', padding: '1rem', borderRadius: 8, fontSize: '1rem', maxHeight: 200, overflow: 'auto' }}>{typeof matchingAnalysis.analysisData === 'string' ? matchingAnalysis.analysisData : JSON.stringify(matchingAnalysis.analysisData, null, 2)}</pre>
+                ) : (
+                  <span>분석 결과 정보 없음</span>
+                )}
+              </div>
+              {/* 매칭 점수/이유 */}
+              <div>
+                <strong>매칭 점수:</strong> {matchingScore !== null ? <span style={{ color: '#30c59b', fontWeight: 700 }}>{matchingScore}점</span> : '정보 없음'}<br />
+                <strong>매칭 이유:</strong> {matchingReason || '정보 없음'}
+              </div>
+            </>
+          )}
         </div>
       )}
     </>

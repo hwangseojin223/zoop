@@ -1,8 +1,12 @@
 package com.zoop.backend.domain.dto;
 
-import lombok.*;
-
 import java.time.LocalDateTime;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -15,6 +19,7 @@ public class AiAnalysisResultDto {
     private String analysisType;
     private Long githubSearchResultId;
     private Long jobCandidateId;
+    private Long candPortfolioId;
     private String analysisData;
     private Double analysisScore;
     private LocalDateTime analysisDate;

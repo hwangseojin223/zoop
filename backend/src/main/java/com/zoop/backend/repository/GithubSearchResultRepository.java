@@ -30,7 +30,7 @@ public interface GithubSearchResultRepository extends JpaRepository<GithubSearch
     java.util.Optional<GithubSearchResult> findByPostIdAndGithubLogin(@Param("postId") Long postId, @Param("githubLogin") String githubLogin);
 
     // 공고 후보자, 지원자 상태조회 20250626
-    @Query("""
+    @Query(value = """
         SELECT new com.zoop.backend.domain.dto.GithubSearchResultWithStageDto(
             g.githubLogin,
             g.candidateEmail,
@@ -43,11 +43,10 @@ public interface GithubSearchResultRepository extends JpaRepository<GithubSearch
             j.jobCandidateId  
         )
         FROM GithubSearchResult g
-        LEFT JOIN AiAnalysisResults a ON g.aiGithubAnalysisId = a.analysisId
+        LEFT JOIN AiAnalysisResult a ON g.aiGithubAnalysisId = a.analysisId
         LEFT JOIN JobCandProgress j ON g.postId = j.post.postId AND g.githubLogin = j.githubLogin
         JOIN Post p ON g.postId = p.postId
         WHERE g.postId = :postId
-        AND g.candidateEmail != 'not_found@example.com'
     """)
     List<GithubSearchResultWithStageDto> findSearchResultsWithStageByPostId(@Param("postId") Long postId);
 }

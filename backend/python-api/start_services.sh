@@ -79,6 +79,20 @@ uvicorn interview_questions_api:app --host 0.0.0.0 --port 8004 --reload &
 QUESTIONS_PID=$!
 echo "✅ Interview Questions Service 시작됨 (PID: $QUESTIONS_PID)"
 
+# OCR Service (Port 8005)
+echo "📄 OCR Service 시작 중... (Port 8005)"
+cd ../../ocr
+if [ ! -f ".env" ]; then
+    echo "⚠️  .env 파일이 없습니다. ocr/.env 파일을 생성해주세요."
+    echo "예시:"
+    echo "OPENAI_API_KEY=your_api_key_here"
+fi
+
+# 백그라운드에서 OCR 서비스 시작
+uvicorn ocr_api:app --host 0.0.0.0 --port 8005 --reload &
+OCR_PID=$!
+echo "✅ OCR Service 시작됨 (PID: $OCR_PID)"
+
 echo ""
 echo "🎉 모든 서비스가 시작되었습니다!"
 echo "🔍 GitHub Search Service: http://localhost:8000"
@@ -86,12 +100,13 @@ echo "📱 Chatbot Service: http://localhost:8001"
 echo "🎥 Interview Analysis Service: http://localhost:8002"
 echo "📊 Portfolio Matching Service: http://localhost:8003"
 echo "❓ Interview Questions Service: http://localhost:8004"
+echo "📄 OCR Service: http://localhost:8005"
 echo ""
 echo "서비스를 중지하려면:"
-echo "kill $GITHUB_PID $CHATBOT_PID $INTERVIEW_PID $PORTFOLIO_PID $QUESTIONS_PID"
+echo "kill $GITHUB_PID $CHATBOT_PID $INTERVIEW_PID $PORTFOLIO_PID $QUESTIONS_PID $OCR_PID"
 echo ""
 echo "로그 확인:"
-echo "tail -f github_search/logs.txt chatbot/logs.txt interview_analysis/logs.txt portfolio_matching/logs.txt interview_questions/logs.txt"
+echo "tail -f github_search/logs.txt chatbot/logs.txt interview_analysis/logs.txt portfolio_matching/logs.txt interview_questions/logs.txt ocr/logs.txt"
 
 # 서비스 상태 모니터링
 while true; do
@@ -113,6 +128,10 @@ while true; do
     fi
     if ! kill -0 $QUESTIONS_PID 2>/dev/null; then
         echo "❌ Interview Questions Service가 중단되었습니다."
+        break
+    fi
+    if ! kill -0 $OCR_PID 2>/dev/null; then
+        echo "❌ OCR Service가 중단되었습니다."
         break
     fi
     sleep 5

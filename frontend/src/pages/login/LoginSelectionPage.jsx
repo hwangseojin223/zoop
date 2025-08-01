@@ -188,7 +188,7 @@ function LoginSelectionPage() {
           }
         }
 
-        alert('로그인 성공!');
+        // 로그인 성공 시 바로 페이지 이동
         if(receivedUserType === 'candidate'){
           navigate('/candidate/dashboard', { replace: true });
         }else if(receivedUserType === 'company'){

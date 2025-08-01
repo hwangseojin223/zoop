@@ -1,12 +1,11 @@
 package com.zoop.backend.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.http.HttpEntity;
@@ -17,19 +16,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zoop.backend.config.GithubBridgeConfig;
 import com.zoop.backend.domain.dto.FilterRequestDto;
 import com.zoop.backend.domain.dto.GithubCandidateDto;
-import com.zoop.backend.domain.entity.GithubSearchResult;
 import com.zoop.backend.domain.entity.AiAnalysisResult;
-import com.zoop.backend.domain.entity.JobCandProgress;
-import com.zoop.backend.repository.GithubSearchResultRepository;
-import com.zoop.backend.repository.AiAnalysisResultRepository;
-import com.zoop.backend.repository.PostRepository;
-import com.zoop.backend.domain.entity.Post;
-import com.zoop.backend.repository.JobCandProgressRepository;
-import com.zoop.backend.repository.CandidateRepository;
 import com.zoop.backend.domain.entity.Candidate;
+import com.zoop.backend.domain.entity.GithubSearchResult;
+import com.zoop.backend.domain.entity.JobCandProgress;
+import com.zoop.backend.domain.entity.Post;
+import com.zoop.backend.repository.AiAnalysisResultRepository;
+import com.zoop.backend.repository.CandidateRepository;
+import com.zoop.backend.repository.GithubSearchResultRepository;
+import com.zoop.backend.repository.JobCandProgressRepository;
+import com.zoop.backend.repository.PostRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -110,30 +110,41 @@ public class GithubBridgeService {
                 // 디버깅: 받은 데이터 출력
                 System.out.println("[DEBUG] 받은 사용자 데이터: " + user);
                 System.out.println("[DEBUG] llm_score: " + user.get("llm_score") + " (타입: " + (user.get("llm_score") != null ? user.get("llm_score").getClass().getSimpleName() : "null") + ")");
+                System.out.println("[DEBUG] score: " + user.get("score") + " (타입: " + (user.get("score") != null ? user.get("score").getClass().getSimpleName() : "null") + ")");
                 
                 // 점수 파싱 개선 (llm_score 또는 score 둘 다 시도)
                 Double score = null;
                 if (user.get("llm_score") != null) {
+                    System.out.println("[DEBUG] llm_score 처리 시작: " + user.get("llm_score"));
                     if (user.get("llm_score") instanceof Number) {
                         score = ((Number) user.get("llm_score")).doubleValue();
+                        System.out.println("[DEBUG] llm_score Number 변환 성공: " + score);
                     } else if (user.get("llm_score") instanceof String) {
                         try {
                             score = Double.parseDouble((String) user.get("llm_score"));
+                            System.out.println("[DEBUG] llm_score String 변환 성공: " + score);
                         } catch (NumberFormatException e) {
                             System.err.println("[ERROR] llm_score 파싱 실패: " + user.get("llm_score"));
                         }
                     }
                 } else if (user.get("score") != null) {
+                    System.out.println("[DEBUG] score 처리 시작: " + user.get("score"));
                     if (user.get("score") instanceof Number) {
                         score = ((Number) user.get("score")).doubleValue();
+                        System.out.println("[DEBUG] score Number 변환 성공: " + score);
                     } else if (user.get("score") instanceof String) {
                         try {
                             score = Double.parseDouble((String) user.get("score"));
+                            System.out.println("[DEBUG] score String 변환 성공: " + score);
                         } catch (NumberFormatException e) {
                             System.err.println("[ERROR] score 파싱 실패: " + user.get("score"));
                         }
                     }
+                } else {
+                    System.out.println("[WARNING] llm_score와 score 모두 null 또는 0");
                 }
+                
+                System.out.println("[DEBUG] 최종 파싱된 점수: " + score);
                 
                 // GitHub 검색 결과 저장
                 System.out.println("[DEBUG] GitHub 검색 결과 저장 시작: " + user.get("login"));

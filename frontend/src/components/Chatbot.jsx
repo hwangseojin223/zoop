@@ -332,8 +332,8 @@ export default function Chatbot({ open, onClose, anchorRef, onIdealCandidateUpda
           <span className="chatbot-banner-icon">📢</span>
           <span className="chatbot-banner-text">
             {lang === "ko"
-              ? "초기 스타트업 합류는, ZOOP에서"
-              : "Join early startups via ZOOP"}
+              ? "채용, 이제 쉽고 간편하게"
+              : "Hiring made easy and simple"}
           </span>
         </div>
         <div className="chatbot-appicon-block">

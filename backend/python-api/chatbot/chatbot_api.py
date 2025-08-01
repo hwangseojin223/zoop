@@ -144,3 +144,12 @@ async def ideal_candidate_chat_endpoint(req: IdealCandidateRequest):
     except Exception as e:
         print(f"[Error in ideal-candidate-chat] {e}")
         return {"answer": "죄송합니다. 일시적인 오류가 발생했습니다. 다시 시도해 주세요."}
+
+@app.get("/health")
+async def health_check():
+    """헬스 체크"""
+    return {"status": "healthy", "service": "chatbot"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8001)

@@ -102,7 +102,6 @@ function GoogleAuthCallback() {
 
             // 5. 응답에 토큰이 있는지 확인하고 로그인 성공 처리
             if (token) {
-                setMessage('Google 소셜 로그인 성공!');
                 setLoading(false); // 로딩 상태 해제
 
                 // AuthContext 상태 업데이트
@@ -113,8 +112,6 @@ function GoogleAuthCallback() {
                 localStorage.setItem('userType', userType); // 백엔드에서 받은 최종 userType 저장 (e.g., 'candidate')
                 localStorage.setItem('userId', userId);
                 localStorage.setItem('loginId', loginId); // 백엔드에서 정의한 소셜 로그인 사용자의 loginId (e.g., 'google_12345')
-
-                alert('Google 소셜 로그인에 성공했습니다.'); // 사용자에게 성공 알림
 
                 // 백엔드에서 받은 사용자 유형에 따라 적절한 대시보드 페이지로 이동
                  if (userType === 'candidate') {

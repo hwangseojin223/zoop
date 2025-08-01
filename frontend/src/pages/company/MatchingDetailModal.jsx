@@ -1,0 +1,175 @@
+import React, { useEffect, useState } from 'react';
+
+export default function MatchingDetailModal({ open, onClose, candPortfolioId, postId }) {
+  const [portfolio, setPortfolio] = useState(null);
+  const [analysis, setAnalysis] = useState(null);
+  const [match, setMatch] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [jobCandidateId, setJobCandidateId] = useState(null);
+  const [inviting, setInviting] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    console.log('MatchingDetailModal props:', { candPortfolioId, postId });
+    if (candPortfolioId == null || postId == null) {
+      setError('필수 정보가 누락되었습니다.');
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError('');
+    
+    // 매칭 정보와 함께 jobCandidateId도 가져오기
+    Promise.all([
+      fetch(`http://localhost:8081/api/portfolio-job-matches/portfolio/${candPortfolioId}/post/${postId}`)
+        .then(r => r.ok ? r.json() : null),
+      fetch(`http://localhost:8081/api/progress/${postId}/portfolio/${candPortfolioId}/job-candidate-id`)
+        .then(r => r.ok ? r.json() : null)
+        .catch(() => null) // jobCandidateId가 없을 수 있음
+    ])
+    .then(([matchData, jobCandidateResponse]) => {
+      setMatch(matchData);
+      if (jobCandidateResponse && jobCandidateResponse.jobCandidateId) {
+        setJobCandidateId(jobCandidateResponse.jobCandidateId);
+      }
+      setLoading(false);
+    })
+    .catch(e => {
+      setError('데이터를 불러오는 중 오류가 발생했습니다.');
+      setLoading(false);
+    });
+  }, [open, candPortfolioId, postId]);
+
+  // 면접초대 함수
+  const handleInterviewInvitation = async () => {
+    if (!jobCandidateId) {
+      alert('후보자 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    setInviting(true);
+    try {
+      const response = await fetch(`http://localhost:8081/api/progress/${jobCandidateId}/update-stage-2p`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        alert('면접초대가 성공적으로 전송되었습니다.');
+        onClose(); // 모달 닫기
+      } else {
+        const errorData = await response.text();
+        alert(`면접초대 전송 실패: ${errorData}`);
+      }
+    } catch (error) {
+      console.error('면접초대 전송 중 오류:', error);
+      alert('면접초대 전송 중 오류가 발생했습니다.');
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  if (!open) return null;
+
+  return (
+    <div style={{ position: 'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.45)', zIndex: 2000, display:'flex', alignItems:'center', justifyContent:'center' }} onClick={onClose}>
+      <div style={{ maxWidth: 800, width: '95vw', background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(48,197,155,0.10)', padding: '2.5rem 2.5rem 2rem 2.5rem', position:'relative' }} onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} style={{ position:'absolute', top:18, right:18, background:'none', border:'none', fontSize:28, color:'#aaa', cursor:'pointer', fontWeight:700 }}>&times;</button>
+        <h1 style={{ color: '#30c59b', fontWeight: 900, fontSize: '2rem', marginBottom: 32 }}>매칭 상세 결과</h1>
+        {loading ? (
+          <div style={{ padding: 40, textAlign: 'center' }}>불러오는 중...</div>
+        ) : error ? (
+          <div style={{ padding: 40, color: 'red', textAlign: 'center' }}>{error}</div>
+        ) : (
+          <>
+            {/* 매칭 점수/이유만 남김 */}
+            <section>
+              <h2 style={{ color: '#222', fontWeight: 800, fontSize: '1.2rem', marginBottom: 12 }}>매칭 점수 및 이유</h2>
+              {(() => {
+                const score = match.matchScore ?? match.MATCHING_SCORE ?? match.matchingScore;
+                const reason = match.matchReason ?? match.MATCHING_REASON ?? match.matchingReason;
+                return score !== undefined ? (
+                  <div style={{ background: '#f8fafd', borderRadius: 10, padding: 18, fontSize: 16 }}>
+                    <div><b>매칭 점수:</b> <span style={{ color: '#f59e42', fontWeight: 700, fontSize: 20 }}>{score}</span></div>
+                    <div style={{ marginTop: 10 }}><b>매칭 이유:</b></div>
+                    <pre style={{ background: '#fff', borderRadius: 8, padding: 14, fontSize: 15, marginTop: 6, maxHeight: 200, overflow: 'auto' }}>{reason || '매칭 이유 정보 없음'}</pre>
+                  </div>
+                ) : <div style={{ color: '#888' }}>매칭 점수/이유 정보를 찾을 수 없습니다.</div>;
+              })()}
+            </section>
+
+            {/* 면접초대 버튼 섹션 */}
+            <section style={{ marginTop: 24 }}>
+              <h2 style={{ color: '#222', fontWeight: 800, fontSize: '1.2rem', marginBottom: 12 }}>면접 관리</h2>
+              <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10, padding: 18 }}>
+                <p style={{ margin: '0 0 16px 0', color: '#166534', fontSize: 14 }}>
+                  이 후보자에게 면접을 초대하시겠습니까?
+                </p>
+                <button
+                  onClick={handleInterviewInvitation}
+                  disabled={inviting || !jobCandidateId}
+                  style={{
+                    background: jobCandidateId ? 'linear-gradient(135deg, #30c59b 0%, #22c55e 100%)' : '#ccc',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '12px 24px',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: jobCandidateId ? 'pointer' : 'not-allowed',
+                    transition: 'all 0.2s ease',
+                    boxShadow: jobCandidateId ? '0 4px 12px rgba(48, 197, 155, 0.3)' : 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                  onMouseEnter={e => {
+                    if (jobCandidateId) {
+                      e.target.style.transform = 'translateY(-1px)';
+                      e.target.style.boxShadow = '0 6px 20px rgba(48, 197, 155, 0.4)';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (jobCandidateId) {
+                      e.target.style.transform = 'none';
+                      e.target.style.boxShadow = '0 4px 12px rgba(48, 197, 155, 0.3)';
+                    }
+                  }}
+                >
+                  {inviting ? (
+                    <>
+                      <div style={{ width: '16px', height: '16px', border: '2px solid #fff', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                      면접초대 전송 중...
+                    </>
+                  ) : (
+                    <>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                      </svg>
+                      면접초대 보내기
+                    </>
+                  )}
+                </button>
+                {!jobCandidateId && (
+                  <p style={{ margin: '8px 0 0 0', color: '#dc2626', fontSize: '12px' }}>
+                    * 후보자 정보를 찾을 수 없어 면접초대를 보낼 수 없습니다.
+                  </p>
+                )}
+              </div>
+            </section>
+          </>
+        )}
+        
+        <style jsx>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    </div>
+  );
+} 

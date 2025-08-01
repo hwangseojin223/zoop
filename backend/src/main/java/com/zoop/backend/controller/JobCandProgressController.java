@@ -128,6 +128,19 @@ public class JobCandProgressController {
         }
     }
 
+    // postId와 candPortfolioId로 jobCandidateId 조회 (매칭 상세보기용)
+    @GetMapping("/{postId}/portfolio/{candPortfolioId}/job-candidate-id")
+    public ResponseEntity<?> getJobCandidateIdByPortfolio(@PathVariable Long postId, @PathVariable Long candPortfolioId) {
+        log.info("jobCandidateId 조회 API 호출: postId={}, candPortfolioId={}", postId, candPortfolioId);
+        try {
+            Long jobCandidateId = jobCandProgressService.getJobCandidateIdByPortfolio(postId, candPortfolioId);
+            return ResponseEntity.ok(new JobCandidateIdResponse(jobCandidateId));
+        } catch (Exception e) {
+            log.error("jobCandidateId 조회 실패: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     // invitation token으로 job_cand_progress의 candidate_id 업데이트
     @PostMapping("/update-candidate-id")
     public ResponseEntity<?> updateCandidateId(@RequestBody UpdateJobCandProgressRequest request) {
