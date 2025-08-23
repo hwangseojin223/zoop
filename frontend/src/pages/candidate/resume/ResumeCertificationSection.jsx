@@ -98,18 +98,16 @@ const ResumeCertificationSection = ({ form, setForm }) => {
       <h3 className="resume-section-title">자격/어학/수상</h3>
       
       {/* 새 자격 추가 폼 */}
-      <div className="certification-form">
+      <div className="form-container">
         <div className="form-row">
           <div className="form-group">
-            <label className="form-label">
-              구분 <span className="required">*</span>
-            </label>
+            <label className="form-label">구분</label>
             <select
               value={newCertification.type}
               onChange={(e) => setNewCertification(prev => ({ ...prev, type: e.target.value }))}
               className="form-select"
             >
-              <option value="">구분 *</option>
+              <option value="">구분 선택</option>
               {certificationTypes.map(type => (
                 <option key={type.value} value={type.value}>
                   {type.label}
@@ -119,14 +117,12 @@ const ResumeCertificationSection = ({ form, setForm }) => {
           </div>
           
           <div className="form-group">
-            <label className="form-label">
-              자격/어학/수상명 <span className="required">*</span>
-            </label>
+            <label className="form-label">자격/어학/수상명</label>
             <input
               type="text"
               value={newCertification.name}
               onChange={(e) => setNewCertification(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="자격/어학/수상명 *"
+              placeholder="자격/어학/수상명 입력"
               className="form-input"
             />
           </div>
@@ -139,7 +135,7 @@ const ResumeCertificationSection = ({ form, setForm }) => {
               type="text"
               value={newCertification.organization}
               onChange={(e) => setNewCertification(prev => ({ ...prev, organization: e.target.value }))}
-              placeholder="발급기관명"
+              placeholder="발급기관 입력"
               className="form-input"
             />
           </div>
@@ -150,7 +146,7 @@ const ResumeCertificationSection = ({ form, setForm }) => {
               type="text"
               value={newCertification.score}
               onChange={(e) => setNewCertification(prev => ({ ...prev, score: e.target.value }))}
-              placeholder="점수 또는 등급"
+              placeholder="점수/등급 입력"
               className="form-input"
             />
           </div>
@@ -158,7 +154,7 @@ const ResumeCertificationSection = ({ form, setForm }) => {
 
         <div className="form-row">
           <div className="form-group">
-            <label className="form-label">취득일</label>
+            <label className="form-label">취득년월</label>
             <div className="date-input-group">
               <select
                 value={newCertification.issueDate.split('-')[1] || ''}
@@ -191,7 +187,7 @@ const ResumeCertificationSection = ({ form, setForm }) => {
           </div>
           
           <div className="form-group">
-            <label className="form-label">만료일</label>
+            <label className="form-label">만료년월</label>
             <div className="date-input-group">
               <select
                 value={newCertification.expiryDate.split('-')[1] || ''}

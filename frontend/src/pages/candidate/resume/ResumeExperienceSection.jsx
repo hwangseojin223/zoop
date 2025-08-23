@@ -100,21 +100,19 @@ const ResumeExperienceSection = ({ form, setForm }) => {
 
   return (
     <div className="resume-section">
-      <h3 className="resume-section-title">경험/활동/교육</h3>
+      <h3 className="resume-section-title">경험/활동</h3>
       
       {/* 새 경험 추가 폼 */}
-      <div className="experience-form">
+      <div className="form-container">
         <div className="form-row">
           <div className="form-group">
-            <label className="form-label">
-              활동구분 선택 <span className="required">*</span>
-            </label>
+            <label className="form-label">활동구분</label>
             <select
               value={newExperience.type}
               onChange={(e) => setNewExperience(prev => ({ ...prev, type: e.target.value }))}
               className="form-select"
             >
-              <option value="">활동구분 선택 *</option>
+              <option value="">활동구분 선택</option>
               {activityTypes.map(type => (
                 <option key={type.value} value={type.value}>
                   {type.label}
@@ -124,14 +122,12 @@ const ResumeExperienceSection = ({ form, setForm }) => {
           </div>
           
           <div className="form-group">
-            <label className="form-label">
-              기관/장소명 <span className="required">*</span>
-            </label>
+            <label className="form-label">기관/장소명</label>
             <input
               type="text"
               value={newExperience.organization}
               onChange={(e) => setNewExperience(prev => ({ ...prev, organization: e.target.value }))}
-              placeholder="기관/장소명 *"
+              placeholder="기관/장소명 입력"
               className="form-input"
             />
           </div>

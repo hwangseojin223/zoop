@@ -1664,11 +1664,11 @@ export default function CompanyDashboard() {
                             style={{
                               position: 'relative',
                               overflow: 'hidden',
-                              padding: '0.6rem 1.5rem',
+                              padding: '0.5rem 1.2rem',
                               borderRadius: '999px',
                               border: '1.5px solid',
                               fontWeight: 700,
-                              fontSize: '1.05rem',
+                              fontSize: '0.95rem',
                                 cursor: isActiveFilter ? 'default' : 'pointer',
                                 boxShadow: isAdditionalApplicant 
                                   ? '0 0 15px rgba(59, 130, 246, 0.3), 0 0 30px rgba(59, 130, 246, 0.1)' 

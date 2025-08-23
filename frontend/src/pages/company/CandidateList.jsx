@@ -172,8 +172,8 @@ const TossCard = styled.div`
     0 4px 24px 0 rgba(48,197,155,0.08),
     0 1.5px 8px 0 rgba(107,232,200,0.06),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  width: 340px;
-  min-width: 340px;
+  width: 350px;
+  min-width: 350px;
   min-height: 480px;
   height: auto;
   padding: 1.7rem 1.3rem 1.7rem 1.3rem;

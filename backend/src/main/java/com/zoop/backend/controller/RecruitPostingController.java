@@ -33,7 +33,9 @@ import java.util.List;
 public class RecruitPostingController {
 
     private final PostService postService;
-    private final JwtUtil jwtUtil; // ✅ 추가됨
+    private final JwtUtil jwtUtil;
+    private final CompanyRepository companyRepository;
+    private final PostRepository postRepository;
 
     @Operation(summary = "새 채용 공고 생성", description = "인증된 사용자가 새로운 채용 공고를 등록합니다.")
     @ApiResponses(value={
@@ -64,7 +66,7 @@ public class RecruitPostingController {
             System.out.println("JWT 인증 실패, 기본값으로 처리: " + e.getMessage());
             dto.setCompanyId(1L);
             dto.setCompanyAdminId(1L);
-            Post post = postService.createPost(dto);
+            Post post = postService.createPost(dto, "default");
             return ResponseEntity.ok(Map.of("postId", post.getPostId()));
         }
     }
@@ -214,22 +216,6 @@ public class RecruitPostingController {
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
-    }
-
-    @Operation(summary = "회사별 공고 목록 조회", description = "특정 회사의 모든 공고 목록을 조회합니다.")
-    @ApiResponses(value={
-        @ApiResponse(responseCode = "200", description = "공고 목록 반환",
-            content = @Content(schema = @Schema(implementation = Post.class))),
-        @ApiResponse(responseCode = "404", description = "해당 회사의 공고를 찾을 수 없음"),
-        @ApiResponse(responseCode = "500", description = "서버 내부 오류")
-    })
-    @GetMapping
-    public ResponseEntity<List<Post>> getPostsByCompany(
-        @Parameter(description = "조회할 회사의 ID", required = true, example = "1")
-        @RequestParam Long companyId
-    ) {
-        List<Post> posts = postService.getPostsByCompanyId(companyId);
-        return ResponseEntity.ok(posts);
     }
 
     @Operation(summary = "모든 공고 목록 조회", description = "시스템의 모든 공고 목록을 조회합니다.")
