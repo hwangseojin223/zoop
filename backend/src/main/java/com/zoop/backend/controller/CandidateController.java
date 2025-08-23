@@ -113,6 +113,12 @@ public class CandidateController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             log.error("회원가입 중 예상치 못한 오류 발생: {}", e.getMessage(), e);
+            
+            // 트랜잭션 롤백 오류인지 확인
+            if (e.getMessage() != null && e.getMessage().contains("Transaction silently rolled back")) {
+                return new ResponseEntity<>("회원가입 중 데이터베이스 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            
             return new ResponseEntity<>("회원가입 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

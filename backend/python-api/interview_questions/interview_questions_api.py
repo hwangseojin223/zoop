@@ -10,10 +10,18 @@ from typing import List
 
 # .env에서 API 키 로드
 load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
-client = openai.OpenAI(api_key=OPENAI_API_KEY)
+# 환경 변수 검증
+if not OPENAI_API_KEY:
+    print("⚠️  OPENAI_API_KEY가 설정되지 않았습니다. .env 파일을 확인해주세요.")
+
+# OpenAI 클라이언트 초기화 (API 키가 있을 때만)
+if OPENAI_API_KEY:
+    client = openai.OpenAI(api_key=OPENAI_API_KEY)
+else:
+    client = None
 
 app = FastAPI()
 
@@ -42,6 +50,9 @@ class InterviewQuestionsResponse(BaseModel):
 
 def call_openai_chat(messages, max_tokens=800, temperature=0.3):
     """OpenAI API 호출 함수"""
+    if not client:
+        return "OpenAI API 키가 설정되지 않았습니다."
+    
     try:
         response = client.chat.completions.create(
             model=OPENAI_MODEL,
@@ -382,4 +393,4 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8004) 
+    uvicorn.run(app, host="0.0.0.0", port=8003) 

@@ -6,10 +6,13 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import com.zoop.backend.domain.dto.CandidatePreferencesDto;
 import com.zoop.backend.domain.dto.finding.FindGithubLoginRequest;
@@ -18,8 +21,6 @@ import com.zoop.backend.domain.entity.Candidate;
 import com.zoop.backend.repository.CandidateRepository;
 import com.zoop.backend.repository.InvitationRepository;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -83,9 +84,13 @@ public class CandidateService {
             Candidate savedCandidate = candidateRepository.save(candidate);
             logger.info("저장된 후보자 ID: {}", savedCandidate.getCandidateId());
             
-            // invitations 테이블 업데이트는 별도 API를 통해 처리 (외래키 제약조건 문제 해결)
-            // 회원가입 성공 후 프론트엔드에서 별도로 호출하도록 변경
-            logger.info("✅ 회원가입 성공: candidateId={}, githubLogin={}", savedCandidate.getCandidateId(), savedCandidate.getGithubLogin());
+            // invitations 테이블 업데이트는 별도 트랜잭션에서 처리
+            try {
+                updateInvitationAsync(savedCandidate.getGithubLogin(), savedCandidate.getCandidateId());
+            } catch (Exception invitationError) {
+                logger.warn("⚠️ invitations 테이블 업데이트 실패 (회원가입은 성공): {}", invitationError.getMessage());
+                // invitations 업데이트 실패해도 회원가입은 성공으로 처리
+            }
             
             return savedCandidate;
         } catch (Exception e) {
@@ -104,6 +109,8 @@ public class CandidateService {
             // invitations 업데이트 실패해도 회원가입은 성공으로 처리
         }
     }
+    
+
 
     @Transactional
     public Candidate updatePreferences(CandidatePreferencesDto preferencesDto) {

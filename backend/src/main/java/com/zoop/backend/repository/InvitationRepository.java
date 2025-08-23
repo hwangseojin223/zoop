@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.zoop.backend.domain.entity.Invitation;
 
@@ -24,14 +25,17 @@ public interface InvitationRepository extends JpaRepository<Invitation, Long> {
 
     // 초대 링크를 클릭한 시각을 기록 / 사용자가 이메일 링크를 클릭할 때 → 백엔드에서 이 쿼리 호출
     @Modifying
+    @Transactional
     @Query("UPDATE Invitation i SET i.invitationClickedDate = CURRENT_TIMESTAMP WHERE i.invitationUniqueToken = :token")
     void updateClickedDateByToken(String token);
 
     @Modifying
+    @Transactional
     @Query("UPDATE Invitation i SET i.candidateId = :candidateId WHERE i.githubLogin = :githubLogin")
     void updateCandidateIdByGithubLogin(String githubLogin, Long candidateId);
 
     @Modifying
+    @Transactional
     @Query("UPDATE Invitation i SET i.invitationStatus = :status WHERE i.invitationId = :id")
     void updateStatusById(Long id, String status);
 
@@ -47,6 +51,7 @@ public interface InvitationRepository extends JpaRepository<Invitation, Long> {
 
     // 일괄전송 시 사용 - 여러 invitation의 email_contents_id 업데이트
     @Modifying
+    @Transactional
     @Query("UPDATE Invitation i SET i.emailContentsId = :emailContentsId WHERE i.invitationId IN :invitationIds")
     void updateEmailContentsIdForInvitations(Long emailContentsId, List<Long> invitationIds);
 }
