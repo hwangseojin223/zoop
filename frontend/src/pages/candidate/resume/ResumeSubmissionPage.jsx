@@ -3,6 +3,8 @@ import { useAuth } from '../../../context/AuthContext';
 import ResumeBasicInfoSection from './ResumeBasicInfoSection';
 import ResumeEducationSection from './ResumeEducationSection';
 import ResumeCareerSection from './ResumeCareerSection';
+import ResumeExperienceSection from './ResumeExperienceSection';
+import ResumeCertificationSection from './ResumeCertificationSection';
 import ResumeSelfIntroSection from './ResumeSelfIntroSection';
 import ResumeFileUploadSection from './ResumeFileUploadSection';
 import './ResumeSubmissionPage.css';
@@ -27,6 +29,8 @@ const ResumeSubmissionPage = () => {
     phone: '',
     education: [],
     career: [],
+    experiences: [],
+    certifications: [],
     selfIntro: '',
     file: null,
   });
@@ -97,6 +101,8 @@ const ResumeSubmissionPage = () => {
         selfIntro: resumeData?.resume?.selfIntro || '',
         education: resumeData?.educations || [],
         career: resumeData?.experiences || [],
+        experiences: resumeData?.experiences || [],
+        certifications: resumeData?.certifications || [],
         file: portfolioFilePath ? { url: portfolioFilePath, name: originalFileName } : null,
       }));
     };
@@ -255,6 +261,12 @@ const ResumeSubmissionPage = () => {
               </div>
               <div className="resume-section-wrapper">
                 <ResumeCareerSection form={form} setForm={setForm} />
+              </div>
+              <div className="resume-section-wrapper">
+                <ResumeExperienceSection form={form} setForm={setForm} />
+              </div>
+              <div className="resume-section-wrapper">
+                <ResumeCertificationSection form={form} setForm={setForm} />
               </div>
               <div className="resume-section-wrapper">
                 <ResumeSelfIntroSection form={form} setForm={setForm} />

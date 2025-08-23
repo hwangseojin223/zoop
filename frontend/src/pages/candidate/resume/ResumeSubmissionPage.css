@@ -1577,4 +1577,233 @@ select:hover {
   padding: 0 2rem 2rem 2rem;
   border-radius: 0;
   box-sizing: border-box;
+}
+
+/* 경험/활동/교육 섹션 스타일 */
+.experience-form,
+.certification-form {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 1.5rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.required {
+  color: #ef4444;
+  margin-left: 0.25rem;
+}
+
+.form-select,
+.form-input {
+  padding: 0.75rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-select:focus,
+.form-input:focus {
+  outline: none;
+  border-color: #30C59B;
+  box-shadow: 0 0 0 3px rgba(48, 197, 155, 0.1);
+}
+
+.date-input-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.month-select {
+  flex: 1;
+  min-width: 80px;
+}
+
+.year-input {
+  flex: 1;
+  min-width: 100px;
+}
+
+.form-textarea {
+  padding: 0.75rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: #30C59B;
+  box-shadow: 0 0 0 3px rgba(48, 197, 155, 0.1);
+}
+
+.character-count {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary {
+  background: #30C59B;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #28a085;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(48, 197, 155, 0.3);
+}
+
+/* 경험 목록 스타일 */
+.experience-list,
+.certification-list {
+  margin-top: 1.5rem;
+}
+
+.experience-item,
+.certification-item {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.experience-header,
+.certification-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.experience-type,
+.certification-type {
+  background: #e6faf6;
+  color: #30C59B;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.experience-organization,
+.certification-name {
+  font-weight: 600;
+  color: #1f2937;
+  flex: 1;
+}
+
+.certification-organization,
+.certification-score {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.experience-dates,
+.certification-dates {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.experience-description,
+.certification-description {
+  color: #374151;
+  line-height: 1.6;
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.btn-remove {
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-remove:hover {
+  background: #fecaca;
+  transform: scale(1.05);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .date-input-group {
+    flex-direction: column;
+  }
+  
+  .month-select,
+  .year-input {
+    min-width: auto;
+  }
+  
+  .experience-header,
+  .certification-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .character-count {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
 } 
