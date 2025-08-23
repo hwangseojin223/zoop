@@ -8,11 +8,19 @@ import openai
 
 # .env에서 API 키와 PDF 경로, 모델명 등 로드
 load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 PDF_PATH = os.getenv("PDF_PATH", "채용_관리자_가이드.pdf")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
-client = openai.OpenAI(api_key=OPENAI_API_KEY)
+# 환경 변수 검증
+if not OPENAI_API_KEY:
+    print("⚠️  OPENAI_API_KEY가 설정되지 않았습니다. .env 파일을 확인해주세요.")
+
+# OpenAI 클라이언트 초기화 (API 키가 있을 때만)
+if OPENAI_API_KEY:
+    client = openai.OpenAI(api_key=OPENAI_API_KEY)
+else:
+    client = None
 
 app = FastAPI()
 
@@ -40,6 +48,9 @@ PDF_TEXT = load_pdf_text(PDF_PATH)
 
 # --------- 중복 제거용 함수 ----------
 def call_openai_chat(messages, max_tokens=800, temperature=0.3):
+    if not client:
+        return "OpenAI API 키가 설정되지 않았습니다."
+    
     try:
         response = client.chat.completions.create(
             model=OPENAI_MODEL,
@@ -54,7 +65,7 @@ def call_openai_chat(messages, max_tokens=800, temperature=0.3):
         )
     except Exception as e:
         print(f"[OpenAI API Error] {e}")
-        return {"answer": "AI 서버 연결에 문제가 발생했습니다."}
+        return "AI 서버 연결에 문제가 발생했습니다."
 
 def build_messages(system_prompt, history, user_input):
     messages = [{"role": "system", "content": system_prompt}]

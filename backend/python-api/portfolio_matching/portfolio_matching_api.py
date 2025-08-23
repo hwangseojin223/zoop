@@ -13,13 +13,24 @@ import time
 
 # .env에서 API 키 로드
 load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 SPRING_API_URL = os.getenv("SPRING_API_URL", "http://localhost:8081")
 
-client = openai.OpenAI(api_key=OPENAI_API_KEY)
+# 환경 변수 검증
+if not OPENAI_API_KEY:
+    print("⚠️  OPENAI_API_KEY가 설정되지 않았습니다. .env 파일을 확인해주세요.")
+
+# OpenAI 클라이언트 초기화 (API 키가 있을 때만)
+if OPENAI_API_KEY:
+    client = openai.OpenAI(api_key=OPENAI_API_KEY)
+else:
+    client = None
 
 def call_openai_chat(messages, max_tokens=800, temperature=0.3):
     """OpenAI API 호출 함수"""
+    if not client:
+        return "OpenAI API 키가 설정되지 않았습니다."
+    
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",

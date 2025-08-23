@@ -85,7 +85,12 @@ public class CandidateService {
             logger.info("저장된 후보자 ID: {}", savedCandidate.getCandidateId());
             
             // invitations 테이블 업데이트는 별도 트랜잭션에서 처리
-            updateInvitationAsync(savedCandidate.getGithubLogin(), savedCandidate.getCandidateId());
+            try {
+                updateInvitationAsync(savedCandidate.getGithubLogin(), savedCandidate.getCandidateId());
+            } catch (Exception invitationError) {
+                logger.warn("⚠️ invitations 테이블 업데이트 실패 (회원가입은 성공): {}", invitationError.getMessage());
+                // invitations 업데이트 실패해도 회원가입은 성공으로 처리
+            }
             
             return savedCandidate;
         } catch (Exception e) {

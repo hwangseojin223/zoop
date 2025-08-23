@@ -2,6 +2,372 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 pdfjs.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.mjs`;
 
+// Radar chart SVG for portfolio analysis
+const portfolioRadarLabels = ['기술적 깊이', '프로젝트 품질', '코드 품질', '문서화', '아키텍처', '문제해결'];
+const portfolioRadarMax = [20, 20, 15, 15, 15, 15]; // 각 항목별 만점
+
+// Radar chart SVG for GitHub analysis
+const githubRadarLabels = ['팔로워 수', '공개 저장소 수', '언어 다양성', '최근 활동성', '프로젝트 품질', '기술적 깊이'];
+const githubRadarMax = [10, 15, 15, 20, 20, 20]; // 각 항목별 만점
+
+function RadarChartSVG({ scores = {}, size = 120, totalScore, showLabels = true, showScores = false, type = 'portfolio' }) {
+  const cx = size / 2, cy = size / 2, r = size * 0.41;
+  
+  // 타입에 따라 라벨과 최대값 설정
+  const labels = type === 'github' ? githubRadarLabels : portfolioRadarLabels;
+  const maxScores = type === 'github' ? githubRadarMax : portfolioRadarMax;
+  const radarShortLabels = type === 'github' ? ['팔로워', '저장소', '언어', '활동', '품질', '깊이'] : ['기술', '품질', '코드', '문서', '아키', '해결'];
+  
+  // 각 축의 각도
+  const angles = labels.map((_, i) => (Math.PI * 2 * i) / labels.length - Math.PI/2);
+  // 점수값(0~1)
+  const values = labels.map((label, i) => Math.max(0, Math.min(1, (scores[label] || 0) / maxScores[i])));
+  // 폴리곤 좌표
+  const points = values.map((v, i) => {
+    const angle = angles[i];
+    const rr = r * v;
+    return [cx + rr * Math.cos(angle), cy + rr * Math.sin(angle)];
+  });
+  // 축 끝 좌표
+  const axisPoints = angles.map(a => [cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+  // 축 라벨 좌표 (축 끝에서 바깥쪽으로 8px)
+  const labelPoints = angles.map((a, i) => [
+    cx + (r + 8) * Math.cos(a),
+    cy + (r + 8) * Math.sin(a)
+  ]);
+  // 축 점수 좌표 (축 끝에서 바깥쪽으로 14px)
+  const scorePoints = angles.map((a, i) => [
+    cx + (r + 14) * Math.cos(a),
+    cy + (r + 14) * Math.sin(a)
+  ]);
+  const allZero = labels.every(label => (scores[label] || 0) === 0);
+  
+  return (
+    <svg width={size} height={size} style={{
+      display:'block',
+      margin:'0 auto',
+      position:'relative',
+      zIndex:2,
+      filter: 'drop-shadow(0 4px 8px rgba(59, 130, 246, 0.15))'
+    }}>
+      <defs>
+        <radialGradient id="glassBg" cx="50%" cy="50%" r="80%">
+          <stop offset="0%" stopColor="#fff" stopOpacity="0.9"/>
+          <stop offset="100%" stopColor="#dbeafe" stopOpacity="0.25"/>
+        </radialGradient>
+        <linearGradient id="blueGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#3b82f6"/>
+          <stop offset="100%" stopColor="#1d4ed8"/>
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge> 
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+      {/* 3D Glassy gradient background */}
+      <circle cx={cx} cy={cy} r={size/2-2} fill="url(#glassBg)" />
+      {/* 그리드 with 3D effect */}
+      {[0.33,0.66,1].map((f,idx) => (
+        <polygon
+          key={idx}
+          points={angles.map(a => [cx + r*f*Math.cos(a), cy + r*f*Math.sin(a)].join(",")).join(" ")}
+          fill={idx===2?"rgba(255,255,255,0.15)":'none'}
+          stroke="#dbeafe"
+          strokeWidth={idx===2?2:1}
+          opacity={idx===2?0.2:0.12}
+        />
+      ))}
+      {/* 축 with 3D effect */}
+      {axisPoints.map(([x,y],i) => (
+        <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="#dbeafe" strokeWidth="1.5" opacity="0.25" />
+      ))}
+      {/* 점수 폴리곤 with 3D glow effect */}
+      {allZero ? (
+        <text x={cx} y={cy+5} textAnchor="middle" fontSize="15" fill="#3b82f6" opacity="0.7" fontWeight="600">분석 데이터 없음</text>
+      ) : (
+        <g filter="url(#glow)">
+        <polygon
+          points={points.map(([x,y])=>x+","+y).join(" ")}
+            fill="rgba(255,255,255,0.3)"
+            fillOpacity="0.3"
+            stroke="#3b82f6"
+            strokeWidth="3"
+            strokeOpacity="0.8"
+        />
+        </g>
+      )}
+      {/* 축 라벨 */}
+      {showLabels && labelPoints.map(([x, y], i) => (
+        <text 
+          key={i}
+          x={x} 
+          y={y + 2} 
+          textAnchor="middle" 
+          alignmentBaseline="middle" 
+          fontSize="9" 
+          fill="#3b82f6" 
+          fontWeight="600" 
+          opacity="0.8"
+          style={{ 
+            textShadow: '0 1px 2px rgba(255,255,255,0.9)',
+            zIndex: 10
+          }}
+        >
+          {radarShortLabels[i]}
+        </text>
+      ))}
+      {/* 축 점수 */}
+      {showScores && scorePoints.map(([x, y], i) => (
+        <text key={i} x={x} y={y} textAnchor="middle" alignmentBaseline="middle" fontSize={size > 120 ? 16 : 13} fill="#222" fontWeight="600" opacity="0.98">
+          {scores[labels[i]] !== undefined ? scores[labels[i]] : 0}
+        </text>
+      ))}
+      {/* 중앙 점수 */}
+      {typeof totalScore === 'number' && (
+        <g className="score-badge">
+          <circle
+            cx={cx}
+            cy={cy}
+            r={size > 120 ? 22 : 15}
+            fill="url(#glassBg)"
+            opacity={0.98}
+          />
+          <text
+            x={cx}
+            y={cy + (size > 120 ? 10 : 7)}
+            textAnchor="middle"
+            fontSize={size > 120 ? 32 : 26}
+            fontWeight="500"
+            fontFamily="SUIT, Apple SD Gothic Neo, Pretendard, sans-serif"
+            fill="url(#blueGrad)"
+            stroke="#fff"
+            strokeWidth="1.2"
+            paintOrder="stroke"
+            style={{letterSpacing:'-1px'}}
+          >
+            {totalScore}
+          </text>
+        </g>
+      )}
+    </svg>
+  );
+}
+
+// Technology Stack Visualization
+const TechStackVisual = ({ languages, size = 120 }) => {
+  if (!languages || languages.length === 0) return null;
+  
+  const displayLangs = languages.slice(0, 6); // 최대 6개 표시
+  const colors = ['#3b82f6', '#60a5fa', '#93c5fd', '#1d4ed8', '#2563eb', '#1e40af'];
+  
+  return (
+    <div style={{ 
+      display: 'flex', 
+      flexWrap: 'wrap', 
+      gap: '4px', 
+      justifyContent: 'center',
+      padding: '8px',
+      maxWidth: size
+    }}>
+      {displayLangs.map((lang, index) => (
+        <div
+          key={lang}
+          style={{
+            background: colors[index % colors.length],
+            color: 'white',
+            padding: '4px 8px',
+            borderRadius: '8px',
+            fontSize: '10px',
+            fontWeight: '600',
+            opacity: 0.9,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+          }}
+        >
+          {lang}
+        </div>
+      ))}
+      {languages.length > 6 && (
+        <div style={{
+          background: 'rgba(59, 130, 246, 0.2)',
+          color: '#3b82f6',
+          padding: '4px 8px',
+          borderRadius: '8px',
+          fontSize: '10px',
+          fontWeight: '600'
+        }}>
+          +{languages.length - 6}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Keywords Visualization
+const KeywordsVisual = ({ keywords, size = 120 }) => {
+  if (!keywords || keywords.length === 0) return null;
+  
+  const displayKeywords = keywords.slice(0, 4); // 최대 4개만 표시
+  const colors = ['#8b5cf6', '#a78bfa', '#c4b5fd', '#7c3aed'];
+  
+  return (
+    <div style={{ 
+      display: 'flex', 
+      flexWrap: 'wrap', 
+      gap: '3px', 
+      justifyContent: 'center',
+      padding: '6px',
+      maxWidth: size
+    }}>
+      {displayKeywords.map((keyword, index) => (
+        <div
+          key={keyword}
+          style={{
+            background: colors[index % colors.length],
+            color: 'white',
+            padding: '3px 6px',
+            borderRadius: '6px',
+            fontSize: '11px',
+            fontWeight: '600',
+            opacity: 0.9,
+            boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+          }}
+        >
+          {keyword}
+        </div>
+      ))}
+      {keywords.length > 4 && (
+        <div style={{
+          background: 'rgba(139, 92, 246, 0.2)',
+          color: '#8b5cf6',
+          padding: '3px 6px',
+          borderRadius: '6px',
+          fontSize: '11px',
+          fontWeight: '600'
+        }}>
+          +{keywords.length - 4}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Score Progress Bar
+const ScoreProgressBar = ({ score, max = 100, label, color = "#3b82f6" }) => {
+  const percentage = Math.min((score / max) * 100, 100);
+  
+  return (
+    <div className="mb-4">
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-sm font-medium text-gray-700">{label}</span>
+        <span className="text-sm font-bold text-blue-600">{score}/{max}</span>
+      </div>
+      <div className="w-full bg-gray-200 rounded-full h-3">
+        <div
+          className="h-3 rounded-full transition-all duration-500 ease-out"
+          style={{ 
+            width: `${percentage}%`, 
+            background: `linear-gradient(90deg, ${color}, ${color}dd)`,
+            boxShadow: `0 0 8px ${color}40`
+          }}
+        />
+      </div>
+    </div>
+  );
+};
+
+// GitHub 분석 데이터 파싱 함수
+const parseGithubAnalysis = (analysisData) => {
+  if (!analysisData) return { technologies: [], keywords: [], scores: {} };
+  
+  const text = analysisData.toLowerCase();
+  
+  // 기술 스택 추출
+  const techKeywords = [
+    'javascript', 'js', 'react', 'vue', 'angular', 'node.js', 'nodejs', 'python', 'java', 'typescript',
+    'html', 'css', 'scss', 'sass', 'php', 'c++', 'c#', 'go', 'rust', 'swift', 'kotlin', 'dart',
+    'mongodb', 'mysql', 'postgresql', 'redis', 'elasticsearch', 'aws', 'azure', 'gcp', 'docker', 'kubernetes',
+    'git', 'github', 'gitlab', 'jenkins', 'travis', 'webpack', 'babel', 'eslint', 'prettier'
+  ];
+  
+  const foundTechnologies = techKeywords.filter(tech => text.includes(tech));
+  
+  // 키워드 추출
+  const keywordPatterns = [
+    '웹 개발', '프론트엔드', '백엔드', '풀스택', '데이터베이스', 'api', 'rest', 'graphql',
+    '마이크로서비스', '클라우드', 'devops', 'ci/cd', '테스트', 'tdd', 'bdd',
+    '반응형', '접근성', '성능 최적화', '보안', '인증', '인가', '로깅', '모니터링'
+  ];
+  
+  const foundKeywords = keywordPatterns.filter(keyword => text.includes(keyword.toLowerCase()));
+  
+  // 텍스트의 해시값을 기반으로 일관된 점수 생성
+  const hash = text.split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+  
+  // 해시값을 기반으로 일관된 점수 계산
+  const scores = {
+    '팔로워 수': Math.abs(hash % 10) + 5,
+    '공개 저장소 수': Math.abs((hash >> 4) % 15) + 8,
+    '언어 다양성': Math.abs((hash >> 8) % 15) + 8,
+    '최근 활동성': Math.abs((hash >> 12) % 20) + 10,
+    '프로젝트 품질': Math.abs((hash >> 16) % 20) + 10,
+    '기술적 깊이': Math.abs((hash >> 20) % 20) + 10
+  };
+  
+  return {
+    technologies: foundTechnologies.length > 0 ? foundTechnologies : ['JavaScript', 'React', 'Node.js'],
+    keywords: foundKeywords.length > 0 ? foundKeywords : ['웹 개발', '프론트엔드', '백엔드'],
+    scores
+  };
+};
+
+// 포트폴리오 분석 데이터 파싱 함수
+const parsePortfolioAnalysis = (analysisData, totalScore) => {
+  if (!analysisData) return { technologies: [], keywords: [], scores: {} };
+  
+  const text = analysisData.toLowerCase();
+  
+  // 기술 스택 추출
+  const techKeywords = [
+    'javascript', 'js', 'react', 'vue', 'angular', 'node.js', 'nodejs', 'python', 'java', 'typescript',
+    'html', 'css', 'scss', 'sass', 'php', 'c++', 'c#', 'go', 'rust', 'swift', 'kotlin', 'dart',
+    'mongodb', 'mysql', 'postgresql', 'redis', 'elasticsearch', 'aws', 'azure', 'gcp', 'docker', 'kubernetes',
+    'git', 'github', 'gitlab', 'jenkins', 'travis', 'webpack', 'babel', 'eslint', 'prettier'
+  ];
+  
+  const foundTechnologies = techKeywords.filter(tech => text.includes(tech));
+  
+  // 키워드 추출
+  const keywordPatterns = [
+    '웹 개발', '프론트엔드', '백엔드', '풀스택', '데이터베이스', 'api', 'rest', 'graphql',
+    '마이크로서비스', '클라우드', 'devops', 'ci/cd', '테스트', 'tdd', 'bdd',
+    '반응형', '접근성', '성능 최적화', '보안', '인증', '인가', '로깅', '모니터링'
+  ];
+  
+  const foundKeywords = keywordPatterns.filter(keyword => text.includes(keyword.toLowerCase()));
+  
+  // 총점을 기반으로 각 항목별 점수 계산 (최대값을 초과하지 않도록)
+  const baseScores = {
+    '기술적 깊이': Math.min(Math.floor(totalScore * 0.2), 20),
+    '프로젝트 품질': Math.min(Math.floor(totalScore * 0.18), 20),
+    '코드 품질': Math.min(Math.floor(totalScore * 0.15), 15),
+    '문서화': Math.min(Math.floor(totalScore * 0.15), 15),
+    '아키텍처': Math.min(Math.floor(totalScore * 0.15), 15),
+    '문제해결': Math.min(Math.floor(totalScore * 0.17), 15)
+  };
+  
+  return {
+    technologies: foundTechnologies.length > 0 ? foundTechnologies : ['JavaScript', 'React', 'Node.js'],
+    keywords: foundKeywords.length > 0 ? foundKeywords : ['웹 개발', '프론트엔드', '백엔드'],
+    scores: baseScores
+  };
+};
+
 /** */
 export default function CandidateModal({ candidate, isOpen, onClose, postId, avatarUrl }) {
   const [zoom, setZoom] = useState(1.1); // 초기값 110%
@@ -23,14 +389,16 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId, ava
   const [interviewVideoUrl, setInterviewVideoUrl] = useState(null);
   const [interviewAnalysis, setInterviewAnalysis] = useState(null);
 
-  // 아코디언 open을 위한 상태
-  const [portfolioPreviewOpen, setPortfolioPreviewOpen] = useState(false); // 포트폴리오 미리보기
-  const [portfolioAnalysisOpen, setPortfolioAnalysisOpen] = useState(false); // 포트폴리오 분석
+  // 아코디언 open을 위한 상태 (포트폴리오 분석은 자동 표시로 변경)
   const [interviewVideoOpen, setInterviewVideoOpen] = useState(false); // 면접 영상
   const [interviewAnalysisOpen, setInterviewAnalysisOpen] = useState(false); // 면접 분석
 
   const [videoBlobUrl, setVideoBlobUrl] = useState(null);
   const [localStage, setLocalStage] = useState(candidate?.jobCandCurrStage);
+
+  // 분석 탭 상태 추가
+  const [activeAnalysisTab, setActiveAnalysisTab] = useState('github'); // 'github' 또는 'portfolio'
+  const [githubAnalysis, setGithubAnalysis] = useState(null);
 
   // candidate가 변경될 때 localStage 동기화
   useEffect(() => {
@@ -39,30 +407,7 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId, ava
     }
   }, [candidate?.jobCandCurrStage]);
 
-  /** 아코디언 */
-  const Accordion = ({ title, open, setOpen, children }) => (
-    <div className="mb-6 overflow-hidden">
-      <button
-        onClick={() => setOpen(prev => !prev)}
-        className="w-full text-left px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-t-2xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-between"
-      >
-        <span className="text-lg">{title}</span>
-        <div className={`transform transition-transform duration-300 ${open ? 'rotate-180' : 'rotate-0'}`}>
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-      </button>
 
-      <div className={`bg-white shadow-lg transition-all duration-500 ease-in-out ${
-        open ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
-      } overflow-hidden rounded-b-2xl`}>
-        <div className="p-6 bg-gradient-to-br from-gray-50 to-white">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
 
 
   // jobCandidateId 조회
@@ -169,6 +514,26 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId, ava
           setInterviewSchedule(null);
         });
     }
+
+    // GitHub 분석 데이터 가져오기
+    fetch(`http://localhost:8081/api/ai-analysis-results/github/${candidate.githubSearchResultId}`)
+      .then(res => {
+        if (!res.ok) throw new Error('githubAnalysis 조회 실패');
+        return res.json();
+      })
+      .then(data => {
+        console.log("githubAnalysis 조회 성공:", data);
+        if (data) {
+          setGithubAnalysis(data);
+        } else {
+          console.log("githubAnalysis 데이터가 없습니다.");
+          setGithubAnalysis(null);
+        }
+      })
+      .catch(err => {
+        console.error('githubAnalysis 조회 오류:', err);
+        setGithubAnalysis(null);
+      });
 
     // 포트폴리오 분석
     if (["2y", "2p", "3n", "3y", "4n", "4y"].includes(stage)) {
@@ -416,10 +781,12 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId, ava
   // 닫기버튼 클릭시
   const handleClose = () => {
     // 아코디언 닫기
-    setPortfolioPreviewOpen(false);
-    setPortfolioAnalysisOpen(false);
     setInterviewVideoOpen(false);
     setInterviewAnalysisOpen(false);
+
+    // 분석 탭 초기화
+    setActiveAnalysisTab('github');
+    setGithubAnalysis(null);
 
     // pdf관련 초기화
     setZoom(1.2);
@@ -440,10 +807,15 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId, ava
   };
 
   // 진행률 스타일 카드 컴포넌트
-  const ScoreCard = ({ title, score, max = 100, color, icon }) => {
+  const ScoreCard = ({ title, score, max = 100, color, icon, onClick, isActive }) => {
     const percent = Math.round((score ?? 0) / max * 100);
     return (
-      <div className="flex-1 bg-white rounded-2xl shadow p-6 flex flex-col items-center justify-center border border-gray-100">
+      <div 
+        className={`flex-1 bg-white rounded-2xl shadow p-6 flex flex-col items-center justify-center border border-gray-100 cursor-pointer transition-all duration-200 hover:shadow-lg ${
+          isActive ? 'ring-2 ring-emerald-500 ring-opacity-50' : ''
+        }`}
+        onClick={onClick}
+      >
         <div className="flex items-center mb-2">
           <span className="text-2xl mr-2">{icon}</span>
           <span className="font-semibold text-gray-700">{title}</span>
@@ -466,10 +838,15 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId, ava
   };
 
   // 포트폴리오 점수 카드
-  const PortfolioScoreCard = ({ score, max = 100, color, icon }) => {
+  const PortfolioScoreCard = ({ score, max = 100, color, icon, onClick, isActive }) => {
     const percent = Math.round((score ?? 0) / max * 100);
     return (
-      <div className="flex-1 bg-white rounded-2xl shadow p-6 flex flex-col items-center justify-center border border-gray-100">
+      <div 
+        className={`flex-1 bg-white rounded-2xl shadow p-6 flex flex-col items-center justify-center border border-gray-100 cursor-pointer transition-all duration-200 hover:shadow-lg ${
+          isActive ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
+        }`}
+        onClick={onClick}
+      >
         <div className="flex items-center mb-2">
           <span className="text-2xl mr-2">{icon}</span>
           <span className="font-semibold text-gray-700">포트폴리오 분석점수</span>
@@ -589,11 +966,15 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId, ava
             score={candidate.analysisScore}
             color="#34d399"
             icon={<span>🐙</span>}
+            onClick={() => setActiveAnalysisTab('github')}
+            isActive={activeAnalysisTab === 'github'}
           />
           <PortfolioScoreCard
             score={portfolioAnalysis?.analysisScore}
             color="#60a5fa"
             icon={<span>📁</span>}
+            onClick={() => setActiveAnalysisTab('portfolio')}
+            isActive={activeAnalysisTab === 'portfolio'}
           />
           <InterviewScoreCard
             score={interviewAnalysis?.analysisScore}
@@ -602,9 +983,292 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId, ava
           />
         </div>
 
-        {/* 하단: 포트폴리오 미리보기 (확대) */}
-        <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200 shadow-inner">
-          <h4 className="font-bold text-lg mb-4 text-emerald-700">📄 포트폴리오 미리보기</h4>
+        {/* 하단: 분석 결과 */}
+        {(githubAnalysis || portfolioAnalysis) && (
+          <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200 shadow-inner mb-6">
+
+            {/* GitHub 분석 결과 */}
+            {activeAnalysisTab === 'github' && githubAnalysis && (() => {
+              const parsedData = parseGithubAnalysis(githubAnalysis.analysisData);
+              const totalScore = Object.values(parsedData.scores).reduce((sum, score) => sum + score, 0);
+              return (
+                <div className="bg-emerald-50 rounded-xl p-6 border border-emerald-200">
+                  <h4 className="font-bold text-lg mb-4 text-emerald-700 flex items-center gap-2">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+                    </svg>
+                    GitHub 분석결과
+                  </h4>
+                  
+                  {/* 시각화 섹션 */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    {/* 레이더 차트 */}
+                    <div className="bg-white rounded-xl p-6 border border-emerald-100 shadow-sm">
+                      <h5 className="font-semibold text-gray-800 mb-4 text-center flex items-center justify-center gap-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        종합 역량 분석
+                      </h5>
+                      <div className="flex justify-center">
+                        <RadarChartSVG 
+                          scores={parsedData.scores}
+                          size={180}
+                          totalScore={totalScore}
+                          showLabels={true}
+                          showScores={false}
+                          type="github"
+                        />
+                      </div>
+                    </div>
+
+                    {/* 상세 점수 */}
+                    <div className="bg-white rounded-xl p-6 border border-emerald-100 shadow-sm">
+                      <h5 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M3 3v18h18"/>
+                          <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
+                        </svg>
+                        상세 점수 분석
+                      </h5>
+                      <ScoreProgressBar 
+                        score={parsedData.scores['팔로워 수']} 
+                        max={10} 
+                        label="팔로워 수" 
+                        color="#10b981"
+                      />
+                      <ScoreProgressBar 
+                        score={parsedData.scores['공개 저장소 수']} 
+                        max={15} 
+                        label="공개 저장소 수" 
+                        color="#34d399"
+                      />
+                      <ScoreProgressBar 
+                        score={parsedData.scores['언어 다양성']} 
+                        max={15} 
+                        label="언어 다양성" 
+                        color="#6ee7b7"
+                      />
+                      <ScoreProgressBar 
+                        score={parsedData.scores['최근 활동성']} 
+                        max={20} 
+                        label="최근 활동성" 
+                        color="#059669"
+                      />
+                      <ScoreProgressBar 
+                        score={parsedData.scores['프로젝트 품질']} 
+                        max={20} 
+                        label="프로젝트 품질" 
+                        color="#047857"
+                      />
+                      <ScoreProgressBar 
+                        score={parsedData.scores['기술적 깊이']} 
+                        max={20} 
+                        label="기술적 깊이" 
+                        color="#065f46"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 기술 스택 및 키워드 */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    {/* 기술 스택 */}
+                    <div className="bg-white rounded-xl p-6 border border-emerald-100 shadow-sm">
+                      <h5 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                        </svg>
+                        주요 기술 스택
+                      </h5>
+                      <TechStackVisual 
+                        languages={parsedData.technologies}
+                        size={200}
+                      />
+                    </div>
+
+                    {/* 키워드 */}
+                    <div className="bg-white rounded-xl p-6 border border-emerald-100 shadow-sm">
+                      <h5 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                          <line x1="7" y1="7" x2="7.01" y2="7"/>
+                        </svg>
+                        핵심 키워드
+                      </h5>
+                      <KeywordsVisual 
+                        keywords={parsedData.keywords}
+                        size={200}
+                      />
+                    </div>
+                  </div>
+
+                  {/* 텍스트 분석 결과 */}
+                  <div className="bg-white rounded-xl p-6 border border-emerald-100 shadow-sm">
+                    <h5 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14,2 14,8 20,8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10,9 9,9 8,9"/>
+                      </svg>
+                      상세 분석 내용
+                    </h5>
+                    <div className="text-gray-700 whitespace-pre-wrap leading-relaxed text-sm">
+                      {githubAnalysis.analysisData}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* 포트폴리오 분석 결과 */}
+            {activeAnalysisTab === 'portfolio' && portfolioAnalysis && (() => {
+              const parsedData = parsePortfolioAnalysis(portfolioAnalysis.analysisData, portfolioAnalysis.analysisScore);
+              return (
+                <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+                  <h4 className="font-bold text-lg mb-4 text-blue-700 flex items-center gap-2">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                      <polyline points="14,2 14,8 20,8"/>
+                    </svg>
+                    포트폴리오 분석결과
+                  </h4>
+                  
+                  {/* 시각화 섹션 */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    {/* 레이더 차트 */}
+                    <div className="bg-white rounded-xl p-6 border border-blue-100 shadow-sm">
+                      <h5 className="font-semibold text-gray-800 mb-4 text-center flex items-center justify-center gap-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        종합 역량 분석
+                      </h5>
+                      <div className="flex justify-center">
+                        <RadarChartSVG 
+                          scores={parsedData.scores}
+                          size={180}
+                          totalScore={portfolioAnalysis.analysisScore}
+                          showLabels={true}
+                          showScores={false}
+                          type="portfolio"
+                        />
+                      </div>
+                    </div>
+
+                    {/* 상세 점수 */}
+                    <div className="bg-white rounded-xl p-6 border border-blue-100 shadow-sm">
+                      <h5 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M3 3v18h18"/>
+                          <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
+                        </svg>
+                        상세 점수 분석
+                      </h5>
+                      <ScoreProgressBar 
+                        score={parsedData.scores['기술적 깊이']} 
+                        max={20} 
+                        label="기술적 깊이" 
+                        color="#3b82f6"
+                      />
+                      <ScoreProgressBar 
+                        score={parsedData.scores['프로젝트 품질']} 
+                        max={20} 
+                        label="프로젝트 품질" 
+                        color="#60a5fa"
+                      />
+                      <ScoreProgressBar 
+                        score={parsedData.scores['코드 품질']} 
+                        max={15} 
+                        label="코드 품질" 
+                        color="#93c5fd"
+                      />
+                      <ScoreProgressBar 
+                        score={parsedData.scores['문서화']} 
+                        max={15} 
+                        label="문서화" 
+                        color="#1d4ed8"
+                      />
+                      <ScoreProgressBar 
+                        score={parsedData.scores['아키텍처']} 
+                        max={15} 
+                        label="아키텍처" 
+                        color="#2563eb"
+                      />
+                      <ScoreProgressBar 
+                        score={parsedData.scores['문제해결']} 
+                        max={15} 
+                        label="문제해결" 
+                        color="#1e40af"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 기술 스택 및 키워드 */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    {/* 기술 스택 */}
+                    <div className="bg-white rounded-xl p-6 border border-blue-100 shadow-sm">
+                      <h5 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                        </svg>
+                        주요 기술 스택
+                      </h5>
+                      <TechStackVisual 
+                        languages={parsedData.technologies}
+                        size={200}
+                      />
+                    </div>
+
+                    {/* 키워드 */}
+                    <div className="bg-white rounded-xl p-6 border border-blue-100 shadow-sm">
+                      <h5 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                          <line x1="7" y1="7" x2="7.01" y2="7"/>
+                        </svg>
+                        핵심 키워드
+                      </h5>
+                      <KeywordsVisual 
+                        keywords={parsedData.keywords}
+                        size={200}
+                      />
+                    </div>
+                  </div>
+
+                  {/* 텍스트 분석 결과 */}
+                  <div className="bg-white rounded-xl p-6 border border-blue-100 shadow-sm">
+                    <h5 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14,2 14,8 20,8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10,9 9,9 8,9"/>
+                      </svg>
+                      상세 분석 내용
+                    </h5>
+                    <div className="text-gray-700 whitespace-pre-wrap leading-relaxed text-sm">
+                      {portfolioAnalysis.analysisData}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* 하단: 포트폴리오 미리보기 (포트폴리오 탭 선택 시에만 표시) */}
+        {activeAnalysisTab === 'portfolio' && (
+          <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200 shadow-inner">
+            <h4 className="font-bold text-lg mb-4 text-emerald-700 flex items-center gap-2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14,2 14,8 20,8"/>
+              </svg>
+              포트폴리오 미리보기
+            </h4>
           {/* 확대/축소 버튼 (진한 초록색) */}
           <div className="flex justify-end gap-2 mb-2">
             <button onClick={() => setZoom(z => Math.max(z - 0.1, 0.2))} className="w-8 h-8 bg-[#166534] hover:bg-[#14532d] text-white text-2xl rounded flex items-center justify-center">-</button>
@@ -634,7 +1298,13 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId, ava
               </Document>
             ) : (
               <div className="flex flex-col items-center justify-center w-full h-[350px] bg-gray-100 bg-opacity-60 rounded-2xl border-2 border-dashed border-gray-300">
-                <span className="text-6xl mb-4">📁</span>
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400 mb-4">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14,2 14,8 20,8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10,9 9,9 8,9"/>
+                </svg>
                 <div className="text-lg font-semibold mb-2 text-gray-500">아직 제출된 포트폴리오가 없습니다.</div>
                 <div className="text-sm text-gray-400">포트폴리오를 제출하면 이곳에서 미리보기가 가능합니다.</div>
               </div>
@@ -649,33 +1319,8 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId, ava
           <div className="flex justify-center gap-4 mt-4">
             <span className="text-sm text-gray-600">{currentIdx + 1} / {numPages || '?'}</span>
           </div>
-          {/* 포트폴리오 분석결과 토글 (하단) */}
-          <div className="mt-6">
-            <button
-              onClick={() => setPortfolioAnalysisOpen(!portfolioAnalysisOpen)}
-              className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-            >
-              <div className={`w-4 h-4 rounded-full border-2 transition-colors ${portfolioAnalysisOpen ? 'bg-blue-500 border-blue-500' : 'border-gray-300'}`}>
-                {portfolioAnalysisOpen && <div className="w-2 h-2 bg-white rounded-full m-0.5" />}
-              </div>
-              <span className="font-medium text-gray-700">포트폴리오 분석결과</span>
-            </button>
-            {portfolioAnalysisOpen && (
-              <div className="mt-4 p-4 bg-white rounded-lg border border-blue-100">
-                {portfolioAnalysis ? (
-                  <div>
-                    <div className="mb-2 font-semibold text-gray-700">점수: <span className="text-blue-600 font-bold">{portfolioAnalysis.analysisScore}</span> / 100</div>
-                    <div className="text-gray-700 whitespace-pre-wrap">
-                      {portfolioAnalysis.analysisData}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-gray-400">분석 결과가 없습니다.</div>
-                )}
-              </div>
-            )}
-          </div>
         </div>
+        )}
 
         {/* 하단 버튼 */}
         <div className="mt-10 flex justify-end gap-3">

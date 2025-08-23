@@ -8,9 +8,15 @@ import mimetypes
 from PyPDF2 import PdfReader
 
 load_dotenv()
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+# 환경 변수 검증
+if not OPENAI_API_KEY:
+    print("⚠️  OPENAI_API_KEY가 설정되지 않았습니다. .env 파일을 확인해주세요.")
+if not GITHUB_TOKEN:
+    print("⚠️  GITHUB_TOKEN이 설정되지 않았습니다. .env 파일을 확인해주세요.")
 
 def get_headers():
     return {
@@ -243,9 +249,16 @@ def enhanced_search_github_candidates(filters, post_id=None):
     email_results = sorted(email_results, key=lambda x: x["llm_score"], reverse=True)[:headcount]
     return email_results
 
-openai_client = openai.OpenAI(api_key=OPENAI_API_KEY)
+# OpenAI 클라이언트 초기화 (API 키가 있을 때만)
+if OPENAI_API_KEY:
+    openai_client = openai.OpenAI(api_key=OPENAI_API_KEY)
+else:
+    openai_client = None
 
 def call_openai_chat(messages, max_tokens=800, temperature=0.3):
+    if not openai_client:
+        return "OpenAI API 키가 설정되지 않았습니다."
+    
     try:
         response = openai_client.chat.completions.create(
             model=OPENAI_MODEL,
@@ -260,7 +273,7 @@ def call_openai_chat(messages, max_tokens=800, temperature=0.3):
         )
     except Exception as e:
         print(f"[OpenAI API Error] {e}")
-        return {"answer": "AI 서버 연결에 문제가 발생했습니다."}
+        return "AI 서버 연결에 문제가 발생했습니다."
 
 def get_github_candidate_details(username):
     """
