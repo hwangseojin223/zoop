@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: 'http://localhost:8081',  // Spring Boot 서버 주소
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8081',  // 환경변수 또는 로컬 서버
   headers: {
     'Content-Type': 'application/json',
   },
