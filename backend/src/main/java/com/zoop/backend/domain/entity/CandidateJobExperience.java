@@ -35,9 +35,11 @@ public class CandidateJobExperience {
     private LocalDate endDate;
 
     @Column(name = "created_at", nullable = false)
+    @Builder.Default
     private LocalDate createdAt = LocalDate.now();
 
     @Column(name = "updated_at", nullable = false)
+    @Builder.Default
     private LocalDate updatedAt = LocalDate.now();
 
     @PrePersist

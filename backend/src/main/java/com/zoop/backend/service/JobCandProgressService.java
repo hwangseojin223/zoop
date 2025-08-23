@@ -15,6 +15,7 @@ import com.zoop.backend.domain.entity.Candidate;
 import com.zoop.backend.domain.entity.JobCandProgress;
 import com.zoop.backend.domain.entity.Post;
 import com.zoop.backend.repository.CandidateRepository;
+import lombok.extern.slf4j.Slf4j;
 import com.zoop.backend.repository.InvitationRepository;
 import com.zoop.backend.repository.JobCandProgressRepository;
 import com.zoop.backend.repository.PostRepository;
@@ -322,7 +323,58 @@ public class JobCandProgressService {
     */
 
     public Optional<JobCandProgress> getJobCandProgressByGithubLogin(String githubLogin) {
-        return jobCandProgressRepository.findByGithubLogin(githubLogin);
+        try {
+            List<JobCandProgress> progresses = jobCandProgressRepository.findAllByGithubLogin(githubLogin);
+            if (progresses.isEmpty()) {
+                log.warn("githubLogin {}으로 JobCandProgress를 찾을 수 없습니다.", githubLogin);
+                return Optional.empty();
+            }
+            
+            // 여러 레코드가 있을 경우, 가장 최근에 생성된 레코드 반환
+            // 또는 특정 조건에 맞는 레코드 선택
+            JobCandProgress selectedProgress = progresses.stream()
+                .sorted((p1, p2) -> {
+                    // jobCandCreatedAt 기준으로 최신순 정렬
+                    if (p1.getJobCandCreatedAt() != null && p2.getJobCandCreatedAt() != null) {
+                        return p2.getJobCandCreatedAt().compareTo(p1.getJobCandCreatedAt());
+                    }
+                    return 0;
+                })
+                .findFirst()
+                .orElse(progresses.get(0));
+            
+            log.info("githubLogin {}으로 JobCandProgress 조회 성공: jobCandidateId={}, postId={}, stage={}", 
+                githubLogin, selectedProgress.getJobCandidateId(), 
+                selectedProgress.getPost().getPostId(), 
+                selectedProgress.getJobCandCurrStage());
+            
+            return Optional.of(selectedProgress);
+        } catch (Exception e) {
+            log.error("githubLogin {}으로 JobCandProgress 조회 중 오류 발생: {}", githubLogin, e.getMessage(), e);
+            return Optional.empty();
+        }
+    }
+    
+    // postId와 candidateId로 jobCandidateId 찾기
+    public Long findJobCandidateIdByPostAndCandidate(Long postId, Long candidateId) {
+        log.info("postId: {}와 candidateId: {}로 jobCandidateId 조회", postId, candidateId);
+        
+        try {
+            // postId와 candidateId로 JobCandProgress 조회
+            Optional<JobCandProgress> progressOpt = jobCandProgressRepository.findByPost_PostIdAndCandidate_CandidateId(postId, candidateId);
+            
+            if (progressOpt.isPresent()) {
+                Long jobCandidateId = progressOpt.get().getJobCandidateId();
+                log.info("찾은 jobCandidateId: {}", jobCandidateId);
+                return jobCandidateId;
+            } else {
+                log.warn("postId: {}와 candidateId: {}에 해당하는 JobCandProgress를 찾을 수 없습니다.", postId, candidateId);
+                return null;
+            }
+        } catch (Exception e) {
+            log.error("jobCandidateId 조회 중 오류 발생: {}", e.getMessage(), e);
+            return null;
+        }
     }
 
     public Optional<JobCandProgressWithCandidateDto> getJobCandProgressWithCandidateById(Long jobCandidateId) {

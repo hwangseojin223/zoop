@@ -183,4 +183,39 @@ public class AiAnalysisResultController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    // jobCandidateId로 AI 분석 결과 조회 (임원면접용)
+    @Operation(summary = "지원자 ID로 AI 분석 결과 조회", description = "특정 지원자의 임원면접 AI 분석 결과를 조회합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "AI 분석 결과 반환",
+            content = @Content(schema = @Schema(implementation = AiAnalysisResult.class))),
+        @ApiResponse(responseCode = "404", description = "AI 분석 결과 없음")
+    })
+    @GetMapping("/candidate/{jobCandidateId}/executive-interview")
+    public ResponseEntity<?> getByJobCandidateId(
+        @Parameter(description = "지원자 ID", required = true, example = "1")
+        @PathVariable Long jobCandidateId) {
+        
+        try {
+            // jobCandidateId와 analysisType이 'executive_interview'인 결과 조회
+            List<AiAnalysisResult> results = aiAnalysisResultService.findByJobCandidateIdAndAnalysisType(jobCandidateId, "executive_interview");
+            
+            if (!results.isEmpty()) {
+                // 가장 최근 분석 결과 반환 (analysisDate 기준)
+                AiAnalysisResult latestResult = results.get(0);
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "aiAnalysisResult", latestResult
+                ));
+            } else {
+                return ResponseEntity.ok(Map.of(
+                    "success", false,
+                    "message", "해당 지원자의 임원면접 AI 분석 결과가 없습니다."
+                ));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                .body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
 } 

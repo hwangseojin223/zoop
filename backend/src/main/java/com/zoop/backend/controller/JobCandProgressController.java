@@ -12,11 +12,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.zoop.backend.domain.dto.InvitationSendRequest;
-import com.zoop.backend.domain.dto.JobCandidateIdResponse;
 import com.zoop.backend.domain.dto.JobCandProgressWithCandidateDto;
+import com.zoop.backend.domain.dto.JobCandidateIdResponse;
 import com.zoop.backend.domain.dto.ResponderDto;
 import com.zoop.backend.domain.dto.UpdateJobCandProgressRequest;
 import com.zoop.backend.domain.entity.JobCandProgress;
@@ -85,6 +86,46 @@ public class JobCandProgressController {
                 "updatedCount", updatedCount
             ));
         } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of(
+                "success", false,
+                "message", "상태 업데이트 중 오류가 발생했습니다: " + e.getMessage()
+            ));
+        }
+    }
+
+    // 개별 후보자 상태 변경 API (Pass/Fail 버튼용)
+    @PutMapping("/update-stage/{jobCandidateId}")
+    public ResponseEntity<Map<String, Object>> updateIndividualStage(
+            @PathVariable Long jobCandidateId,
+            @RequestBody Map<String, Object> request) {
+        try {
+            // 프론트엔드에서 보내는 필드들 처리
+            String newStage = null;
+            if (request.containsKey("newStage")) {
+                newStage = (String) request.get("newStage");
+            } else if (request.containsKey("jobCandCurrStage")) {
+                newStage = (String) request.get("jobCandCurrStage");
+            }
+            
+            if (newStage == null) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "newStage 또는 jobCandCurrStage 필드가 필요합니다."
+                ));
+            }
+            
+            log.info("개별 후보자 상태 변경 API 호출: jobCandidateId={}, newStage={}", jobCandidateId, newStage);
+            
+            jobCandProgressService.updateStageWithNotification(jobCandidateId, newStage);
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "후보자 상태가 성공적으로 업데이트되었습니다.",
+                "jobCandidateId", jobCandidateId,
+                "newStage", newStage
+            ));
+        } catch (Exception e) {
+            log.error("개별 후보자 상태 변경 실패: jobCandidateId={}, error={}", jobCandidateId, e.getMessage(), e);
             return ResponseEntity.internalServerError().body(Map.of(
                 "success", false,
                 "message", "상태 업데이트 중 오류가 발생했습니다: " + e.getMessage()
@@ -246,6 +287,35 @@ public class JobCandProgressController {
             }
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+    
+    // postId와 candidateId로 jobCandidateId 찾기
+    @GetMapping("/find-job-candidate-id")
+    public ResponseEntity<Map<String, Object>> findJobCandidateId(
+            @RequestParam Long postId, 
+            @RequestParam Long candidateId) {
+        try {
+            log.info("postId: {}와 candidateId: {}로 jobCandidateId 조회", postId, candidateId);
+            Long jobCandidateId = jobCandProgressService.findJobCandidateIdByPostAndCandidate(postId, candidateId);
+            
+            if (jobCandidateId != null) {
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "jobCandidateId", jobCandidateId
+                ));
+            } else {
+                return ResponseEntity.ok(Map.of(
+                    "success", false,
+                    "message", "해당하는 jobCandidateId를 찾을 수 없습니다."
+                ));
+            }
+        } catch (Exception e) {
+            log.error("jobCandidateId 조회 실패: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                "success", false,
+                "message", "조회 중 오류가 발생했습니다: " + e.getMessage()
+            ));
         }
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.zoop.backend.domain.entity.AiAnalysisResult;
+import com.zoop.backend.domain.entity.ExecutiveInterviewSchedule;
 
 @Repository
 public interface AiAnalysisResultRepository extends JpaRepository<AiAnalysisResult, Long> {
@@ -40,4 +41,9 @@ public interface AiAnalysisResultRepository extends JpaRepository<AiAnalysisResu
     @Transactional
     @Query("UPDATE AiAnalysisResult a SET a.jobCandidateId = :jobCandidateId WHERE a.candPortfolioId = :candPortfolioId AND a.analysisType = 'portfolio'")
     int updateJobCandidateIdByCandPortfolioId(@Param("jobCandidateId") Long jobCandidateId, @Param("candPortfolioId") Long candPortfolioId);
+    
+    // scheduleId로 AI 분석 결과 조회 (임원면접용)
+    @Query("SELECT a FROM AiAnalysisResult a WHERE a.analysisType = 'executive_interview' AND a.jobCandidateId IN " +
+           "(SELECT e.jobCandidateId FROM ExecutiveInterviewSchedule e WHERE e.scheduleId = :scheduleId)")
+    Optional<AiAnalysisResult> findByScheduleId(@Param("scheduleId") Long scheduleId);
 } 

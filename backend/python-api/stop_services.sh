@@ -1,83 +1,56 @@
 #!/bin/bash
 
-# Python API 서비스들을 중지하는 스크립트
+echo "🚫 모든 Python API 서비스 종료 중..."
 
-echo "Stopping Python API services..."
+# 1. 기존 uvicorn 방식 서비스들
+echo "📤 기존 uvicorn 서비스 종료 중..."
 
-# 저장된 프로세스 ID들을 읽어서 중지
-if [ -f /tmp/interview_api.pid ]; then
-    INTERVIEW_PID=$(cat /tmp/interview_api.pid)
-    if kill -0 $INTERVIEW_PID 2>/dev/null; then
-        kill $INTERVIEW_PID
-        echo "✓ Interview Analysis API stopped"
-    else
-        echo "✗ Interview Analysis API was not running"
-    fi
-    rm /tmp/interview_api.pid
-fi
+# GitHub Search Service (Port 8000)
+pkill -f "uvicorn.*8000" 2>/dev/null && echo "✅ GitHub Search API (8000) 종료됨"
 
-if [ -f /tmp/portfolio_api.pid ]; then
-    PORTFOLIO_PID=$(cat /tmp/portfolio_api.pid)
-    if kill -0 $PORTFOLIO_PID 2>/dev/null; then
-        kill $PORTFOLIO_PID
-        echo "✓ Portfolio Matching API stopped"
-    else
-        echo "✗ Portfolio Matching API was not running"
-    fi
-    rm /tmp/portfolio_api.pid
-fi
+# Chatbot Service (Port 8001)  
+pkill -f "uvicorn.*8001" 2>/dev/null && echo "✅ Chatbot API (8001) 종료됨"
 
-if [ -f /tmp/chatbot_api.pid ]; then
-    CHATBOT_PID=$(cat /tmp/chatbot_api.pid)
-    if kill -0 $CHATBOT_PID 2>/dev/null; then
-        kill $CHATBOT_PID
-        echo "✓ Chatbot API stopped"
-    else
-        echo "✗ Chatbot API was not running"
-    fi
-    rm /tmp/chatbot_api.pid
-fi
+# Interview Analysis Service (Port 8002)
+pkill -f "uvicorn.*8002" 2>/dev/null && echo "✅ Interview Analysis API (8002) 종료됨"
 
-if [ -f /tmp/github_api.pid ]; then
-    GITHUB_PID=$(cat /tmp/github_api.pid)
-    if kill -0 $GITHUB_PID 2>/dev/null; then
-        kill $GITHUB_PID
-        echo "✓ GitHub Search API stopped"
-    else
-        echo "✗ GitHub Search API was not running"
-    fi
-    rm /tmp/github_api.pid
-fi
+# Portfolio Matching Service (Port 8003)
+pkill -f "uvicorn.*8003" 2>/dev/null && echo "✅ Portfolio Matching API (8003) 종료됨"
 
-if [ -f /tmp/questions_api.pid ]; then
-    QUESTIONS_PID=$(cat /tmp/questions_api.pid)
-    if kill -0 $QUESTIONS_PID 2>/dev/null; then
-        kill $QUESTIONS_PID
-        echo "✓ Interview Questions API stopped"
-    else
-        echo "✗ Interview Questions API was not running"
-    fi
-    rm /tmp/questions_api.pid
-fi
+# Interview Questions Service (Port 8004)
+pkill -f "uvicorn.*8004" 2>/dev/null && echo "✅ Interview Questions API (8004) 종료됨"
 
-if [ -f /tmp/ocr_api.pid ]; then
-    OCR_PID=$(cat /tmp/ocr_api.pid)
-    if kill -0 $OCR_PID 2>/dev/null; then
-        kill $OCR_PID
-        echo "✓ OCR API stopped"
-    else
-        echo "✗ OCR API was not running"
-    fi
-    rm /tmp/ocr_api.pid
-fi
+# OCR Service (Port 8005)
+pkill -f "uvicorn.*8005" 2>/dev/null && echo "✅ OCR API (8005) 종료됨"
 
-# 포트를 사용하는 모든 Python 프로세스 강제 종료 (필요시)
-echo "Checking for any remaining Python processes on API ports..."
-pkill -f "uvicorn.*8001" 2>/dev/null && echo "✓ Killed remaining processes on port 8001"
-pkill -f "uvicorn.*8002" 2>/dev/null && echo "✓ Killed remaining processes on port 8002"
-pkill -f "python.*chatbot_api.py" 2>/dev/null && echo "✓ Killed remaining chatbot processes"
-pkill -f "python.*main.py" 2>/dev/null && echo "✓ Killed remaining github search processes"
-pkill -f "python.*interview_questions_api.py" 2>/dev/null && echo "✓ Killed remaining questions processes"
-pkill -f "python.*ocr_api.py" 2>/dev/null && echo "✓ Killed remaining OCR processes"
+# 2. 새로운 AI 서비스들
+echo "🤖 새로운 AI 서비스 종료 중..."
 
-echo "All Python API services stopped!" 
+# Executive Interview S3 Service (Port 8006)
+pkill -f "simple_s3_api.py" 2>/dev/null && echo "✅ Executive Interview S3 API (8006) 종료됨"
+
+# AI Analysis Service (Port 8007)
+pkill -f "ai_analysis_api.py" 2>/dev/null && echo "✅ AI Analysis API (8007) 종료됨"
+
+# Auto Analyzer Scheduler
+pkill -f "auto_analyzer.py" 2>/dev/null && echo "✅ Auto Analyzer Scheduler 종료됨"
+
+# 3. 추가 정리
+echo "🧹 추가 정리 중..."
+
+# 모든 Python 프로세스 확인 및 종료
+pkill -f "python.*simple_s3_api" 2>/dev/null
+pkill -f "python.*ai_analysis_api" 2>/dev/null  
+pkill -f "python.*auto_analyzer" 2>/dev/null
+
+# 포트 사용 확인
+echo "🔍 포트 사용 상태 확인:"
+netstat -an | grep -E ":(8000|8001|8002|8003|8004|8005|8006|8007)" | grep LISTEN || echo "모든 포트가 비어있습니다"
+
+echo ""
+echo "🎉 모든 Python API 서비스가 종료되었습니다!"
+echo ""
+echo "📝 재시작 방법:"
+echo "1. 기존 서비스: ./start_services.sh"
+echo "2. AI 서비스만: cd executive_interview && ./start_ai_services.sh"
+echo "3. 전체 통합: ./start_services.sh (새로 생성 예정)" 

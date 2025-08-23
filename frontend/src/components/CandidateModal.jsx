@@ -189,7 +189,7 @@ export default function CandidateModal({ candidate, isOpen, onClose, postId, ava
     
     // 면접 영상
     if (["3y", "4n", "4y"].includes(stage)) {
-      fetch(`http://localhost:8081/api/interviews/${jobCandidateId}/video`)
+      fetch(`http://localhost:8081/api/interview-schedules/${jobCandidateId}/video`)
         .then(res => {
           if (!res.ok) throw new Error('interviewVideo 조회 실패');
           return res.json();

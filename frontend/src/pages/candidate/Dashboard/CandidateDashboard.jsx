@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-// useAuth 훅을 임포트합니다. 실제 AuthContext 파일 경로에 맞게 수정해주세요.
 import { useAuth } from '../../../context/AuthContext.jsx';
 import SEO from '../../../components/SEO';
 
@@ -18,6 +17,162 @@ import { InterviewSchedulerModal } from '../Interview';
 import InterviewPreparationModal from '../../../components/InterviewPreparationModal';
 
 import './CandidateDashboard.css';
+
+// 임원면접 정보 컴포넌트
+const ExecutiveInterviewInfo = ({ post }) => {
+  const [schedule, setSchedule] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const loadSchedule = async () => {
+      if (post.jobCandCurrStage === '5n') {
+        setLoading(true);
+        try {
+          // postId: 101에 대한 임원면접 일정 조회
+          console.log('postId:', post.postId, '에 대한 임원면접 일정 조회');
+          
+          // postId: 101인 경우 jobCandidateId: 1 사용 (이미 생성된 일정)
+          if (post.postId === 101) {
+            const existingSchedules = await fetch('http://localhost:8081/api/executive-interview/schedules?postId=101');
+            if (existingSchedules.ok) {
+              const schedules = await existingSchedules.json();
+              if (schedules.length > 0) {
+                // 기존 일정이 있으면 사용
+                const scheduleData = schedules[0];
+                console.log('기존 임원면접 일정 사용:', scheduleData);
+                setSchedule(scheduleData);
+                return;
+              }
+            }
+          }
+          
+          // 다른 postId인 경우 또는 일정이 없는 경우
+          console.log('임원면접 일정을 찾을 수 없습니다.');
+        } catch (error) {
+          console.error(`공고 ${post.postId}의 임원면접 일정 조회/생성 실패:`, error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    
+    loadSchedule();
+  }, [post]);
+  
+  if (loading) {
+    return (
+      <div style={{ marginTop: '0.8rem', textAlign: 'center', color: '#666' }}>
+        면접 일정 불러오는 중...
+      </div>
+    );
+  }
+  
+  if (!schedule) {
+    return (
+      <div style={{ marginTop: '0.8rem', textAlign: 'center', color: '#666' }}>
+        면접 일정 정보를 찾을 수 없습니다.
+      </div>
+    );
+  }
+  
+  return (
+    <div style={{ marginTop: '0.8rem' }}>
+      {/* 임원면접 일정 정보 */}
+      <div style={{
+        padding: '0.6rem',
+        background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+        borderRadius: '8px',
+        border: '1px solid #0ea5e9',
+        marginBottom: '0.8rem',
+        fontSize: '0.85rem',
+        color: '#0c4a6e'
+      }}>
+        <div style={{ marginBottom: '0.3rem' }}>
+          <strong>📅 면접 일시:</strong> {schedule.interviewDate ? 
+            new Date(schedule.interviewDate).toLocaleDateString('ko-KR', { 
+              month: 'short', 
+              day: 'numeric',
+              weekday: 'short'
+            }) : '일정 없음'
+          }
+        </div>
+        <div>
+          <strong>⏰ 면접 시간:</strong> {schedule.timeSlot || '시간 없음'}
+        </div>
+      </div>
+      
+              {/* 면접 참여하기 버튼 */}
+        <button
+          onClick={() => {
+            console.log('면접 참여하기 버튼 클릭됨');
+            console.log('post 정보:', post);
+            
+            // postId와 candidateId로 jobCandidateId 조회
+            const getJobCandidateId = async () => {
+              try {
+                const candidateId = localStorage.getItem('userId') || 19;
+                console.log('postId:', post.postId, 'candidateId:', candidateId);
+                
+                // 새로운 API 사용: postId와 candidateId로 jobCandidateId 찾기
+                const response = await fetch(`http://localhost:8081/api/progress/find-job-candidate-id?postId=${post.postId}&candidateId=${candidateId}`);
+                
+                if (response.ok) {
+                  const data = await response.json();
+                  console.log('API 응답:', data);
+                  
+                  if (data.success && data.jobCandidateId) {
+                    const jobCandidateId = data.jobCandidateId;
+                    console.log('찾은 jobCandidateId:', jobCandidateId);
+                    console.log('면접 세션으로 이동:', `/executive-interview-session/${jobCandidateId}`);
+                    navigate(`/executive-interview-session/${jobCandidateId}`);
+                  } else {
+                    console.error('jobCandidateId를 찾을 수 없습니다:', data.message);
+                    alert('면접 정보를 찾을 수 없습니다. 관리자에게 문의해주세요.');
+                  }
+                } else {
+                  console.error('API 호출 실패:', response.status);
+                  alert('면접 정보 조회에 실패했습니다.');
+                }
+              } catch (error) {
+                console.error('jobCandidateId 조회 실패:', error);
+                alert('면접 참여 중 오류가 발생했습니다.');
+              }
+            };
+            
+            getJobCandidateId();
+          }}
+        style={{
+          background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+          color: 'white',
+          border: 'none',
+          borderRadius: '8px',
+          padding: '0.6rem 1rem',
+          fontWeight: '600',
+          fontSize: '0.85rem',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          boxShadow: '0 2px 8px rgba(139, 92, 246, 0.2)',
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.3rem'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-1px)';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.3)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(139, 92, 246, 0.2)';
+        }}
+      >
+        📹 면접 참여하기
+      </button>
+    </div>
+  );
+};
 
 // DB 날짜 포맷을 Date 객체로 변환하는 함수
 function parseDbDate(str) {
@@ -67,103 +222,328 @@ function calculateRemainingTime(deadlineDate) {
   }
 }
 
-// 스테이지별 색상 스타일 함수 추가
+// 스테이지별 색상 스타일 함수
 const getStageColor = (code) => {
   switch (code) {
-    case '4n': return { bg: '#fed7d7', text: '#e53e3e', border: '#fc8181' }; // 불합격 - 빨간색
-    case '4y': return { bg: '#c6f6d5', text: '#38a169', border: '#68d391' }; // 합격 - 진한 초록색
-    default: return { bg: '#e6fffa', text: '#319795', border: '#b2f5ea' };
+    case '0': return { bg: '#e2e8f0', text: '#4a5568', border: '#cbd5e0' }; // 지원
+    case '0n': return { bg: '#fed7d7', text: '#e53e3e', border: '#fc8181' }; // 지원 거절
+    case '1n': return { bg: '#fef5e7', text: '#d69e2e', border: '#f6ad55' }; // GitHub 필터링
+    case '2n': return { bg: '#e6fffa', text: '#319795', border: '#b2f5ea' }; // 이메일 발송
+    case '2y': return { bg: '#f0fff4', text: '#38a169', border: '#9ae6b4' }; // 포트폴리오 제출
+    case '2p': return { bg: '#f0fff4', text: '#38a169', border: '#9ae6b4' }; // 포트폴리오 통과
+    case '3n': return { bg: '#e6fffa', text: '#319795', border: '#b2f5ea' }; // AI 면접 예정
+    case '3y': return { bg: '#f0fff4', text: '#38a169', border: '#9ae6b4' }; // AI 면접 완료
+    case '4n': return { bg: '#fed7d7', text: '#e53e3e', border: '#fc8181' }; // AI 면접 불합격
+    case '4y': return { bg: '#c6f6d5', text: '#38a169', border: '#68d391' }; // AI 면접 합격
+    case '5n': return { bg: '#e6fffa', text: '#319795', border: '#b2f5ea' }; // 임원면접 예정
+    case '5y': return { bg: '#f0fff4', text: '#38a169', border: '#9ae6b4' }; // 임원면접 완료
+    case '6n': return { bg: '#fed7d7', text: '#e53e3e', border: '#fc8181' }; // 최종 불합격
+    case '6y': return { bg: '#c6f6d5', text: '#38a169', border: '#68d391' }; // 최종 합격
+    default: return { bg: '#e2e8f0', text: '#4a5568', border: '#cbd5e0' };
   }
 };
 
-// 스테이지별 라벨 함수 추가
+// 스테이지별 라벨 함수
 const getStageLabel = (code) => {
   switch (code) {
-    case '4n': return '불합격';
-    case '4y': return '합격';
+    case '0': return '지원';
+    case '0n': return '지원 거절';
+    case '1n': return 'GitHub 필터링';
+    case '2n': return '포트폴리오 대기';
+    case '2y': return '포트폴리오 제출';
+    case '2p': return '포트폴리오 통과';
+    case '3n': return 'AI 면접 예정';
+    case '3y': return 'AI 면접 완료';
+    case '4n': return 'AI 면접 불합격';
+    case '4y': return 'AI 면접 합격';
+    case '5n': return '임원면접 예정';
+    case '5y': return '임원면접 완료';
+    case '6n': return '최종 불합격';
+    case '6y': return '최종 합격';
     default: return '진행중';
   }
 };
 
 function CandidateDashboard() {
-  // useAuth 훅을 사용하여 인증 상태 정보를 가져옵니다.
-  // authState 객체에 로그인 정보 (예: userId, userType, token)가 담겨 있다고 가정합니다.
   const { authState } = useAuth();
+  const navigate = useNavigate();
 
   const [userName, setUserName] = useState('게스트');
   const [activeTab, setActiveTab] = useState('all');
-
-  // 백엔드에서 가져온 공고 목록 데이터를 저장할 상태
   const [jobPostings, setJobPostings] = useState([]);
+  const [scheduledInterviews, setScheduledInterviews] = useState({});
+  const [executiveInterviewSchedules, setExecutiveInterviewSchedules] = useState([]);
+  const [aiInterviewSchedules, setAiInterviewSchedules] = useState([]);
+  const [executiveInterviewLoading, setExecutiveInterviewLoading] = useState(false);
+  const [aiInterviewLoading, setAiInterviewLoading] = useState(false);
 
-  // 로그인한 사용자의 ID를 authState에서 가져옵니다.
-  // authState.userId 또는 authState.candidateId 등 실제 필드명에 맞게 수정해주세요.
-  // 로그인되지 않은 상태일 경우 authState.userId는 null 또는 undefined일 수 있습니다.
-  const candidateId = authState.userId; // <-- 로그인한 사용자의 ID 사용
-
-  // React Router의 navigate 훅 초기화
-  const navigate = useNavigate();
-
-  // 직무 선택 모달 상태 (localStorage 연동)
+  // 모달 상태
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
-  const [selectedJob, setSelectedJob] = useState('입력해주세요');
-
-  // 지역 선택 모달 상태 (localStorage 연동)
   const [isRegionModalOpen, setIsRegionModalOpen] = useState(false);
-  const [selectedRegion, setSelectedRegion] = useState('입력해주세요');
-
-  // 연봉 선택 모달 상태 (localStorage 연동)
   const [isSalaryModalOpen, setIsSalaryModalOpen] = useState(false);
-  const [selectedSalary, setSelectedSalary] = useState('입력해주세요');
-
-  // 기업규모 선택 모달 상태 (새로 추가, localStorage 연동)
   const [isCompanySizeModalOpen, setIsCompanySizeModalOpen] = useState(false);
-  const [selectedCompanySize, setSelectedCompanySize] = useState('입력해주세요');
-
-  // 출근소요시간 선택 모달 상태 (새로 추가, localStorage 연동)
   const [isCommuteTimeModalOpen, setIsCommuteTimeModalOpen] = useState(false);
-  const [selectedCommuteTime, setSelectedCommuteTime] = useState('입력해주세요');
-
-  // 나머지 입력값 상태 (현재 모달이 없으므로 '입력해주세요'로 고정)
-  const [selectedIndustry, setSelectedIndustry] = useState('입력해주세요');
-  const [selectedBenefits, setSelectedBenefits] = useState([]);
-  const [selectedWorkType, setSelectedWorkType] = useState('입력해주세요');
-
-  // 면접 일정 모달 관련 상태
+  const [isBenefitModalOpen, setIsBenefitModalOpen] = useState(false);
   const [isInterviewSchedulerModalOpen, setIsInterviewSchedulerModalOpen] = useState(false);
-  const [selectedPostIdForScheduling, setSelectedPostIdForScheduling] = useState(null);
-
-  // 면접 예상질문 모달 관련 상태
   const [isInterviewPreparationModalOpen, setIsInterviewPreparationModalOpen] = useState(false);
+
+  // 선택된 값들
+  const [selectedJob, setSelectedJob] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState('');
+  const [selectedSalary, setSelectedSalary] = useState('');
+  const [selectedCompanySize, setSelectedCompanySize] = useState('');
+  const [selectedCommuteTime, setSelectedCommuteTime] = useState('');
+  const [selectedBenefits, setSelectedBenefits] = useState([]);
+  const [selectedPostIdForScheduling, setSelectedPostIdForScheduling] = useState(null);
   const [selectedPostIdForPreparation, setSelectedPostIdForPreparation] = useState(null);
 
-  // 면접 일정이 잡힌 공고들을 추적하는 상태
-  const [scheduledInterviews, setScheduledInterviews] = useState({});
+  // candidateId 가져오기
+  const candidateId = authState?.userId || localStorage.getItem('userId');
+  
+  // 디버깅용 로그
+  console.log('현재 candidateId:', candidateId);
+  console.log('authState:', authState);
+  
+  // githubLogin 기반으로 candidateId 조회 (fallback)
+  const [actualCandidateId, setActualCandidateId] = useState(candidateId);
 
-  // 복리후생 모달 관련 상태
-  const [isBenefitModalOpen, setIsBenefitModalOpen] = useState(false);
+  // 공고 목록 가져오기
+  const fetchJobPostings = async () => {
+    try {
+      const response = await fetch(`http://localhost:8081/api/candidates/${actualCandidateId || candidateId}/job-postings`);
+      if (response.ok) {
+        const data = await response.json();
+        setJobPostings(data);
+      }
+    } catch (error) {
+      console.error('공고 목록 가져오기 오류:', error);
+    }
+  };
 
-  // 대시보드 마운트 시 항상 최신 데이터 fetch
-  useEffect(() => {
-    fetchJobPostings();
-  }, []);
+  // 기존 면접 일정 정보 불러오기
+  const loadExistingInterviewSchedules = async () => {
+    try {
+      const jobPostingsResponse = await fetch(`http://localhost:8081/api/candidates/${actualCandidateId || candidateId}/job-postings`);
+      if (jobPostingsResponse.ok) {
+        const jobPostings = await jobPostingsResponse.json();
+        
+        // 3n 단계인 공고들에 대해 기존 scheduledInterviews 상태 유지
+        const aiInterviewPosts = jobPostings.filter(post => post.jobCandCurrStage === '3n');
+        
+        if (aiInterviewPosts.length > 0) {
+          // 기존 scheduledInterviews 상태에서 3n 단계 공고들의 정보만 유지
+          setScheduledInterviews(prev => {
+            const newScheduledInterviews = {};
+            aiInterviewPosts.forEach(post => {
+              if (prev[post.postId]) {
+                newScheduledInterviews[post.postId] = prev[post.postId];
+              }
+            });
+            return newScheduledInterviews;
+          });
+        }
+      }
+    } catch (error) {
+      console.error('기존 면접 일정 정보 불러오기 오류:', error);
+    }
+  };
 
-  // 컴포넌트가 처음 마운트되거나 candidateId가 변경될 때 데이터를 가져오는 useEffect 훅
+  // 임원면접 일정 정보 불러오기
+  const loadExecutiveInterviewSchedules = async () => {
+    try {
+      setExecutiveInterviewLoading(true);
+      
+      console.log('임원면접 일정 불러오기 시작, candidateId:', candidateId);
+      
+      const jobPostingsResponse = await fetch(`http://localhost:8081/api/candidates/${actualCandidateId || candidateId}/job-postings`);
+      if (jobPostingsResponse.ok) {
+        const jobPostings = await jobPostingsResponse.json();
+        
+        console.log('가져온 jobPostings:', jobPostings);
+        
+        const executiveInterviewPosts = jobPostings.filter(post => post.jobCandCurrStage === '5n');
+        
+        console.log('임원면접 단계 공고들:', executiveInterviewPosts);
+        
+        if (executiveInterviewPosts.length > 0) {
+          const schedulePromises = executiveInterviewPosts.map(async (post) => {
+            try {
+              // jobCandidateId가 없으면 githubLogin으로 조회
+              let jobCandidateId = post.jobCandidateId;
+              if (!jobCandidateId) {
+                const progressResponse = await fetch(`http://localhost:8081/api/progress/job-cand-progress/by-github-login/${authState?.loginId || localStorage.getItem('loginId')}`);
+                if (progressResponse.ok) {
+                  const progressData = await progressResponse.json();
+                  if (progressData && progressData.post && progressData.post.postId === post.postId) {
+                    jobCandidateId = progressData.jobCandidateId;
+                  }
+                }
+              }
+              
+              if (jobCandidateId) {
+                const scheduleResponse = await fetch(`http://localhost:8081/api/executive-interview/schedule/${jobCandidateId}`);
+                if (scheduleResponse.ok) {
+                  const scheduleData = await scheduleResponse.json();
+                  return {
+                    ...post,
+                    executiveInterviewSchedule: scheduleData,
+                    jobCandidateId: jobCandidateId
+                  };
+                }
+              }
+            } catch (error) {
+              console.error(`공고 ${post.postId}의 임원면접 일정 조회 실패:`, error);
+            }
+            return post;
+          });
+          
+          const postsWithSchedules = await Promise.all(schedulePromises);
+          setExecutiveInterviewSchedules(postsWithSchedules);
+        } else {
+          setExecutiveInterviewSchedules([]);
+        }
+      }
+    } catch (error) {
+      console.error('임원면접 일정 정보 불러오기 오류:', error);
+      setExecutiveInterviewSchedules([]);
+    } finally {
+      setExecutiveInterviewLoading(false);
+    }
+  };
+
+  // AI 면접 일정 정보 불러오기
+  const loadAiInterviewSchedules = async () => {
+    try {
+      setAiInterviewLoading(true);
+      
+      const jobPostingsResponse = await fetch(`http://localhost:8081/api/candidates/${actualCandidateId || candidateId}/job-postings`);
+      if (jobPostingsResponse.ok) {
+        const jobPostings = await jobPostingsResponse.json();
+        
+        const aiInterviewPosts = jobPostings.filter(post => post.jobCandCurrStage === '3n');
+        
+        if (aiInterviewPosts.length > 0) {
+          // API 호출 없이 3n 단계 공고들만 설정
+          setAiInterviewSchedules(aiInterviewPosts);
+        } else {
+          setAiInterviewSchedules([]);
+        }
+      }
+    } catch (error) {
+      console.error('AI 면접 일정 정보 불러오기 오류:', error);
+      setAiInterviewSchedules([]);
+    } finally {
+      setAiInterviewLoading(false);
+    }
+  };
+
+  // 사용자 설정 불러오기
+  const loadPreferencesFromDB = async () => {
+    try {
+      const response = await fetch(`http://localhost:8081/api/candidates/${actualCandidateId || candidateId}/preferences`);
+      if (response.ok) {
+        const preferences = await response.json();
+        setSelectedJob(preferences.preferredJob || '');
+        setSelectedRegion(preferences.preferredRegion || '');
+        setSelectedSalary(preferences.preferredSalary || '');
+        setSelectedCompanySize(preferences.preferredCompanySize || '');
+        setSelectedCommuteTime(preferences.preferredCommuteTime || '');
+        setSelectedBenefits(preferences.preferredBenefits ? JSON.parse(preferences.preferredBenefits) : []);
+      }
+    } catch (error) {
+      console.error('사용자 설정 불러오기 오류:', error);
+    }
+  };
+
+  // 사용자 설정 저장
+  const savePreferencesToDB = async (preferences) => {
+    try {
+              const response = await fetch(`http://localhost:8081/api/candidates/${actualCandidateId || candidateId}/preferences`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(preferences)
+      });
+      if (!response.ok) {
+        console.error('설정 저장 실패:', response.status);
+      }
+    } catch (error) {
+      console.error('설정 저장 오류:', error);
+    }
+  };
+
+  // useEffect - 컴포넌트 마운트 시 데이터 로드
   useEffect(() => {
     const fetchUserDataAndJobPostings = async () => {
       try {
         // 1. 사용자 정보 가져오기
-        const userResponse = await fetch(`http://localhost:8081/api/candidates/${candidateId}`);
+        const userResponse = await fetch(`http://localhost:8081/api/candidates/${actualCandidateId || candidateId}`);
         if (userResponse.ok) {
           const userData = await userResponse.json();
           setUserName(userData.candidateName || '사용자');
         }
 
         // 2. 공고 목록 가져오기
-        const postingsResponse = await fetch(`http://localhost:8081/api/candidates/${candidateId}/job-postings`);
+        const postingsResponse = await fetch(`http://localhost:8081/api/candidates/${actualCandidateId || candidateId}/job-postings`);
         if (postingsResponse.ok) {
           const postingsData = await postingsResponse.json();
-          setJobPostings(postingsData);
+          
+          // 임원면접 단계인 공고들에 대해 임원면접 일정 정보 추가
+          const postingsWithSchedules = await Promise.all(
+            postingsData.map(async (post) => {
+              if (post.jobCandCurrStage === '5n') {
+                try {
+                  // jobCandidateId가 필요하므로 job_cand_progress에서 조회
+                  const progressResponse = await fetch(`http://localhost:8081/api/progress/job-cand-progress/by-github-login/${authState?.loginId || localStorage.getItem('loginId')}`);
+                  if (progressResponse.ok) {
+                    const progressData = await progressResponse.json();
+                    if (progressData && progressData.post && progressData.post.postId === post.postId) {
+                      const scheduleResponse = await fetch(`http://localhost:8081/api/executive-interview/schedule/${progressData.jobCandidateId}`);
+                      if (scheduleResponse.ok) {
+                        const scheduleData = await scheduleResponse.json();
+                        return {
+                          ...post,
+                          executiveInterviewSchedule: scheduleData,
+                          jobCandidateId: progressData.jobCandidateId
+                        };
+                      }
+                    }
+                  }
+                } catch (error) {
+                  console.error(`공고 ${post.postId}의 임원면접 일정 조회 실패:`, error);
+                }
+              }
+              return post;
+            })
+          );
+          
+          setJobPostings(postingsWithSchedules);
+          
+          // 공고가 없으면 githubLogin으로 실제 candidateId 조회 시도
+          if (postingsData.length === 0) {
+            const githubLogin = authState?.loginId || localStorage.getItem('loginId');
+            if (githubLogin) {
+              console.log('공고가 없어서 githubLogin으로 조회 시도:', githubLogin);
+              const progressResponse = await fetch(`http://localhost:8081/api/progress/job-cand-progress/by-github-login/${githubLogin}`);
+              if (progressResponse.ok) {
+                const progressData = await progressResponse.json();
+                if (progressData && progressData.candidate && progressData.candidate.candidateId) {
+                  const actualId = progressData.candidate.candidateId;
+                  setActualCandidateId(actualId);
+                  console.log('githubLogin으로 조회한 실제 candidateId:', actualId);
+                  
+                  // 실제 candidateId로 다시 시도
+                  const retryResponse = await fetch(`http://localhost:8081/api/candidates/${actualId}/job-postings`);
+                  if (retryResponse.ok) {
+                    const retryData = await retryResponse.json();
+                    setJobPostings(retryData);
+                    console.log('실제 candidateId로 조회한 공고:', retryData);
+                  }
+                }
+              }
+            }
+          }
         }
 
         // 3. 사용자 설정 불러오기
@@ -172,25 +552,40 @@ function CandidateDashboard() {
         // 4. 기존 면접 일정 정보 불러오기
         await loadExistingInterviewSchedules();
         
+        // 5. 임원면접 일정 정보 불러오기
+        await loadExecutiveInterviewSchedules();
+        
+        // 6. AI 면접 일정 정보 불러오기
+        await loadAiInterviewSchedules();
+        
       } catch (error) {
         console.error('데이터 가져오기 오류:', error);
-        setUserName('오류 발생'); // 사용자 이름 로딩 오류 처리
-        setJobPostings([]); // 공고 목록 로딩 오류 시 빈 배열로 설정
+        setUserName('오류 발생');
+        setJobPostings([]);
       }
     };
 
-    // candidateId 값이 변경될 때마다 effect 재실행
-    // authState.userId (또는 해당 필드)가 변경될 때마다 이 effect가 다시 실행되어 새로운 사용자의 데이터를 가져옵니다.
-    fetchUserDataAndJobPostings();
-  }, [candidateId, authState.userId]); // 의존성 배열에 candidateId와 authState.userId 추가
+    if (candidateId) {
+      fetchUserDataAndJobPostings();
+    }
+  }, [candidateId, authState?.loginId]);
 
-  const handleTabClick = (tabId) => {
+  // 탭 클릭 핸들러
+  const handleTabClick = async (tabId) => {
     setActiveTab(tabId);
-    console.log(`Tab selected: ${tabId}`);
-    // TODO: 탭 변경 시 해당 탭에 맞는 공고 목록을 필터링하거나, 백엔드 API 호출 시 탭 정보를 넘겨줄 수 있습니다.
-    // 현재는 모든 탭에서 동일한 전체 목록을 보여줍니다.
+    
+    // "전체" 탭으로 이동할 때 임원면접 일정 정보 로드
+    if (tabId === 'all') {
+      try {
+        const postsWithSchedules = await getJobPostingsWithSchedules();
+        setJobPostings(postsWithSchedules);
+      } catch (error) {
+        console.error('전체 탭 임원면접 일정 로드 실패:', error);
+      }
+    }
   };
-  // 면접 일정 모달 관련 함수 추가
+
+  // 모달 관련 함수들
   const openInterviewSchedulerModal = (postId) => {
     setSelectedPostIdForScheduling(postId);
     setIsInterviewSchedulerModalOpen(true);
@@ -201,7 +596,6 @@ function CandidateDashboard() {
     setSelectedPostIdForScheduling(null);
   };
 
-  // 면접 예상질문 모달 열기/닫기 핸들러
   const openInterviewPreparationModal = (postId) => {
     setSelectedPostIdForPreparation(postId);
     setIsInterviewPreparationModalOpen(true);
@@ -212,90 +606,59 @@ function CandidateDashboard() {
     setSelectedPostIdForPreparation(null);
   };
 
-  // 면접 일정이 정해졌을 때 처리하는 함수
+  // 면접 일정 처리
   const handleInterviewScheduled = async (postId, scheduleInfo) => {
     console.log("면접 일정 저장됨:", postId, scheduleInfo);
     
-    // 1. 서버에서 최신 데이터를 다시 가져와서 상태 동기화
     try {
-      const response = await fetch(`http://localhost:8081/api/candidates/${candidateId}/job-postings`);
-      if (response.ok) {
-        const updatedJobPostings = await response.json();
-        setJobPostings(updatedJobPostings);
-        console.log("면접 일정 등록 후 최신 데이터 동기화 완료");
-        
-        // 2. 면접 일정 정보를 백엔드에서 가져와서 scheduledInterviews에 저장
-        try {
-          const interviewResponse = await fetch(`http://localhost:8081/api/interviews/by-post-candidate?postId=${postId}&candidateId=${candidateId}`);
-          if (interviewResponse.ok) {
-            const interviewData = await interviewResponse.json();
-            console.log("면접 정보 조회 성공:", interviewData);
-            
-            // 면접 정보를 scheduledInterviews에 저장
-            const scheduledDate = parseDbDate(interviewData.scheduledTime);
-            const deadlineDate = parseDbDate(interviewData.deadlineTime);
-            console.log('면접 API 응답:', interviewData);
-            console.log('파싱 결과 scheduledDate:', scheduledDate, 'deadlineDate:', deadlineDate);
-            setScheduledInterviews(prev => {
-              const updated = {
-                ...prev,
-                [postId]: {
-                  date: formatUtcToKst(scheduledDate),
-                  time: '',
-                  iso: scheduledDate,
-                  deadline: deadlineDate,
-                  link: interviewData.interviewLink,
-                  scheduleId: interviewData.scheduleId
-                }
-              };
-              console.log('scheduledInterviews 저장:', updated);
-              return updated;
-            });
-          } else {
-            console.error("면접 정보 조회 실패:", interviewResponse.status);
-          }
-        } catch (interviewError) {
-          console.error("면접 정보 조회 중 오류:", interviewError);
+      // 모달에서 전달받은 데이터를 직접 사용
+      const scheduledDate = parseDbDate(scheduleInfo.scheduledTime);
+      const deadlineDate = parseDbDate(scheduleInfo.deadlineTime);
+      
+      // scheduledInterviews 상태 즉시 업데이트
+      setScheduledInterviews(prev => ({
+        ...prev,
+        [postId]: {
+          date: formatUtcToKst(scheduledDate),
+          time: '',
+          iso: scheduledDate,
+          deadline: deadlineDate,
+          link: scheduleInfo.interviewLink,
+          scheduleId: scheduleInfo.scheduleId
         }
-      }
+      }));
+      
+      // 해당 공고의 단계를 3n으로 변경 (면접 일정 정함)
+      setJobPostings(prev => prev.map(post => 
+        post.postId === postId 
+          ? { ...post, jobCandCurrStage: '3n' }
+          : post
+      ));
+      
     } catch (error) {
       console.error("면접 일정 등록 후 데이터 동기화 실패:", error);
-      // 동기화 실패 시 로컬 상태만 업데이트
-      setJobPostings(prevJobPostings =>
-        prevJobPostings.map(post =>
-          post.postId === postId
-            ? { ...post, jobCandCurrStage: '3n' } // 상태를 '3n'으로 변경 (면접 일정 확정)
-            : post
-        )
-      );
     }
     
     closeInterviewSchedulerModal();
   };
 
-  // 포트폴리오 제출 페이지로 이동하는 함수
-  const handleGoToSubmitPortfolio = (postId) => {
-    console.log(`공고 ID ${postId}에 대한 포트폴리오 제출 페이지로 이동`);
-    // React Router의 navigate 함수를 사용하여 포트폴리오 제출 페이지로 이동합니다.
-    // URL 경로에 공고 ID를 포함시켜 제출 페이지에서 어떤 공고인지 알 수 있도록 합니다.
-    navigate(`/submit-portfolio/${postId}`); // 실제 라우팅 경로에 맞게 수정
+  // 남은 시간 계산 버튼 클릭 시 면접 보러가기
+  const calculateRemainingTime = (postId) => {
+    // 바로 면접 참여 페이지로 이동
+    navigateToInterview(postId);
   };
-  // 면접 일정 정하기 페이지로 이동하는 함수
+
+  // 기타 핸들러 함수들
+  const handleGoToSubmitPortfolio = (postId) => {
+    navigate(`/submit-portfolio/${postId}`);
+  };
+
   const handleGoToScheduleInterview = (postId) => {
       navigate(`/interview-scheduling/${postId}`);
   };
 
-  // 면접 페이지로 이동하는 함수
   const navigateToInterview = async (postId) => {
     try {
-      // 1. 현재 로그인한 사용자의 candidateId 가져오기
-      const candidateId = localStorage.getItem('userId');
-      if (!candidateId) {
-        alert('사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
-        return;
-      }
-
-      // 2. scheduledInterviews에서 면접 일정 확인
       const interview = scheduledInterviews[postId];
       if (interview && interview.iso) {
         const interviewDateTime = new Date(interview.iso);
@@ -306,18 +669,11 @@ function CandidateDashboard() {
         }
       }
 
-      // 3. 백엔드 API 호출 URL 수정
       const response = await fetch(`http://localhost:8081/api/interviews/by-post-candidate?postId=${postId}&candidateId=${candidateId}`);
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API 응답 오류:", response.status, errorText);
-        try {
-          const errorData = JSON.parse(errorText);
-          throw new Error(errorData.message || '면접 일정을 조회하는데 실패했습니다.');
-        } catch (parseError) {
-          throw new Error(`면접 일정을 조회하는데 실패했습니다. (HTTP ${response.status}: ${errorText.substring(0, 100)}...)`);
-        }
+        throw new Error('면접 일정을 조회하는데 실패했습니다.');
       }
+      
       const data = await response.json();
       if (data && data.scheduleId) {
         navigate(`/interview/${data.scheduleId}`);
@@ -330,312 +686,174 @@ function CandidateDashboard() {
     }
   };
 
-  // 직무 모달 관련 함수
-  const openJobModal = () => {
-    setIsJobModalOpen(true);
-  };
-  const closeJobModal = () => {
-    setIsJobModalOpen(false);
-  };
+  // 모달 관련 함수들
+  const openJobModal = () => setIsJobModalOpen(true);
+  const closeJobModal = () => setIsJobModalOpen(false);
   const handleJobSelected = async (job) => {
     setSelectedJob(job);
     localStorage.setItem('selectedJob', job);
-    // DB에 저장
     await savePreferencesToDB({ preferredJob: job });
   };
 
-  // 지역 모달 관련 함수
-  const openRegionModal = () => {
-    setIsRegionModalOpen(true);
-  };
-  const closeRegionModal = () => {
-    setIsRegionModalOpen(false);
-  };
+  const openRegionModal = () => setIsRegionModalOpen(true);
+  const closeRegionModal = () => setIsRegionModalOpen(false);
   const handleRegionSelected = async (region) => {
     setSelectedRegion(region);
     localStorage.setItem('selectedRegion', region);
-    // DB에 저장
     await savePreferencesToDB({ preferredRegion: region });
   };
 
-  // 연봉 모달 관련 함수
-  const openSalaryModal = () => {
-    setIsSalaryModalOpen(true);
-  };
-  const closeSalaryModal = () => {
-    setIsSalaryModalOpen(false);
-  };
+  const openSalaryModal = () => setIsSalaryModalOpen(true);
+  const closeSalaryModal = () => setIsSalaryModalOpen(false);
   const handleSalarySelected = async (salary) => {
     setSelectedSalary(salary);
     localStorage.setItem('selectedSalary', salary);
-    // DB에 저장
     await savePreferencesToDB({ preferredSalary: salary });
   };
 
-  // 기업규모 모달 관련 함수 (새로 추가)
-  const openCompanySizeModal = () => {
-    setIsCompanySizeModalOpen(true);
-  };
-  const closeCompanySizeModal = () => {
-    setIsCompanySizeModalOpen(false);
-  };
+  const openCompanySizeModal = () => setIsCompanySizeModalOpen(true);
+  const closeCompanySizeModal = () => setIsCompanySizeModalOpen(false);
   const handleCompanySizeSelected = async (size) => {
     setSelectedCompanySize(size);
     localStorage.setItem('selectedCompanySize', size);
-    // DB에 저장
     await savePreferencesToDB({ preferredCompanySize: size });
   };
 
-  // 출근소요시간 모달 관련 함수 (새로 추가)
-  const openCommuteTimeModal = () => {
-    setIsCommuteTimeModalOpen(true);
-  };
-  const closeCommuteTimeModal = () => {
-    setIsCommuteTimeModalOpen(false);
-  };
+  const openCommuteTimeModal = () => setIsCommuteTimeModalOpen(true);
+  const closeCommuteTimeModal = () => setIsCommuteTimeModalOpen(false);
   const handleCommuteTimeSelected = async (time) => {
     setSelectedCommuteTime(time);
     localStorage.setItem('selectedCommuteTime', time);
-    // DB에 저장
     await savePreferencesToDB({ preferredCommuteTime: time });
   };
 
-  // 복리후생 모달 관련 함수 (새로 추가)
-  const openBenefitModal = () => {
-    setIsBenefitModalOpen(true);
-  };
-  const closeBenefitModal = () => {
-    setIsBenefitModalOpen(false);
-  };
+  const openBenefitModal = () => setIsBenefitModalOpen(true);
+  const closeBenefitModal = () => setIsBenefitModalOpen(false);
   const handleBenefitsSelected = async (benefits) => {
     setSelectedBenefits(benefits);
     localStorage.setItem('selectedBenefits', JSON.stringify(benefits));
-    // DB에 저장
-    await savePreferencesToDB({ preferredBenefit: benefits.join(', ') });
+    await savePreferencesToDB({ preferredBenefits: JSON.stringify(benefits) });
   };
 
-  // 공고 제목 클릭 시 해당 공고 상세 페이지로 이동
   const handleJobTitleClick = (postId) => {
     navigate(`/job/${postId}`);
   };
 
-  // 사용자 설정을 DB에 저장하는 함수
-  const savePreferencesToDB = async (preferences) => {
-    try {
-      const response = await fetch(`http://localhost:8081/api/candidates/${candidateId}/preferences`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          candidateId: candidateId,
-          ...preferences
-        })
-      });
-
-      if (response.ok) {
-        console.log('사용자 설정이 DB에 저장되었습니다.');
-      } else {
-        console.error('사용자 설정 저장 실패:', response.status);
-      }
-    } catch (error) {
-      console.error('사용자 설정 저장 중 오류:', error);
+  // 공고 필터링
+  const getFilteredJobPostings = () => {
+    if (activeTab === 'all') {
+      return jobPostings;
+    } else if (activeTab === 'positionProposal') {
+      return jobPostings.filter(post => ['0', '0n', '1n', '2n'].includes(post.jobCandCurrStage));
+    } else if (activeTab === 'aiInterview') {
+      return jobPostings.filter(post => ['2y', '2p', '3n', '3y', '4n', '4y'].includes(post.jobCandCurrStage));
+    } else if (activeTab === 'executiveInterview') {
+      return jobPostings.filter(post => ['5n', '5y'].includes(post.jobCandCurrStage));
+    } else if (activeTab === 'resultAnnouncement') {
+      return jobPostings.filter(post => ['6n', '6y'].includes(post.jobCandCurrStage));
     }
+    return jobPostings;
   };
-
-  // 사용자 설정을 DB에서 불러오는 함수
-  const loadPreferencesFromDB = async () => {
-    try {
-      const response = await fetch(`http://localhost:8081/api/candidates/${candidateId}/preferences`);
-      if (response.ok) {
-        const preferences = await response.json();
-        
-        // DB에서 가져온 설정으로 상태 업데이트
-        if (preferences.preferredJob) {
-          setSelectedJob(preferences.preferredJob);
-          localStorage.setItem('selectedJob', preferences.preferredJob);
-        }
-        if (preferences.preferredRegion) {
-          setSelectedRegion(preferences.preferredRegion);
-          localStorage.setItem('selectedRegion', preferences.preferredRegion);
-        }
-        if (preferences.preferredSalary) {
-          setSelectedSalary(preferences.preferredSalary);
-          localStorage.setItem('selectedSalary', preferences.preferredSalary);
-        }
-        if (preferences.preferredCompanySize) {
-          setSelectedCompanySize(preferences.preferredCompanySize);
-          localStorage.setItem('selectedCompanySize', preferences.preferredCompanySize);
-        }
-        if (preferences.preferredCommuteTime) {
-          setSelectedCommuteTime(preferences.preferredCommuteTime);
-          localStorage.setItem('selectedCommuteTime', preferences.preferredCommuteTime);
-        }
-        if (preferences.preferredBenefit) {
-          const benefits = preferences.preferredBenefit.split(', ').filter(b => b.trim());
-          setSelectedBenefits(benefits);
-          localStorage.setItem('selectedBenefits', JSON.stringify(benefits));
-        }
-        
-        console.log('사용자 설정을 DB에서 불러왔습니다.');
-      }
-    } catch (error) {
-      console.error('사용자 설정 로드 중 오류:', error);
-    }
-  };
-
-  // 기존 면접 일정 정보 불러오기
-  const loadExistingInterviewSchedules = async () => {
-    try {
-      // 각 공고별로 면접 일정 정보를 가져오기
-      const jobPostingsResponse = await fetch(`http://localhost:8081/api/candidates/${candidateId}/job-postings`);
-      if (jobPostingsResponse.ok) {
-        const jobPostings = await jobPostingsResponse.json();
-        
-        // 3n 상태(면접 일정 확정)인 공고들에 대해서만 면접 정보 조회
-        const interviewPromises = jobPostings
-          .filter(post => post.jobCandCurrStage === '3n')
-          .map(async (post) => {
+  
+  // 임원면접 일정이 포함된 공고 목록 가져오기
+  const getJobPostingsWithSchedules = async () => {
+    if (activeTab === 'all') {
+      // "전체" 탭에서는 임원면접 단계인 공고에 대해 일정 정보 추가
+      const postsWithSchedules = await Promise.all(
+        jobPostings.map(async (post) => {
+          if (post.jobCandCurrStage === '5n' && !post.executiveInterviewSchedule) {
             try {
-              const interviewResponse = await fetch(`http://localhost:8081/api/interviews/by-post-candidate?postId=${post.postId}&candidateId=${candidateId}`);
-              if (interviewResponse.ok) {
-                const interviewData = await interviewResponse.json();
-                return {
-                  postId: post.postId,
-                  interviewData: interviewData
-                };
+              // jobCandidateId가 없으면 githubLogin으로 조회
+              let jobCandidateId = post.jobCandidateId;
+              if (!jobCandidateId) {
+                const progressResponse = await fetch(`http://localhost:8081/api/progress/job-cand-progress/by-github-login/${authState?.loginId || localStorage.getItem('loginId')}`);
+                if (progressResponse.ok) {
+                  const progressData = await progressResponse.json();
+                  if (progressData && progressData.post && progressData.post.postId === post.postId) {
+                    jobCandidateId = progressData.jobCandidateId;
+                  }
+                }
+              }
+              
+              if (jobCandidateId) {
+                const scheduleResponse = await fetch(`http://localhost:8081/api/executive-interview/schedule/${jobCandidateId}`);
+                if (scheduleResponse.ok) {
+                  const scheduleData = await scheduleResponse.json();
+                  return {
+                    ...post,
+                    executiveInterviewSchedule: scheduleData,
+                    jobCandidateId: jobCandidateId
+                  };
+                }
               }
             } catch (error) {
-              console.error(`공고 ${post.postId}의 면접 정보 조회 실패:`, error);
+              console.error(`공고 ${post.postId}의 임원면접 일정 조회 실패:`, error);
             }
-            return null;
-          });
-
-        const interviewResults = await Promise.all(interviewPromises);
-        
-        // scheduledInterviews 상태 업데이트
-        const newScheduledInterviews = {};
-        interviewResults.forEach(result => {
-          if (result && result.interviewData) {
-            const scheduledDate = parseDbDate(result.interviewData.scheduledTime);
-            const deadlineDate = parseDbDate(result.interviewData.deadlineTime);
-            console.log('면접 API 응답(일괄):', result.interviewData);
-            console.log('파싱 결과 scheduledDate2:', scheduledDate, 'deadlineDate2:', deadlineDate);
-            newScheduledInterviews[result.postId] = {
-              date: formatUtcToKst(scheduledDate),
-              time: '',
-              iso: scheduledDate,
-              deadline: deadlineDate,
-              link: result.interviewData.interviewLink,
-              scheduleId: result.interviewData.scheduleId
-            };
           }
-        });
-        
-        setScheduledInterviews(newScheduledInterviews);
-        console.log('최종 scheduledInterviews:', newScheduledInterviews);
-      }
-    } catch (error) {
-      console.error('기존 면접 일정 로드 중 오류:', error);
+          return post;
+        })
+      );
+      return postsWithSchedules;
     }
+    return jobPostings;
   };
 
-  // 대시보드 마운트 시 항상 최신 데이터 fetch
-  const fetchJobPostings = async () => {
-    try {
-      const response = await fetch(`http://localhost:8081/api/candidates/${candidateId}/job-postings`);
-      if (response.ok) {
-        const data = await response.json();
-        setJobPostings(data);
-      }
-    } catch (error) {
-      console.error('데이터 가져오기 중 오류:', error);
-      setJobPostings([]);
-    }
-  };
+  const filteredJobPostings = getFilteredJobPostings();
 
   return (
-    <div className="candidate-dashboard-wrapper dashboard-page">
-      <SEO title="개인 대시보드" description="개인 대시보드에서 나의 포지션 제안, 면접 일정, 결과를 확인할 수 있습니다." />
+    <div className="candidate-dashboard">
+      <SEO 
+        title="개인회원 대시보드 | ZOOP"
+        description="개인회원을 위한 맞춤형 채용 정보와 면접 일정을 확인하세요."
+        keywords="개인회원, 대시보드, 채용정보, 면접일정, 포트폴리오"
+      />
+      
       <Sidebar />
 
-      <div className="main-content-area">
-        {/* Header 컴포넌트에 userName 전달 */}
-        <PortfolioNavbar userName={userName} />
-
-        <h1 className="page-title">포지션 제안 현황</h1>
-
-        <div className="info-box company-proposal">
-          <p>
-            <span className="icon">
-              <img src="../../icons/sparkle.svg" alt="sparkle" />
-            </span> 기업에게 포지션 제안을 받는 중입니다.
-          </p>
-          <button className="highlight-button">
-            이력서 하이라이트 신청하기 <span className="arrow-right">›</span>
-          </button>
+      <div className="dashboard-main">
+        <PortfolioNavbar />
+        
+        <div className="dashboard-content">
+          <div className="dashboard-header">
+            <h1>안녕하세요, {userName}님!</h1>
+            <p>지원한 공고와 면접 일정을 한눈에 확인하세요.</p>
         </div>
 
-        {/* Search/Filter Section */}
-        <div className="filter-section">
-          <div className="filter-row">
-            <span className="label">희망 근무 조건</span>
-            <div className="tags">
-              {/* 직무 관련 그룹 */}
-              <div className="tag-group">
-                <span className="tag static-tag">직무</span>
-                <span className="tag blue interactive-tag" onClick={openJobModal}>
-                  {selectedJob}
-                </span>
+          {/* 사용자 설정 섹션 */}
+          <div className="user-preferences">
+            <h2>나의 선호도 설정</h2>
+            <div className="preferences-grid">
+              <div className="preference-item" onClick={openJobModal}>
+                <span className="preference-label">희망 직무</span>
+                <span className="preference-value">{selectedJob || '선택해주세요'}</span>
               </div>
-              
-              {/* 지역 관련 그룹 */}
-              <div className="tag-group">
-                <span className="tag static-tag">지역</span>
-                <span className="tag blue interactive-tag" onClick={openRegionModal}>
-                  {selectedRegion}
-                </span>
+              <div className="preference-item" onClick={openRegionModal}>
+                <span className="preference-label">희망 지역</span>
+                <span className="preference-value">{selectedRegion || '선택해주세요'}</span>
               </div>
-              
-              {/* 조건 관련 그룹 */}
-              <div className="tag-group">
-                <span className="tag static-tag">연봉</span>
-                <span className="tag blue interactive-tag" onClick={openSalaryModal}>
-                  {selectedSalary}
-                </span>
+              <div className="preference-item" onClick={openSalaryModal}>
+                <span className="preference-label">희망 연봉</span>
+                <span className="preference-value">{selectedSalary || '선택해주세요'}</span>
               </div>
-              
-              {/* 복리후생 그룹 */}
-              <div className="tag-group">
-                <span className="tag static-tag">복리후생</span>
-                <span className="tag blue interactive-tag" onClick={openBenefitModal}>
-                  {selectedBenefits.length > 0 ? selectedBenefits.join(', ') : '입력해주세요'}
-                </span>
+              <div className="preference-item" onClick={openCompanySizeModal}>
+                <span className="preference-label">희망 회사 규모</span>
+                <span className="preference-value">{selectedCompanySize || '선택해주세요'}</span>
               </div>
-              
-              {/* 기업 관련 그룹 */}
-              <div className="tag-group">
-                <span className="tag static-tag">기업규모</span>
-                <span className="tag blue interactive-tag" onClick={openCompanySizeModal}>
-                  {selectedCompanySize}
-                </span>
+              <div className="preference-item" onClick={openCommuteTimeModal}>
+                <span className="preference-label">희망 통근 시간</span>
+                <span className="preference-value">{selectedCommuteTime || '선택해주세요'}</span>
               </div>
-              
-              {/* 출근 관련 그룹 */}
-              <div className="tag-group">
-                <span className="tag static-tag">출근소요시간</span>
-                <span className="tag blue interactive-tag" onClick={openCommuteTimeModal}>
-                  {selectedCommuteTime}
+              <div className="preference-item" onClick={openBenefitModal}>
+                <span className="preference-label">희망 복리후생</span>
+                <span className="preference-value">
+                  {selectedBenefits.length > 0 ? selectedBenefits.join(', ') : '선택해주세요'}
                 </span>
-              </div>
             </div>
           </div>
         </div>
 
-
-        {/* Tabs and Content Area */}
-        <div className="tabs-container">
-          <div className="tabs">
+          {/* 탭 네비게이션 */}
+          <div className="dashboard-tabs">
             <button
               className={`tab-button ${activeTab === 'all' ? 'active' : ''}`}
               onClick={() => handleTabClick('all')}
@@ -643,47 +861,38 @@ function CandidateDashboard() {
               전체
             </button>
             <button
-              className={`tab-button ${activeTab === 'positionOffer' ? 'active' : ''}`}
-              onClick={() => handleTabClick('positionOffer')}
+              className={`tab-button ${activeTab === 'positionProposal' ? 'active' : ''}`}
+              onClick={() => handleTabClick('positionProposal')}
             >
               포지션 제안
             </button>
             <button
-              className={`tab-button ${activeTab === 'interviewOffer' ? 'active' : ''}`}
-              onClick={() => handleTabClick('interviewOffer')}
+              className={`tab-button ${activeTab === 'aiInterview' ? 'active' : ''}`}
+              onClick={() => handleTabClick('aiInterview')}
             >
-              면접
+              AI 면접
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'executiveInterview' ? 'active' : ''}`}
+              onClick={() => handleTabClick('executiveInterview')}
+            >
+              임원면접
             </button>
             <button
               className={`tab-button ${activeTab === 'resultAnnouncement' ? 'active' : ''}`}
               onClick={() => handleTabClick('resultAnnouncement')}
             >
-              결과
+              최종 결과
             </button>
           </div>
 
-          <div className="filter-options">
-            <select className="dropdown">
-              <option>지난 1년</option>
-            </select>
-            <select className="dropdown">
-              <option>확인안한 제안 제외</option>
-            </select>
-            <select className="dropdown">ㄴ
-              <option>20개씩</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Tab Content - 공고 목록 표시 */}
-        <div className="tab-content">
+          {/* 탭별 내용 */}
   {activeTab === 'all' && (
-    <div>
-      {/* jobPostings 상태에 데이터가 있는지 확인하고 목록을 렌더링 */}
-      {jobPostings.length > 0 ? (
-        <ul>
-          {/* jobPostings 배열을 순회하며 각 공고 항목을 렌더링 */}
-          {jobPostings.map(post => (
+            <div className="tab-content">
+              <h3>전체 공고 목록</h3>
+              {filteredJobPostings.length > 0 ? (
+                <ul className="job-postings-list">
+                  {filteredJobPostings.map(post => (
             <li key={post.postId} className="job-posting-item">
               <div className="job-posting-flex-row">
                 <div className="job-posting-content">
@@ -701,178 +910,124 @@ function CandidateDashboard() {
                     <p>마감일: {post.postExpiryDate}</p>
                   </div>
                 </div>
-                <div className="job-posting-action-col">
-                  {/* jobCandCurrStage 값에 따라 버튼 표시 로직 추가 */}
-                  {post.jobCandCurrStage === '1n' && (
-                    <button onClick={() => handleGoToSubmitPortfolio(post.postId)}
-                      className="submit-portfolio-button">
-                      포트폴리오 제출하기
-                    </button>
-                  )}
-                  {post.jobCandCurrStage === '2n' && (
-                    <button onClick={() => handleGoToSubmitPortfolio(post.postId)}
-                      className="submit-portfolio-button">
-                      포트폴리오 제출하기
-                    </button>
-                  )}
-                  {post.jobCandCurrStage === '2y' && (
-                    <div 
-                      className="pending-status"
-                      style={{
-                        backgroundColor: '#fef5e7',
-                        color: '#d69e2e',
-                        border: '1px solid #fbd38d',
-                        padding: '8px 16px',
-                        borderRadius: '20px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                        cursor: 'default',
-                        userSelect: 'none'
-                      }}
-                    >
-                      {/* Use a clock SVG for pending/waiting */}
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d69e2e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}>
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                      </svg>
-                      면접 수락 요청 중
-                    </div>
-                  )}
-                  {post.jobCandCurrStage === '2p' && (
-                    <button 
-                      onClick={() => openInterviewSchedulerModal(post.postId)}
-                      className="action-button interview-scheduler-button">
-                      면접 일정 정하기
-                    </button>
-                  )}
-                  {post.jobCandCurrStage === '3n' && (() => {
-                    const interview = scheduledInterviews[post.postId];
-                    const now = new Date();
-                    const isInterviewStarted = interview && interview.iso && new Date(interview.iso) <= now;
-                    const remainingTime = interview && interview.deadline ? calculateRemainingTime(new Date(interview.deadline)) : '';
-                    return (
-                      <>
-                        <div style={{ marginBottom: 8, width: 'fit-content' }}>
-                          <button 
-                            onClick={() => openInterviewPreparationModal(post.postId)}
-                            className="action-button preparation-button"
-                            style={{
-                              borderRadius: '999px',
-                              background: 'linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)',
-                              color: '#fff',
-                              fontWeight: 700,
-                              fontSize: 15,
-                              padding: '7px 15px',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '7px',
-                              border: 'none',
-                              boxShadow: '0 2px 8px #fbbf2433',
-                              cursor: 'pointer',
-                              transition: 'background 0.18s, box-shadow 0.18s, transform 0.14s',
-                              outline: 'none',
-                              minWidth: 'auto',
-                              width: 'auto',
-                              lineHeight: 1.2
-                            }}
-                            onMouseEnter={e => {
-                              e.currentTarget.style.background = 'linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%)';
-                              e.currentTarget.style.boxShadow = '0 6px 18px #fbbf2444';
-                              e.currentTarget.style.transform = 'translateY(-2px) scale(1.04)';
-                            }}
-                            onMouseLeave={e => {
-                              e.currentTarget.style.background = 'linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)';
-                              e.currentTarget.style.boxShadow = '0 2px 8px #fbbf2433';
-                              e.currentTarget.style.transform = 'none';
-                            }}
-                          >
-                            {/* Outline Lightbulb SVG */}
-                            <svg width="17" height="17" fill="none" stroke="#fff" strokeWidth="2" viewBox="0 0 24 24" style={{ display: 'block' }}>
-                              <path d="M9 18h6" />
-                              <path d="M10 22h4" />
-                              <path d="M12 2a7 7 0 0 0-4 12c.3.3.5.7.5 1.1V17a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1v-1.9c0-.4.2-.8.5-1.1A7 7 0 0 0 12 2z" />
-                            </svg>
-                            <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-0.5px' }}>면접 예상질문</span>
-                          </button>
+                                        <div className="job-posting-action-col">
+                          {/* 2n, 2p 단계가 아닐 때만 단계 배지 표시 */}
+                          {post.jobCandCurrStage !== '2n' && post.jobCandCurrStage !== '2p' && (
+                            <div 
+                              className="stage-badge"
+                              style={{
+                                backgroundColor: getStageColor(post.jobCandCurrStage).bg,
+                                color: getStageColor(post.jobCandCurrStage).text,
+                                border: `1px solid ${getStageColor(post.jobCandCurrStage).border}`
+                              }}
+                            >
+                              {getStageLabel(post.jobCandCurrStage)}
+                            </div>
+                          )}
+                          
+                          {/* 2n 단계일 때 포트폴리오 제출 버튼 표시 */}
+                          {post.jobCandCurrStage === '2n' && (
+                            <button
+                              className="submit-portfolio-button"
+                              onClick={() => handleGoToSubmitPortfolio(post.postId)}
+                              style={{ marginTop: '0.8rem', width: '100%' }}
+                            >
+                              📁 포트폴리오 제출
+                            </button>
+                          )}
+                          
+                          {/* 2p 단계일 때 면접 일정 정하기 버튼 표시 */}
+                          {post.jobCandCurrStage === '2p' && (
+                            <button
+                              className="interview-scheduler-button"
+                              onClick={() => openInterviewSchedulerModal(post.postId)}
+                              style={{ marginTop: '0.8rem', width: '100%' }}
+                            >
+                              📅 면접 일정 정하기
+                            </button>
+                          )}
+                          
+                          {/* 임원면접 예정인 경우 날짜/시간과 면접 참여 버튼 표시 */}
+                          {post.jobCandCurrStage === '5n' && (
+                            <ExecutiveInterviewInfo post={post} />
+                          )}
                         </div>
-                        <div className="button-group">
-                          <button 
-                            onClick={() => openInterviewPreparationModal(post.postId)}
-                            style={{ display: 'none' }}
-                          /> {/* dummy for key consistency, not rendered */}
-                          <button 
-                            onClick={() => navigateToInterview(post.postId)}
-                            className={`action-button interview-button ${!isInterviewStarted ? 'disabled' : ''}`}
-                            disabled={!isInterviewStarted}>
-                          {interview && interview.date
-                            ? isInterviewStarted 
-                              ? remainingTime || '면접 보러가기'
-                              : `${interview.date} (시작 대기중)`
-                            : '면접 일정'}
-                        </button>
                       </div>
-                    </>
-                  );
-                })()}
-                  {post.jobCandCurrStage === '3y' && (
-                    <button 
-                      onClick={() => navigate(`/interview-result/${post.postId}`)}
-                      className="action-button result-button"
-                      disabled
-                      style={{ cursor: 'not-allowed', opacity: 0.7 }}
-                    >
-                      결과 취합 중
-                    </button>
-                  )}
-                  {(post.jobCandCurrStage === '4n' || post.jobCandCurrStage === '4y') && (
-                    <div 
-                      className="result-badge"
-                      style={{
-                        backgroundColor: getStageColor(post.jobCandCurrStage).bg,
-                        color: getStageColor(post.jobCandCurrStage).text,
-                        border: `1px solid ${getStageColor(post.jobCandCurrStage).border}`,
-                        padding: '8px 16px',
-                        borderRadius: '20px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      {post.jobCandCurrStage === '4y' && (
-                        <span style={{ fontSize: '16px' }}>✓</span>
-                      )}
-                      {post.jobCandCurrStage === '4n' && (
-                        <span style={{ fontSize: '16px' }}>✗</span>
-                      )}
-                      {getStageLabel(post.jobCandCurrStage)}
-                    </div>
-                  )}
-                </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>표시할 공고가 없습니다.</p>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'positionProposal' && (
+            <div className="tab-content">
+              <h3>포지션 제안 단계</h3>
+              {filteredJobPostings.length > 0 ? (
+                <ul className="job-postings-list">
+                  {filteredJobPostings.map(post => (
+                    <li key={post.postId} className="job-posting-item">
+                      <div className="job-posting-flex-row">
+                        <div className="job-posting-content">
+                          <div className="company-title-row">
+                            <h3>{post.companyName}</h3>
+                            <p 
+                              onClick={() => handleJobTitleClick(post.postId)}
+                              className="clickable-job-title"
+                            >
+                              {post.postTitle}
+                            </p>
+                        </div>
+                          <div className="job-posting-dates">
+                            <p>등록일: {post.postPostedDate}</p>
+                            <p>마감일: {post.postExpiryDate}</p>
+                      </div>
+                        </div>
+                        <div className="job-posting-action-col">
+                          {/* 2n, 2p 단계가 아닐 때만 단계 배지 표시 */}
+                          {post.jobCandCurrStage !== '2n' && post.jobCandCurrStage !== '2p' && (
+                            <div 
+                              className="stage-badge"
+                              style={{
+                                backgroundColor: getStageColor(post.jobCandCurrStage).bg,
+                                color: getStageColor(post.jobCandCurrStage).text,
+                                border: `1px solid ${getStageColor(post.jobCandCurrStage).border}`
+                              }}
+                            >
+                              {getStageLabel(post.jobCandCurrStage)}
+                            </div>
+                          )}
+                          
+                          {/* 2n 단계일 때 포트폴리오 제출 버튼 표시 */}
+                          {post.jobCandCurrStage === '2n' && (
+                            <button
+                              className="submit-portfolio-button"
+                              onClick={() => handleGoToSubmitPortfolio(post.postId)}
+                              style={{ marginTop: '0.8rem', width: '100%' }}
+                            >
+                              📁 포트폴리오 제출
+                            </button>
+                          )}
+                        </div>
               </div>
             </li>
           ))}
         </ul>
       ) : (
-        // jobPostings 배열이 비어있을 때 표시할 내용
-        <p>표시할 공고가 없습니다.</p>
+                <p>표시할 포지션 제안이 없습니다.</p>
       )}
     </div>
   )}
-  {activeTab === 'positionOffer' && (
+
+          {activeTab === 'aiInterview' && (
     <div className="tab-content">
-      {jobPostings.filter(post => post.jobCandCurrStage === '1n' || post.jobCandCurrStage === '2n').length > 0 ? (
-        <ul>
-          {jobPostings.filter(post => post.jobCandCurrStage === '1n' || post.jobCandCurrStage === '2n').map(post => (
+              <h3>AI 면접 단계</h3>
+              {filteredJobPostings.length > 0 ? (
+                <ul className="job-postings-list">
+                  {filteredJobPostings.map(post => (
             <li key={post.postId} className="job-posting-item">
-              {/* 포지션 제안 항목의 내용 - 전체 탭과 유사한 구조 */}
               <div className="job-posting-flex-row">
                 <div className="job-posting-content">
                   <div className="company-title-row">
@@ -890,134 +1045,262 @@ function CandidateDashboard() {
                   </div>
                 </div>
                 <div className="job-posting-action-col">
-                  <button onClick={() => handleGoToSubmitPortfolio(post.postId)}
-                    className="submit-portfolio-button">
-                  포트폴리오 제출하기
-                </button>
+                          <div 
+                            className="stage-badge"
+                            style={{
+                              backgroundColor: getStageColor(post.jobCandCurrStage).bg,
+                              color: getStageColor(post.jobCandCurrStage).text,
+                              border: `1px solid ${getStageColor(post.jobCandCurrStage).border}`
+                            }}
+                          >
+                            {getStageLabel(post.jobCandCurrStage)}
+                          </div>
+                          
+                          {/* 2p 단계일 때 면접 일정 정하기 버튼 표시 */}
+                          {post.jobCandCurrStage === '2p' && (
+                            <button
+                              className="interview-scheduler-button"
+                              onClick={() => openInterviewSchedulerModal(post.postId)}
+                              style={{ marginTop: '0.8rem', width: '100%' }}
+                            >
+                              📅 면접 일정 정하기
+                            </button>
+                          )}
+                          
+                          {post.jobCandCurrStage === '3n' && (
+                            <div className="interview-info">
+                              {scheduledInterviews[post.postId] ? (
+                                <>
+                                  <p>면접 일정: {scheduledInterviews[post.postId].date}</p>
+                                  <button 
+                                    className="remaining-time-btn"
+                                    onClick={() => calculateRemainingTime(post.postId)}
+                                    style={{
+                                      background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '8px',
+                                      padding: '0.6rem 1rem',
+                                      fontWeight: '500',
+                                      fontSize: '0.9rem',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.2s ease'
+                                    }}
+                                  >
+                                    ⏱️ 남은 시간 계산
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>
+                                    ⏰ AI 면접 예정
+                                  </p>
+                                  <p style={{ color: '#9ca3af', fontSize: '0.8rem', marginTop: '0.3rem' }}>
+                                    면접 일정이 정해지면 알려드립니다
+                                  </p>
+                                </>
+                              )}
+                            </div>
+                          )}
               </div>
             </div>
           </li>
         ))}
       </ul>
     ) : (
-      <p>표시할 포지션 제안이 없습니다.</p>
+                <p>표시할 AI 면접이 없습니다.</p>
     )}
   </div>
 )}
 
-{activeTab === 'interviewOffer' && (
-  <div className="tab-content">
-<div>
-  {/* 2y (포트폴리오 제출 완료), 2p (면접 수락됨), 3n (면접 일정 확정), 3y (면접 완료) 상태의 공고를 필터링 */}
-  {jobPostings.filter(post => post.jobCandCurrStage === '2y' || post.jobCandCurrStage === '2p' || post.jobCandCurrStage === '3n' || post.jobCandCurrStage === '3y').length > 0 ? (
-    <ul>
-      {jobPostings.filter(post => post.jobCandCurrStage === '2y' || post.jobCandCurrStage === '2p' || post.jobCandCurrStage === '3n' || post.jobCandCurrStage === '3y').map(post => (
-        <li key={post.postId} className="job-posting-item">
-          <div className="job-posting-flex-row">
-            <div className="job-posting-content">
-              <div className="company-title-row">
-                <h3>{post.companyName}</h3>
-                <p 
-                  onClick={() => handleJobTitleClick(post.postId)}
-                  className="clickable-job-title"
-                >
-                  {post.postTitle}
-                </p>
-              </div>
-              <div className="job-posting-dates">
-                <p>등록일: {post.postPostedDate}</p>
-                <p>마감일: {post.postExpiryDate}</p>
-              </div>
+          {activeTab === 'executiveInterview' && (
+            <div className="tab-content">
+              <h3>임원면접 단계</h3>
+              {executiveInterviewLoading ? (
+                <p>임원면접 일정을 불러오는 중...</p>
+              ) : executiveInterviewSchedules.length > 0 ? (
+                <ul className="job-postings-list">
+                  {executiveInterviewSchedules.map(post => (
+                    <li key={post.postId} className="job-posting-item">
+                      <div className="job-posting-flex-row">
+                        <div className="job-posting-content">
+                          <div className="company-title-row">
+                            <h3>{post.companyName}</h3>
+                            <p 
+                              onClick={() => handleJobTitleClick(post.postId)}
+                              className="clickable-job-title"
+                            >
+                              {post.postTitle}
+                            </p>
+                          </div>
+                          <div className="job-posting-dates">
+                            <p>등록일: {post.postPostedDate}</p>
+                            <p>마감일: {post.postExpiryDate}</p>
+                          </div>
+                          
+                          {/* 임원면접 일정 정보 */}
+                          {post.executiveInterviewSchedule && (
+                            <div className="executive-interview-schedule" style={{
+                              marginTop: '1rem',
+                              padding: '1rem',
+                              background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                              borderRadius: '12px',
+                              border: '1px solid #0ea5e9',
+                              boxShadow: '0 2px 8px rgba(14, 165, 233, 0.1)'
+                            }}>
+                              <h4 style={{
+                                fontSize: '1.1rem',
+                                fontWeight: '600',
+                                color: '#0369a1',
+                                marginBottom: '0.8rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem'
+                              }}>
+                                📅 임원면접 일정
+                              </h4>
+                              <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                gap: '1rem',
+                                fontSize: '0.95rem',
+                                color: '#0c4a6e'
+                              }}>
+                                <div>
+                                  <strong>면접 일시:</strong><br />
+                                  {new Date(post.executiveInterviewSchedule.interviewDate).toLocaleDateString('ko-KR', { 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric',
+                                    weekday: 'long'
+                                  })}
+                                </div>
+                                <div>
+                                  <strong>면접 시간:</strong><br />
+                                  {post.executiveInterviewSchedule.timeSlot}
+                                </div>
+                                <div>
+                                  <strong>면접 상태:</strong><br />
+                                  <span style={{
+                                    background: '#10b981',
+                                    color: 'white',
+                                    padding: '0.3rem 0.8rem',
+                                    borderRadius: '20px',
+                                    fontSize: '0.85rem',
+                                    fontWeight: '600'
+                                  }}>
+                                    예정
+                                  </span>
+                                </div>
+                                {post.executiveInterviewSchedule.notes && (
+                                  <div>
+                                    <strong>메모:</strong><br />
+                                    {post.executiveInterviewSchedule.notes}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="job-posting-action-col">
+                          <div 
+                            className="stage-badge"
+                            style={{
+                              backgroundColor: getStageColor(post.jobCandCurrStage).bg,
+                              color: getStageColor(post.jobCandCurrStage).text,
+                              border: `1px solid ${getStageColor(post.jobCandCurrStage).border}`
+                            }}
+                          >
+                            {getStageLabel(post.jobCandCurrStage)}
+                          </div>
+                          
+                          {/* 면접 참여하기 버튼 */}
+                          {post.executiveInterviewSchedule && (
+                            <div className="interview-actions" style={{ marginTop: '1rem' }}>
+                              <button
+                                onClick={() => {
+                                  // 임원면접 세션으로 이동
+                                  navigate(`/executive-interview-session/${post.jobCandidateId}`);
+                                }}
+                                style={{
+                                  background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '12px',
+                                  padding: '0.8rem 1.5rem',
+                                  fontWeight: '600',
+                                  fontSize: '0.95rem',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease',
+                                  boxShadow: '0 4px 12px rgba(139, 92, 246, 0.2)',
+                                  width: '100%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '0.5rem'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.transform = 'translateY(-2px)';
+                                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(139, 92, 246, 0.3)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.transform = 'translateY(0)';
+                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.2)';
+                                }}
+                              >
+                                📹 면접 참여하기
+                              </button>
+                              
+                              {/* 면접 준비 팁 */}
+                              <div style={{
+                                marginTop: '0.8rem',
+                                padding: '0.8rem',
+                                background: '#fef3c7',
+                                borderRadius: '8px',
+                                border: '1px solid #f59e0b',
+                                fontSize: '0.85rem',
+                                color: '#92400e'
+                              }}>
+                                <strong>💡 면접 준비 팁:</strong>
+                                <ul style={{ margin: '0.5rem 0 0 1.5rem', padding: 0 }}>
+                                  <li>면접 10분 전에 입장해주세요</li>
+                                  <li>카메라와 마이크가 정상 작동하는지 확인하세요</li>
+                                  <li>조용한 환경에서 면접에 참여하세요</li>
+                                </ul>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div style={{
+                  padding: '2rem',
+                  background: '#f8fafc',
+                  borderRadius: '12px',
+                  border: '1px solid #e2e8f0',
+                  textAlign: 'center',
+                  color: '#4a5568'
+                }}>
+                  <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>📅</div>
+                  <p>아직 임원면접 일정이 잡힌 공고가 없습니다.</p>
+                  <p style={{ fontSize: '0.9rem', marginTop: '0.5rem', color: '#718096' }}>
+                    AI 면접을 통과하면 임원면접 일정이 잡힐 수 있습니다.
+                  </p>
+                </div>
+              )}
             </div>
-            <div className="job-posting-action-col">
-              {/* jobCandCurrStage 값에 따라 버튼 표시 */}
-              {post.jobCandCurrStage === '3y' ? (
-                <button 
-                  onClick={() => navigate(`/interview-result/${post.postId}`)}
-                  className="action-button result-button"
-                  disabled
-                  style={{ cursor: 'not-allowed', opacity: 0.7 }}
-                >
-                  결과 취합 중
-                </button>
-              ) : post.jobCandCurrStage === '2y' ? (
-                <div 
-                  className="pending-status"
-                  style={{
-                    backgroundColor: '#fef5e7',
-                    color: '#d69e2e',
-                    border: '1px solid #fbd38d',
-                    padding: '8px 16px',
-                    borderRadius: '20px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                    cursor: 'default',
-                    userSelect: 'none'
-                  }}
-                >
-                  <img src={process.env.PUBLIC_URL + '/icons/interview.svg'} alt="interview" style={{ width: 20, height: 20, verticalAlign: 'middle' }} />
-                  면접 수락 요청 중
-                </div>
-              ) : post.jobCandCurrStage === '2p' ? (
-                <button 
-                  onClick={() => openInterviewSchedulerModal(post.postId)}
-                  className="action-button interview-scheduler-button">
-                면접 일정 정하기
-              </button>
-            ) : post.jobCandCurrStage === '3n' ? (
-              (() => {
-                const interview = scheduledInterviews[post.postId];
-                const now = new Date();
-                const isInterviewStarted = interview && interview.iso && new Date(interview.iso) <= now;
-                const remainingTime = interview && interview.deadline ? calculateRemainingTime(new Date(interview.deadline)) : '';
-                
-                return (
-                  <div className="button-group">
-                    <button 
-                      onClick={() => openInterviewPreparationModal(post.postId)}
-                      className="action-button preparation-button">
-                      면접 예상질문
-                    </button>
-                    <button 
-                      onClick={() => navigateToInterview(post.postId)}
-                      className={`action-button interview-button ${!isInterviewStarted ? 'disabled' : ''}`}
-                      disabled={!isInterviewStarted}>
-                    {interview && interview.date
-                      ? isInterviewStarted 
-                        ? remainingTime || '면접 보러가기'
-                        : `${interview.date} (시작 대기중)`
-                      : '면접 일정'}
-                  </button>
-                </div>
-              );
-            })()
-          ) : null}
-        </div>
-      </div>
-    </li>
-  ))}
-</ul>
-) : (
-  <p>표시할 면접 제안이 없습니다.</p>
-)}
-</div>
-</div>
-)}
-
-
-
+          )}
 
 {activeTab === 'resultAnnouncement' && (
   <div className="tab-content">
-<div>
-  {/* '4n' (불합격), '4y' (합격) 단계만 결과 발표 탭에서 보여주도록 수정 */}
-  {jobPostings.filter(post => post.jobCandCurrStage === '4n' || post.jobCandCurrStage === '4y').length > 0 ? (
-    <ul>
-      {jobPostings.filter(post => post.jobCandCurrStage === '4n' || post.jobCandCurrStage === '4y').map(post => (
+              <h3>최종 채용 결과</h3>
+              {filteredJobPostings.length > 0 ? (
+                <ul className="job-postings-list">
+                  {filteredJobPostings.map(post => (
         <li key={post.postId} className="job-posting-item">
           <div className="job-posting-flex-row">
             <div className="job-posting-content">
@@ -1053,13 +1336,13 @@ function CandidateDashboard() {
                   transition: 'all 0.2s ease'
                 }}
               >
-                {post.jobCandCurrStage === '4y' && (
-                  <span style={{ fontSize: '16px' }}>✓</span>
+                            {post.jobCandCurrStage === '6y' && (
+                              <span style={{ fontSize: '16px' }}>🎉</span>
                 )}
-                {post.jobCandCurrStage === '4n' && (
-                  <span style={{ fontSize: '16px' }}>✗</span>
+                            {post.jobCandCurrStage === '6n' && (
+                              <span style={{ fontSize: '16px' }}>😔</span>
                 )}
-                {getStageLabel(post.jobCandCurrStage)}
+                            {post.jobCandCurrStage === '6y' ? '최종 합격' : '최종 불합격'}
               </div>
             </div>
           </div>
@@ -1067,22 +1350,20 @@ function CandidateDashboard() {
       ))}
     </ul>
   ) : (
-    <p>표시할 결과 발표가 없습니다.</p>
+                <p>표시할 최종 결과가 없습니다.</p>
   )}
 </div>
-</div>
 )}
-
         </div>
       </div>
 
       {/* 모달 렌더링 */}
-      {isJobModalOpen && (<JobSelectionModal onClose={closeJobModal} onSelectJob={handleJobSelected} />)}
-      {isRegionModalOpen && (<RegionSelectionModal onClose={closeRegionModal} onSelectRegion={handleRegionSelected} />)}
-      {isSalaryModalOpen && (<SalarySelectionModal onClose={closeSalaryModal} onSelectSalary={handleSalarySelected} />)}
-      {isCompanySizeModalOpen && (<CompanySizeSelectionModal onClose={closeCompanySizeModal} onSelectCompanySize={handleCompanySizeSelected} />)}
-      {isCommuteTimeModalOpen && (<CommuteTimeSelectionModal onClose={closeCommuteTimeModal} onSelectCommuteTime={handleCommuteTimeSelected} />)}
-      {/* 복리후생 선택 모달 */}
+      {isJobModalOpen && <JobSelectionModal onClose={closeJobModal} onSelectJob={handleJobSelected} />}
+      {isRegionModalOpen && <RegionSelectionModal onClose={closeRegionModal} onSelectRegion={handleRegionSelected} />}
+      {isSalaryModalOpen && <SalarySelectionModal onClose={closeSalaryModal} onSelectSalary={handleSalarySelected} />}
+      {isCompanySizeModalOpen && <CompanySizeSelectionModal onClose={closeCompanySizeModal} onSelectCompanySize={handleCompanySizeSelected} />}
+      {isCommuteTimeModalOpen && <CommuteTimeSelectionModal onClose={closeCommuteTimeModal} onSelectCommuteTime={handleCommuteTimeSelected} />}
+      
       <BenefitSelectionModal
         isOpen={isBenefitModalOpen}
         onClose={closeBenefitModal}
@@ -1090,7 +1371,6 @@ function CandidateDashboard() {
         selectedBenefits={selectedBenefits}
       />
 
-      {/* 면접 일정 모달 */}
       <InterviewSchedulerModal
         isOpen={isInterviewSchedulerModalOpen}
         onClose={closeInterviewSchedulerModal}
@@ -1099,7 +1379,6 @@ function CandidateDashboard() {
         onSchedule={handleInterviewScheduled}
       />
 
-      {/* 면접 예상질문 모달 */}
       <InterviewPreparationModal
         isOpen={isInterviewPreparationModalOpen}
         onClose={closeInterviewPreparationModal}

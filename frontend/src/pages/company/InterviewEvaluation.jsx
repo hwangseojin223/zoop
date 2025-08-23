@@ -34,8 +34,7 @@ export default function InterviewEvaluation() {
   const [existingEvaluation, setExistingEvaluation] = useState(null);
   const [evaluation, setEvaluation] = useState({
     adminIntrvwScore: '',
-    adminIntrvwNotes: '',
-    adminIntrvwSlctStatus: 'pending'
+    adminIntrvwNotes: ''
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -113,12 +112,73 @@ export default function InterviewEvaluation() {
         // 기존 평가가 있으면 폼에 설정
         setEvaluation({
           adminIntrvwScore: data.adminIntrvwScore?.toString() || '',
-          adminIntrvwNotes: data.adminIntrvwNotes || '',
-          adminIntrvwSlctStatus: data.adminIntrvwSlctStatus || 'pending'
+          adminIntrvwNotes: data.adminIntrvwNotes || ''
         });
       }
     } catch (error) {
       console.error('기존 평가 조회 실패:', error);
+    }
+  };
+
+  // AI 면접 결과 처리 함수 (평가 데이터 자동 저장 포함)
+  const handleAIInterviewResult = async (result) => {
+    try {
+      setSubmitting(true);
+      
+      // 1. 먼저 면접 평가 데이터 저장
+      if (evaluation.adminIntrvwScore && evaluation.adminIntrvwNotes) {
+        const evaluationResponse = await fetch('http://localhost:8081/api/admin-interview-evaluations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
+          },
+          body: JSON.stringify({
+            jobCandidateId: parseInt(candidateId),
+            evaluatedByAdminId: parseInt(localStorage.getItem('userId')),
+            adminIntrvwEvaluationDate: new Date().toISOString(),
+            adminIntrvwScore: parseFloat(evaluation.adminIntrvwScore),
+            adminIntrvwNotes: evaluation.adminIntrvwNotes
+          }),
+        });
+
+        if (!evaluationResponse.ok) {
+          throw new Error('면접 평가 저장 실패');
+        }
+      }
+      
+      // 2. 지원자 상태를 4y(합격) 또는 4n(불합격)으로 업데이트
+      const response = await fetch(`http://localhost:8081/api/progress/update-stage/${candidateId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
+        },
+        body: JSON.stringify({
+          jobCandCurrStage: result
+        })
+      });
+
+      if (response.ok) {
+        const message = result === '4y' ? 
+          'AI 면접 합격 처리되었습니다. (평가 데이터도 함께 저장되었습니다)' : 
+          'AI 면접 불합격 처리되었습니다. (평가 데이터도 함께 저장되었습니다)';
+        alert(message);
+        
+        // 후보자 정보 새로고침
+        fetchCandidateData();
+        
+        // 4y(합격) 또는 4n(불합격) 모두 대시보드로 이동
+        // 대시보드에서 임원면접 일정을 관리할 수 있음
+        navigate('/company/dashboard');
+      } else {
+        throw new Error('상태 업데이트 실패');
+      }
+    } catch (error) {
+      console.error('AI 면접 결과 처리 실패:', error);
+      alert('AI 면접 결과 처리에 실패했습니다.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -208,8 +268,7 @@ export default function InterviewEvaluation() {
           evaluatedByAdminId: parseInt(localStorage.getItem('userId')),
           adminIntrvwEvaluationDate: new Date().toISOString(),
           adminIntrvwScore: parseFloat(evaluation.adminIntrvwScore),
-          adminIntrvwNotes: evaluation.adminIntrvwNotes,
-          adminIntrvwSlctStatus: evaluation.adminIntrvwSlctStatus
+          adminIntrvwNotes: evaluation.adminIntrvwNotes
         }),
       });
 
@@ -583,20 +642,6 @@ export default function InterviewEvaluation() {
                       alignItems: 'center',
                       gap: 8,
                     }}>{existingEvaluation.adminIntrvwScore}점</span>
-                    <span style={{ 
-                      color: existingEvaluation.adminIntrvwSlctStatus === 'selected' ? '#22c55e' : existingEvaluation.adminIntrvwSlctStatus === 'rejected' ? '#dc2626' : '#a3a3a3',
-                      background: existingEvaluation.adminIntrvwSlctStatus === 'selected' ? '#f0fdf4' : existingEvaluation.adminIntrvwSlctStatus === 'rejected' ? '#fef2f2' : '#f3f4f6',
-                      borderRadius: 999,
-                      fontWeight: 700,
-                      fontSize: '1.05rem',
-                      padding: '0.25em 1.1em',
-                      border: '1px solid #e2e8f0',
-                      boxShadow: '0 1px 4px #22c55e11',
-                      marginLeft: 4,
-                    }}>
-                      {existingEvaluation.adminIntrvwSlctStatus === 'selected' ? '선정' : 
-                       existingEvaluation.adminIntrvwSlctStatus === 'rejected' ? '미선정' : '검토 중'}
-                    </span>
                   </div>
                   {existingEvaluation.adminIntrvwNotes && (
                     <div style={{ marginBottom: '1.2rem' }}>
@@ -621,7 +666,7 @@ export default function InterviewEvaluation() {
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSubmit}>
+              <div>
                 <div style={{ marginBottom: '1.5rem' }}>
                   <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.5rem', color: '#2d3748' }}>
                     점수 (0-100)
@@ -684,38 +729,9 @@ export default function InterviewEvaluation() {
                   />
                 </div>
 
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.5rem', color: '#2d3748' }}>
-                    선정 상태
-                  </label>
-                  <select
-                    value={evaluation.adminIntrvwSlctStatus}
-                    onChange={(e) => setEvaluation({...evaluation, adminIntrvwSlctStatus: e.target.value})}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      transition: 'border-color 0.18s, box-shadow 0.18s',
-                      outline: 'none',
-                    }}
-                    onFocus={e => {
-                      e.currentTarget.style.borderColor = '#22c55e';
-                      e.currentTarget.style.boxShadow = '0 0 0 2px #22c55e33';
-                    }}
-                    onBlur={e => {
-                      e.currentTarget.style.borderColor = '#e2e8f0';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
-                  >
-                    <option value="pending">검토 중</option>
-                    <option value="selected">선정</option>
-                    <option value="rejected">미선정</option>
-                  </select>
-                </div>
 
-                <div style={{ display: 'flex', gap: '1rem' }}>
+
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                   <button
                     type="button"
                     onClick={() => navigate('/company/dashboard')}
@@ -732,38 +748,41 @@ export default function InterviewEvaluation() {
                   >
                     취소
                   </button>
-                  {/* 면접 평가 버튼 Toss-style로 변경 */}
+                  
+                  {/* AI 면접 Pass/Fail 버튼들 */}
                   <button
-                    type="submit"
-                    disabled={submitting}
+                    type="button"
+                    onClick={() => handleAIInterviewResult('4y')} // Pass
+                    disabled={submitting || !evaluation.adminIntrvwScore || !evaluation.adminIntrvwNotes}
                     style={{
                       background: '#22c55e',
                       color: 'white',
                       border: 'none',
-                      borderRadius: '999px',
+                      borderRadius: '8px',
                       height: '44px',
                       padding: '0 1.6rem',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.7rem',
-                      fontWeight: 700,
+                      fontWeight: '700',
                       fontSize: '1.08rem',
                       boxShadow: '0 2px 8px rgba(34,197,94,0.13)',
-                      cursor: submitting ? 'not-allowed' : 'pointer',
+                      cursor: submitting || !evaluation.adminIntrvwScore || !evaluation.adminIntrvwNotes ? 'not-allowed' : 'pointer',
                       transition: 'background 0.18s, box-shadow 0.18s, transform 0.14s',
                       letterSpacing: '0.01em',
                       outline: 'none',
                       marginTop: '0.5rem',
+                      opacity: submitting || !evaluation.adminIntrvwScore || !evaluation.adminIntrvwNotes ? 0.6 : 1,
                     }}
                     onMouseEnter={e => {
-                      if (!submitting) {
+                      if (!submitting && evaluation.adminIntrvwScore && evaluation.adminIntrvwNotes) {
                         e.currentTarget.style.background = '#16a34a';
                         e.currentTarget.style.boxShadow = '0 6px 18px rgba(34,197,94,0.18)';
                         e.currentTarget.style.transform = 'translateY(-2px) scale(1.04)';
                       }
                     }}
                     onMouseLeave={e => {
-                      if (!submitting) {
+                      if (!submitting && evaluation.adminIntrvwScore && evaluation.adminIntrvwNotes) {
                         e.currentTarget.style.background = '#22c55e';
                         e.currentTarget.style.boxShadow = '0 2px 8px rgba(34,197,94,0.13)';
                         e.currentTarget.style.transform = 'none';
@@ -771,17 +790,60 @@ export default function InterviewEvaluation() {
                     }}
                   >
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="4" y="3" width="16" height="18" rx="2" />
-                      <path d="M9 7h6" />
-                      <path d="M9 11h6" />
-                      <path d="M9 15h2" />
-                      <path d="M15 19l2 2 4-4" stroke="#22c55e" strokeWidth="2" fill="none"/>
+                      <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" fill="none"/>
                     </svg>
-                    면접 평가
+                    합격 처리 (4y)
                   </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => handleAIInterviewResult('4n')} // Fail
+                    disabled={submitting || !evaluation.adminIntrvwScore || !evaluation.adminIntrvwNotes}
+                    style={{
+                      background: '#ef4444',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      height: '44px',
+                      padding: '0 1.6rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.7rem',
+                      fontWeight: '700',
+                      fontSize: '1.08rem',
+                      boxShadow: '0 2px 8px rgba(239,68,68,0.13)',
+                      cursor: submitting || !evaluation.adminIntrvwScore || !evaluation.adminIntrvwNotes ? 'not-allowed' : 'pointer',
+                      transition: 'background 0.18s, box-shadow 0.18s, transform 0.14s',
+                      letterSpacing: '0.01em',
+                      outline: 'none',
+                      marginTop: '0.5rem',
+                      opacity: submitting || !evaluation.adminIntrvwScore || !evaluation.adminIntrvwNotes ? 0.6 : 1,
+                    }}
+                    onMouseEnter={e => {
+                      if (!submitting && evaluation.adminIntrvwScore && evaluation.adminIntrvwNotes) {
+                        e.currentTarget.style.background = '#dc2626';
+                        e.currentTarget.style.boxShadow = '0 6px 18px rgba(239,68,68,0.18)';
+                        e.currentTarget.style.transform = 'translateY(-2px) scale(1.04)';
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (!submitting && evaluation.adminIntrvwScore && evaluation.adminIntrvwNotes) {
+                        e.currentTarget.style.background = '#ef4444';
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(239,68,68,0.13)';
+                        e.currentTarget.style.transform = 'none';
+                      }
+                    }}
+                  >
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" fill="none"/>
+                    </svg>
+                    불합격 처리 (4n)
+                  </button>
+                  
+
+                                  </div>
                 </div>
-              </form>
-            )}
+              )}
           </div>
         </div>
       </div>

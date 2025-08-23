@@ -50,23 +50,49 @@ def interview_analysis_agent(data):
         results.append(response.json())
     return {"interview_results": results}
 
+# 5. 임원면접 분석 agent
+def executive_interview_agent(data):
+    print("[executive_interview_agent] input:", data)
+    try:
+        # 임원면접 AI 분석 API 호출
+        payload = {
+            "job_candidate_id": data.get("job_candidate_id"),
+            "post_id": data.get("post_id"),
+            "job_description": data.get("post_description", "IT 개발자 채용"),
+            "candidate_profile": data.get("candidate_profile", "웹 개발자"),
+            "interview_recording_url": data.get("interview_recording_url")
+        }
+        
+        response = requests.post('http://localhost:8006/analyze-interview', json=payload)
+        response.raise_for_status()
+        
+        print(f"[executive_interview_agent] output:", response.json())
+        return {"executive_interview_results": response.json()}
+        
+    except Exception as e:
+        print(f"[executive_interview_agent] error: {str(e)}")
+        return {"executive_interview_results": {"error": str(e)}}
+
 # LangGraph 워크플로우 정의
 graph = StateGraph(dict)
 graph.add_node("chatbot_agent", chatbot_agent)
 graph.add_node("github_search_agent", github_search_agent)
 graph.add_node("interview_questions_agent", interview_questions_agent)
 graph.add_node("interview_analysis_agent", interview_analysis_agent)
+graph.add_node("executive_interview_agent", executive_interview_agent)
 graph.add_edge("__start__", "chatbot_agent")
 graph.add_edge("chatbot_agent", "github_search_agent")
 graph.add_edge("github_search_agent", "interview_questions_agent")
 graph.add_edge("interview_questions_agent", "interview_analysis_agent")
+graph.add_edge("interview_analysis_agent", "executive_interview_agent")
 
 def run_workflow(input_data):
     step1 = chatbot_agent(input_data)
     step2 = github_search_agent(step1)
     step3 = interview_questions_agent(step2)
     step4 = interview_analysis_agent(step3)
-    return step4
+    step5 = executive_interview_agent(step4)
+    return step5
 
 if __name__ == "__main__":
     input_data = {
@@ -81,5 +107,5 @@ if __name__ == "__main__":
     print("\n[Mermaid 그래프]")
     print("""
 flowchart TD
-    chatbot_agent --> github_search_agent --> interview_questions_agent --> interview_analysis_agent
+    chatbot_agent --> github_search_agent --> interview_questions_agent --> interview_analysis_agent --> executive_interview_agent
 """)

@@ -19,7 +19,7 @@ function InterviewPage() {
     const fetchInterviewDetails = async () => {
       try {
         // 1. 면접 일정 정보 조회
-        const response = await fetch(`http://localhost:8081/api/interviews/${id}`);
+        const response = await fetch(`http://localhost:8081/api/interview-schedules/${id}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

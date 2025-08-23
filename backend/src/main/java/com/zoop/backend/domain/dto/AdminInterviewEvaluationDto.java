@@ -19,6 +19,6 @@ public class AdminInterviewEvaluationDto {
     private LocalDateTime adminIntrvwEvaluationDate;
     private BigDecimal adminIntrvwScore;
     private String adminIntrvwNotes;
-    private String adminIntrvwSlctStatus;
+
     private LocalDateTime adminIntrvwCreatedAt;
-} 
+}

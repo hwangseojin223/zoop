@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import CompanySidebar from './CompanySidebar';
 import CandidateModal from '../../components/CandidateModal';
@@ -10,6 +10,7 @@ import SEO from '../../components/SEO';
 
 export default function CompanyDashboard() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [companyInfo, setCompanyInfo] = useState(null);
   const [postings, setPostings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +20,7 @@ export default function CompanyDashboard() {
   const [loadingPostDetail, setLoadingPostDetail] = useState(false);
   const [githubCandidates, setGithubCandidates] = useState([]);
   const [loadingCandidates, setLoadingCandidates] = useState(false);
-  const [activeTab, setActiveTab] = useState('details'); // 'details' or 'candidates'
+  const [activeTab, setActiveTab] = useState('details'); // 'details', 'candidates', or 'executiveInterview'
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editTitle, setEditTitle] = useState('');
@@ -47,6 +48,15 @@ export default function CompanyDashboard() {
   // MatchingDetailModal 상태
   const [showMatchingDetailModal, setShowMatchingDetailModal] = useState(false);
   const [selectedMatchingCandidate, setSelectedMatchingCandidate] = useState(null);
+
+  // 임원면접 일정잡기 모달 상태
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [selectedCandidateForSchedule, setSelectedCandidateForSchedule] = useState(null);
+  const [scheduleForm, setScheduleForm] = useState({
+    interviewDate: '',
+    interviewTime: '',
+    notes: ''
+  });
 
 
   //-----------------------------------------------------------------------------------------------
@@ -249,8 +259,10 @@ export default function CompanyDashboard() {
         'all': '전체',
         'no-response': '미회신자',
         'response': '회신자',
-        'interview-scheduled': '면접 예정자',
-        'interview-completed': '면접 완료자',
+        'interview-scheduled': 'AI 면접 예정자',
+        'interview-completed': 'AI 면접 완료자',
+        'executive-interview-scheduled': '임원면접 예정자',
+        'executive-interview-completed': '임원면접 완료자',
         'portfolio-matched': '매칭' // 포트폴리오 매칭도 매칭으로 처리
       };
       
@@ -390,6 +402,44 @@ export default function CompanyDashboard() {
     return null;
   };
 
+  // 임원면접 예정자 목록 불러오기
+  const fetchExecutiveInterviewCandidates = async (postId) => {
+    setLoadingCandidates(true);
+    try {
+      const response = await fetch(`http://localhost:8081/api/executive-interview/schedules?postId=${postId}`);
+      if (!response.ok) throw new Error('임원면접 예정자 데이터 조회 실패');
+      const schedules = await response.json();
+      
+      // 각 일정에 대한 후보자 정보 가져오기
+      const candidatesWithSchedules = await Promise.all(
+        schedules.map(async (schedule) => {
+          try {
+            const candidateResponse = await fetch(`http://localhost:8081/api/progress/job-cand-progress/${schedule.jobCandidateId}`);
+            if (candidateResponse.ok) {
+              const candidate = await candidateResponse.json();
+              return {
+                ...candidate,
+                executiveInterviewSchedule: schedule
+              };
+            }
+            return null;
+          } catch (error) {
+            console.error('후보자 정보 조회 실패:', error);
+            return null;
+          }
+        })
+      );
+      
+      const validCandidates = candidatesWithSchedules.filter(candidate => candidate !== null);
+      setGithubCandidates(validCandidates);
+    } catch (e) {
+      console.error('임원면접 예정자 조회 오류:', e);
+      setGithubCandidates([]);
+    } finally {
+      setLoadingCandidates(false);
+    }
+  };
+
   // 후보자 목록 불러오기 (상태값 포함 API 사용)
   const fetchCandidates = async (postId, filter = '전체') => {
     setLoadingCandidates(true);
@@ -414,11 +464,17 @@ export default function CompanyDashboard() {
         case '회신자':
           endpoint = `http://localhost:8081/api/github-search/by-post/${postId}/response`;
           break;
-        case '면접 예정자':
+        case 'AI 면접 예정자':
           endpoint = `http://localhost:8081/api/github-search/by-post/${postId}/interview-scheduled`;
           break;
-        case '면접 완료자':
+        case 'AI 면접 완료자':
           endpoint = `http://localhost:8081/api/github-search/by-post/${postId}/interview-completed`;
+          break;
+        case '임원면접 예정자':
+          endpoint = `http://localhost:8081/api/github-search/by-post/${postId}/executive-interview-scheduled`;
+          break;
+        case '임원면접 완료자':
+          endpoint = `http://localhost:8081/api/github-search/by-post/${postId}/executive-interview-completed`;
           break;
         default:
           endpoint = `http://localhost:8081/api/github-search/by-post/${postId}/all`;
@@ -493,7 +549,12 @@ export default function CompanyDashboard() {
   const activePostings = postings?.filter(post => post.postStatus === 'ACTIVE') || [];
 
   // 탭 변경
-  const handleTabChange = (tab) => setActiveTab(tab);
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (tab === 'executiveInterview' && selectedPostId) {
+      fetchExecutiveInterviewCandidates(selectedPostId);
+    }
+  };
 
   // Feather 스타일 SVG 아이콘
   const EditIcon = () => (
@@ -1126,7 +1187,7 @@ export default function CompanyDashboard() {
   const closedPostings = postings?.filter(post => post.postStatus === 'CLOSED') || [];
 
   // 후보자 목록 필터 버튼 부분
-  const filterLabels = ['추가 지원자', '매칭', '전체', '미회신자', '회신자', '면접 예정자', '면접 완료자'];
+        const filterLabels = ['추가 지원자', '매칭', '전체', '미회신자', '회신자', 'AI 면접 예정자', 'AI 면접 완료자', '임원면접 예정자', '임원면접 완료자'];
 
   // AI 분석 결과 가져오기
   const fetchAiAnalysis = async (jobCandidateId) => {
@@ -1172,6 +1233,73 @@ export default function CompanyDashboard() {
     };
     if (githubCandidates.length > 0) fetchAllMatches();
   }, [githubCandidates]);
+
+  // 임원면접 일정 저장 함수
+  const handleScheduleSubmit = async () => {
+    if (!selectedCandidateForSchedule || !scheduleForm.interviewDate || !scheduleForm.interviewTime) {
+      alert('필수 정보를 모두 입력해주세요.');
+      return;
+    }
+
+    try {
+      // 날짜와 시간을 결합하여 ISO 형식으로 변환
+      const interviewDateTime = new Date(`${scheduleForm.interviewDate}T${scheduleForm.interviewTime}`);
+      
+      const scheduleData = {
+        jobCandidateId: selectedCandidateForSchedule.jobCandidateId,
+        postId: selectedPostId,
+        companyAdminId: companyAdminId,
+        interviewDate: interviewDateTime.toISOString(),
+        timeSlot: scheduleForm.interviewTime,
+        notes: scheduleForm.notes || '',
+        status: 'SCHEDULED'
+      };
+
+      // 백엔드 API 호출
+      const response = await fetch('http://localhost:8081/api/executive-interview/schedule', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(scheduleData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        // 성공 시 후보자 상태를 5n으로 변경
+        const stageUpdateResponse = await fetch(`http://localhost:8081/api/progress/update-stage/${selectedCandidateForSchedule.jobCandidateId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            newStage: '5n',
+            postId: selectedPostId
+          })
+        });
+
+        if (stageUpdateResponse.ok) {
+          alert('임원면접 일정이 성공적으로 저장되었습니다!');
+          setShowScheduleModal(false);
+          setScheduleForm({ interviewDate: '', interviewTime: '', notes: '' });
+          
+          // 후보자 목록 새로고침
+          if (selectedPostId) {
+            fetchCandidates(selectedPostId, candidateFilter);
+          }
+        } else {
+          alert('일정은 저장되었지만 상태 업데이트에 실패했습니다.');
+        }
+      } else {
+        const errorData = await response.json();
+        alert(`일정 저장 실패: ${errorData.message || '알 수 없는 오류가 발생했습니다.'}`);
+      }
+    } catch (error) {
+      console.error('임원면접 일정 저장 오류:', error);
+      alert('일정 저장 중 오류가 발생했습니다.');
+    }
+  };
 
   return (
     <div className="company-dashboard" style={{ fontFamily: 'SUIT, Apple SD Gothic Neo, sans-serif', backgroundColor: '#ffffff', minHeight: '100vh' }}>
@@ -1543,6 +1671,23 @@ export default function CompanyDashboard() {
                   disabled={activeTab === 'candidates'}
                 >
                   후보자 목록
+                </button>
+                <button
+                  onClick={() => handleTabChange('executiveInterview')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    fontSize: activeTab === 'executiveInterview' ? '1.6rem' : '1.1rem',
+                    fontWeight: 700,
+                    color: activeTab === 'executiveInterview' ? '#2d3748' : '#bcc6d3',
+                    cursor: activeTab === 'executiveInterview' ? 'default' : 'pointer',
+                    transition: 'color 0.3s, font-size 0.3s',
+                    lineHeight: 1.1,
+                  }}
+                  disabled={activeTab === 'executiveInterview'}
+                >
+                  임원면접예정자
                 </button>
               </div>
 
@@ -2387,6 +2532,64 @@ export default function CompanyDashboard() {
                                       </button>
                                     </div>
                                   )}
+
+                                  {/* 임원면접 일정잡기 버튼 (4y 상태 후보자용) */}
+                                  {candidate.jobCandCurrStage === '4y' && (
+                                    <div style={{
+                                      position: 'absolute',
+                                      bottom: '1rem',
+                                      right: '1rem'
+                                    }}>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          // 임원면접 일정잡기 모달 열기
+                                          setSelectedCandidateForSchedule(candidate);
+                                          setShowScheduleModal(true);
+                                        }}
+                                        style={{
+                                          background: '#8b5cf6',
+                                          color: 'white',
+                                          border: 'none',
+                                          borderRadius: '999px',
+                                          height: '44px',
+                                          padding: '0 1.6rem',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '0.7rem',
+                                          fontWeight: 700,
+                                          fontSize: '1.08rem',
+                                          boxShadow: '0 2px 8px rgba(139,92,246,0.13)',
+                                          cursor: 'pointer',
+                                          transition: 'background 0.18s, box-shadow 0.18s, transform 0.14s',
+                                          letterSpacing: '0.01em',
+                                          outline: 'none',
+                                          marginTop: 0,
+                                        }}
+                                        onMouseEnter={e => {
+                                          e.currentTarget.style.background = '#7c3aed';
+                                          e.currentTarget.style.boxShadow = '0 6px 18px rgba(139,92,246,0.18)';
+                                          e.currentTarget.style.transform = 'translateY(-2px) scale(1.04)';
+                                        }}
+                                        onMouseLeave={e => {
+                                          e.currentTarget.style.background = '#8b5cf6';
+                                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(139,92,246,0.13)';
+                                          e.currentTarget.style.transform = 'none';
+                                        }}
+                                        title="임원면접 일정잡기"
+                                      >
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                          <path d="M8 2v4"/>
+                                          <path d="M16 2v4"/>
+                                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                          <path d="M3 10h18"/>
+                                          <path d="M9 14h.01"/>
+                                          <path d="M15 14h.01"/>
+                                        </svg>
+                                        임원면접 일정잡기
+                                      </button>
+                                    </div>
+                                  )}
                                   {/* 상태 라벨 */}
                                   {candidate.jobCandCurrStage && (
                                     <div style={{
@@ -2602,6 +2805,234 @@ export default function CompanyDashboard() {
                           </motion.div>
                         )}
                       </AnimatePresence>
+                    )}
+                  </section>
+                )}
+                
+                {/* 임원면접예정자 탭 */}
+                {activeTab === 'executiveInterview' && (
+                  <section style={{ ...hoverBoxStyle }} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+                    {loadingCandidates ? (
+                      <p style={{ color: '#888', textAlign: 'center', padding: '2rem' }}>임원면접 예정자 정보를 불러오는 중...</p>
+                    ) : githubCandidates.length === 0 ? (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.32, type: 'spring', stiffness: 60 }}
+                        style={{
+                          padding: '2rem',
+                          background: '#f8fafc',
+                          borderRadius: '12px',
+                          border: '1px solid #e2e8f0',
+                          textAlign: 'center',
+                          color: '#4a5568'
+                        }}
+                      >
+                        <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>📅</div>
+                        <p>아직 임원면접 관련 후보자가 없습니다.</p>
+                        <p style={{ fontSize: '0.9rem', marginTop: '0.5rem', color: '#718096' }}>
+                          AI 면접을 통과한 후보자(5n, 5y, 6n, 6y 단계)가 여기에 표시됩니다.
+                        </p>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.32, type: 'spring', stiffness: 60 }}
+                        style={{ display: 'grid', gap: '1rem' }}
+                      >
+                        <div style={{ marginBottom: '1rem' }}>
+                          <h3 style={{ fontSize: '1.3rem', fontWeight: '600', color: '#2d3748', marginBottom: '0.5rem' }}>
+                            임원면접 관련자 ({githubCandidates.length}명)
+                          </h3>
+                          <p style={{ fontSize: '0.9rem', color: '#718096' }}>
+                            5n, 5y, 6n, 6y 단계의 임원면접 관련 후보자들을 관리할 수 있습니다.
+                          </p>
+                        </div>
+                        
+                        {githubCandidates.map((candidate, index) => (
+                          <motion.div
+                            key={candidate.jobCandidateId || index}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.32, type: 'spring', stiffness: 60, delay: index * 0.1 }}
+                            style={{
+                              padding: '1.5rem',
+                              border: '1px solid #e2e8f0',
+                              borderRadius: '14px',
+                              background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                              transition: 'all 0.3s ease',
+                              position: 'relative'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = 'translateY(-2px)';
+                              e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.1)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.boxShadow = 'none';
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                              <div style={{ flex: 1 }}>
+                                <h4 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#2d3748', marginBottom: '0.5rem' }}>
+                                  {candidate.candidate?.candidateName || candidate.githubName || '이름 없음'}
+                                </h4>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', fontSize: '0.9rem', color: '#4a5568' }}>
+                                  <div>
+                                    <strong>GitHub:</strong> {candidate.githubLogin || 'GitHub 없음'}
+                                  </div>
+                                  <div>
+                                    <strong>이메일:</strong> {candidate.candidate?.candidateEmail || candidate.githubEmail || '이메일 없음'}
+                                  </div>
+                                  <div>
+                                    <strong>공고:</strong> {candidate.post?.postTitle || '공고 제목 없음'}
+                                  </div>
+                                  <div>
+                                    <strong>면접 일시:</strong> {candidate.executiveInterviewSchedule?.interviewDate ? 
+                                      new Date(candidate.executiveInterviewSchedule.interviewDate).toLocaleString('ko-KR', { 
+                                        year: 'numeric', 
+                                        month: 'long', 
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      }) : '일정 없음'
+                                    }
+                                  </div>
+                                  <div>
+                                    <strong>면접 시간:</strong> {candidate.executiveInterviewSchedule?.timeSlot || '시간 없음'}
+                                  </div>
+                                  {/* jobCandCurrStage가 5y가 아닌 경우에만 메모 표시 */}
+                                  {candidate.jobCandCurrStage !== '5y' && (
+                                    <div>
+                                      <strong>메모:</strong> {candidate.executiveInterviewSchedule?.notes || '메모 없음'}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginLeft: '1rem' }}>
+                                {/* jobCandCurrStage에 따라 버튼 표시 */}
+                                {candidate.jobCandCurrStage === '5y' ? (
+                                  /* 5y인 경우: 면접 분석 버튼 */
+                                  <button
+                                    onClick={() => {
+                                      // 디버깅: 전체 candidate 객체와 schedule 정보 확인
+                                      console.log('=== 면접 분석 버튼 클릭 ===');
+                                      console.log('전체 candidate 객체:', candidate);
+                                      console.log('executiveInterviewSchedule:', candidate.executiveInterviewSchedule);
+                                      console.log('executiveInterviewSchedule의 모든 키:', candidate.executiveInterviewSchedule ? Object.keys(candidate.executiveInterviewSchedule) : 'null');
+                                      console.log('candidate.id:', candidate.id);
+                                      console.log('candidate.jobCandidateId:', candidate.jobCandidateId);
+                                      console.log('candidate.executiveInterviewSchedule?.id:', candidate.executiveInterviewSchedule?.id);
+                                      console.log('candidate.executiveInterviewSchedule?.schedule_id:', candidate.executiveInterviewSchedule?.schedule_id);
+                                      
+                                      // job_candidate_id 사용 (더 간단하고 직관적)
+                                      const jobCandidateId = candidate.jobCandidateId;
+                                      
+                                      console.log('사용할 jobCandidateId:', jobCandidateId);
+                                      
+                                      if (jobCandidateId) {
+                                        console.log('면접 분석 페이지로 이동:', jobCandidateId);
+                                        navigate(`/interview-analysis-result/${jobCandidateId}`);
+                                      } else {
+                                        alert('지원자 ID를 찾을 수 없습니다. 관리자에게 문의해주세요.');
+                                        console.error('jobCandidateId를 찾을 수 없음. candidate:', candidate);
+                                      }
+                                    }}
+                                    style={{
+                                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '12px',
+                                      padding: '0.8rem 1.5rem',
+                                      fontWeight: '600',
+                                      fontSize: '0.95rem',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.2s ease',
+                                      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)',
+                                      whiteSpace: 'nowrap'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.transform = 'translateY(-2px)';
+                                      e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.3)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.transform = 'translateY(0)';
+                                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.2)';
+                                    }}
+                                  >
+                                    📊 면접 분석
+                                  </button>
+                                ) : (
+                                  /* 5y가 아닌 경우: 면접 보러가기 버튼 */
+                                  <button
+                                    onClick={() => {
+                                      // 임원면접 세션으로 이동
+                                      navigate(`/executive-interview-session/${candidate.jobCandidateId}`);
+                                    }}
+                                    style={{
+                                      background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '12px',
+                                      padding: '0.8rem 1.5rem',
+                                      fontWeight: '600',
+                                      fontSize: '0.95rem',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.2s ease',
+                                      boxShadow: '0 4px 12px rgba(139, 92, 246, 0.2)',
+                                      whiteSpace: 'nowrap'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.transform = 'translateY(-2px)';
+                                      e.currentTarget.style.boxShadow = '0 6px 20px rgba(139, 92, 246, 0.3)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.transform = 'translateY(0)';
+                                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.2)';
+                                    }}
+                                  >
+                                    📹 면접 보러가기
+                                  </button>
+                                )}
+                                
+                                {/* 면접 일정 수정 버튼 */}
+                                <button
+                                  onClick={() => {
+                                    // 면접 일정 수정 모달 열기
+                                    setSelectedCandidateForSchedule(candidate);
+                                    setShowScheduleModal(true);
+                                  }}
+                                  style={{
+                                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '12px',
+                                    padding: '0.8rem 1.5rem',
+                                    fontWeight: '600',
+                                    fontSize: '0.95rem',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    boxShadow: '0 4px 12px rgba(245, 158, 11, 0.2)',
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(245, 158, 11, 0.3)';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.2)';
+                                  }}
+                                >
+                                  📝 일정 수정
+                                </button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </motion.div>
                     )}
                   </section>
                 )}
@@ -3642,6 +4073,125 @@ export default function CompanyDashboard() {
           candPortfolioId={selectedMatchingCandidate.candPortfolioId}
           postId={selectedMatchingCandidate.postId}
         />
+      )}
+
+      {/* 임원면접 일정잡기 모달 */}
+      {showScheduleModal && selectedCandidateForSchedule && (
+        <Modal open={showScheduleModal} onClose={() => setShowScheduleModal(false)}>
+          <div style={{ textAlign: 'center' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1.5rem', color: '#2d3748' }}>
+              임원면접 일정잡기
+            </h2>
+            
+            <div style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#4a5568' }}>
+                후보자 정보
+              </h3>
+              <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <p><strong>이름:</strong> {selectedCandidateForSchedule.candidateName || selectedCandidateForSchedule.githubName || '이름 없음'}</p>
+                <p><strong>GitHub:</strong> {selectedCandidateForSchedule.githubLogin || 'GitHub 없음'}</p>
+                <p><strong>이메일:</strong> {selectedCandidateForSchedule.candidateEmail || selectedCandidateForSchedule.githubEmail || '이메일 없음'}</p>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.5rem', color: '#2d3748', textAlign: 'left' }}>
+                면접 날짜
+              </label>
+              <input
+                type="date"
+                value={scheduleForm.interviewDate}
+                onChange={(e) => setScheduleForm({...scheduleForm, interviewDate: e.target.value})}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  marginBottom: '1rem'
+                }}
+                min={new Date().toISOString().split('T')[0]}
+                required
+              />
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.5rem', color: '#2d3748', textAlign: 'left' }}>
+                면접 시간
+              </label>
+              <input
+                type="time"
+                value={scheduleForm.interviewTime}
+                onChange={(e) => setScheduleForm({...scheduleForm, interviewTime: e.target.value})}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  marginBottom: '1rem'
+                }}
+                required
+              />
+            </div>
+
+            <div style={{ marginBottom: '2rem' }}>
+              <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.5rem', color: '#2d3748', textAlign: 'left' }}>
+                메모 (선택사항)
+              </label>
+              <textarea
+                value={scheduleForm.notes}
+                onChange={(e) => setScheduleForm({...scheduleForm, notes: e.target.value})}
+                rows="3"
+                placeholder="면접 관련 특이사항이나 준비사항을 입력하세요..."
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <button
+                onClick={() => setShowScheduleModal(false)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  background: '#ffffff',
+                  color: '#4a5568',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                취소
+              </button>
+              
+              <button
+                onClick={handleScheduleSubmit}
+                disabled={!scheduleForm.interviewDate || !scheduleForm.interviewTime}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  border: 'none',
+                  borderRadius: '8px',
+                  background: '#8b5cf6',
+                  color: 'white',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  opacity: (!scheduleForm.interviewDate || !scheduleForm.interviewTime) ? 0.6 : 1
+                }}
+              >
+                일정 저장
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
 
     </div>

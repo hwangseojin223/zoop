@@ -289,11 +289,12 @@ function InterviewSchedulerModal({ isOpen, onClose, onSchedule, postId, candidat
       console.log('API 성공 응답:', result);
       
       if (result.success) {
-        // 성공 시 부모 컴포넌트에 알림
+        // 성공 시 부모 컴포넌트에 알림 - API 응답의 전체 데이터 전달
         onSchedule(postId, {
-          date: selectedDate,
-          time: selectedTime,
-          link: result.interviewLink
+          scheduledTime: result.scheduledTime || scheduledDateTime.toISOString(),
+          deadlineTime: result.deadlineTime || new Date(scheduledDateTime.getTime() + 60 * 60 * 1000).toISOString(), // 1시간 후
+          interviewLink: result.interviewLink,
+          scheduleId: result.scheduleId
         });
       } else {
         throw new Error(result.message || '면접 일정 등록에 실패했습니다.');

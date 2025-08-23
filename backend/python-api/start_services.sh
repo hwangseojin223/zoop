@@ -79,6 +79,36 @@ uvicorn interview_questions_api:app --host 0.0.0.0 --port 8004 --reload &
 QUESTIONS_PID=$!
 echo "✅ Interview Questions Service 시작됨 (PID: $QUESTIONS_PID)"
 
+# Executive Interview Service (Port 8006)
+echo "👔 Executive Interview Service 시작 중... (Port 8006)"
+cd ../executive_interview
+if [ ! -f ".env" ]; then
+    echo "⚠️  .env 파일이 없습니다. executive_interview/.env 파일을 생성해주세요."
+    echo "예시:"
+    echo "AWS_ACCESS_KEY_ID=your_aws_key"
+    echo "AWS_SECRET_ACCESS_KEY=your_aws_secret"
+    echo "AWS_REGION=ap-northeast-2"
+    echo "AWS_S3_BUCKET=zoop-seoul-bucket"
+    echo "SPRING_API_BASE_URL=http://localhost:8081"
+fi
+
+# 백그라운드에서 executive interview S3 업로드 서비스 시작
+python simple_s3_api.py &
+EXECUTIVE_S3_PID=$!
+echo "✅ Executive Interview S3 Service 시작됨 (PID: $EXECUTIVE_S3_PID)"
+
+# AI Analysis Service (Port 8007)
+echo "🤖 AI Analysis Service 시작 중... (Port 8007)"
+python ai_analysis_api.py &
+AI_ANALYSIS_PID=$!
+echo "✅ AI Analysis Service 시작됨 (PID: $AI_ANALYSIS_PID)"
+
+# Auto Analyzer Scheduler
+echo "⏰ Auto Analyzer Scheduler 시작 중..."
+python auto_analyzer.py &
+AUTO_ANALYZER_PID=$!
+echo "✅ Auto Analyzer Scheduler 시작됨 (PID: $AUTO_ANALYZER_PID)"
+
 # OCR Service (Port 8005)
 echo "📄 OCR Service 시작 중... (Port 8005)"
 cd ../../ocr
@@ -100,10 +130,13 @@ echo "📱 Chatbot Service: http://localhost:8001"
 echo "🎥 Interview Analysis Service: http://localhost:8002"
 echo "📊 Portfolio Matching Service: http://localhost:8003"
 echo "❓ Interview Questions Service: http://localhost:8004"
+echo "👔 Executive Interview S3 Service: http://localhost:8006"
+echo "🤖 AI Analysis Service: http://localhost:8007"
+echo "⏰ Auto Analyzer Scheduler: 백그라운드 실행 중"
 echo "📄 OCR Service: http://localhost:8005"
 echo ""
 echo "서비스를 중지하려면:"
-echo "kill $GITHUB_PID $CHATBOT_PID $INTERVIEW_PID $PORTFOLIO_PID $QUESTIONS_PID $OCR_PID"
+echo "kill $GITHUB_PID $CHATBOT_PID $INTERVIEW_PID $PORTFOLIO_PID $QUESTIONS_PID $EXECUTIVE_S3_PID $AI_ANALYSIS_PID $AUTO_ANALYZER_PID $OCR_PID"
 echo ""
 echo "로그 확인:"
 echo "tail -f github_search/logs.txt chatbot/logs.txt interview_analysis/logs.txt portfolio_matching/logs.txt interview_questions/logs.txt ocr/logs.txt"
@@ -128,6 +161,18 @@ while true; do
     fi
     if ! kill -0 $QUESTIONS_PID 2>/dev/null; then
         echo "❌ Interview Questions Service가 중단되었습니다."
+        break
+    fi
+    if ! kill -0 $EXECUTIVE_S3_PID 2>/dev/null; then
+        echo "❌ Executive Interview S3 Service가 중단되었습니다."
+        break
+    fi
+    if ! kill -0 $AI_ANALYSIS_PID 2>/dev/null; then
+        echo "❌ AI Analysis Service가 중단되었습니다."
+        break
+    fi
+    if ! kill -0 $AUTO_ANALYZER_PID 2>/dev/null; then
+        echo "❌ Auto Analyzer Scheduler가 중단되었습니다."
         break
     fi
     if ! kill -0 $OCR_PID 2>/dev/null; then

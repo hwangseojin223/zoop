@@ -236,4 +236,31 @@ public class AiInterviewScheduleController {
                     .body("PENDING 면접 스케줄 조회 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
+
+    @Operation(summary = "postId와 candidateId로 면접 일정 조회", description = "특정 공고와 후보자 ID로 면접 일정을 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "면접 일정 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "면접 일정을 찾을 수 없음"),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    @GetMapping("/by-post-candidate")
+    public ResponseEntity<?> getInterviewByPostAndCandidate(
+            @Parameter(description = "공고 ID", required = true)
+            @RequestParam Long postId,
+            @Parameter(description = "후보자 ID", required = true)
+            @RequestParam Long candidateId) {
+        try {
+            InterviewScheduleResponseDto schedule = aiInterviewScheduleService.getInterviewByPostIdAndCandidateId(postId, candidateId);
+            if (schedule != null) {
+                return ResponseEntity.ok(schedule);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            System.err.println("면접 일정 조회 중 오류 발생: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("면접 일정 조회 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
 }

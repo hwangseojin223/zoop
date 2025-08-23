@@ -1,5 +1,4 @@
 package com.zoop.backend.service;
-
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +18,9 @@ import com.zoop.backend.repository.JobCandProgressRepository;
 import com.zoop.backend.repository.PostRepository;
 
 import jakarta.mail.MessagingException;
+import lombok.extern.slf4j.Slf4j;
 
-@Service
+@Slf4j@Service
 public class AdminInterviewEvaluationService {
     
     private final AdminInterviewEvaluationRepository adminInterviewEvaluationRepository;
@@ -58,47 +58,17 @@ public class AdminInterviewEvaluationService {
                 .adminIntrvwEvaluationDate(evaluationDto.getAdminIntrvwEvaluationDate())
                 .adminIntrvwScore(evaluationDto.getAdminIntrvwScore())
                 .adminIntrvwNotes(evaluationDto.getAdminIntrvwNotes())
-                .adminIntrvwSlctStatus(evaluationDto.getAdminIntrvwSlctStatus())
                 .build();
         
         AdminInterviewEvaluation savedEvaluation = adminInterviewEvaluationRepository.save(evaluation);
         
-        // JobCandProgress의 stage 업데이트 (알림 생성 포함)
-        Optional<JobCandProgress> progressOpt = jobCandProgressRepository.findById(evaluationDto.getJobCandidateId());
-        if (progressOpt.isPresent()) {
-            JobCandProgress progress = progressOpt.get();
-            String oldStage = progress.getJobCandCurrStage();
-            String newStage = "selected".equals(evaluationDto.getAdminIntrvwSlctStatus()) ? "4y" : "4n";
-            
-            System.out.println("[AdminInterviewEvaluation] Stage 업데이트:");
-            System.out.println("  - JobCandidateId: " + evaluationDto.getJobCandidateId());
-            System.out.println("  - 기존 Stage: " + oldStage);
-            System.out.println("  - 새로운 Stage: " + newStage);
-            System.out.println("  - 선정 상태: " + evaluationDto.getAdminIntrvwSlctStatus());
-            
-            // 알림 생성과 함께 stage 업데이트
-            jobCandProgressService.updateStageWithNotification(progress.getJobCandidateId(), newStage);
-            
-            // adminIntrvwEvalId 업데이트
-            progress.setAdminIntrvwEvalId(savedEvaluation.getAdminIntrvwEvalId());
-            jobCandProgressRepository.save(progress);
-            
-            System.out.println("[AdminInterviewEvaluation] Stage 업데이트 완료: " + newStage);
-            System.out.println("[AdminInterviewEvaluation] Stage 업데이트 완료: " + progress.getJobCandCurrStage());
-            
-            // 합격(4y)인 경우 합격 메일 발송
-            if ("4y".equals(newStage)) {
-                try {
-                    sendPassNotificationEmail(progress);
-                    System.out.println("[AdminInterviewEvaluation] 합격 메일 발송 완료");
-                } catch (Exception e) {
-                    System.err.println("[AdminInterviewEvaluation] 합격 메일 발송 실패: " + e.getMessage());
-                    // 메일 발송 실패는 전체 프로세스를 실패시키지 않음
-                }
-            }
-        } else {
-            System.out.println("[AdminInterviewEvaluation] JobCandProgress를 찾을 수 없음: " + evaluationDto.getJobCandidateId());
-        }
+        // JobCandProgress의 stage 업데이트는 별도로 처리 (Pass/Fail 버튼에서)
+        // 여기서는 평가 데이터만 저장
+        
+        System.out.println("[AdminInterviewEvaluation] 평가 데이터 저장 완료:");
+        System.out.println("  - JobCandidateId: " + evaluationDto.getJobCandidateId());
+        System.out.println("  - 점수: " + evaluationDto.getAdminIntrvwScore());
+        System.out.println("  - 평가 의견: " + evaluationDto.getAdminIntrvwNotes());
         
         return AdminInterviewEvaluationDto.builder()
                 .adminIntrvwEvalId(savedEvaluation.getAdminIntrvwEvalId())
@@ -107,7 +77,6 @@ public class AdminInterviewEvaluationService {
                 .adminIntrvwEvaluationDate(savedEvaluation.getAdminIntrvwEvaluationDate())
                 .adminIntrvwScore(savedEvaluation.getAdminIntrvwScore())
                 .adminIntrvwNotes(savedEvaluation.getAdminIntrvwNotes())
-                .adminIntrvwSlctStatus(savedEvaluation.getAdminIntrvwSlctStatus())
                 .adminIntrvwCreatedAt(savedEvaluation.getAdminIntrvwCreatedAt())
                 .build();
     }
@@ -122,7 +91,6 @@ public class AdminInterviewEvaluationService {
                         .adminIntrvwEvaluationDate(evaluation.getAdminIntrvwEvaluationDate())
                         .adminIntrvwScore(evaluation.getAdminIntrvwScore())
                         .adminIntrvwNotes(evaluation.getAdminIntrvwNotes())
-                        .adminIntrvwSlctStatus(evaluation.getAdminIntrvwSlctStatus())
                         .adminIntrvwCreatedAt(evaluation.getAdminIntrvwCreatedAt())
                         .build());
     }

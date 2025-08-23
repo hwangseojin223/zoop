@@ -36,6 +36,8 @@ const ResponderList = lazy(() => import('./pages/company/ResponderList'));
 const StatePage = lazy(() => import('./pages/company/StatePage'));
 const IdealCandidate = lazy(() => import('./pages/company/IdealCandidate'));
 const InterviewEvaluation = lazy(() => import('./pages/company/InterviewEvaluation'));
+const ExecutiveInterviewManagement = lazy(() => import('./pages/company/ExecutiveInterviewManagement'));
+const InterviewAnalysisResult = lazy(() => import('./pages/company/InterviewAnalysisResult'));
 
 // candidate - lazy loading으로 변경
 const CandidateDashboard = lazy(() => import('./pages/candidate/Dashboard').then(module => ({ default: module.CandidateDashboard })));
@@ -43,6 +45,7 @@ const CandidateSettings = lazy(() => import('./pages/candidate/Portfolio/Candida
 const PortfolioSubmissionPage = lazy(() => import('./pages/candidate/Portfolio/PortfolioSubmissionPage'));
 const InterviewPage = lazy(() => import('./pages/candidate/Interview/InterviewPage'));
 const InterviewSession = lazy(() => import('./pages/candidate/Interview/InterviewSession'));
+const ExecutiveInterviewSession = lazy(() => import('./components/ExecutiveInterviewSession'));
 const ResumeSubmissionPage = lazy(() => import('./pages/candidate/resume/ResumeSubmissionPage'));
 const BookmarksPage = lazy(() => import('./pages/candidate/BookmarksPage'));
 
@@ -220,6 +223,15 @@ function AppContent() {
         />
 
         <Route
+          path="/company/executive-interview"
+          element={
+            <PrivateRoute allowedUserType="company">
+              <ExecutiveInterviewManagement />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
           path="/company/candidates"
           element={
             <PrivateRoute allowedUserType="company">
@@ -251,6 +263,26 @@ function AppContent() {
           element={
             <PrivateRoute allowedUserType='candidate'>
               <InterviewSession />
+            </PrivateRoute>
+          }
+        />
+        
+        {/* 임원면접 세션 라우트 추가 */}
+        <Route
+          path="/executive-interview-session/:jobCandidateId"
+          element={
+            <PrivateRoute>
+              <ExecutiveInterviewSession />
+            </PrivateRoute>
+          }
+        />
+        
+        {/* 면접 분석 결과 라우트 추가 */}
+        <Route
+          path="/interview-analysis-result/:scheduleId"
+          element={
+            <PrivateRoute allowedUserType="company">
+              <InterviewAnalysisResult />
             </PrivateRoute>
           }
         />

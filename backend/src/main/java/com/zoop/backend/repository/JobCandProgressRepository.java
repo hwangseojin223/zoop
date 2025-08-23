@@ -99,6 +99,10 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
     @Query("SELECT j FROM JobCandProgress j WHERE j.post.postId = :postId AND j.githubLogin IN :githubLogins")
     List<JobCandProgress> findByPostIdAndGithubLoginIn(@Param("postId") Long postId, @Param("githubLogins") List<String> githubLogins);
 
+    // postId와 여러 단계로 JobCandProgress 조회 (5n, 5y, 6n, 6y)
+    @Query("SELECT j FROM JobCandProgress j WHERE j.post.postId = :postId AND j.jobCandCurrStage IN :stages")
+    List<JobCandProgress> findByPost_PostIdAndJobCandCurrStageIn(@Param("postId") Long postId, @Param("stages") List<String> stages);
+
     // 필터링 단계별 githubLogin 조회
     @Query("SELECT j.githubLogin FROM JobCandProgress j WHERE j.post.postId = :postId AND j.jobCandCurrStage = '1n'")
     List<String> findGithubLoginsByPostIdAndFilteringStage(@Param("postId") Long postId);
@@ -169,6 +173,9 @@ public interface JobCandProgressRepository extends JpaRepository<JobCandProgress
     
     // githubLogin으로 조회 - 팀 버전 기능
     Optional<JobCandProgress> findByGithubLogin(String githubLogin);
+    
+    // githubLogin으로 모든 레코드 조회 (여러 레코드가 있을 수 있음)
+    List<JobCandProgress> findAllByGithubLogin(String githubLogin);
 
     // postId, stage, candPortfolioId IS NOT NULL로 조회
     List<JobCandProgress> findByPost_PostIdAndJobCandCurrStageAndCandPortfolioIdIsNotNull(Long postId, String jobCandCurrStage);

@@ -142,10 +142,14 @@ export default function StatePage() {
       case '1n': return '필터링';
       case '2n': return '메일발송';
       case '2y': return '회신';
-      case '3n': return '면접 예정자';
-      case '3y': return '면접 완료자';
-      case '4n': return '불합격';
-      case '4y': return '합격';
+      case '3n': return 'AI 면접 예정';
+      case '3y': return 'AI 면접 완료';
+      case '4n': return 'AI 면접 불합격';
+      case '4y': return 'AI 면접 합격';
+      case '5n': return '임원 면접 예정';
+      case '5y': return '임원 면접 완료';
+      case '6n': return '최종 불합격';
+      case '6y': return '최종 합격';
       default: return '필터링';
     }
   };
@@ -153,10 +157,14 @@ export default function StatePage() {
   const filteredResults = searchResults.filter((r) => {
     if (tab === '전체') return true;
     if (tab === '회신자') return r.jobCandCurrStage === '2y';
-    if (tab === '면접 예정자') return r.jobCandCurrStage === '3n';
-    if (tab === '면접 완료자') {
-      return ['3y', '4n', '4y'].includes(r.jobCandCurrStage);
-    }
+    if (tab === 'AI 면접 예정') return r.jobCandCurrStage === '3n';
+    if (tab === 'AI 면접 완료') return r.jobCandCurrStage === '3y';
+    if (tab === 'AI 면접 불합격') return r.jobCandCurrStage === '4n';
+    if (tab === 'AI 면접 합격') return r.jobCandCurrStage === '4y';
+    if (tab === '임원 면접 예정') return r.jobCandCurrStage === '5n';
+    if (tab === '임원 면접 완료') return r.jobCandCurrStage === '5y';
+    if (tab === '최종 불합격') return r.jobCandCurrStage === '6n';
+    if (tab === '최종 합격') return r.jobCandCurrStage === '6y';
     return true;
   });
 
@@ -169,7 +177,18 @@ export default function StatePage() {
   const nextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   const prevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
 
-  const tabs = ['전체', '회신자', '면접 예정자', '면접 완료자'];
+  const tabs = [
+    '전체', 
+    '회신자', 
+    'AI 면접 예정', 
+    'AI 면접 완료',
+    'AI 면접 불합격',
+    'AI 면접 합격',
+    '임원 면접 예정',
+    '임원 면접 완료',
+    '최종 불합격',
+    '최종 합격'
+  ];
 
   return (
     <div className="min-h-screen bg-emerald-50 pt-20">

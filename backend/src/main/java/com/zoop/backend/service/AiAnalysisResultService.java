@@ -93,4 +93,11 @@ public class AiAnalysisResultService {
     public int updateJobCandidateIdForPortfolio(Long candPortfolioId, Long jobCandidateId) {
         return aiAnalysisResultRepository.updateJobCandidateIdByCandPortfolioId(jobCandidateId, candPortfolioId);
     }
+
+    // scheduleId로 AI 분석 결과 조회 (임원면접용)
+    public Optional<AiAnalysisResult> findByScheduleId(Long scheduleId) {
+        // scheduleId로 jobCandidateId를 찾고, 해당 jobCandidateId로 AI 분석 결과 조회
+        // analysisType이 "executive_interview"인 결과를 찾음
+        return aiAnalysisResultRepository.findByScheduleId(scheduleId);
+    }
 } 

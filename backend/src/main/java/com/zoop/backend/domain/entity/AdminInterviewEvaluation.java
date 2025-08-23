@@ -38,14 +38,13 @@ public class AdminInterviewEvaluation {
     @Column(name = "admin_intrvw_evaluation_date", nullable = false)
     private LocalDateTime adminIntrvwEvaluationDate;
 
-    @Column(name = "admin_intrvw_score", precision = 5, scale = 2)
+    @Column(name = "admin_intrvw_score")
     private BigDecimal adminIntrvwScore;
 
     @Column(name = "admin_intrvw_notes", columnDefinition = "CLOB")
     private String adminIntrvwNotes;
 
-    @Column(name = "admin_intrvw_slct_status", length = 50, nullable = false)
-    private String adminIntrvwSlctStatus;
+
 
     @Column(name = "admin_intrvw_created_at", nullable = false)
     private LocalDateTime adminIntrvwCreatedAt;
