@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -72,7 +73,7 @@ class ChatRequest(BaseModel):
 class IdealCandidateRequest(BaseModel):
     history: list
     user_input: str
-    recruit_filters: dict | None = None
+    recruit_filters: Optional[dict] = None
 
 @app.post("/chat")
 async def chat_endpoint(req: ChatRequest):
