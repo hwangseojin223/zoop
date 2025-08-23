@@ -233,10 +233,10 @@
 
 /* Interview Info */
 .interview-info {
-  background: #f8fafc;
-  border-radius: 6px;
-  padding: 12px;
-  border: 1px solid #e2e8f0;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  border: none;
 }
 
 .interview-info p {

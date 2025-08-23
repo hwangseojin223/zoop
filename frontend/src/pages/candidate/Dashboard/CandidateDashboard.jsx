@@ -29,28 +29,28 @@ const ExecutiveInterviewInfo = ({ post }) => {
       if (post.jobCandCurrStage === '5n') {
         setLoading(true);
         try {
-          // postId: 101에 대한 임원면접 일정 조회
-          console.log('postId:', post.postId, '에 대한 임원면접 일정 조회');
+          // postId와 candidateId로 jobCandidateId 조회
+          const candidateId = localStorage.getItem('userId') || 19;
+          const response = await fetch(`http://localhost:8081/api/progress/find-job-candidate-id?postId=${post.postId}&candidateId=${candidateId}`);
           
-          // postId: 101인 경우 jobCandidateId: 1 사용 (이미 생성된 일정)
-          if (post.postId === 101) {
-            const existingSchedules = await fetch('http://localhost:8081/api/executive-interview/schedules?postId=101');
-            if (existingSchedules.ok) {
-              const schedules = await existingSchedules.json();
-              if (schedules.length > 0) {
-                // 기존 일정이 있으면 사용
-                const scheduleData = schedules[0];
-                console.log('기존 임원면접 일정 사용:', scheduleData);
-                setSchedule(scheduleData);
-                return;
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.jobCandidateId) {
+              // jobCandidateId로 임원면접 일정 조회
+              const scheduleResponse = await fetch(`http://localhost:8081/api/executive-interview/schedule/${data.jobCandidateId}`);
+              if (scheduleResponse.ok) {
+                const scheduleData = await scheduleResponse.json();
+                if (scheduleData && scheduleData.length > 0) {
+                  setSchedule(scheduleData[0]);
+                  return;
+                }
               }
             }
           }
           
-          // 다른 postId인 경우 또는 일정이 없는 경우
           console.log('임원면접 일정을 찾을 수 없습니다.');
         } catch (error) {
-          console.error(`공고 ${post.postId}의 임원면접 일정 조회/생성 실패:`, error);
+          console.error(`공고 ${post.postId}의 임원면접 일정 조회 실패:`, error);
         } finally {
           setLoading(false);
         }
@@ -62,7 +62,7 @@ const ExecutiveInterviewInfo = ({ post }) => {
   
   if (loading) {
     return (
-      <div style={{ marginTop: '0.8rem', textAlign: 'center', color: '#666' }}>
+      <div style={{ marginTop: '0.5rem', textAlign: 'center', color: '#666', fontSize: '0.8rem' }}>
         면접 일정 불러오는 중...
       </div>
     );
@@ -70,25 +70,25 @@ const ExecutiveInterviewInfo = ({ post }) => {
   
   if (!schedule) {
     return (
-      <div style={{ marginTop: '0.8rem', textAlign: 'center', color: '#666' }}>
-        면접 일정 정보를 찾을 수 없습니다.
+      <div style={{ marginTop: '0.5rem', textAlign: 'center', color: '#666', fontSize: '0.8rem' }}>
+        임원면접 일정이 아직 정해지지 않았습니다.
       </div>
     );
   }
   
   return (
-    <div style={{ marginTop: '0.8rem' }}>
+    <div style={{ marginTop: '0.5rem' }}>
       {/* 임원면접 일정 정보 */}
       <div style={{
-        padding: '0.6rem',
+        padding: '0.4rem',
         background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
-        borderRadius: '8px',
+        borderRadius: '6px',
         border: '1px solid #0ea5e9',
-        marginBottom: '0.8rem',
-        fontSize: '0.85rem',
+        marginBottom: '0.5rem',
+        fontSize: '0.75rem',
         color: '#0c4a6e'
       }}>
-        <div style={{ marginBottom: '0.3rem' }}>
+        <div style={{ marginBottom: '0.2rem' }}>
           <strong>📅 면접 일시:</strong> {schedule.interviewDate ? 
             new Date(schedule.interviewDate).toLocaleDateString('ko-KR', { 
               month: 'short', 
@@ -102,70 +102,57 @@ const ExecutiveInterviewInfo = ({ post }) => {
         </div>
       </div>
       
-              {/* 면접 참여하기 버튼 */}
-        <button
-          onClick={() => {
-            console.log('면접 참여하기 버튼 클릭됨');
-            console.log('post 정보:', post);
-            
-            // postId와 candidateId로 jobCandidateId 조회
-            const getJobCandidateId = async () => {
-              try {
-                const candidateId = localStorage.getItem('userId') || 19;
-                console.log('postId:', post.postId, 'candidateId:', candidateId);
-                
-                // 새로운 API 사용: postId와 candidateId로 jobCandidateId 찾기
-                const response = await fetch(`http://localhost:8081/api/progress/find-job-candidate-id?postId=${post.postId}&candidateId=${candidateId}`);
-                
-                if (response.ok) {
-                  const data = await response.json();
-                  console.log('API 응답:', data);
-                  
-                  if (data.success && data.jobCandidateId) {
-                    const jobCandidateId = data.jobCandidateId;
-                    console.log('찾은 jobCandidateId:', jobCandidateId);
-                    console.log('면접 세션으로 이동:', `/executive-interview-session/${jobCandidateId}`);
-                    navigate(`/executive-interview-session/${jobCandidateId}`);
-                  } else {
-                    console.error('jobCandidateId를 찾을 수 없습니다:', data.message);
-                    alert('면접 정보를 찾을 수 없습니다. 관리자에게 문의해주세요.');
-                  }
+      {/* 면접 참여하기 버튼 */}
+      <button
+        onClick={() => {
+          // postId와 candidateId로 jobCandidateId 조회
+          const getJobCandidateId = async () => {
+            try {
+              const candidateId = localStorage.getItem('userId') || 19;
+              const response = await fetch(`http://localhost:8081/api/progress/find-job-candidate-id?postId=${post.postId}&candidateId=${candidateId}`);
+              
+              if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.jobCandidateId) {
+                  navigate(`/executive-interview-session/${data.jobCandidateId}`);
                 } else {
-                  console.error('API 호출 실패:', response.status);
-                  alert('면접 정보 조회에 실패했습니다.');
+                  alert('면접 정보를 찾을 수 없습니다. 관리자에게 문의해주세요.');
                 }
-              } catch (error) {
-                console.error('jobCandidateId 조회 실패:', error);
-                alert('면접 참여 중 오류가 발생했습니다.');
+              } else {
+                alert('면접 정보 조회에 실패했습니다.');
               }
-            };
-            
-            getJobCandidateId();
-          }}
+            } catch (error) {
+              console.error('jobCandidateId 조회 실패:', error);
+              alert('면접 참여 중 오류가 발생했습니다.');
+            }
+          };
+          
+          getJobCandidateId();
+        }}
         style={{
           background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
           color: 'white',
           border: 'none',
-          borderRadius: '8px',
-          padding: '0.6rem 1rem',
-          fontWeight: '600',
-          fontSize: '0.85rem',
+          borderRadius: '6px',
+          padding: '0.4rem 0.8rem',
+          fontWeight: '500',
+          fontSize: '0.8rem',
           cursor: 'pointer',
           transition: 'all 0.2s ease',
-          boxShadow: '0 2px 8px rgba(139, 92, 246, 0.2)',
+          boxShadow: '0 2px 4px rgba(139, 92, 246, 0.2)',
           width: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '0.3rem'
+          gap: '0.2rem'
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translateY(-1px)';
-          e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.3)';
+          e.currentTarget.style.boxShadow = '0 3px 8px rgba(139, 92, 246, 0.3)';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = '0 2px 8px rgba(139, 92, 246, 0.2)';
+          e.currentTarget.style.boxShadow = '0 2px 4px rgba(139, 92, 246, 0.2)';
         }}
       >
         📹 면접 참여하기
@@ -200,8 +187,8 @@ function formatUtcToKst(dateObj) {
   return dateObj.toLocaleString('ko-KR', { hour12: false });
 }
 
-// 남은 시간을 계산하는 함수
-function calculateRemainingTime(deadlineDate) {
+// 남은 시간을 계산하는 함수 (실제 남은 시간 계산)
+const calculateRemainingTime = (deadlineDate) => {
   if (!deadlineDate || !(deadlineDate instanceof Date) || isNaN(deadlineDate.getTime())) return '';
   
   const now = new Date();
@@ -220,7 +207,7 @@ function calculateRemainingTime(deadlineDate) {
   } else {
     return `면접 종료까지 ${minutes}분 남았습니다.`;
   }
-}
+};
 
 // 스테이지별 색상 스타일 함수
 const getStageColor = (code) => {
@@ -230,12 +217,12 @@ const getStageColor = (code) => {
     case '1n': return { bg: '#fef5e7', text: '#d69e2e', border: '#f6ad55' }; // GitHub 필터링
     case '2n': return { bg: '#e6fffa', text: '#319795', border: '#b2f5ea' }; // 이메일 발송
     case '2y': return { bg: '#f0fff4', text: '#38a169', border: '#9ae6b4' }; // 포트폴리오 제출
-    case '2p': return { bg: '#f0fff4', text: '#38a169', border: '#9ae6b4' }; // 포트폴리오 통과
-    case '3n': return { bg: '#e6fffa', text: '#319795', border: '#b2f5ea' }; // AI 면접 예정
+            case '2p': return { bg: 'transparent', text: 'transparent', border: 'transparent' }; // 포트폴리오 통과 배지 제거
+            case '3n': return { bg: 'transparent', text: 'transparent', border: 'transparent' }; // AI 면접 예정 배지 제거
     case '3y': return { bg: '#f0fff4', text: '#38a169', border: '#9ae6b4' }; // AI 면접 완료
     case '4n': return { bg: '#fed7d7', text: '#e53e3e', border: '#fc8181' }; // AI 면접 불합격
     case '4y': return { bg: '#c6f6d5', text: '#38a169', border: '#68d391' }; // AI 면접 합격
-    case '5n': return { bg: '#e6fffa', text: '#319795', border: '#b2f5ea' }; // 임원면접 예정
+    case '5n': return { bg: 'transparent', text: 'transparent', border: 'transparent' }; // 임원면접 예정 배지 제거
     case '5y': return { bg: '#f0fff4', text: '#38a169', border: '#9ae6b4' }; // 임원면접 완료
     case '6n': return { bg: '#fed7d7', text: '#e53e3e', border: '#fc8181' }; // 최종 불합격
     case '6y': return { bg: '#c6f6d5', text: '#38a169', border: '#68d391' }; // 최종 합격
@@ -251,12 +238,12 @@ const getStageLabel = (code) => {
     case '1n': return 'GitHub 필터링';
     case '2n': return '포트폴리오 대기';
     case '2y': return '포트폴리오 제출';
-    case '2p': return '포트폴리오 통과';
-    case '3n': return 'AI 면접 예정';
+            case '2p': return ''; // 포트폴리오 통과 배지 제거
+            case '3n': return ''; // AI 면접 예정 배지 제거
     case '3y': return 'AI 면접 완료';
     case '4n': return 'AI 면접 불합격';
     case '4y': return 'AI 면접 합격';
-    case '5n': return '임원면접 예정';
+    case '5n': return ''; // 임원면접 예정 배지 제거
     case '5y': return '임원면접 완료';
     case '6n': return '최종 불합격';
     case '6y': return '최종 합격';
@@ -327,20 +314,51 @@ function CandidateDashboard() {
       if (jobPostingsResponse.ok) {
         const jobPostings = await jobPostingsResponse.json();
         
-        // 3n 단계인 공고들에 대해 기존 scheduledInterviews 상태 유지
+        // 3n 단계인 공고들에 대해 면접 일정 조회
         const aiInterviewPosts = jobPostings.filter(post => post.jobCandCurrStage === '3n');
         
         if (aiInterviewPosts.length > 0) {
-          // 기존 scheduledInterviews 상태에서 3n 단계 공고들의 정보만 유지
-          setScheduledInterviews(prev => {
-            const newScheduledInterviews = {};
-            aiInterviewPosts.forEach(post => {
-              if (prev[post.postId]) {
-                newScheduledInterviews[post.postId] = prev[post.postId];
+          // 각 3n 단계 공고에 대해 면접 일정 조회
+          const interviewPromises = aiInterviewPosts.map(async (post) => {
+            try {
+              // postId와 candidateId로 면접 일정 조회 (백엔드에 이미 존재하는 API 사용)
+              const candidateId = actualCandidateId || localStorage.getItem('userId') || 19;
+              const response = await fetch(`http://localhost:8081/api/interview-schedules/by-post-candidate?postId=${post.postId}&candidateId=${candidateId}`);
+              
+              if (response.ok) {
+                const scheduleData = await response.json();
+                if (scheduleData && scheduleData.scheduleId) {
+                  // 면접 일정이 있으면 scheduledInterviews에 추가
+                  return {
+                    postId: post.postId,
+                    date: scheduleData.scheduledTime ? new Date(scheduleData.scheduledTime).toLocaleString('ko-KR') : '일정 없음',
+                    time: scheduleData.scheduledTime ? new Date(scheduleData.scheduledTime).toLocaleTimeString('ko-KR') : '',
+                    iso: scheduleData.scheduledTime ? new Date(scheduleData.scheduledTime) : null,
+                    deadline: scheduleData.deadlineTime ? new Date(scheduleData.deadlineTime) : null,
+                    link: scheduleData.interviewLink || '',
+                    scheduleId: scheduleData.scheduleId
+                  };
+                }
               }
-            });
-            return newScheduledInterviews;
+            } catch (error) {
+              console.error(`공고 ${post.postId}의 면접 일정 조회 실패:`, error);
+            }
+            return null;
           });
+          
+          const interviewResults = await Promise.all(interviewPromises);
+          const validInterviews = interviewResults.filter(result => result !== null);
+          
+          // scheduledInterviews 상태 업데이트
+          const newScheduledInterviews = {};
+          validInterviews.forEach(interview => {
+            newScheduledInterviews[interview.postId] = interview;
+          });
+          
+          setScheduledInterviews(prev => ({
+            ...prev,
+            ...newScheduledInterviews
+          }));
         }
       }
     } catch (error) {
@@ -570,6 +588,14 @@ function CandidateDashboard() {
     }
   }, [candidateId, authState?.loginId]);
 
+  // 면접 일정 변경 시 자동으로 데이터 다시 로드
+  useEffect(() => {
+    if (Object.keys(scheduledInterviews).length > 0) {
+      // scheduledInterviews가 변경되면 면접 일정 정보 다시 로드
+      loadExistingInterviewSchedules();
+    }
+  }, [scheduledInterviews]);
+
   // 탭 클릭 핸들러
   const handleTabClick = async (tabId) => {
     setActiveTab(tabId);
@@ -615,19 +641,6 @@ function CandidateDashboard() {
       const scheduledDate = parseDbDate(scheduleInfo.scheduledTime);
       const deadlineDate = parseDbDate(scheduleInfo.deadlineTime);
       
-      // scheduledInterviews 상태 즉시 업데이트
-      setScheduledInterviews(prev => ({
-        ...prev,
-        [postId]: {
-          date: formatUtcToKst(scheduledDate),
-          time: '',
-          iso: scheduledDate,
-          deadline: deadlineDate,
-          link: scheduleInfo.interviewLink,
-          scheduleId: scheduleInfo.scheduleId
-        }
-      }));
-      
       // 해당 공고의 단계를 3n으로 변경 (면접 일정 정함)
       setJobPostings(prev => prev.map(post => 
         post.postId === postId 
@@ -635,16 +648,77 @@ function CandidateDashboard() {
           : post
       ));
       
+      // 면접 일정을 API에서 다시 조회하여 scheduledInterviews 상태 업데이트
+      try {
+        const candidateId = actualCandidateId || localStorage.getItem('userId') || 19;
+        // postId와 candidateId로 면접 일정 조회 (백엔드에 이미 존재하는 API 사용)
+        const response = await fetch(`http://localhost:8081/api/interview-schedules/by-post-candidate?postId=${postId}&candidateId=${candidateId}`);
+        
+        if (response.ok) {
+          const scheduleData = await response.json();
+          if (scheduleData && scheduleData.scheduleId) {
+            // scheduledInterviews 상태 업데이트
+            setScheduledInterviews(prev => ({
+              ...prev,
+              [postId]: {
+                postId: postId,
+                date: scheduleData.scheduledTime ? new Date(scheduleData.scheduledTime).toLocaleString('ko-KR') : '일정 없음',
+                time: scheduleData.scheduledTime ? new Date(scheduleData.scheduledTime).toLocaleTimeString('ko-KR') : '',
+                iso: scheduleData.scheduledTime ? new Date(scheduleData.scheduledTime) : null,
+                deadline: scheduleData.deadlineTime ? new Date(scheduleData.deadlineTime) : null,
+                link: scheduleData.interviewLink || '',
+                scheduleId: scheduleData.scheduleId
+              }
+            }));
+            
+            console.log(`면접 일정 업데이트 완료 - postId: ${postId}, scheduledInterviews:`, {
+              ...scheduledInterviews,
+              [postId]: {
+                postId: postId,
+                date: scheduleData.scheduledTime ? new Date(scheduleData.scheduledTime).toLocaleString('ko-KR') : '일정 없음',
+                time: scheduleData.scheduledTime ? new Date(scheduleData.scheduledTime).toLocaleTimeString('ko-KR') : '',
+                iso: scheduleData.scheduledTime ? new Date(scheduleData.scheduledTime) : null,
+                deadline: scheduleData.deadlineTime ? new Date(scheduleData.deadlineTime) : null,
+                link: scheduleData.interviewLink || '',
+                scheduleId: scheduleData.scheduleId
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('면접 일정 조회 실패:', error);
+        // API 조회 실패 시 모달 데이터로 fallback
+        setScheduledInterviews(prev => ({
+          ...prev,
+          [postId]: {
+            date: formatUtcToKst(scheduledDate),
+            time: '',
+            iso: scheduledDate,
+            deadline: deadlineDate,
+            link: scheduleInfo.interviewLink,
+            scheduleId: scheduleInfo.scheduleId
+          }
+        }));
+      }
+      
     } catch (error) {
       console.error("면접 일정 등록 후 데이터 동기화 실패:", error);
     }
     
     closeInterviewSchedulerModal();
+    
+    // 면접 일정 업데이트 후 상태 확인
+    setTimeout(() => {
+      console.log('면접 일정 업데이트 후 상태 확인:');
+      console.log('scheduledInterviews:', scheduledInterviews);
+      console.log('jobPostings:', jobPostings);
+    }, 1000);
   };
 
-  // 남은 시간 계산 버튼 클릭 시 면접 보러가기
-  const calculateRemainingTime = (postId) => {
-    // 바로 면접 참여 페이지로 이동
+
+
+  // 면접 보러가기 버튼 클릭 시 호출되는 함수
+  const handleGoToInterview = (postId) => {
     navigateToInterview(postId);
   };
 
@@ -659,6 +733,13 @@ function CandidateDashboard() {
 
   const navigateToInterview = async (postId) => {
     try {
+      // postId 유효성 검사
+      if (!postId || isNaN(postId)) {
+        console.error('잘못된 postId:', postId);
+        alert('잘못된 공고 정보입니다.');
+        return;
+      }
+
       const interview = scheduledInterviews[postId];
       if (interview && interview.iso) {
         const interviewDateTime = new Date(interview.iso);
@@ -669,7 +750,8 @@ function CandidateDashboard() {
         }
       }
 
-      const response = await fetch(`http://localhost:8081/api/interviews/by-post-candidate?postId=${postId}&candidateId=${candidateId}`);
+      // 올바른 API 엔드포인트 사용
+      const response = await fetch(`http://localhost:8081/api/interview-schedules/by-post-candidate?postId=${postId}&candidateId=${candidateId}`);
       if (!response.ok) {
         throw new Error('면접 일정을 조회하는데 실패했습니다.');
       }
@@ -951,6 +1033,67 @@ function CandidateDashboard() {
                           {post.jobCandCurrStage === '5n' && (
                             <ExecutiveInterviewInfo post={post} />
                           )}
+                          
+                          {/* AI 면접 예정인 경우 면접 정보 표시 */}
+                          {post.jobCandCurrStage === '3n' && (
+                            <div className="interview-info">
+                              {scheduledInterviews[post.postId] ? (
+                                <>
+                                  <p style={{ fontSize: '0.8rem', margin: '0 0 0.4rem 0' }}>
+                                    면접 일정: {scheduledInterviews[post.postId].date}
+                                  </p>
+                                  <button 
+                                    className="interview-go-btn"
+                                    onClick={() => handleGoToInterview(post.postId)}
+                                    style={{
+                                      background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '6px',
+                                      padding: '0.4rem 0.8rem',
+                                      fontWeight: '500',
+                                      fontSize: '0.8rem',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.2s ease',
+                                      width: '100%'
+                                    }}
+                                  >
+                                    🎯 면접 보러가기
+                                  </button>
+                                  <div style={{
+                                    marginTop: '0.4rem',
+                                    padding: '0.4rem',
+                                    background: 'rgba(59, 130, 246, 0.1)',
+                                    borderRadius: '6px',
+                                    fontSize: '0.7rem',
+                                    color: '#1d4ed8',
+                                    textAlign: 'center'
+                                  }}>
+                                    {calculateRemainingTime(scheduledInterviews[post.postId].iso)}
+                                  </div>
+                                </>
+                              ) : (
+                                <button
+                                  className="interview-scheduler-button"
+                                  onClick={() => openInterviewSchedulerModal(post.postId)}
+                                  style={{
+                                    background: 'transparent',
+                                    color: '#10b981',
+                                    border: '2px solid #10b981',
+                                    borderRadius: '6px',
+                                    padding: '0.4rem 0.8rem',
+                                    fontWeight: '500',
+                                    fontSize: '0.8rem',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    width: '100%'
+                                  }}
+                                >
+                                  📅 면접 일정 정하기
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </li>
@@ -1071,34 +1214,58 @@ function CandidateDashboard() {
                             <div className="interview-info">
                               {scheduledInterviews[post.postId] ? (
                                 <>
-                                  <p>면접 일정: {scheduledInterviews[post.postId].date}</p>
+                                  <p style={{ fontSize: '0.8rem', margin: '0 0 0.4rem 0' }}>
+                                    면접 일정: {scheduledInterviews[post.postId].date}
+                                  </p>
                                   <button 
-                                    className="remaining-time-btn"
-                                    onClick={() => calculateRemainingTime(post.postId)}
+                                    className="interview-go-btn"
+                                    onClick={() => handleGoToInterview(post.postId)}
                                     style={{
                                       background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
                                       color: 'white',
                                       border: 'none',
-                                      borderRadius: '8px',
-                                      padding: '0.6rem 1rem',
+                                      borderRadius: '6px',
+                                      padding: '0.4rem 0.8rem',
                                       fontWeight: '500',
-                                      fontSize: '0.9rem',
+                                      fontSize: '0.8rem',
                                       cursor: 'pointer',
-                                      transition: 'all 0.2s ease'
+                                      transition: 'all 0.2s ease',
+                                      width: '100%'
                                     }}
                                   >
-                                    ⏱️ 남은 시간 계산
+                                    🎯 면접 보러가기
                                   </button>
+                                  <div style={{
+                                    marginTop: '0.4rem',
+                                    padding: '0.4rem',
+                                    background: 'rgba(59, 130, 246, 0.1)',
+                                    borderRadius: '6px',
+                                    fontSize: '0.7rem',
+                                    color: '#1d4ed8',
+                                    textAlign: 'center'
+                                  }}>
+                                    {calculateRemainingTime(scheduledInterviews[post.postId].iso)}
+                                  </div>
                                 </>
                               ) : (
-                                <>
-                                  <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>
-                                    ⏰ AI 면접 예정
-                                  </p>
-                                  <p style={{ color: '#9ca3af', fontSize: '0.8rem', marginTop: '0.3rem' }}>
-                                    면접 일정이 정해지면 알려드립니다
-                                  </p>
-                                </>
+                                <button
+                                  className="interview-scheduler-button"
+                                  onClick={() => openInterviewSchedulerModal(post.postId)}
+                                  style={{
+                                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    padding: '0.6rem 1rem',
+                                    fontWeight: '500',
+                                    fontSize: '0.9rem',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    width: '100%'
+                                  }}
+                                >
+                                  📅 면접 일정 정하기
+                                </button>
                               )}
                             </div>
                           )}
@@ -1116,11 +1283,11 @@ function CandidateDashboard() {
           {activeTab === 'executiveInterview' && (
             <div className="tab-content">
               <h3>임원면접 단계</h3>
-              {executiveInterviewLoading ? (
-                <p>임원면접 일정을 불러오는 중...</p>
-              ) : executiveInterviewSchedules.length > 0 ? (
+              {jobPostings.filter(post => post.jobCandCurrStage === '5n' || post.jobCandCurrStage === '5y').length > 0 ? (
                 <ul className="job-postings-list">
-                  {executiveInterviewSchedules.map(post => (
+                  {jobPostings
+                    .filter(post => post.jobCandCurrStage === '5n' || post.jobCandCurrStage === '5y')
+                    .map(post => (
                     <li key={post.postId} className="job-posting-item">
                       <div className="job-posting-flex-row">
                         <div className="job-posting-content">
@@ -1141,38 +1308,38 @@ function CandidateDashboard() {
                           {/* 임원면접 일정 정보 */}
                           {post.executiveInterviewSchedule && (
                             <div className="executive-interview-schedule" style={{
-                              marginTop: '1rem',
-                              padding: '1rem',
+                              marginTop: '0.5rem',
+                              padding: '0.4rem',
                               background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
-                              borderRadius: '12px',
+                              borderRadius: '6px',
                               border: '1px solid #0ea5e9',
-                              boxShadow: '0 2px 8px rgba(14, 165, 233, 0.1)'
+                              boxShadow: '0 2px 4px rgba(14, 165, 233, 0.1)'
                             }}>
                               <h4 style={{
-                                fontSize: '1.1rem',
+                                fontSize: '0.8rem',
                                 fontWeight: '600',
                                 color: '#0369a1',
-                                marginBottom: '0.8rem',
+                                marginBottom: '0.4rem',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '0.5rem'
+                                gap: '0.3rem'
                               }}>
                                 📅 임원면접 일정
                               </h4>
                               <div style={{
                                 display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                                gap: '1rem',
-                                fontSize: '0.95rem',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                                gap: '0.5rem',
+                                fontSize: '0.75rem',
                                 color: '#0c4a6e'
                               }}>
                                 <div>
                                   <strong>면접 일시:</strong><br />
                                   {new Date(post.executiveInterviewSchedule.interviewDate).toLocaleDateString('ko-KR', { 
                                     year: 'numeric', 
-                                    month: 'long', 
+                                    month: 'short', 
                                     day: 'numeric',
-                                    weekday: 'long'
+                                    weekday: 'short'
                                   })}
                                 </div>
                                 <div>
@@ -1184,9 +1351,9 @@ function CandidateDashboard() {
                                   <span style={{
                                     background: '#10b981',
                                     color: 'white',
-                                    padding: '0.3rem 0.8rem',
-                                    borderRadius: '20px',
-                                    fontSize: '0.85rem',
+                                    padding: '0.2rem 0.6rem',
+                                    borderRadius: '12px',
+                                    fontSize: '0.7rem',
                                     fontWeight: '600'
                                   }}>
                                     예정
@@ -1216,61 +1383,41 @@ function CandidateDashboard() {
                           </div>
                           
                           {/* 면접 참여하기 버튼 */}
-                          {post.executiveInterviewSchedule && (
-                            <div className="interview-actions" style={{ marginTop: '1rem' }}>
-                              <button
-                                onClick={() => {
-                                  // 임원면접 세션으로 이동
-                                  navigate(`/executive-interview-session/${post.jobCandidateId}`);
-                                }}
-                                style={{
-                                  background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '12px',
-                                  padding: '0.8rem 1.5rem',
-                                  fontWeight: '600',
-                                  fontSize: '0.95rem',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.2s ease',
-                                  boxShadow: '0 4px 12px rgba(139, 92, 246, 0.2)',
-                                  width: '100%',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  gap: '0.5rem'
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.transform = 'translateY(-2px)';
-                                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(139, 92, 246, 0.3)';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.transform = 'translateY(0)';
-                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.2)';
-                                }}
-                              >
-                                📹 면접 참여하기
-                              </button>
-                              
-                              {/* 면접 준비 팁 */}
-                              <div style={{
-                                marginTop: '0.8rem',
-                                padding: '0.8rem',
-                                background: '#fef3c7',
-                                borderRadius: '8px',
-                                border: '1px solid #f59e0b',
-                                fontSize: '0.85rem',
-                                color: '#92400e'
-                              }}>
-                                <strong>💡 면접 준비 팁:</strong>
-                                <ul style={{ margin: '0.5rem 0 0 1.5rem', padding: 0 }}>
-                                  <li>면접 10분 전에 입장해주세요</li>
-                                  <li>카메라와 마이크가 정상 작동하는지 확인하세요</li>
-                                  <li>조용한 환경에서 면접에 참여하세요</li>
-                                </ul>
-                              </div>
-                            </div>
-                          )}
+                          <div className="interview-actions" style={{ marginTop: '0.5rem' }}>
+                            <button
+                              onClick={() => {
+                                // 임원면접 세션으로 이동
+                                navigate(`/executive-interview-session/${post.jobCandidateId}`);
+                              }}
+                              style={{
+                                background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                padding: '0.4rem 0.8rem',
+                                fontWeight: '500',
+                                fontSize: '0.8rem',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 2px 4px rgba(139, 92, 246, 0.2)',
+                                width: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.2rem'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'translateY(-1px)';
+                                e.currentTarget.style.boxShadow = '0 3px 8px rgba(139, 92, 246, 0.3)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 2px 4px rgba(139, 92, 246, 0.2)';
+                              }}
+                            >
+                              📹 면접 참여하기
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </li>
@@ -1286,9 +1433,9 @@ function CandidateDashboard() {
                   color: '#4a5568'
                 }}>
                   <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>📅</div>
-                  <p>아직 임원면접 일정이 잡힌 공고가 없습니다.</p>
+                  <p>아직 임원면접 단계인 공고가 없습니다.</p>
                   <p style={{ fontSize: '0.9rem', marginTop: '0.5rem', color: '#718096' }}>
-                    AI 면접을 통과하면 임원면접 일정이 잡힐 수 있습니다.
+                    AI 면접을 통과하면 임원면접 단계로 진행됩니다.
                   </p>
                 </div>
               )}

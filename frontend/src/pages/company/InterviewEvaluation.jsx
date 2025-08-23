@@ -792,7 +792,7 @@ export default function InterviewEvaluation() {
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" fill="none"/>
                     </svg>
-                    합격 처리 (4y)
+                    합격 
                   </button>
                   
                   <button
@@ -837,7 +837,7 @@ export default function InterviewEvaluation() {
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" fill="none"/>
                     </svg>
-                    불합격 처리 (4n)
+                    불합격
                   </button>
                   
 
